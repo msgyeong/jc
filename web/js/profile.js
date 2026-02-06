@@ -65,6 +65,10 @@ async function loadMyProfile() {
 function renderProfile(profile) {
     const container = document.getElementById('profile-content');
     
+    // 현재 사용자 권한 확인
+    const currentUser = storage.get(STORAGE_KEYS.USER_SESSION);
+    const isAdmin = currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'admin');
+    
     container.innerHTML = `
         <div class="profile-header">
             <div class="profile-avatar-large">
@@ -79,6 +83,14 @@ function renderProfile(profile) {
             </div>
             ${profile.jc_role ? `<div class="profile-role">${profile.jc_role}</div>` : ''}
         </div>
+
+        ${isAdmin ? `
+            <div class="profile-admin-section">
+                <button class="btn btn-primary" onclick="navigateTo('/admin')" style="width: 100%; margin-bottom: 20px;">
+                    🔧 관리자 페이지
+                </button>
+            </div>
+        ` : ''}
 
         <div class="profile-section">
             <h3 class="profile-section-title">기본 정보</h3>

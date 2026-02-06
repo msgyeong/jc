@@ -498,6 +498,65 @@
                 </button>
             </nav>
         </div>
+
+        <!-- 관리자 페이지 (admin/super_admin 전용) -->
+        <div id="admin-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="navigateTo('/home')">
+                    <span class="icon">←</span>
+                </button>
+                <h1 class="app-bar-title">관리자 페이지</h1>
+            </div>
+            <div class="screen-content">
+                <div class="error-message" id="admin-error" style="display: none;"></div>
+                
+                <!-- 관리자 탭 -->
+                <div class="admin-tabs">
+                    <button class="admin-tab active" data-tab="pending-users">
+                        승인 대기
+                    </button>
+                    <button class="admin-tab" data-tab="all-users">
+                        회원 관리
+                    </button>
+                    <button class="admin-tab" data-tab="content-management">
+                        콘텐츠 관리
+                    </button>
+                </div>
+
+                <!-- 승인 대기 회원 -->
+                <div id="pending-users-tab" class="admin-tab-content active">
+                    <div class="tab-header">
+                        <h2>승인 대기 회원</h2>
+                        <p class="tab-description">가입 신청한 회원을 승인하거나 거부할 수 있습니다.</p>
+                    </div>
+                    <div id="pending-users-list" class="admin-content">
+                        <div class="content-loading">로딩 중...</div>
+                    </div>
+                </div>
+
+                <!-- 전체 회원 관리 -->
+                <div id="all-users-tab" class="admin-tab-content">
+                    <div class="tab-header">
+                        <h2>전체 회원 관리</h2>
+                        <p class="tab-description">회원의 권한을 변경하거나 정지할 수 있습니다.</p>
+                    </div>
+                    <div id="all-users-list" class="admin-content">
+                        <div class="content-loading">로딩 중...</div>
+                    </div>
+                </div>
+
+                <!-- 콘텐츠 관리 -->
+                <div id="content-management-tab" class="admin-tab-content">
+                    <div class="tab-header">
+                        <h2>콘텐츠 관리</h2>
+                        <p class="tab-description">부적절한 게시글이나 댓글을 삭제할 수 있습니다.</p>
+                    </div>
+                    <div id="content-management-list" class="admin-content">
+                        <div class="content-loading">로딩 중...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Supabase 클라이언트 -->
@@ -514,6 +573,7 @@
     <script src="js/schedules.js"></script>
     <script src="js/members.js"></script>
     <script src="js/profile.js"></script>
+    <script src="js/admin.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/app.js"></script>
 </body>

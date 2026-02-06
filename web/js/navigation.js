@@ -1,5 +1,32 @@
 // 화면 전환 및 네비게이션 (완전 재구현)
 
+// 경로 기반 네비게이션 (새로 추가)
+function navigateTo(path) {
+    console.log('🔗 경로 이동:', path);
+    
+    // 경로를 화면 이름으로 변환
+    const pathToScreen = {
+        '/': 'splash',
+        '/login': 'login',
+        '/signup': 'signup',
+        '/pending': 'pending-approval',
+        '/home': 'home',
+        '/posts': 'posts',
+        '/notices': 'notices',
+        '/schedules': 'schedules',
+        '/members': 'members',
+        '/profile': 'profile',
+        '/admin': 'admin'
+    };
+    
+    const screenName = pathToScreen[path];
+    if (screenName) {
+        navigateToScreen(screenName);
+    } else {
+        console.error('❌ 알 수 없는 경로:', path);
+    }
+}
+
 // 화면 전환
 function navigateToScreen(screenName) {
     console.log('📱 화면 전환:', screenName);
@@ -33,6 +60,11 @@ function navigateToScreen(screenName) {
                 form.reset();
             }
             clearAllErrors();
+        } else if (screenName === 'admin') {
+            // 관리자 페이지 초기화
+            if (typeof initAdminPage === 'function') {
+                initAdminPage();
+            }
         }
         
         console.log('✅ 화면 전환 완료:', screenName);

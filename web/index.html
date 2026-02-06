@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영등포 JC - 회원관리 앱</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- 스플래시 화면 -->
+        <div id="splash-screen" class="screen active">
+            <div class="splash-content">
+                <img src="../image/slash/jc_logo_slash.png" alt="JC Logo" class="logo" onerror="this.style.display='none'">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+
+        <!-- 로그인 화면 -->
+        <div id="login-screen" class="screen">
+            <div class="app-bar">
+                <h1 class="app-bar-title">로그인</h1>
+            </div>
+            <div class="screen-content">
+                <form id="login-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="login-email">이메일</label>
+                        <input 
+                            type="email" 
+                            id="login-email" 
+                            placeholder="example@email.com"
+                            required
+                        >
+                        <span class="error-message" id="email-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">비밀번호</label>
+                        <div class="password-input-wrapper">
+                            <input 
+                                type="password" 
+                                id="login-password" 
+                                placeholder="8자 이상 입력"
+                                required
+                            >
+                            <button type="button" class="toggle-password" data-target="login-password">
+                                <span class="icon">👁️</span>
+                            </button>
+                        </div>
+                        <span class="error-message" id="password-error"></span>
+                    </div>
+
+                    <div class="inline-error-message" id="inline-error"></div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="remember-me">
+                            <span>로그인 유지</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-login">
+                        <span class="btn-text">로그인</span>
+                        <span class="btn-loading" style="display: none;">
+                            <span class="spinner"></span>
+                        </span>
+                    </button>
+
+                    <div class="secondary-links">
+                        <button type="button" class="link-button" id="forgot-password-link">비밀번호 찾기</button>
+                        <span class="divider">|</span>
+                        <button type="button" class="link-button" id="signup-link">회원가입</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 회원가입 화면 (간소화 버전) -->
+        <div id="signup-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="navigateToScreen('login')">
+                    <span class="icon">←</span>
+                </button>
+                <h1 class="app-bar-title">회원가입</h1>
+            </div>
+            <div class="screen-content">
+                <div class="info-box">
+                    ⚠️ 회원가입 후 관리자 승인이 필요합니다.
+                </div>
+                
+                <form id="signup-form" class="auth-form">
+                    <!-- Step 1: 로그인 정보 -->
+                    <h3 class="section-title">로그인 정보</h3>
+                    
+                    <div class="form-group">
+                        <label for="signup-email">
+                            이메일 <span class="required-badge">필수</span>
+                        </label>
+                        <input 
+                            type="email" 
+                            id="signup-email" 
+                            placeholder="example@email.com"
+                            required
+                        >
+                        <span class="help-text">소문자로 입력해주세요</span>
+                        <span class="error-message" id="signup-email-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-password">
+                            비밀번호 <span class="required-badge">필수</span>
+                        </label>
+                        <div class="password-input-wrapper">
+                            <input 
+                                type="password" 
+                                id="signup-password" 
+                                placeholder="8자 이상"
+                                required
+                                minlength="8"
+                            >
+                            <button type="button" class="toggle-password" data-target="signup-password">
+                                <span class="icon">👁️</span>
+                            </button>
+                        </div>
+                        <span class="error-message" id="signup-password-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-password-confirm">
+                            비밀번호 확인 <span class="required-badge">필수</span>
+                        </label>
+                        <div class="password-input-wrapper">
+                            <input 
+                                type="password" 
+                                id="signup-password-confirm" 
+                                placeholder="비밀번호 재입력"
+                                required
+                            >
+                            <button type="button" class="toggle-password" data-target="signup-password-confirm">
+                                <span class="icon">👁️</span>
+                            </button>
+                        </div>
+                        <span class="error-message" id="signup-password-confirm-error"></span>
+                    </div>
+
+                    <!-- Step 2: 기본 정보 -->
+                    <h3 class="section-title">기본 정보</h3>
+
+                    <div class="form-group">
+                        <label for="signup-name">
+                            성명 <span class="required-badge">필수</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="signup-name" 
+                            placeholder="홍길동"
+                            required
+                        >
+                        <span class="error-message" id="signup-name-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-phone">
+                            휴대폰 <span class="required-badge">필수</span>
+                        </label>
+                        <input 
+                            type="tel" 
+                            id="signup-phone" 
+                            placeholder="010-0000-0000"
+                            required
+                        >
+                        <span class="error-message" id="signup-phone-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-address">
+                            주소 <span class="required-badge">필수</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="signup-address" 
+                            placeholder="주소 입력"
+                            required
+                        >
+                        <span class="error-message" id="signup-address-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-address-detail">
+                            상세 주소 <span class="optional-badge">선택</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="signup-address-detail" 
+                            placeholder="동, 호수 등"
+                        >
+                    </div>
+
+                    <!-- Step 3: 추가 정보 (선택) -->
+                    <h3 class="section-title">추가 정보 (선택)</h3>
+
+                    <div class="form-group">
+                        <label for="signup-company">회사명</label>
+                        <input 
+                            type="text" 
+                            id="signup-company" 
+                            placeholder="회사명"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-position">직책</label>
+                        <input 
+                            type="text" 
+                            id="signup-position" 
+                            placeholder="직책"
+                        >
+                    </div>
+
+                    <div class="inline-error-message" id="signup-inline-error"></div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="navigateToScreen('login')">
+                            취소
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-signup">
+                            <span class="btn-text">가입 신청</span>
+                            <span class="btn-loading" style="display: none;">
+                                <span class="spinner"></span>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 승인 대기 화면 -->
+        <div id="pending-approval-screen" class="screen">
+            <div class="app-bar">
+                <h1 class="app-bar-title">가입 승인 대기</h1>
+            </div>
+            <div class="screen-content">
+                <div class="pending-content">
+                    <div class="icon-large">⏳</div>
+                    <h2>가입 신청이 완료되었습니다</h2>
+                    <p>관리자의 승인을 기다려주세요.</p>
+                    <p class="text-secondary">승인이 완료되면 로그인하실 수 있습니다.</p>
+                    <button class="btn btn-primary" onclick="navigateToScreen('login')">확인</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 홈 화면 (인증 후) -->
+        <div id="home-screen" class="screen">
+            <div class="app-bar">
+                <h1 class="app-bar-title">영등포 JC</h1>
+                <button class="logout-button" id="logout-btn">
+                    <span class="icon">🚪</span>
+                </button>
+            </div>
+            <div class="screen-content with-bottom-nav">
+                <div class="home-content">
+                    <!-- 배너 슬라이드 -->
+                    <div class="banner-section">
+                        <div class="banner-slider" id="banner-slider">
+                            <div class="banner-loading">배너 로딩 중...</div>
+                        </div>
+                        <div class="banner-indicators" id="banner-indicators"></div>
+                    </div>
+
+                    <!-- 공지사항 요약 -->
+                    <section class="content-section">
+                        <div class="section-header">
+                            <h2>공지사항</h2>
+                            <button class="view-all-btn" data-navigate="notices">전체 보기 →</button>
+                        </div>
+                        <div class="notice-list" id="notice-summary">
+                            <div class="content-loading">공지사항 로딩 중...</div>
+                        </div>
+                    </section>
+
+                    <!-- 다가오는 일정 -->
+                    <section class="content-section">
+                        <div class="section-header">
+                            <h2>다가오는 일정</h2>
+                            <button class="view-all-btn" data-navigate="schedules">전체 보기 →</button>
+                        </div>
+                        <div class="schedule-list" id="schedule-summary">
+                            <div class="content-loading">일정 로딩 중...</div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            
+            <!-- 하단 네비게이션 -->
+            <nav class="bottom-nav">
+                <button class="nav-item active" data-tab="home">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">홈</span>
+                </button>
+                <button class="nav-item" data-tab="posts">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-label">게시판</span>
+                </button>
+                <button class="nav-item" data-tab="schedules">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-label">일정</span>
+                </button>
+                <button class="nav-item" data-tab="members">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-label">회원</span>
+                </button>
+                <button class="nav-item" data-tab="profile">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-label">프로필</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- 게시판 화면 -->
+        <div id="posts-screen" class="screen">
+            <div class="app-bar">
+                <h1 class="app-bar-title">게시판</h1>
+                <button class="fab" id="create-post-btn">+</button>
+            </div>
+            <div class="screen-content with-bottom-nav">
+                <div class="post-list" id="post-list">
+                    <div class="content-loading">게시글 로딩 중...</div>
+                </div>
+            </div>
+            <nav class="bottom-nav">
+                <button class="nav-item" data-tab="home">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">홈</span>
+                </button>
+                <button class="nav-item active" data-tab="posts">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-label">게시판</span>
+                </button>
+                <button class="nav-item" data-tab="schedules">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-label">일정</span>
+                </button>
+                <button class="nav-item" data-tab="members">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-label">회원</span>
+                </button>
+                <button class="nav-item" data-tab="profile">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-label">프로필</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- 공지사항 화면 -->
+        <div id="notices-screen" class="screen">
+            <div class="app-bar">
+                <h1 class="app-bar-title">공지사항</h1>
+                <button class="fab" id="create-notice-btn" style="display: none;">+</button>
+            </div>
+            <div class="screen-content with-bottom-nav">
+                <div class="notice-list" id="notice-list">
+                    <div class="content-loading">공지사항 로딩 중...</div>
+                </div>
+            </div>
+            <nav class="bottom-nav">
+                <button class="nav-item" data-tab="home">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">홈</span>
+                </button>
+                <button class="nav-item" data-tab="posts">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-label">게시판</span>
+                </button>
+                <button class="nav-item" data-tab="schedules">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-label">일정</span>
+                </button>
+                <button class="nav-item" data-tab="members">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-label">회원</span>
+                </button>
+                <button class="nav-item" data-tab="profile">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-label">프로필</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- 일정 화면 -->
+        <div id="schedules-screen" class="screen">
+            <div class="app-bar">
+                <h1 class="app-bar-title">일정</h1>
+                <button class="fab" id="create-schedule-btn" style="display: none;">+</button>
+            </div>
+            <div class="screen-content with-bottom-nav">
+                <div class="schedule-list" id="schedule-list">
+                    <div class="content-loading">일정 로딩 중...</div>
+                </div>
+            </div>
+            <nav class="bottom-nav">
+                <button class="nav-item" data-tab="home">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">홈</span>
+                </button>
+                <button class="nav-item" data-tab="posts">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-label">게시판</span>
+                </button>
+                <button class="nav-item active" data-tab="schedules">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-label">일정</span>
+                </button>
+                <button class="nav-item" data-tab="members">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-label">회원</span>
+                </button>
+                <button class="nav-item" data-tab="profile">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-label">프로필</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- 회원 화면 -->
+        <div id="members-screen" class="screen">
+            <div class="app-bar">
+                <h1 class="app-bar-title">회원</h1>
+            </div>
+            <div class="screen-content with-bottom-nav">
+                <div class="search-bar">
+                    <input type="search" id="member-search" placeholder="이름, 직책, 업종으로 검색..." />
+                </div>
+                <div class="member-list" id="member-list">
+                    <div class="content-loading">회원 목록 로딩 중...</div>
+                </div>
+            </div>
+            <nav class="bottom-nav">
+                <button class="nav-item" data-tab="home">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">홈</span>
+                </button>
+                <button class="nav-item" data-tab="posts">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-label">게시판</span>
+                </button>
+                <button class="nav-item" data-tab="schedules">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-label">일정</span>
+                </button>
+                <button class="nav-item active" data-tab="members">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-label">회원</span>
+                </button>
+                <button class="nav-item" data-tab="profile">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-label">프로필</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- 내 프로필 화면 -->
+        <div id="profile-screen" class="screen">
+            <div class="app-bar">
+                <h1 class="app-bar-title">내 프로필</h1>
+                <button class="edit-button" id="edit-profile-btn">
+                    <span class="icon">✏️</span>
+                </button>
+            </div>
+            <div class="screen-content with-bottom-nav">
+                <div class="profile-content" id="profile-content">
+                    <div class="content-loading">프로필 로딩 중...</div>
+                </div>
+            </div>
+            <nav class="bottom-nav">
+                <button class="nav-item" data-tab="home">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">홈</span>
+                </button>
+                <button class="nav-item" data-tab="posts">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-label">게시판</span>
+                </button>
+                <button class="nav-item" data-tab="schedules">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-label">일정</span>
+                </button>
+                <button class="nav-item" data-tab="members">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-label">회원</span>
+                </button>
+                <button class="nav-item active" data-tab="profile">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-label">프로필</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Supabase 클라이언트 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- 앱 스크립트 -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/signup.js"></script>
+    <script src="js/home.js"></script>
+    <script src="js/posts.js"></script>
+    <script src="js/notices.js"></script>
+    <script src="js/schedules.js"></script>
+    <script src="js/members.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

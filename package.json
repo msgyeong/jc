@@ -1,0 +1,15 @@
+{
+  "name": "jc-app",
+  "version": "1.0.0",
+  "description": "JC Member Management App",
+  "scripts": {
+    "db:init": "node web/js/db-init.js",
+    "start": "npm run db:init && nginx -g 'daemon off;'"
+  },
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

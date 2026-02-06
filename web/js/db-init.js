@@ -143,18 +143,23 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS users_updated_at ON users;
 CREATE TRIGGER users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
+DROP TRIGGER IF EXISTS posts_updated_at ON posts;
 CREATE TRIGGER posts_updated_at BEFORE UPDATE ON posts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
+DROP TRIGGER IF EXISTS comments_updated_at ON comments;
 CREATE TRIGGER comments_updated_at BEFORE UPDATE ON comments
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
+DROP TRIGGER IF EXISTS notices_updated_at ON notices;
 CREATE TRIGGER notices_updated_at BEFORE UPDATE ON notices
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
+DROP TRIGGER IF EXISTS schedules_updated_at ON schedules;
 CREATE TRIGGER schedules_updated_at BEFORE UPDATE ON schedules
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
@@ -171,6 +176,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_post_comments_count_trigger ON comments;
 CREATE TRIGGER update_post_comments_count_trigger
     AFTER INSERT OR DELETE ON comments
     FOR EACH ROW EXECUTE FUNCTION update_post_comments_count();
@@ -188,6 +194,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_post_likes_count_trigger ON post_likes;
 CREATE TRIGGER update_post_likes_count_trigger
     AFTER INSERT OR DELETE ON post_likes
     FOR EACH ROW EXECUTE FUNCTION update_post_likes_count();

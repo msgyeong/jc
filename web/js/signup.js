@@ -111,7 +111,7 @@ async function handleSignup(event) {
         }
         
         // Supabase 확인
-        if (!supabase) {
+        if (!window.supabaseClient) {
             showInlineError('signup-inline-error', 'Supabase가 초기화되지 않았습니다.');
             setButtonLoading(submitButton, false);
             return;
@@ -121,7 +121,7 @@ async function handleSignup(event) {
         console.log('🔐 Supabase 회원가입 시도...');
         
         // 1. 이메일 중복 확인
-        const { data: existingEmail } = await supabase
+        const { data: existingEmail } = await window.supabaseClient
             .from('members')
             .select('id')
             .eq('email', signupData.email)
@@ -152,7 +152,7 @@ async function handleSignup(event) {
         console.log('✅ Auth 사용자 생성 성공');
         
         // 3. Members 테이블에 정보 저장
-        const { error: memberError } = await supabase
+        const { error: memberError } = await window.supabaseClient
             .from('members')
             .insert([{
                 auth_user_id: authData.user.id,

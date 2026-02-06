@@ -126,7 +126,7 @@ const storage = {
 };
 
 // 세션 스토리지 헬퍼
-const sessionStorage = {
+const sessionStore = {
     set: (key, value) => {
         try {
             window.sessionStorage.setItem(key, JSON.stringify(value));

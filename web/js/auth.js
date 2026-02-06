@@ -80,7 +80,7 @@ async function handleLogin(event) {
                 name: '테스트 사용자',
                 isApproved: true
             };
-            sessionStorage.set('demo_user', demoUser);
+            sessionStorage.setItem('demo_user', JSON.stringify(demoUser));
             
             currentUser = demoUser;
             currentAuthStatus = AuthStatus.AUTHENTICATED;
@@ -195,7 +195,7 @@ async function handleLogout() {
         }
         
         // 세션 정보 삭제
-        sessionStorage.remove('demo_user');
+        sessionStorage.removeItem('demo_user');
         
         currentUser = null;
         currentAuthStatus = AuthStatus.UNAUTHENTICATED;
@@ -243,12 +243,17 @@ async function checkAuthStatus() {
     // 데모 모드
     if (CONFIG.DEMO_MODE) {
         console.log('📝 데모 모드');
-        const demoUser = sessionStorage.get('demo_user');
-        if (demoUser) {
-            currentUser = demoUser;
-            currentAuthStatus = AuthStatus.AUTHENTICATED;
-            console.log('✅ 데모 세션 있음:', demoUser.name || demoUser.email);
-            return currentAuthStatus;
+        const demoUserStr = sessionStorage.getItem('demo_user');
+        if (demoUserStr) {
+            try {
+                const demoUser = JSON.parse(demoUserStr);
+                currentUser = demoUser;
+                currentAuthStatus = AuthStatus.AUTHENTICATED;
+                console.log('✅ 데모 세션 있음:', demoUser.name || demoUser.email);
+                return currentAuthStatus;
+            } catch (e) {
+                console.error('❌ 데모 세션 파싱 오류:', e);
+            }
         }
         currentAuthStatus = AuthStatus.UNAUTHENTICATED;
         console.log('❌ 데모 세션 없음');
@@ -256,7 +261,7 @@ async function checkAuthStatus() {
     }
     
     // Supabase가 없으면 에러
-    if (!supabase) {
+    if (!window.supabaseClient) {
         console.error('❌ Supabase가 초기화되지 않았습니다');
         currentAuthStatus = AuthStatus.UNAUTHENTICATED;
         return currentAuthStatus;

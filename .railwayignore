@@ -1,0 +1,24 @@
+# Railway 배포 시 제외할 파일들
+.git
+.gitignore
+node_modules
+.env
+.DS_Store
+*.log
+android/
+ios/
+lib/
+test/
+windows/
+linux/
+macos/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+build/
+*.md
+!README.md
+Docs/
+.vscode/
+.idea/

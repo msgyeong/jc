@@ -15,7 +15,19 @@ database/
 
 ## 🔄 마이그레이션 실행
 
-### 1. 초기 설정 (최초 1회)
+### 방법 1: Railway PostgreSQL (권장!)
+
+**Railway에서 바로 실행:**
+
+1. Railway 대시보드 → **PostgreSQL** 클릭
+2. **"Data"** 탭 클릭
+3. **"Query"** 버튼 클릭
+4. `database/railway_init.sql` 파일 내용 전체 복사
+5. 붙여넣고 **"Run Query"** 클릭
+6. ✅ `Railway PostgreSQL 데이터베이스 초기화 완료!` 확인
+7. `database/create_admin.sql` 파일로 관리자 계정 생성
+
+### 방법 2: Supabase (선택)
 
 **Supabase SQL Editor에서 실행:**
 

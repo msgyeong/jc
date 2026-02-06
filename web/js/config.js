@@ -5,11 +5,11 @@ const CONFIG = {
     DEMO_MODE: true // true로 설정하면 샘플 데이터 사용 (Supabase 없이 테스트 가능)
 };
 
-// Supabase 클라이언트
-let supabase = null;
+// Supabase 클라이언트 (전역 변수로 사용)
+window.supabaseClient = null;
 
 // Supabase 초기화
-function initSupabase() {
+window.initSupabase = function() {
     try {
         // 데모 모드면 Supabase 초기화 건너뛰기
         if (CONFIG.DEMO_MODE) {
@@ -23,13 +23,17 @@ function initSupabase() {
             return null;
         }
         
-        supabase = window.supabase.createClient(
-            CONFIG.SUPABASE_URL,
-            CONFIG.SUPABASE_ANON_KEY
-        );
+        if (typeof window.supabase !== 'undefined') {
+            window.supabaseClient = window.supabase.createClient(
+                CONFIG.SUPABASE_URL,
+                CONFIG.SUPABASE_ANON_KEY
+            );
+            console.log('✅ Supabase 초기화 완료');
+        } else {
+            console.warn('⚠️ Supabase CDN 로드 실패');
+        }
         
-        console.log('✅ Supabase 초기화 완료');
-        return supabase;
+        return window.supabaseClient;
     } catch (error) {
         console.error('❌ Supabase 초기화 실패:', error);
         console.log('💡 데모 모드로 테스트하려면 CONFIG.DEMO_MODE = true로 설정하세요.');

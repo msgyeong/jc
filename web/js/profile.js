@@ -36,7 +36,7 @@ async function loadMyProfile() {
     }
 
     try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
         if (!user) {
             throw new Error('사용자 정보를 찾을 수 없습니다');
         }

@@ -97,7 +97,7 @@ async function handleLogin(event) {
         // 실제 Supabase 로그인
         console.log('🔐 Supabase 로그인 시도...');
         
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        const { data: authData, error: authError } = await window.supabaseClient.auth.signInWithPassword({
             email: email,
             password: password
         });
@@ -121,7 +121,7 @@ async function handleLogin(event) {
         if (!member) {
             console.error('❌ 회원 정보 없음');
             showInlineError('inline-error', '회원 정보를 찾을 수 없습니다.');
-            await supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             setButtonLoading(loginButton, false);
             return;
         }
@@ -131,21 +131,21 @@ async function handleLogin(event) {
         // 회원 상태 확인
         if (member.withdrawn_at) {
             showInlineError('inline-error', '탈퇴한 계정입니다.');
-            await supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             setButtonLoading(loginButton, false);
             return;
         }
         
         if (member.is_suspended) {
             showInlineError('inline-error', '계정이 정지되었습니다. 관리자에게 문의하세요.');
-            await supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             setButtonLoading(loginButton, false);
             return;
         }
         
         if (!member.is_approved && member.rejection_reason) {
             showInlineError('inline-error', member.rejection_reason || '가입이 거절되었습니다.');
-            await supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             setButtonLoading(loginButton, false);
             return;
         }
@@ -189,8 +189,8 @@ async function handleLogout() {
     console.log('🔹 로그아웃 시작');
     
     try {
-        if (supabase) {
-            await supabase.auth.signOut();
+        if (window.supabaseClient) {
+            await window.supabaseClient.auth.signOut();
             console.log('✅ Supabase 로그아웃 완료');
         }
         
@@ -263,7 +263,7 @@ async function checkAuthStatus() {
     }
 
     try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await window.supabaseClient.auth.getSession();
         
         if (error) {
             console.error('❌ 세션 조회 오류:', error);
@@ -284,7 +284,7 @@ async function checkAuthStatus() {
         if (!member) {
             console.log('❌ 회원 정보 없음');
             currentAuthStatus = AuthStatus.UNAUTHENTICATED;
-            await supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             return currentAuthStatus;
         }
         
@@ -293,21 +293,21 @@ async function checkAuthStatus() {
         if (member.withdrawn_at) {
             console.log('❌ 탈퇴한 계정');
             currentAuthStatus = AuthStatus.WITHDRAWN;
-            await supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             return currentAuthStatus;
         }
 
         if (member.is_suspended) {
             console.log('❌ 정지된 계정');
             currentAuthStatus = AuthStatus.SUSPENDED;
-            await supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             return currentAuthStatus;
         }
 
         if (!member.is_approved && member.rejection_reason) {
             console.log('❌ 거절된 계정');
             currentAuthStatus = AuthStatus.REJECTED;
-            await supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             return currentAuthStatus;
         }
 

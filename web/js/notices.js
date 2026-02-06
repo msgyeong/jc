@@ -21,7 +21,7 @@ async function checkNoticePermission() {
     }
 
     try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
         if (!user) return;
 
         // 사용자의 role_permissions 확인

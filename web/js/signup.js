@@ -134,7 +134,7 @@ async function handleSignup(event) {
         }
         
         // 2. Auth 사용자 생성
-        const { data: authData, error: authError } = await supabase.auth.signUp({
+        const { data: authData, error: authError } = await window.supabaseClient.auth.signUp({
             email: signupData.email,
             password: signupData.password,
             options: {
@@ -179,7 +179,7 @@ async function handleSignup(event) {
         console.log('✅ 회원 정보 저장 성공');
         
         // 4. 로그아웃 (승인 대기 상태이므로)
-        await supabase.auth.signOut();
+        await window.supabaseClient.auth.signOut();
         
         // 5. 승인 대기 화면으로 이동
         navigateToScreen('pending-approval');

@@ -189,7 +189,7 @@ async function rejectUser(userId, userName) {
         }
         
         // Supabase Auth에서 사용자 삭제 (관리자 권한 필요)
-        const { error } = await supabase.auth.admin.deleteUser(userId);
+        const { error } = await window.supabaseClient.auth.admin.deleteUser(userId);
         
         if (error) throw error;
         

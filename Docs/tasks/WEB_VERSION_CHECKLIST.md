@@ -164,9 +164,19 @@
 ## 📊 통계
 
 - **총 기능 항목**: ~150개
-- **완료**: ~85개 (57%)
-- **진행 중**: ~15개 (10%)
+- **완료**: ~90개 (60%)
+- **진행 중**: ~10개 (7%)
 - **예정**: ~50개 (33%)
+
+## 🚀 배포 정보
+
+- **Railway 웹 앱**: https://jc-production-7db6.up.railway.app
+- **데이터베이스**: Railway PostgreSQL (내부)
+- **배포 방식**: Docker + Nginx
+- **자동 배포**: Git Push 시 자동 빌드/배포
+- **초기 관리자 계정**:
+  - 이메일: admin@jc.com
+  - 비밀번호: admin1234
 
 ---
 
@@ -217,6 +227,10 @@
 - [x] 데모 모드 (DEMO_MODE: true)
 - [x] 반응형 디자인 (모바일/데스크톱)
 - [x] 새 콘텐츠 'N' 배지
+- [x] Railway PostgreSQL 데이터베이스 설정
+- [x] Railway 웹 앱 배포 (Nginx + Docker)
+- [x] 관리자 계정 자동 생성
+- [x] 동적 포트 바인딩 (Railway PORT 환경 변수)
 
 ---
 

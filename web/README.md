@@ -70,7 +70,17 @@
    - [ ] 권한 관리
    - [ ] 콘텐츠 관리
 
-## 🚀 실행 방법
+## 🌐 배포된 앱 접속
+
+**Railway 배포 URL**: https://jc-production-7db6.up.railway.app
+
+### 초기 관리자 계정
+- **이메일**: admin@jc.com
+- **비밀번호**: admin1234
+
+---
+
+## 🚀 로컬 실행 방법
 
 ### 1. 로컬 서버 시작
 
@@ -114,6 +124,34 @@ const CONFIG = {
 ### 데모 모드
 
 Supabase 없이 테스트하려면 `DEMO_MODE: true`로 설정하세요.
+
+---
+
+## 🚀 Railway 배포
+
+### 배포 아키텍처
+- **웹 서버**: Nginx (Alpine Linux)
+- **데이터베이스**: Railway PostgreSQL
+- **컨테이너**: Docker
+- **자동 배포**: Git Push → 자동 빌드/배포
+
+### 배포 파일
+- `Dockerfile` - Docker 이미지 설정
+- `nginx.conf` - Nginx 웹 서버 설정
+- `railway.json` - Railway 배포 설정
+- `start.sh` - 동적 포트 바인딩 스크립트
+
+### 데이터베이스 초기화
+```bash
+# Railway PostgreSQL PUBLIC URL 필요
+# init-db.bat 파일 수정 후 실행 (Windows)
+init-db.bat
+```
+
+### 배포 가이드
+자세한 배포 방법은 다음 문서 참고:
+- `RAILWAY_ONLY_SETUP.md` - Railway 전용 설정 가이드
+- `RAILWAY_DEPLOYMENT_GUIDE.md` - 배포 상세 가이드
 
 ## 📁 파일 구조
 

@@ -14,8 +14,9 @@
 
 ### 👤 일반 회원 계정 (추천)
 ```
-이메일: test@jc.com
+이메일: minsu@jc.com
 비밀번호: test1234
+이름: 경민수
 ```
 - **권한**: 일반 회원 (member)
 - **상태**: 활성화 (바로 로그인 가능)
@@ -147,7 +148,7 @@ git remote -v
 ## 🎮 테스트 시나리오
 
 ### 일반 회원으로 테스트
-1. `test@jc.com`으로 로그인
+1. `minsu@jc.com`으로 로그인
 2. 홈 화면에서 공지사항 확인
 3. 게시판 탭에서 글 작성
 4. 회원 탭에서 다른 회원 조회
@@ -167,21 +168,21 @@ git remote -v
 ### 로그인 안 됨
 Railway PostgreSQL → Query에서 확인:
 ```sql
-SELECT * FROM users WHERE email = 'test@jc.com';
+SELECT * FROM users WHERE email = 'minsu@jc.com';
 ```
 
 ### 계정 활성화
 ```sql
 UPDATE users 
 SET status = 'active', role = 'member' 
-WHERE email = 'test@jc.com';
+WHERE email = 'minsu@jc.com';
 ```
 
 ### 비밀번호 재설정
 ```sql
 UPDATE users 
 SET password_hash = 'test1234' 
-WHERE email = 'test@jc.com';
+WHERE email = 'minsu@jc.com';
 ```
 
 ---

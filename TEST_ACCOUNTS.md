@@ -9,8 +9,9 @@
 - **기능**: 회원 승인, 권한 관리, 콘텐츠 관리
 
 ### 테스트 회원 계정
-- **이메일**: `test@jc.com`
+- **이메일**: `minsu@jc.com`
 - **비밀번호**: `test1234`
+- **이름**: 경민수
 - **권한**: 일반 회원 (member)
 - **상태**: 활성화 (바로 로그인 가능)
 
@@ -45,7 +46,7 @@ Railway PostgreSQL → Data → Query 탭에서 실행:
 4. 공지사항/일정 작성 테스트
 
 ### 일반 회원으로 테스트
-1. `test@jc.com` / `test1234`로 로그인
+1. `minsu@jc.com` / `test1234`로 로그인
 2. 홈 화면에서 공지사항/일정 확인
 3. 게시판에 글 작성
 4. 회원 목록 조회
@@ -91,12 +92,12 @@ VALUES (
 ### 로그인 안 됨
 1. Railway PostgreSQL → Query에서 확인:
    ```sql
-   SELECT * FROM users WHERE email = 'test@jc.com';
+   SELECT * FROM users WHERE email = 'minsu@jc.com';
    ```
 2. 계정이 없으면 `create_test_member.sql` 다시 실행
 3. `status`가 'pending'이면 'active'로 변경:
    ```sql
-   UPDATE users SET status = 'active' WHERE email = 'test@jc.com';
+   UPDATE users SET status = 'active' WHERE email = 'minsu@jc.com';
    ```
 
 ### 비밀번호 틀림
@@ -104,7 +105,7 @@ Railway Query에서 비밀번호 재설정:
 ```sql
 UPDATE users 
 SET password_hash = 'test1234' 
-WHERE email = 'test@jc.com';
+WHERE email = 'minsu@jc.com';
 ```
 
 ---

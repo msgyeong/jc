@@ -30,6 +30,10 @@
 - **관리자 계정**:
   - 이메일: `admin@jc.com`
   - 비밀번호: `admin1234`
+- **테스트 회원**:
+  - 이메일: `minsu@jc.com`
+  - 비밀번호: `test1234`
+  - 이름: 경민수
 
 ### 로컬 실행
 ```bash
@@ -61,10 +65,17 @@ flutter run
 
 ## 📚 문서
 
+### 배포 가이드
+- **🚀 최종 배포**: [RAILWAY_DEPLOYMENT_FINAL.md](RAILWAY_DEPLOYMENT_FINAL.md) - Railway 배포 완벽 가이드
+- **빠른 시작**: [QUICKSTART.md](QUICKSTART.md) - 5분 안에 시작하기
+- **테스트 계정**: [TEST_ACCOUNTS.md](TEST_ACCOUNTS.md) - 테스트 계정 정보
+- **문제 해결**: [RAILWAY_TROUBLESHOOTING.md](RAILWAY_TROUBLESHOOTING.md) - 배포 문제 해결
+
+### 프로젝트 문서
 - **웹 버전**: [web/README.md](web/README.md)
 - **작업 가이드**: [Docs/contributing.md](Docs/contributing.md)
 - **기능 체크리스트**: [Docs/tasks/WEB_VERSION_CHECKLIST.md](Docs/tasks/WEB_VERSION_CHECKLIST.md)
-- **Railway 배포**: [RAILWAY_ONLY_SETUP.md](RAILWAY_ONLY_SETUP.md)
+- **협업 가이드**: [COLLABORATION_STATUS.md](COLLABORATION_STATUS.md)
 
 ---
 

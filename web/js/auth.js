@@ -69,6 +69,35 @@ async function handleLogin(event) {
             console.log('📝 데모 모드: 로그인 시뮬레이션');
             await new Promise(resolve => setTimeout(resolve, 1000));
             
+            // 승인된 계정 리스트 (데모용)
+            const approvedAccounts = {
+                'admin@jc.com': { name: '총관리자', role: 'super_admin', status: 'active' },
+                'minsu@jc.com': { name: '경민수', role: 'member', status: 'active' }
+            };
+            
+            // 계정 확인
+            if (!approvedAccounts[email]) {
+                showInlineError('inline-error', '등록되지 않은 계정입니다.');
+                setButtonLoading(loginButton, false);
+                return;
+            }
+            
+            const accountInfo = approvedAccounts[email];
+            
+            // 비밀번호 확인 (데모용 간단 검증)
+            if (password !== 'test1234' && password !== 'admin1234') {
+                showInlineError('inline-error', '비밀번호가 일치하지 않습니다.');
+                setButtonLoading(loginButton, false);
+                return;
+            }
+            
+            // 승인 상태 확인
+            if (accountInfo.status !== 'active') {
+                showInlineError('inline-error', '승인되지 않은 계정입니다. 관리자 승인을 기다려주세요.');
+                setButtonLoading(loginButton, false);
+                return;
+            }
+            
             // 로컬 스토리지에 저장
             if (rememberMe) {
                 storage.set(STORAGE_KEYS.REMEMBER_ME, true);
@@ -77,7 +106,9 @@ async function handleLogin(event) {
             // 데모 사용자 정보 저장
             const demoUser = {
                 email: email,
-                name: '테스트 사용자',
+                name: accountInfo.name,
+                role: accountInfo.role,
+                status: accountInfo.status,
                 isApproved: true
             };
             sessionStorage.setItem('demo_user', JSON.stringify(demoUser));
@@ -90,7 +121,7 @@ async function handleLogin(event) {
             updateUserDisplay();
             setButtonLoading(loginButton, false);
             
-            console.log('✅ 데모 로그인 성공');
+            console.log('✅ 데모 로그인 성공:', accountInfo.name);
             return;
         }
         

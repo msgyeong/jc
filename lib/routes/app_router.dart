@@ -8,6 +8,10 @@ import '../screens/auth/signup_screen.dart';
 import '../screens/splash_screen.dart';
 import '../screens/profile_tab_screen.dart';
 import '../screens/tab_placeholder_screen.dart';
+import '../screens/notices/notice_list_screen.dart';
+import '../screens/notices/notice_detail_screen.dart';
+import '../screens/notices/notice_create_screen.dart';
+import '../screens/notices/notice_edit_screen.dart';
 import '../services/session_service.dart';
 import '../services/supabase_service.dart';
 import '../widgets/main_navigation.dart';
@@ -220,8 +224,33 @@ GoRouter createAppRouter() {
             routes: <RouteBase>[
               GoRoute(
                 path: 'board',
-                builder: (_, __) =>
-                    const TabPlaceholderScreen(title: '게시판'),
+                builder: (_, __) => const NoticeListScreen(),
+              ),
+              GoRoute(
+                path: 'notices',
+                builder: (_, __) => const NoticeListScreen(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'create',
+                    builder: (_, __) => const NoticeCreateScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (c, state) {
+                      final id = state.pathParameters['id']!;
+                      return NoticeDetailScreen(noticeId: id);
+                    },
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: 'edit',
+                        builder: (c, state) {
+                          final id = state.pathParameters['id']!;
+                          return NoticeEditScreen(noticeId: id);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
               GoRoute(
                 path: 'schedule',

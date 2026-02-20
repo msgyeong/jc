@@ -352,8 +352,8 @@ Supabase → **Settings** → **API**
 ## 📞 지원
 
 - **문서**: `Docs/` 폴더
-- **체크리스트**: `Docs/tasks/WEB_VERSION_CHECKLIST.md`
-- **테스트 보고서**: `Docs/tasks/WEB_VERSION_TEST_REPORT.md`
+- **체크리스트**: `Docs/tasks-web/WEB_VERSION_CHECKLIST.md`
+- **테스트 보고서**: `Docs/tasks-web/WEB_VERSION_TEST_REPORT.md`
 
 ---
 

@@ -1,4 +1,4 @@
-// 인증 관련 기능 (완전 재구현)
+// 인증 관련 기능 (Railway API 연동)
 
 // 인증 상태
 const AuthStatus = {
@@ -64,340 +64,200 @@ async function handleLogin(event) {
         
         console.log('📝 로그인 시도:', email);
         
-        // 데모 모드 처리
-        if (CONFIG.DEMO_MODE) {
-            console.log('📝 데모 모드: 로그인 시뮬레이션');
-            await new Promise(resolve => setTimeout(resolve, 1000));
+        // API 로그인 호출
+        const result = await apiClient.login(email, password);
+        
+        if (result.success) {
+            console.log('✅ 로그인 성공:', result.user);
             
-            // 승인된 계정 리스트 (데모용)
-            const approvedAccounts = {
-                'admin@jc.com': { name: '총관리자', role: 'super_admin', status: 'active' },
-                'minsu@jc.com': { name: '경민수', role: 'member', status: 'active' }
-            };
+            // 사용자 정보 저장
+            currentUser = result.user;
+            localStorage.setItem('user_info', JSON.stringify(result.user));
             
-            // 계정 확인
-            if (!approvedAccounts[email]) {
-                showInlineError('inline-error', '등록되지 않은 계정입니다.');
-                setButtonLoading(loginButton, false);
-                return;
-            }
-            
-            const accountInfo = approvedAccounts[email];
-            
-            // 비밀번호 확인 (데모용 간단 검증)
-            if (password !== 'test1234' && password !== 'admin1234') {
-                showInlineError('inline-error', '비밀번호가 일치하지 않습니다.');
-                setButtonLoading(loginButton, false);
-                return;
-            }
-            
-            // 승인 상태 확인
-            if (accountInfo.status !== 'active') {
-                showInlineError('inline-error', '승인되지 않은 계정입니다. 관리자 승인을 기다려주세요.');
-                setButtonLoading(loginButton, false);
-                return;
-            }
-            
-            // 로컬 스토리지에 저장
+            // 로그인 유지 옵션 저장
             if (rememberMe) {
-                storage.set(STORAGE_KEYS.REMEMBER_ME, true);
+                localStorage.setItem(STORAGE_KEYS.REMEMBER_ME, 'true');
             }
-            
-            // 데모 사용자 정보 저장
-            const demoUser = {
-                email: email,
-                name: accountInfo.name,
-                role: accountInfo.role,
-                status: accountInfo.status,
-                isApproved: true
-            };
-            sessionStorage.setItem('demo_user', JSON.stringify(demoUser));
-            
-            currentUser = demoUser;
-            currentAuthStatus = AuthStatus.AUTHENTICATED;
             
             // 홈 화면으로 이동
+            currentAuthStatus = AuthStatus.AUTHENTICATED;
             navigateToScreen('home');
-            updateUserDisplay();
-            setButtonLoading(loginButton, false);
             
-            console.log('✅ 데모 로그인 성공:', accountInfo.name);
-            return;
-        }
-        
-        // 실제 Supabase 로그인
-        console.log('🔐 Supabase 로그인 시도...');
-        
-        const { data: authData, error: authError } = await window.supabaseClient.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
-        
-        if (authError) {
-            console.error('❌ 로그인 실패:', authError);
-            if (authError.message.includes('Invalid')) {
-                showInlineError('inline-error', '이메일 또는 비밀번호가 올바르지 않습니다.');
-            } else {
-                showInlineError('inline-error', '로그인에 실패했습니다: ' + authError.message);
+            // 홈 화면 데이터 로드
+            if (typeof loadHomeData === 'function') {
+                loadHomeData();
             }
-            setButtonLoading(loginButton, false);
-            return;
-        }
-        
-        console.log('✅ Auth 로그인 성공');
-        
-        // 회원 정보 확인
-        const member = await fetchMemberByAuthUserId(authData.user.id);
-        
-        if (!member) {
-            console.error('❌ 회원 정보 없음');
-            showInlineError('inline-error', '회원 정보를 찾을 수 없습니다.');
-            await window.supabaseClient.auth.signOut();
-            setButtonLoading(loginButton, false);
-            return;
-        }
-        
-        console.log('✅ 회원 정보 확인:', member.name);
-        
-        // 회원 상태 확인
-        if (member.withdrawn_at) {
-            showInlineError('inline-error', '탈퇴한 계정입니다.');
-            await window.supabaseClient.auth.signOut();
-            setButtonLoading(loginButton, false);
-            return;
-        }
-        
-        if (member.is_suspended) {
-            showInlineError('inline-error', '계정이 정지되었습니다. 관리자에게 문의하세요.');
-            await window.supabaseClient.auth.signOut();
-            setButtonLoading(loginButton, false);
-            return;
-        }
-        
-        if (!member.is_approved && member.rejection_reason) {
-            showInlineError('inline-error', member.rejection_reason || '가입이 거절되었습니다.');
-            await window.supabaseClient.auth.signOut();
-            setButtonLoading(loginButton, false);
-            return;
-        }
-        
-        if (!member.is_approved) {
-            console.log('⏳ 승인 대기 중');
-            currentAuthStatus = AuthStatus.PENDING_APPROVAL;
-            currentUser = member;
-            navigateToScreen('pending-approval');
-            setButtonLoading(loginButton, false);
-            return;
-        }
-        
-        // 로그인 성공
-        console.log('✅ 로그인 성공');
-        
-        // 로그인 유지 설정
-        if (rememberMe) {
-            storage.set(STORAGE_KEYS.REMEMBER_ME, true);
         } else {
-            storage.remove(STORAGE_KEYS.REMEMBER_ME);
+            // 에러 메시지 표시
+            showInlineError('inline-error', result.message || '로그인에 실패했습니다.');
         }
-        
-        currentUser = member;
-        currentAuthStatus = AuthStatus.AUTHENTICATED;
-        
-        // 홈 화면으로 이동
-        navigateToScreen('home');
-        updateUserDisplay();
-        setButtonLoading(loginButton, false);
         
     } catch (error) {
-        console.error('❌ 로그인 오류:', error);
-        showInlineError('inline-error', '로그인 중 오류가 발생했습니다: ' + error.message);
+        console.error('❌ 로그인 에러:', error);
+        
+        // 사용자 친화적 에러 메시지
+        let errorMessage = '로그인 중 오류가 발생했습니다.';
+        
+        if (error.message) {
+            if (error.message.includes('승인')) {
+                errorMessage = error.message;
+                currentAuthStatus = AuthStatus.PENDING_APPROVAL;
+            } else if (error.message.includes('정지')) {
+                errorMessage = error.message;
+                currentAuthStatus = AuthStatus.SUSPENDED;
+            } else if (error.message.includes('이메일') || error.message.includes('비밀번호')) {
+                errorMessage = error.message;
+            } else {
+                errorMessage = error.message;
+            }
+        }
+        
+        showInlineError('inline-error', errorMessage);
+        
+    } finally {
         setButtonLoading(loginButton, false);
     }
 }
 
 // 로그아웃 처리
 async function handleLogout() {
-    console.log('🔹 로그아웃 시작');
-    
     try {
-        if (window.supabaseClient) {
-            await window.supabaseClient.auth.signOut();
-            console.log('✅ Supabase 로그아웃 완료');
-        }
+        console.log('🔹 로그아웃 시작');
         
-        // 세션 정보 삭제
-        sessionStorage.removeItem('demo_user');
+        // API 로그아웃 호출
+        await apiClient.logout();
         
+        // 로컬 상태 초기화
         currentUser = null;
         currentAuthStatus = AuthStatus.UNAUTHENTICATED;
+        
+        console.log('✅ 로그아웃 완료');
         
         // 로그인 화면으로 이동
         navigateToScreen('login');
         
-        // 로그인 폼 초기화
-        document.getElementById('login-form').reset();
-        clearAllErrors();
-        
-        console.log('✅ 로그아웃 완료');
-        
-    } catch (error) {
-        console.error('❌ 로그아웃 오류:', error);
-    }
-}
-
-// 회원 정보 조회
-async function fetchMemberByAuthUserId(authUserId) {
-    try {
-        const { data, error } = await supabase
-            .from('members')
-            .select('*')
-            .eq('auth_user_id', authUserId)
-            .maybeSingle();
-
-        if (error) {
-            console.error('❌ 회원 정보 조회 오류:', error);
-            return null;
+        // 폼 초기화
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.reset();
         }
-
-        return data;
+        
     } catch (error) {
-        console.error('❌ 회원 정보 조회 오류:', error);
-        return null;
+        console.error('❌ 로그아웃 에러:', error);
+        // 에러가 발생해도 로컬 상태는 초기화하고 로그인 화면으로 이동
+        currentUser = null;
+        currentAuthStatus = AuthStatus.UNAUTHENTICATED;
+        apiClient.clearToken();
+        navigateToScreen('login');
     }
 }
 
 // 인증 상태 확인
 async function checkAuthStatus() {
-    console.log('🔹 인증 상태 확인 시작');
-    currentAuthStatus = AuthStatus.LOADING;
-
-    // 데모 모드
-    if (CONFIG.DEMO_MODE) {
-        console.log('📝 데모 모드');
-        const demoUserStr = sessionStorage.getItem('demo_user');
-        if (demoUserStr) {
-            try {
-                const demoUser = JSON.parse(demoUserStr);
-                currentUser = demoUser;
-                currentAuthStatus = AuthStatus.AUTHENTICATED;
-                console.log('✅ 데모 세션 있음:', demoUser.name || demoUser.email);
-                return currentAuthStatus;
-            } catch (e) {
-                console.error('❌ 데모 세션 파싱 오류:', e);
-            }
-        }
-        currentAuthStatus = AuthStatus.UNAUTHENTICATED;
-        console.log('❌ 데모 세션 없음');
-        return currentAuthStatus;
-    }
-    
-    // Supabase가 없으면 에러
-    if (!window.supabaseClient) {
-        console.error('❌ Supabase가 초기화되지 않았습니다');
-        currentAuthStatus = AuthStatus.UNAUTHENTICATED;
-        return currentAuthStatus;
-    }
-
     try {
-        const { data: { session }, error } = await window.supabaseClient.auth.getSession();
+        const token = localStorage.getItem('auth_token');
         
-        if (error) {
-            console.error('❌ 세션 조회 오류:', error);
+        if (!token) {
+            console.log('❌ 저장된 토큰 없음');
             currentAuthStatus = AuthStatus.UNAUTHENTICATED;
-            return currentAuthStatus;
+            return false;
         }
         
-        if (!session) {
-            console.log('❌ 세션 없음');
+        console.log('🔹 인증 상태 확인 중...');
+        
+        // API로 현재 사용자 정보 조회
+        const result = await apiClient.getMe();
+        
+        if (result.success && result.user) {
+            console.log('✅ 인증 유효:', result.user);
+            currentUser = result.user;
+            currentAuthStatus = AuthStatus.AUTHENTICATED;
+            localStorage.setItem('user_info', JSON.stringify(result.user));
+            return true;
+        } else {
+            console.log('❌ 인증 실패');
             currentAuthStatus = AuthStatus.UNAUTHENTICATED;
-            return currentAuthStatus;
+            apiClient.clearToken();
+            return false;
         }
         
-        console.log('✅ 세션 있음:', session.user.email);
-
-        const member = await fetchMemberByAuthUserId(session.user.id);
-        
-        if (!member) {
-            console.log('❌ 회원 정보 없음');
-            currentAuthStatus = AuthStatus.UNAUTHENTICATED;
-            await window.supabaseClient.auth.signOut();
-            return currentAuthStatus;
-        }
-        
-        console.log('✅ 회원 정보 확인:', member.name);
-
-        if (member.withdrawn_at) {
-            console.log('❌ 탈퇴한 계정');
-            currentAuthStatus = AuthStatus.WITHDRAWN;
-            await window.supabaseClient.auth.signOut();
-            return currentAuthStatus;
-        }
-
-        if (member.is_suspended) {
-            console.log('❌ 정지된 계정');
-            currentAuthStatus = AuthStatus.SUSPENDED;
-            await window.supabaseClient.auth.signOut();
-            return currentAuthStatus;
-        }
-
-        if (!member.is_approved && member.rejection_reason) {
-            console.log('❌ 거절된 계정');
-            currentAuthStatus = AuthStatus.REJECTED;
-            await window.supabaseClient.auth.signOut();
-            return currentAuthStatus;
-        }
-
-        if (!member.is_approved) {
-            console.log('⏳ 승인 대기');
-            currentAuthStatus = AuthStatus.PENDING_APPROVAL;
-            currentUser = member;
-            return currentAuthStatus;
-        }
-
-        console.log('✅ 인증 완료:', member.name);
-        currentAuthStatus = AuthStatus.AUTHENTICATED;
-        currentUser = member;
-        return currentAuthStatus;
-
     } catch (error) {
-        console.error('❌ 인증 상태 확인 오류:', error);
+        console.error('❌ 인증 확인 에러:', error);
         currentAuthStatus = AuthStatus.UNAUTHENTICATED;
-        return currentAuthStatus;
+        apiClient.clearToken();
+        return false;
     }
 }
 
-// 사용자 표시 업데이트
-function updateUserDisplay() {
-    const userNameDisplay = document.getElementById('user-name-display');
-    if (userNameDisplay && currentUser) {
-        userNameDisplay.textContent = `${currentUser.name}님 환영합니다!`;
-    }
-}
-
-// 로그인 폼 이벤트 설정
-function setupLoginForm() {
-    const form = document.getElementById('login-form');
-    if (form) {
-        form.addEventListener('submit', handleLogin);
-        console.log('✅ 로그인 폼 이벤트 설정 완료');
+// 현재 사용자 정보 가져오기
+function getCurrentUser() {
+    if (currentUser) {
+        return currentUser;
     }
     
-    // 로그인 유지 체크박스 초기화
-    const rememberMe = storage.get(STORAGE_KEYS.REMEMBER_ME);
-    if (rememberMe) {
-        document.getElementById('remember-me').checked = true;
+    // 로컬 스토리지에서 가져오기
+    const userInfo = localStorage.getItem('user_info');
+    if (userInfo) {
+        try {
+            currentUser = JSON.parse(userInfo);
+            return currentUser;
+        } catch (error) {
+            console.error('사용자 정보 파싱 에러:', error);
+            return null;
+        }
     }
+    
+    return null;
 }
 
-// 로그아웃 버튼 이벤트 설정
-function setupLogoutButton() {
+// 인증 필요 확인
+function requireAuth() {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+        console.log('❌ 인증 필요 - 로그인 화면으로 이동');
+        navigateToScreen('login');
+        return false;
+    }
+    return true;
+}
+
+// 페이지 로드 시 이벤트 리스너 등록
+document.addEventListener('DOMContentLoaded', () => {
+    // 로그인 폼
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+    
+    // 로그아웃 버튼
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-            if (confirm('로그아웃 하시겠습니까?')) {
-                await handleLogout();
+        logoutBtn.addEventListener('click', handleLogout);
+    }
+    
+    // 회원가입 링크
+    const signupLink = document.getElementById('signup-link');
+    if (signupLink) {
+        signupLink.addEventListener('click', () => {
+            navigateToScreen('signup');
+        });
+    }
+    
+    // 비밀번호 토글
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                this.querySelector('.icon').textContent = '🙈';
+            } else {
+                input.type = 'password';
+                this.querySelector('.icon').textContent = '👁️';
             }
         });
-        console.log('✅ 로그아웃 버튼 이벤트 설정 완료');
-    }
-}
+    });
+});
+
+console.log('✅ Auth 모듈 로드 완료 (Railway API)');

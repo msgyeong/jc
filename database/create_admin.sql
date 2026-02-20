@@ -4,12 +4,13 @@
 -- railway_init.sql 실행 후 이 파일을 실행하세요!
 
 -- 관리자 계정 생성
--- ⚠️ 이메일과 비밀번호를 원하는 대로 변경하세요!
+-- 비밀번호: admin1234 (bcrypt 해시 저장)
+-- ⚠️ 이메일/이름은 원하는 대로 변경 가능 (비밀번호 변경은 웹에서)
 INSERT INTO users (email, password_hash, name, role, status)
 VALUES (
-    'admin@jc.com',           -- ← 이메일 변경
-    'admin1234',              -- ← 비밀번호 변경 (나중에 웹에서 변경 가능)
-    '총관리자',                -- ← 이름 변경
+    'admin@jc.com',           -- ← 이메일 변경 가능
+    '$2b$10$bQxMtPEEXHA4vajU99iR7e0DCcxpmuMkgQz0OHuxLrTlKpeoYFsq6',  -- admin1234 (bcrypt)
+    '총관리자',                -- ← 이름 변경 가능
     'super_admin',
     'active'
 )

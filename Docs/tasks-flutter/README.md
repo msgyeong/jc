@@ -1,42 +1,28 @@
-# 개발 작업 목록
+# Flutter 앱 작업 목록 (tasks-flutter)
 
-본 폴더는 영등포 JC 회원관리 앱 개발을 위한 단계별 작업 목록을 관리합니다.
+본 폴더는 **Flutter 앱** 개발을 위한 **구현 상세**를 담습니다.
+
+> **체크리스트·완료 기준**은 **../tasks-common/** 에서 공통 관리합니다. 항목 완료 시 **tasks-common** 해당 파일의 체크박스를 함께 업데이트하세요.
+> **웹 구현**은 **../tasks-web/** (동일 번호 체계) 참고.
 
 > **프로젝트 목적**: 영등포 JC 회원 간의 공지 전달, 소통, 일정 공유, 회원 정보 관리를 하나의 앱에서 제공하며, 오프라인 중심 커뮤니티 운영을 온라인으로 보조합니다.
 
 ---
 
-## 작업 파일 목록
+## 작업 파일 목록 (tasks-common과 동일 번호)
 
-작업은 다음 순서대로 진행됩니다:
+1. **[00-project-overview.md](./00-project-overview.md)** — 프로젝트 개요
+2. **[01-project-setup-and-auth.md](./01-project-setup-and-auth.md)** — 프로젝트 설정 및 인증 (예상 1.5일)
+3. **[02-post-features.md](./02-post-features.md)** — 게시글 관련 기능 (예상 2일)
+4. **[03-notice-and-schedule.md](./03-notice-and-schedule.md)** — 공지사항 및 일정 (예상 2일)
+5. **[04-member-profile-and-home.md](./04-member-profile-and-home.md)** — 회원/프로필 및 홈 (예상 2일)
+6. **[06-common-features.md](./06-common-features.md)** — 공통 기능 및 마무리 (예상 1일)
+7. **[07-testing-and-polish.md](./07-testing-and-polish.md)** — 테스트 및 최종 마무리 (예상 5일)
+8. **[09-signup-upgrade-6-steps.md](./09-signup-upgrade-6-steps.md)** — 회원가입 6단계 업그레이드
+9. **[10-signup-ui-ux-improvement.md](./10-signup-ui-ux-improvement.md)** — 회원가입 UI/UX 개선
+10. **[11-design-system-cleanup.md](./11-design-system-cleanup.md)** — 디자인 시스템 정리
 
-1. **[01-project-setup-and-auth.md](./01-project-setup-and-auth.md)**
-   - 프로젝트 설정 및 인증 시스템 구축
-   - 예상 소요: 1.5일
-
-2. **[02-post-features.md](./02-post-features.md)**
-   - 게시글 관련 기능 구현
-   - 예상 소요: 2일
-
-3. **[03-notice-and-schedule.md](./03-notice-and-schedule.md)**
-   - 공지사항 및 일정 기능 구현
-   - 예상 소요: 2일
-
-4. **[04-member-profile-and-home.md](./04-member-profile-and-home.md)**
-   - 회원/프로필 및 홈 화면 기능 구현
-   - 예상 소요: 2일
-
-5. **[05-admin-web.md](./05-admin-web.md)**
-   - 관리자 웹 개발
-   - 예상 소요: 2.5일
-
-6. **[06-common-features.md](./06-common-features.md)**
-   - 공통 기능 및 마무리
-   - 예상 소요: 1일
-
-7. **[07-testing-and-polish.md](./07-testing-and-polish.md)**
-   - 테스트 및 최종 마무리 (개발자 주도)
-   - 예상 소요: 5일
+*(05 관리자 웹은 tasks-common·tasks-web에 있음. Flutter 앱에서는 관리자 웹을 별도 Next.js 등으로 구현 시 tasks-common/05 참고.)*
 
 ---
 
@@ -89,6 +75,7 @@
 
 ## 참고 문서
 
+- **공통 체크리스트(to-do)**: `../tasks-common/`
 - **PRD 문서**: `../prd/08-design.md`
 - **스키마 문서**: `../schema/schema.sql`
 - **유저 플로우**: `../user-flows/`

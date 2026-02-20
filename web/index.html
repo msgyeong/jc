@@ -148,7 +148,7 @@
                     </div>
 
                     <!-- Step 2: 기본 정보 -->
-                    <h3 class="section-title">기본 정보</h3>
+                    <h3 class="section-title">Step 2: 기본 정보</h3>
 
                     <div class="form-group">
                         <label for="signup-name">
@@ -161,6 +161,24 @@
                             required
                         >
                         <span class="error-message" id="signup-name-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-ssn">
+                            주민등록번호 <span class="required-badge">필수</span>
+                        </label>
+                        <div class="ssn-input-wrapper" id="signup-ssn-wrapper">
+                            <input 
+                                type="text" 
+                                id="signup-ssn" 
+                                placeholder="900101-1******"
+                                maxlength="8"
+                                required
+                            >
+                            <span class="ssn-mask" id="signup-ssn-mask" aria-hidden="true">******</span>
+                        </div>
+                        <small class="help-text">생년월일 6자리 + 성별 1자리만 입력하세요 (예: 900101-1******)</small>
+                        <span class="error-message" id="signup-ssn-error"></span>
                     </div>
 
                     <div class="form-group">
@@ -200,8 +218,8 @@
                         >
                     </div>
 
-                    <!-- Step 3: 추가 정보 (선택) -->
-                    <h3 class="section-title">추가 정보 (선택)</h3>
+                    <!-- Step 3: 직장 정보 (선택) -->
+                    <h3 class="section-title">Step 3: 직장 정보 <span class="optional-badge">선택</span></h3>
 
                     <div class="form-group">
                         <label for="signup-company">회사명</label>
@@ -217,8 +235,171 @@
                         <input 
                             type="text" 
                             id="signup-position" 
-                            placeholder="직책"
+                            placeholder="대리, 과장 등"
                         >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-department">부서</label>
+                        <input 
+                            type="text" 
+                            id="signup-department" 
+                            placeholder="영업부, 개발팀 등"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-work-phone">직장 전화번호</label>
+                        <input 
+                            type="tel" 
+                            id="signup-work-phone" 
+                            placeholder="02-0000-0000"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-work-address">직장 주소</label>
+                        <input 
+                            type="text" 
+                            id="signup-work-address" 
+                            placeholder="직장 주소"
+                        >
+                    </div>
+
+                    <!-- Step 4: 학력/경력 정보 (선택) -->
+                    <h3 class="section-title">Step 4: 학력/경력 정보</h3>
+
+                    <div class="form-group">
+                        <label>최종 학력 <span class="required-badge">필수</span></label>
+                        <div id="education-list">
+                            <!-- 학력 항목들이 동적으로 추가됩니다 -->
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-add-education" onclick="addEducationField()">
+                            + 학력 추가
+                        </button>
+                        <span class="error-message" id="education-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>경력 <span class="optional-badge">선택</span></label>
+                        <div id="career-list">
+                            <!-- 경력 항목들이 동적으로 추가됩니다 -->
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-add-career" onclick="addCareerField()">
+                            + 경력 추가
+                        </button>
+                    </div>
+
+                    <!-- Step 5: 가족 정보 (선택) -->
+                    <h3 class="section-title">Step 5: 가족 정보 <span class="optional-badge">선택</span></h3>
+
+                    <div class="form-group">
+                        <label>결혼 여부</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="marital-status" value="unmarried" checked>
+                                <span>미혼</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="marital-status" value="married">
+                                <span>기혼</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="spouse-info" style="display: none;">
+                        <div class="form-group">
+                            <label for="spouse-name">배우자 이름</label>
+                            <input 
+                                type="text" 
+                                id="spouse-name" 
+                                placeholder="배우자 이름"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="spouse-birth">배우자 생년월일</label>
+                            <input 
+                                type="date" 
+                                id="spouse-birth"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>자녀 유무</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="has-children" value="no" checked>
+                                <span>없음</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="has-children" value="yes">
+                                <span>있음</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="children-info" style="display: none;">
+                        <div id="children-list">
+                            <!-- 자녀 항목들이 동적으로 추가됩니다 -->
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-add-child" onclick="addChildField()">
+                            + 자녀 추가
+                        </button>
+                    </div>
+
+                    <!-- Step 6: 기타 정보 (선택) -->
+                    <h3 class="section-title">Step 6: 기타 정보 <span class="optional-badge">선택</span></h3>
+
+                    <div class="form-group">
+                        <label for="signup-hobbies">취미</label>
+                        <input 
+                            type="text" 
+                            id="signup-hobbies" 
+                            placeholder="독서, 운동, 여행 등"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-emergency-contact-name">비상 연락처 이름</label>
+                        <input 
+                            type="text" 
+                            id="signup-emergency-contact-name" 
+                            placeholder="홍길동"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-emergency-contact">비상 연락처</label>
+                        <input 
+                            type="tel" 
+                            id="signup-emergency-contact" 
+                            placeholder="010-0000-0000"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-emergency-relationship">비상 연락처 관계</label>
+                        <input 
+                            type="text" 
+                            id="signup-emergency-relationship" 
+                            placeholder="부, 모, 배우자, 형제 등"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-join-message">
+                            영등포 JC 가입 소감문 
+                            <span class="optional-badge">선택</span>
+                        </label>
+                        <textarea 
+                            id="signup-join-message" 
+                            class="form-textarea"
+                            placeholder="영등포 JC와 함께하게 된 소감이나 각오를 자유롭게 작성해주세요."
+                            rows="5"
+                        ></textarea>
+                        <small class="help-text">이 메시지는 회원 프로필에 표시됩니다</small>
                     </div>
 
                     <div class="inline-error-message" id="signup-inline-error"></div>
@@ -331,6 +512,7 @@
                 <div class="post-list" id="post-list">
                     <div class="content-loading">게시글 로딩 중...</div>
                 </div>
+                <div class="posts-scroll-sentinel" aria-hidden="true"></div>
             </div>
             <nav class="bottom-nav">
                 <button class="nav-item" data-tab="home">
@@ -354,6 +536,132 @@
                     <span class="nav-label">프로필</span>
                 </button>
             </nav>
+        </div>
+
+        <!-- 게시글 상세 화면 -->
+        <div id="post-detail-screen" class="screen">
+            <div class="app-bar">
+                <button type="button" class="back-button" id="post-detail-back">
+                    <span class="icon">←</span>
+                </button>
+                <h1 class="app-bar-title">게시글</h1>
+            </div>
+            <div class="screen-content">
+                <div id="post-detail-content">
+                    <div class="content-loading">로딩 중...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 게시글 수정 화면 -->
+        <div id="post-edit-screen" class="screen">
+            <div class="app-bar">
+                <button type="button" class="back-button" id="post-edit-back">
+                    <span class="icon">←</span>
+                </button>
+                <h1 class="app-bar-title">글 수정</h1>
+            </div>
+            <div class="screen-content">
+                <form id="post-edit-form" class="auth-form">
+                    <input type="hidden" id="post-edit-id" value="">
+                    <div class="form-group">
+                        <label for="post-edit-category">게시판</label>
+                        <select id="post-edit-category">
+                            <option value="general">일반 게시판</option>
+                            <option value="notice">공지사항 게시판</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-edit-title">제목</label>
+                        <input type="text" id="post-edit-title" placeholder="제목을 입력하세요" maxlength="200" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-edit-content">내용</label>
+                        <textarea id="post-edit-content" placeholder="내용을 입력하세요" rows="8" required></textarea>
+                    </div>
+                    <div class="form-group post-form-images-group">
+                        <label>이미지 (최대 5개)</label>
+                        <div id="post-edit-images-list" class="post-form-images-list"></div>
+                        <div class="post-form-images-actions">
+                            <input type="url" id="post-edit-image-url" placeholder="이미지 URL 입력" class="post-form-image-url-input">
+                            <button type="button" class="btn btn-secondary btn-sm" id="post-edit-add-url-btn">URL 추가</button>
+                            <input type="file" id="post-edit-image-file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
+                            <button type="button" class="btn btn-secondary btn-sm" id="post-edit-upload-btn">파일 선택</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-edit-schedule-id">연결 일정 ID <span class="optional-badge">선택</span></label>
+                        <input type="number" id="post-edit-schedule-id" placeholder="일정 ID (있으면 입력)" min="1" step="1">
+                    </div>
+                    <div class="inline-error-message" id="post-edit-error"></div>
+                    <button type="submit" class="btn btn-primary" id="post-edit-submit">
+                        <span class="btn-text">저장</span>
+                        <span class="btn-loading" style="display: none;"><span class="spinner"></span></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 게시글 작성 화면 -->
+        <div id="post-create-screen" class="screen">
+            <div class="app-bar">
+                <button type="button" class="back-button" id="post-create-back">
+                    <span class="icon">←</span>
+                </button>
+                <h1 class="app-bar-title">글쓰기</h1>
+            </div>
+            <div class="screen-content">
+                <form id="post-create-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="post-create-category">게시판</label>
+                        <select id="post-create-category">
+                            <option value="general">일반 게시판</option>
+                            <option value="notice">공지사항 게시판</option>
+                        </select>
+                        <small class="help-text" id="post-create-category-help">공지사항은 관리자만 작성 가능합니다.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-create-title">제목</label>
+                        <input
+                            type="text"
+                            id="post-create-title"
+                            placeholder="제목을 입력하세요"
+                            maxlength="200"
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="post-create-content">내용</label>
+                        <textarea
+                            id="post-create-content"
+                            placeholder="내용을 입력하세요"
+                            rows="8"
+                            required
+                        ></textarea>
+                    </div>
+                    <div class="form-group post-form-images-group">
+                        <label>이미지 (최대 5개)</label>
+                        <div id="post-create-images-list" class="post-form-images-list"></div>
+                        <div class="post-form-images-actions">
+                            <input type="url" id="post-create-image-url" placeholder="이미지 URL 입력" class="post-form-image-url-input">
+                            <button type="button" class="btn btn-secondary btn-sm" id="post-create-add-url-btn">URL 추가</button>
+                            <input type="file" id="post-create-image-file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
+                            <button type="button" class="btn btn-secondary btn-sm" id="post-create-upload-btn">파일 선택</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-create-schedule-id">연결 일정 ID <span class="optional-badge">선택</span></label>
+                        <input type="number" id="post-create-schedule-id" placeholder="일정 ID (있으면 입력)" min="1" step="1">
+                    </div>
+                    <div class="inline-error-message" id="post-create-error"></div>
+                    <button type="submit" class="btn btn-primary" id="post-create-submit">
+                        <span class="btn-text">등록</span>
+                        <span class="btn-loading" style="display: none;">
+                            <span class="spinner"></span>
+                        </span>
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- 공지사항 화면 -->
@@ -560,11 +868,9 @@
         </div>
     </div>
 
-    <!-- Supabase 클라이언트 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <!-- 앱 스크립트 -->
     <script src="js/config.js"></script>
+    <script src="js/api-client.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/signup.js"></script>

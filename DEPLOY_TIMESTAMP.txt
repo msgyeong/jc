@@ -1,0 +1,23 @@
+Railway Deployment Trigger
+===========================
+
+Last Deploy: 2026-02-15 (Saturday)
+Deploy Reason: Force redeploy with collaborator changes
+
+Changes included:
+- Test accounts system (TEST_ACCOUNTS.md)
+- Enhanced authentication with approval verification
+- Railway deployment guides (8 documents)
+- Collaboration workflow documentation
+- Database test member creation SQL
+
+Expected in deployment:
+✅ Enhanced auth.js with approval checks
+✅ Test accounts (admin@jc.com, minsu@jc.com)
+✅ All documentation files from msgyeong
+✅ Supabase environment configuration
+
+---
+Deployment ID: DEPLOY-20260215-001
+Commit: Including merge from msgyeong/main (1f122f4)
+Trigger: Manual deployment trigger

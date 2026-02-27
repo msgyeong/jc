@@ -11,6 +11,7 @@ const noticesRoutes = require('./routes/notices');
 const schedulesRoutes = require('./routes/schedules');
 const membersRoutes = require('./routes/members');
 const profileRoutes = require('./routes/profile');
+const adminRoutes = require('./routes/admin');
 
 // Express 앱 초기화
 const app = express();
@@ -68,6 +69,7 @@ app.use('/api/schedules', schedulesRoutes);
 app.use('/api/members', membersRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

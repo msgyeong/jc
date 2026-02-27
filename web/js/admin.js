@@ -1,123 +1,215 @@
-// 관리자 페이지 (Railway API 연동)
+// 관리자 페이지 (API 클라이언트 기반)
+
+// ============================================
+// 초기화
+// ============================================
 
 function initAdminPage() {
-    console.log('🔧 관리자 페이지 초기화...');
-
     if (!checkAdminPermission()) {
-        alert('관리자 권한이 없습니다.');
-        navigateToScreen('home');
+        showAdminError('관리자 권한이 없습니다. 홈으로 이동합니다.');
+        setTimeout(() => navigateTo('/home'), 2000);
         return;
     }
 
-    document.querySelectorAll('.admin-tab').forEach(tab => {
-        tab.addEventListener('click', (e) => {
-            e.preventDefault();
-            switchAdminTab(tab.dataset.tab);
-        });
-    });
-
+    setupAdminTabs();
+    loadAdminStats();
     switchAdminTab('pending-users');
 }
 
 function checkAdminPermission() {
-    const user = JSON.parse(localStorage.getItem('user_info') || 'null');
-    return user && ['super_admin', 'admin'].includes(user.role);
+    const user = getCurrentUser();
+    if (!user) return false;
+    return user.role === 'super_admin' || user.role === 'admin';
 }
 
-function switchAdminTab(tabName) {
-    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+function getCurrentUser() {
+    try {
+        return JSON.parse(localStorage.getItem('user_info')) || null;
+    } catch {
+        return null;
+    }
+}
 
-    const tab = document.querySelector(`[data-tab="${tabName}"]`);
-    if (tab) tab.classList.add('active');
-    const content = document.getElementById(`${tabName}-tab`);
-    if (content) content.classList.add('active');
-
-    switch (tabName) {
-        case 'pending-users': loadPendingUsers(); break;
-        case 'all-users': loadAllUsers(); break;
-        case 'content-management': loadContentManagement(); break;
+function showAdminError(msg) {
+    const el = document.getElementById('admin-error');
+    if (el) {
+        el.textContent = msg;
+        el.style.display = 'block';
     }
 }
 
 // ============================================
-// 승인 대기 회원
+// 탭 전환
+// ============================================
+
+function setupAdminTabs() {
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+        tab.addEventListener('click', e => {
+            e.preventDefault();
+            switchAdminTab(tab.dataset.tab);
+        });
+    });
+}
+
+function switchAdminTab(tabName) {
+    document.querySelectorAll('.admin-tab').forEach(t =>
+        t.classList.remove('active')
+    );
+    document.querySelectorAll('.admin-tab-content').forEach(c =>
+        c.classList.remove('active')
+    );
+
+    const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeTab) activeTab.classList.add('active');
+
+    const activeContent = document.getElementById(`${tabName}-tab`);
+    if (activeContent) activeContent.classList.add('active');
+
+    switch (tabName) {
+        case 'pending-users':
+            loadPendingUsers();
+            break;
+        case 'all-users':
+            loadAllUsers();
+            break;
+        case 'content-management':
+            loadContentManagement();
+            break;
+    }
+}
+
+// ============================================
+// 대시보드 통계
+// ============================================
+
+async function loadAdminStats() {
+    try {
+        const data = await apiClient.request('/admin/stats');
+        if (!data.success) return;
+
+        const { stats } = data;
+        const statsHtml = `
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <span class="stat-number">${stats.totalMembers}</span>
+                    <span class="stat-label">활성 회원</span>
+                </div>
+                <div class="stat-card stat-warning">
+                    <span class="stat-number">${stats.pendingMembers}</span>
+                    <span class="stat-label">승인 대기</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">${stats.totalPosts}</span>
+                    <span class="stat-label">게시글</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">${stats.totalNotices}</span>
+                    <span class="stat-label">공지사항</span>
+                </div>
+            </div>
+        `;
+        const statsEl = document.getElementById('admin-stats');
+        if (statsEl) statsEl.innerHTML = statsHtml;
+    } catch (e) {
+        console.error('통계 로드 실패:', e);
+    }
+}
+
+// ============================================
+// 승인 대기 회원 관리
 // ============================================
 
 async function loadPendingUsers() {
     const container = document.getElementById('pending-users-list');
-    container.innerHTML = '<div class="loading">불러오는 중...</div>';
+    container.innerHTML = '<div class="content-loading">로딩 중...</div>';
 
     try {
-        const result = await apiClient.request('/admin/pending');
-        if (!result.success) throw new Error(result.message);
-        renderPendingUsers(result.users);
+        const data = await apiClient.request('/admin/members/pending');
+
+        if (!data.success) throw new Error(data.message);
+
+        if (data.members.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <p>승인 대기 중인 회원이 없습니다.</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = data.members
+            .map(user => renderPendingUserCard(user))
+            .join('');
     } catch (error) {
-        console.error('승인 대기 로딩 실패:', error);
-        container.innerHTML = `<div class="empty-state"><p>불러오기 실패: ${error.message}</p></div>`;
+        console.error('승인 대기 회원 로딩 실패:', error);
+        container.innerHTML = `
+            <div class="empty-state">
+                <p class="error-text">회원 정보를 불러올 수 없습니다.</p>
+                <p class="error-detail">${error.message}</p>
+            </div>`;
     }
 }
 
-function renderPendingUsers(users) {
-    const container = document.getElementById('pending-users-list');
+function renderPendingUserCard(user) {
+    const avatarHtml = user.profile_image
+        ? `<img src="${user.profile_image}" alt="${user.name}">`
+        : `<div class="avatar-placeholder">${user.name.charAt(0)}</div>`;
 
-    if (!users || users.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p>승인 대기 중인 회원이 없습니다. 🎉</p></div>';
-        return;
-    }
-
-    container.innerHTML = users.map(user => `
-        <div class="user-card" id="pending-card-${user.id}">
+    return `
+        <div class="user-card" data-user-id="${user.id}">
             <div class="user-info">
-                <div class="avatar-placeholder" style="width:48px;height:48px;border-radius:50%;background:#e3e8ff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;color:#4f6ef7;flex-shrink:0;">
-                    ${user.name.charAt(0)}
-                </div>
-                <div class="user-details" style="flex:1;margin-left:12px;">
-                    <h3 style="margin:0 0 4px;">${user.name}</h3>
-                    <p style="margin:0;color:#666;font-size:13px;">📧 ${user.email}</p>
-                    ${user.phone ? `<p style="margin:2px 0;color:#666;font-size:13px;">📞 ${user.phone}</p>` : ''}
-                    ${user.company ? `<p style="margin:2px 0;color:#666;font-size:13px;">🏢 ${user.company} ${user.position || ''}</p>` : ''}
-                    ${user.special_notes ? `<p style="margin:4px 0;color:#888;font-size:12px;">💬 ${user.special_notes}</p>` : ''}
-                    <p style="margin:4px 0;color:#999;font-size:12px;">신청일: ${formatDateTime(user.created_at)}</p>
+                <div class="user-avatar">${avatarHtml}</div>
+                <div class="user-details">
+                    <h3>${user.name}</h3>
+                    <p class="user-email">${user.email}</p>
+                    <p class="user-meta">
+                        ${user.phone ? `📞 ${user.phone}` : ''}
+                        ${user.birth_date ? `🎂 ${formatAdminDate(user.birth_date)}` : ''}
+                    </p>
+                    <p class="user-date">가입 신청: ${formatAdminDateTime(user.created_at)}</p>
                 </div>
             </div>
-            <div class="user-actions" style="display:flex;gap:8px;margin-top:12px;">
-                <button class="btn btn-primary" style="flex:1;" onclick="approveUser(${user.id}, '${user.name}')">
+            <div class="user-actions">
+                <button class="btn btn-success"
+                    onclick="approveUser('${user.id}', '${user.name}')">
                     ✅ 승인
                 </button>
-                <button class="btn" style="flex:1;background:#fff0f0;color:#e53e3e;border:1px solid #fed7d7;" onclick="rejectUser(${user.id}, '${user.name}')">
+                <button class="btn btn-danger"
+                    onclick="rejectUser('${user.id}', '${user.name}')">
                     ❌ 거부
                 </button>
             </div>
-        </div>
-    `).join('');
+        </div>`;
 }
 
 async function approveUser(userId, userName) {
     if (!confirm(`${userName} 님을 승인하시겠습니까?`)) return;
     try {
-        const result = await apiClient.request(`/admin/approve/${userId}`, { method: 'PUT' });
-        if (!result.success) throw new Error(result.message);
-        const card = document.getElementById(`pending-card-${userId}`);
-        if (card) card.remove();
+        const data = await apiClient.request(
+            `/admin/members/${userId}/approve`,
+            { method: 'PATCH' }
+        );
+        if (!data.success) throw new Error(data.message);
         alert(`✅ ${userName} 님이 승인되었습니다.`);
-        if (!document.querySelector('.user-card')) loadPendingUsers();
+        loadPendingUsers();
+        loadAdminStats();
     } catch (error) {
-        alert('❌ 오류: ' + error.message);
+        alert(`❌ 승인 처리 실패: ${error.message}`);
     }
 }
 
 async function rejectUser(userId, userName) {
-    if (!confirm(`${userName} 님의 가입을 거부하시겠습니까?\n계정이 삭제됩니다.`)) return;
+    if (!confirm(`${userName} 님의 가입을 거부하시겠습니까?\n해당 계정이 삭제됩니다.`)) return;
     try {
-        const result = await apiClient.request(`/admin/reject/${userId}`, { method: 'DELETE' });
-        if (!result.success) throw new Error(result.message);
-        const card = document.getElementById(`pending-card-${userId}`);
-        if (card) card.remove();
-        alert(`✅ ${userName} 님이 거부되었습니다.`);
-        if (!document.querySelector('.user-card')) loadPendingUsers();
+        const data = await apiClient.request(
+            `/admin/members/${userId}/reject`,
+            { method: 'DELETE' }
+        );
+        if (!data.success) throw new Error(data.message);
+        alert(`✅ ${userName} 님의 가입이 거부되었습니다.`);
+        loadPendingUsers();
+        loadAdminStats();
     } catch (error) {
-        alert('❌ 오류: ' + error.message);
+        alert(`❌ 거부 처리 실패: ${error.message}`);
     }
 }
 
@@ -125,122 +217,263 @@ async function rejectUser(userId, userName) {
 // 전체 회원 관리
 // ============================================
 
-async function loadAllUsers() {
+let allUsersSearchTimer = null;
+
+async function loadAllUsers(searchQuery = '', statusFilter = '') {
     const container = document.getElementById('all-users-list');
-    container.innerHTML = '<div class="loading">불러오는 중...</div>';
+    container.innerHTML = '<div class="content-loading">로딩 중...</div>';
 
     try {
-        const result = await apiClient.request('/admin/users');
-        if (!result.success) throw new Error(result.message);
-        renderAllUsers(result.users);
+        const params = new URLSearchParams({ limit: 50 });
+        if (searchQuery) params.set('q', searchQuery);
+        if (statusFilter) params.set('status', statusFilter);
+
+        const data = await apiClient.request(`/admin/members?${params}`);
+        if (!data.success) throw new Error(data.message);
+
+        if (data.members.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state"><p>회원이 없습니다.</p></div>`;
+            return;
+        }
+
+        const currentUser = getCurrentUser();
+        container.innerHTML = data.members
+            .map(user => renderAllUserCard(user, currentUser))
+            .join('');
     } catch (error) {
         console.error('전체 회원 로딩 실패:', error);
-        container.innerHTML = `<div class="empty-state"><p>불러오기 실패: ${error.message}</p></div>`;
+        container.innerHTML = `
+            <div class="empty-state">
+                <p class="error-text">회원 정보를 불러올 수 없습니다.</p>
+            </div>`;
     }
 }
 
-function renderAllUsers(users) {
-    const container = document.getElementById('all-users-list');
-    const me = JSON.parse(localStorage.getItem('user_info') || 'null');
-    const isSuperAdmin = me?.role === 'super_admin';
+function renderAllUserCard(user, currentUser) {
+    const isSelf = String(user.id) === String(currentUser?.id);
+    const isSuperAdmin = currentUser?.role === 'super_admin';
+    const statusBadge = getStatusBadge(user.status);
+    const roleBadge = getRoleBadge(user.role);
 
-    if (!users || users.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p>등록된 회원이 없습니다.</p></div>';
+    const avatarHtml = user.profile_image
+        ? `<img src="${user.profile_image}" alt="${user.name}">`
+        : `<div class="avatar-placeholder">${user.name.charAt(0)}</div>`;
+
+    const actionsHtml = isSelf
+        ? '<span class="text-muted">본인 계정</span>'
+        : `
+            <select class="role-select"
+                onchange="changeUserRole('${user.id}', this.value, '${user.name}', this)">
+                <option value="member" ${user.role === 'member' ? 'selected' : ''}>일반 회원</option>
+                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>관리자</option>
+                ${isSuperAdmin ? `<option value="super_admin" ${user.role === 'super_admin' ? 'selected' : ''}>총관리자</option>` : ''}
+            </select>
+            ${user.status === 'active'
+                ? `<button class="btn btn-warning btn-sm"
+                       onclick="suspendUser('${user.id}', '${user.name}')">⏸️ 정지</button>`
+                : user.status === 'suspended'
+                    ? `<button class="btn btn-success btn-sm"
+                           onclick="activateUser('${user.id}', '${user.name}')">▶️ 복구</button>`
+                    : ''
+            }`;
+
+    return `
+        <div class="user-card" data-user-id="${user.id}">
+            <div class="user-info">
+                <div class="user-avatar">${avatarHtml}</div>
+                <div class="user-details">
+                    <h3>
+                        ${user.name}
+                        ${statusBadge}
+                        ${roleBadge}
+                    </h3>
+                    <p class="user-email">${user.email}</p>
+                    <p class="user-meta">${user.phone ? `📞 ${user.phone}` : ''}</p>
+                    <p class="user-date">가입일: ${formatAdminDate(user.created_at)}</p>
+                </div>
+            </div>
+            <div class="user-actions">${actionsHtml}</div>
+        </div>`;
+}
+
+async function changeUserRole(userId, newRole, userName, selectEl) {
+    if (!confirm(`${userName} 님의 권한을 "${getRoleLabel(newRole)}"로 변경하시겠습니까?`)) {
+        loadAllUsers();
         return;
     }
-
-    container.innerHTML = users.map(user => {
-        const isMe = user.id === me?.id;
-        const statusBadge = {
-            active: '<span style="background:#c6f6d5;color:#276749;padding:2px 8px;border-radius:10px;font-size:11px;">활성</span>',
-            pending: '<span style="background:#fefcbf;color:#744210;padding:2px 8px;border-radius:10px;font-size:11px;">대기</span>',
-            suspended: '<span style="background:#fed7d7;color:#822727;padding:2px 8px;border-radius:10px;font-size:11px;">정지</span>'
-        }[user.status] || '';
-
-        const roleBadge = {
-            super_admin: '<span style="background:#e9d8fd;color:#553c9a;padding:2px 8px;border-radius:10px;font-size:11px;">총관리자</span>',
-            admin: '<span style="background:#bee3f8;color:#2a4365;padding:2px 8px;border-radius:10px;font-size:11px;">관리자</span>',
-            member: ''
-        }[user.role] || '';
-
-        return `
-        <div class="user-card" id="user-card-${user.id}">
-            <div class="user-info">
-                <div class="avatar-placeholder" style="width:44px;height:44px;border-radius:50%;background:#e3e8ff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#4f6ef7;flex-shrink:0;">
-                    ${user.name.charAt(0)}
-                </div>
-                <div class="user-details" style="flex:1;margin-left:12px;">
-                    <h3 style="margin:0 0 4px;">${user.name} ${statusBadge} ${roleBadge}</h3>
-                    <p style="margin:0;color:#666;font-size:13px;">📧 ${user.email}</p>
-                    ${user.phone ? `<p style="margin:2px 0;color:#666;font-size:13px;">📞 ${user.phone}</p>` : ''}
-                    <p style="margin:4px 0;color:#999;font-size:12px;">가입일: ${formatDateTime(user.created_at)}</p>
-                </div>
-            </div>
-            ${!isMe ? `
-            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
-                <select onchange="changeUserRole(${user.id}, this.value, '${user.name}')" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;">
-                    <option value="member" ${user.role === 'member' ? 'selected' : ''}>일반 회원</option>
-                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>관리자</option>
-                    ${isSuperAdmin ? `<option value="super_admin" ${user.role === 'super_admin' ? 'selected' : ''}>총관리자</option>` : ''}
-                </select>
-                ${user.status === 'active' ? `
-                    <button class="btn" style="background:#fff0f0;color:#e53e3e;border:1px solid #fed7d7;" onclick="changeUserStatus(${user.id}, 'suspended', '${user.name}')">⏸ 정지</button>
-                ` : user.status === 'suspended' ? `
-                    <button class="btn btn-primary" onclick="changeUserStatus(${user.id}, 'active', '${user.name}')">▶ 복구</button>
-                ` : ''}
-            </div>
-            ` : '<p style="color:#999;font-size:13px;margin-top:8px;">본인 계정</p>'}
-        </div>`;
-    }).join('');
-}
-
-async function changeUserRole(userId, role, userName) {
     try {
-        const result = await apiClient.request(`/admin/users/${userId}/role`, {
-            method: 'PUT',
-            body: JSON.stringify({ role })
-        });
-        if (!result.success) throw new Error(result.message);
-        alert(`✅ ${userName} 님의 역할이 변경되었습니다.`);
+        const data = await apiClient.request(
+            `/admin/members/${userId}/role`,
+            { method: 'PATCH', body: JSON.stringify({ role: newRole }) }
+        );
+        if (!data.success) throw new Error(data.message);
+        alert(`✅ ${userName} 님의 권한이 변경되었습니다.`);
     } catch (error) {
-        alert('❌ 오류: ' + error.message);
+        alert(`❌ 권한 변경 실패: ${error.message}`);
         loadAllUsers();
     }
 }
 
-async function changeUserStatus(userId, status, userName) {
-    const action = status === 'suspended' ? '정지' : '복구';
-    if (!confirm(`${userName} 님을 ${action}하시겠습니까?`)) return loadAllUsers();
+async function suspendUser(userId, userName) {
+    if (!confirm(`${userName} 님을 정지하시겠습니까?`)) return;
     try {
-        const result = await apiClient.request(`/admin/users/${userId}/status`, {
-            method: 'PUT',
-            body: JSON.stringify({ status })
-        });
-        if (!result.success) throw new Error(result.message);
-        alert(`✅ ${result.message}`);
+        const data = await apiClient.request(
+            `/admin/members/${userId}/suspend`,
+            { method: 'PATCH' }
+        );
+        if (!data.success) throw new Error(data.message);
+        alert(`✅ ${userName} 님이 정지되었습니다.`);
         loadAllUsers();
     } catch (error) {
-        alert('❌ 오류: ' + error.message);
+        alert(`❌ 정지 처리 실패: ${error.message}`);
+    }
+}
+
+async function activateUser(userId, userName) {
+    if (!confirm(`${userName} 님을 복구하시겠습니까?`)) return;
+    try {
+        const data = await apiClient.request(
+            `/admin/members/${userId}/activate`,
+            { method: 'PATCH' }
+        );
+        if (!data.success) throw new Error(data.message);
+        alert(`✅ ${userName} 님이 복구되었습니다.`);
+        loadAllUsers();
+    } catch (error) {
+        alert(`❌ 복구 처리 실패: ${error.message}`);
     }
 }
 
 // ============================================
-// 콘텐츠 관리 (기본 안내)
+// 콘텐츠 관리 (게시글)
 // ============================================
 
-function loadContentManagement() {
+async function loadContentManagement() {
     const container = document.getElementById('content-management-list');
-    container.innerHTML = `
-        <div class="empty-state">
-            <p>📋 콘텐츠 관리 기능은 준비 중입니다.</p>
-        </div>
-    `;
+    container.innerHTML = '<div class="content-loading">로딩 중...</div>';
+
+    try {
+        const data = await apiClient.request('/admin/posts?limit=30');
+        if (!data.success) throw new Error(data.message);
+
+        if (data.posts.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state"><p>게시글이 없습니다.</p></div>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="content-section">
+                <h3>최근 게시글 (${data.posts.length}건)</h3>
+                ${data.posts.map(post => renderPostManageCard(post)).join('')}
+            </div>`;
+    } catch (error) {
+        console.error('콘텐츠 관리 로딩 실패:', error);
+        container.innerHTML = `
+            <div class="empty-state">
+                <p class="error-text">콘텐츠를 불러올 수 없습니다.</p>
+            </div>`;
+    }
 }
 
-function formatDateTime(dateString) {
+function renderPostManageCard(post) {
+    return `
+        <div class="content-item" data-id="${post.id}">
+            <div class="content-info">
+                <h4>${post.title}</h4>
+                <p class="content-meta">
+                    작성자: ${post.author_name || '알 수 없음'} |
+                    ${formatAdminDateTime(post.created_at)} |
+                    👁️ ${post.views || 0}
+                    👍 ${post.likes_count || 0}
+                    💬 ${post.comments_count || 0}
+                </p>
+            </div>
+            <div class="content-actions">
+                <button class="btn btn-danger btn-sm"
+                    onclick="deletePost('${post.id}', '${post.title.replace(/'/g, "\\'")}')">
+                    🗑️ 삭제
+                </button>
+            </div>
+        </div>`;
+}
+
+async function deletePost(postId, title) {
+    if (!confirm(`"${title}" 게시글을 삭제하시겠습니까?`)) return;
+    try {
+        const data = await apiClient.request(
+            `/admin/posts/${postId}`,
+            { method: 'DELETE' }
+        );
+        if (!data.success) throw new Error(data.message);
+        alert('✅ 게시글이 삭제되었습니다.');
+        loadContentManagement();
+        loadAdminStats();
+    } catch (error) {
+        alert(`❌ 삭제 실패: ${error.message}`);
+    }
+}
+
+// ============================================
+// 검색/필터 (전체 회원 탭)
+// ============================================
+
+function onAdminMemberSearch(value) {
+    clearTimeout(allUsersSearchTimer);
+    allUsersSearchTimer = setTimeout(() => {
+        const statusFilter = document.getElementById('admin-status-filter')?.value || '';
+        loadAllUsers(value, statusFilter);
+    }, 300);
+}
+
+function onAdminStatusFilter(value) {
+    const searchQuery = document.getElementById('admin-member-search')?.value || '';
+    loadAllUsers(searchQuery, value);
+}
+
+// ============================================
+// 뱃지 / 헬퍼
+// ============================================
+
+function getStatusBadge(status) {
+    const map = {
+        active: '<span class="badge badge-success">활성</span>',
+        pending: '<span class="badge badge-warning">대기</span>',
+        suspended: '<span class="badge badge-danger">정지</span>',
+    };
+    return map[status] || '';
+}
+
+function getRoleBadge(role) {
+    const map = {
+        super_admin: '<span class="badge badge-admin">총관리자</span>',
+        admin: '<span class="badge badge-admin">관리자</span>',
+        member: '<span class="badge badge-member">회원</span>',
+        pending: '<span class="badge badge-pending">미승인</span>',
+    };
+    return map[role] || '';
+}
+
+function getRoleLabel(role) {
+    const map = {
+        super_admin: '총관리자',
+        admin: '관리자',
+        member: '일반 회원',
+    };
+    return map[role] || role;
+}
+
+function formatAdminDate(dateString) {
     if (!dateString) return '-';
-    const date = new Date(dateString);
-    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+    const d = new Date(dateString);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function formatAdminDateTime(dateString) {
+    if (!dateString) return '-';
+    const d = new Date(dateString);
+    return `${formatAdminDate(dateString)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 console.log('✅ Admin 모듈 로드 완료 (Railway API)');

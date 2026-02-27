@@ -80,7 +80,7 @@ function navigateToScreen(screenName) {
         // 화면별 추가 처리
         if (screenName === 'home') {
             updateNavigation('home');
-            updateUserDisplay();
+            if (typeof updateUserDisplay === 'function') updateUserDisplay();
             loadHomeScreen(); // 홈 화면 로드
         } else if (screenName === 'login') {
             // 로그인 화면으로 돌아갈 때 폼 초기화
@@ -223,7 +223,7 @@ async function switchTab(tab) {
             targetScreen = document.getElementById('profile-screen');
             if (targetScreen) {
                 targetScreen.classList.add('active');
-                await loadProfileScreen();
+                await loadProfile();
             }
             break;
             

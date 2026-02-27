@@ -28,7 +28,8 @@ if [ -z "$JWT_SECRET" ]; then
 fi
 
 # Node.js 서버 백그라운드 실행
-node server.js &
+# API_PORT=3000 강제 지정, PORT 변수 숨김 (nginx가 사용하는 포트와 충돌 방지)
+env -u PORT API_PORT=3000 node server.js &
 API_PID=$!
 echo "✅ Node.js API 서버 시작됨 (PID: $API_PID)"
 

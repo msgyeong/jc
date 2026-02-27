@@ -818,7 +818,10 @@
             </div>
             <div class="screen-content">
                 <div class="error-message" id="admin-error" style="display: none;"></div>
-                
+
+                <!-- 대시보드 통계 -->
+                <div id="admin-stats"></div>
+
                 <!-- 관리자 탭 -->
                 <div class="admin-tabs">
                     <button class="admin-tab active" data-tab="pending-users">
@@ -849,6 +852,26 @@
                         <h2>전체 회원 관리</h2>
                         <p class="tab-description">회원의 권한을 변경하거나 정지할 수 있습니다.</p>
                     </div>
+                    <!-- 검색 / 필터 -->
+                    <div class="admin-filter-bar">
+                        <input
+                            type="text"
+                            id="admin-member-search"
+                            class="admin-search-input"
+                            placeholder="이름 / 이메일 / 전화 검색"
+                            oninput="onAdminMemberSearch(this.value)"
+                        >
+                        <select
+                            id="admin-status-filter"
+                            class="admin-filter-select"
+                            onchange="onAdminStatusFilter(this.value)"
+                        >
+                            <option value="">전체 상태</option>
+                            <option value="active">활성</option>
+                            <option value="suspended">정지</option>
+                            <option value="pending">대기</option>
+                        </select>
+                    </div>
                     <div id="all-users-list" class="admin-content">
                         <div class="content-loading">로딩 중...</div>
                     </div>
@@ -858,7 +881,7 @@
                 <div id="content-management-tab" class="admin-tab-content">
                     <div class="tab-header">
                         <h2>콘텐츠 관리</h2>
-                        <p class="tab-description">부적절한 게시글이나 댓글을 삭제할 수 있습니다.</p>
+                        <p class="tab-description">부적절한 게시글을 삭제할 수 있습니다.</p>
                     </div>
                     <div id="content-management-list" class="admin-content">
                         <div class="content-loading">로딩 중...</div>

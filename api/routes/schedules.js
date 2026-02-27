@@ -13,23 +13,22 @@ router.get('/', authenticate, async (req, res) => {
 
         let sqlQuery = `
             SELECT 
-                s.id, s.title, s.event_date, s.start_time, s.end_time,
-                s.location, s.description, s.views,
-                s.likes_count, s.comments_count,
+                s.id, s.title, s.start_date, s.end_date,
+                s.location, s.description, s.category,
                 s.created_at, s.updated_at,
-                u.id as author_id, u.name as author_name, u.profile_image as author_image
+                s.created_by as author_id, u.name as author_name, u.profile_image as author_image
             FROM schedules s
-            LEFT JOIN users u ON s.author_id = u.id
+            LEFT JOIN users u ON s.created_by = u.id
         `;
 
         const params = [];
 
         // 다가오는 일정만 조회 (오늘 이후)
         if (upcoming) {
-            sqlQuery += ' WHERE s.event_date >= CURRENT_DATE';
+            sqlQuery += ' WHERE s.start_date >= CURRENT_DATE';
         }
 
-        sqlQuery += ' ORDER BY s.event_date ASC, s.start_time ASC';
+        sqlQuery += ' ORDER BY s.start_date ASC';
 
         const result = await query(sqlQuery, params);
 
@@ -64,13 +63,12 @@ router.get('/:id', authenticate, async (req, res) => {
         // 일정 조회
         const result = await query(
             `SELECT 
-                s.id, s.title, s.event_date, s.start_time, s.end_time,
-                s.location, s.description, s.views,
-                s.likes_count, s.comments_count,
+                s.id, s.title, s.start_date, s.end_date,
+                s.location, s.description, s.category,
                 s.created_at, s.updated_at,
-                u.id as author_id, u.name as author_name, u.profile_image as author_image
+                s.created_by as author_id, u.name as author_name, u.profile_image as author_image
              FROM schedules s
-             LEFT JOIN users u ON s.author_id = u.id
+             LEFT JOIN users u ON s.created_by = u.id
              WHERE s.id = $1`,
             [id]
         );
@@ -101,7 +99,7 @@ router.get('/:id', authenticate, async (req, res) => {
  */
 router.post('/', authenticate, async (req, res) => {
     try {
-        const { title, event_date, start_time, end_time, location, description } = req.body;
+        const { title, start_date, end_date, location, description, category } = req.body;
         const authorId = req.user.userId;
 
         // 일정 등록 권한 확인
@@ -121,7 +119,7 @@ router.post('/', authenticate, async (req, res) => {
         }
 
         // 유효성 검증
-        if (!title || !event_date) {
+        if (!title || !start_date) {
             return res.status(400).json({
                 success: false,
                 message: '제목과 날짜를 입력해주세요.'
@@ -130,10 +128,10 @@ router.post('/', authenticate, async (req, res) => {
 
         // 일정 생성
         const result = await query(
-            `INSERT INTO schedules (author_id, title, event_date, start_time, end_time, location, description, created_at, updated_at)
+            `INSERT INTO schedules (created_by, title, start_date, end_date, location, description, category, created_at, updated_at)
              VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
              RETURNING id`,
-            [authorId, title, event_date, start_time, end_time, location, description]
+            [authorId, title, start_date, end_date, location, description, category]
         );
 
         res.status(201).json({
@@ -157,13 +155,13 @@ router.post('/', authenticate, async (req, res) => {
 router.put('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, event_date, start_time, end_time, location, description } = req.body;
+        const { title, start_date, end_date, location, description, category } = req.body;
         const userId = req.user.userId;
         const userRole = req.user.role;
 
         // 일정 소유자 확인
         const scheduleResult = await query(
-            'SELECT author_id FROM schedules WHERE id = $1',
+            'SELECT created_by FROM schedules WHERE id = $1',
             [id]
         );
 
@@ -175,7 +173,7 @@ router.put('/:id', authenticate, async (req, res) => {
         }
 
         // 작성자 본인이거나 관리자인 경우만 수정 가능
-        const isAuthor = scheduleResult.rows[0].author_id === userId;
+        const isAuthor = scheduleResult.rows[0].created_by === userId;
         const isAdmin = ['super_admin', 'admin'].includes(userRole);
 
         if (!isAuthor && !isAdmin) {
@@ -188,10 +186,10 @@ router.put('/:id', authenticate, async (req, res) => {
         // 일정 수정
         await query(
             `UPDATE schedules 
-             SET title = $1, event_date = $2, start_time = $3, end_time = $4, 
-                 location = $5, description = $6, updated_at = NOW()
+             SET title = $1, start_date = $2, end_date = $3, 
+                 location = $4, description = $5, category = $6, updated_at = NOW()
              WHERE id = $7`,
-            [title, event_date, start_time, end_time, location, description, id]
+            [title, start_date, end_date, location, description, category, id]
         );
 
         res.json({
@@ -219,7 +217,7 @@ router.delete('/:id', authenticate, async (req, res) => {
 
         // 일정 소유자 확인
         const scheduleResult = await query(
-            'SELECT author_id FROM schedules WHERE id = $1',
+            'SELECT created_by FROM schedules WHERE id = $1',
             [id]
         );
 
@@ -231,7 +229,7 @@ router.delete('/:id', authenticate, async (req, res) => {
         }
 
         // 작성자 본인이거나 관리자인 경우만 삭제 가능
-        const isAuthor = scheduleResult.rows[0].author_id === userId;
+        const isAuthor = scheduleResult.rows[0].created_by === userId;
         const isAdmin = ['super_admin', 'admin'].includes(userRole);
 
         if (!isAuthor && !isAdmin) {

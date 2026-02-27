@@ -23,8 +23,7 @@ router.get('/', authenticate, async (req, res) => {
         const result = await query(
             `SELECT 
                 n.id, n.title, n.content, n.is_pinned,
-                n.attendance_survey_enabled, n.views,
-                n.likes_count, n.comments_count,
+                n.has_attendance, n.views,
                 n.created_at, n.updated_at,
                 u.id as author_id, u.name as author_name, u.profile_image as author_image
              FROM notices n
@@ -68,8 +67,7 @@ router.get('/:id', authenticate, async (req, res) => {
         const result = await query(
             `SELECT 
                 n.id, n.title, n.content, n.is_pinned,
-                n.attendance_survey_enabled, n.views,
-                n.likes_count, n.comments_count,
+                n.has_attendance, n.views,
                 n.created_at, n.updated_at,
                 u.id as author_id, u.name as author_name, u.profile_image as author_image
              FROM notices n
@@ -104,7 +102,7 @@ router.get('/:id', authenticate, async (req, res) => {
  */
 router.post('/', authenticate, async (req, res) => {
     try {
-        const { title, content, is_pinned, attendance_survey_enabled } = req.body;
+        const { title, content, is_pinned, has_attendance } = req.body;
         const authorId = req.user.userId;
 
         // 공지사항 작성 권한 확인
@@ -115,7 +113,7 @@ router.post('/', authenticate, async (req, res) => {
 
         const userRole = userResult.rows[0].role;
         
-        // super_admin, admin만 작성 가능 (실제로는 role_permissions 테이블 확인 필요)
+        // super_admin, admin만 작성 가능
         if (!['super_admin', 'admin'].includes(userRole)) {
             return res.status(403).json({
                 success: false,
@@ -133,10 +131,10 @@ router.post('/', authenticate, async (req, res) => {
 
         // 공지사항 생성
         const result = await query(
-            `INSERT INTO notices (author_id, title, content, is_pinned, attendance_survey_enabled, created_at, updated_at)
+            `INSERT INTO notices (author_id, title, content, is_pinned, has_attendance, created_at, updated_at)
              VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
              RETURNING id`,
-            [authorId, title, content, is_pinned || false, attendance_survey_enabled || false]
+            [authorId, title, content, is_pinned || false, has_attendance || false]
         );
 
         res.status(201).json({
@@ -160,7 +158,7 @@ router.post('/', authenticate, async (req, res) => {
 router.put('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, content, is_pinned, attendance_survey_enabled } = req.body;
+        const { title, content, is_pinned, has_attendance } = req.body;
         const userId = req.user.userId;
         const userRole = req.user.role;
 
@@ -191,9 +189,9 @@ router.put('/:id', authenticate, async (req, res) => {
         // 공지사항 수정
         await query(
             `UPDATE notices 
-             SET title = $1, content = $2, is_pinned = $3, attendance_survey_enabled = $4, updated_at = NOW()
+             SET title = $1, content = $2, is_pinned = $3, has_attendance = $4, updated_at = NOW()
              WHERE id = $5`,
-            [title, content, is_pinned || false, attendance_survey_enabled || false, id]
+            [title, content, is_pinned || false, has_attendance || false, id]
         );
 
         res.json({

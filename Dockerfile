@@ -12,10 +12,10 @@ RUN npm ci --production --silent
 COPY api/ ./
 
 # Stage 2: 최종 이미지
-FROM node:18-alpine
+FROM nginx:alpine
 
-# nginx 설치
-RUN apk add --no-cache nginx
+# Node.js만 설치 (npm 불필요 - 빌드는 stage 1에서 완료)
+RUN apk add --no-cache nodejs
 
 # API 디렉토리 생성 및 파일 복사
 WORKDIR /app/api

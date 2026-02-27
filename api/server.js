@@ -14,7 +14,7 @@ const profileRoutes = require('./routes/profile');
 
 // Express 앱 초기화
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.API_PORT || 3000;
 
 // CORS 설정
 app.use(cors({

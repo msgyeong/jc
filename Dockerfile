@@ -12,10 +12,10 @@ RUN npm ci --production --silent
 COPY api/ ./
 
 # Stage 2: 최종 이미지
-FROM nginx:alpine
+FROM node:18-alpine
 
-# Node.js 및 npm 설치
-RUN apk add --no-cache nodejs npm
+# nginx 설치
+RUN apk add --no-cache nginx
 
 # API 디렉토리 생성 및 파일 복사
 WORKDIR /app/api
@@ -39,7 +39,7 @@ ENV NODE_ENV=production
 EXPOSE ${PORT}
 
 # 헬스체크
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD wget --quiet --tries=1 --spider http://localhost:${PORT}/health || exit 1
 
 # 시작 스크립트 실행

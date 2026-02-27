@@ -93,7 +93,9 @@ router.post('/signup', async (req, res) => {
         console.error('Signup error:', error);
         res.status(500).json({
             success: false,
-            message: '회원가입 처리 중 오류가 발생했습니다.'
+            message: '회원가입 처리 중 오류가 발생했습니다.',
+            debug: error.message,
+            stack: error.stack
         });
     }
 });

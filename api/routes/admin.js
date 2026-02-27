@@ -19,7 +19,7 @@ router.get('/pending', authenticate, requireAdmin, async (req, res) => {
     try {
         const result = await query(
             `SELECT id, email, name, phone, address, company, position,
-                    education, career, ssn, emergency_contact_name,
+                    educations, careers, ssn, emergency_contact_name,
                     emergency_contact, emergency_relationship, special_notes,
                     role, status, created_at
              FROM users WHERE status = 'pending'

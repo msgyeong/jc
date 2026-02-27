@@ -4,10 +4,11 @@
 -- railway_init.sql 실행 후 이 파일을 실행하세요!
 
 -- 테스트 회원 계정 생성 (일반 회원)
+-- 비밀번호: test1234 (bcrypt 해시 저장)
 INSERT INTO users (email, password_hash, name, phone, address, role, status)
 VALUES (
     'minsu@jc.com',               -- 이메일 (계정 이름과 일치)
-    'test1234',                   -- 비밀번호 (평문)
+    '$2b$10$d6HOo60sTh6fijblahBPO.BpsmyP6U/xChdSoT0m8YGxFrbUlYg4e',  -- test1234 (bcrypt)
     '경민수',                     -- 이름
     '010-1234-5678',              -- 전화번호
     '서울시 영등포구',             -- 주소

@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+
+# Node modules
+node_modules
+npm-debug.log
+
+# 환경 변수
+.env
+.env.local
+.env.*.local
+
+# 로그
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# 문서
+*.md
+!README.md
+
+# 테스트
+test
+tests
+__tests__
+
+# Flutter (앱 관련 파일 제외)
+lib
+android
+ios
+macos
+linux
+windows
+.metadata
+.dart_tool
+pubspec.yaml
+pubspec.lock
+
+# Database (마이그레이션 스크립트는 포함하지 않음)
+database/*.sql
+!database/railway_init.sql
+
+# 임시 파일
+tmp
+temp
+*.tmp

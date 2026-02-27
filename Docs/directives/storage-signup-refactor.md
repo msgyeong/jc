@@ -157,7 +157,7 @@ static Future<String> uploadToStorage({
 - [ ] `lib/utils/image_uploader.dart` 수정
   - [ ] MIME 타입 동적 처리 (선택)
 - [ ] 태스크 문서 업데이트
-  - [ ] `Docs/tasks/01-project-setup-and-auth.md`에서 해당 항목 체크
+  - [ ] `Docs/tasks-flutter/01-project-setup-and-auth.md`에서 해당 항목 체크
 
 ---
 
@@ -188,4 +188,4 @@ static Future<String> uploadToStorage({
 - `Docs/schema/README.md` - Storage 설계
 - `Docs/schema/schema.sql` - RLS 정책
 - `Docs/prd/05-data-policy.md` - Storage 정책
-- `Docs/tasks/01-project-setup-and-auth.md` - 태스크
+- `Docs/tasks-flutter/01-project-setup-and-auth.md` - 태스크

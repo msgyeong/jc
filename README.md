@@ -74,7 +74,7 @@ flutter run
 ### 프로젝트 문서
 - **웹 버전**: [web/README.md](web/README.md)
 - **작업 가이드**: [Docs/contributing.md](Docs/contributing.md)
-- **기능 체크리스트**: [Docs/tasks/WEB_VERSION_CHECKLIST.md](Docs/tasks/WEB_VERSION_CHECKLIST.md)
+- **기능 체크리스트**: [Docs/tasks-web/WEB_VERSION_CHECKLIST.md](Docs/tasks-web/WEB_VERSION_CHECKLIST.md)
 - **협업 가이드**: [COLLABORATION_STATUS.md](COLLABORATION_STATUS.md)
 
 ---

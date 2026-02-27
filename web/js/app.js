@@ -9,17 +9,16 @@ async function initApp() {
     console.log('\n=== 앱 초기화 시작 ===\n');
     
     try {
-        // 1. Supabase 초기화
-        console.log('🔹 Step 1: Supabase 초기화');
-        initSupabase();
+        // 1. API 클라이언트 확인
+        console.log('🔹 Step 1: API 클라이언트 확인');
+        if (!window.apiClient) {
+            throw new Error('API 클라이언트가 초기화되지 않았습니다.');
+        }
+        console.log('✅ API 클라이언트 준비됨:', window.apiClient.baseURL);
         
         // 2. UI 이벤트 설정
         console.log('🔹 Step 2: UI 이벤트 설정');
-        setupPasswordToggle();
-        setupLoginForm();
-        setupSignupForm();
-        setupSignupEvents();
-        setupLogoutButton();
+        // auth.js에서 이미 설정되므로 여기서는 추가 설정만
         setupBottomNavigation();
         setupFABButtons();
         setupViewAllButtons();

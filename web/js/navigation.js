@@ -3,7 +3,43 @@
 // 경로 기반 네비게이션 (새로 추가)
 function navigateTo(path) {
     console.log('🔗 경로 이동:', path);
-    
+
+    // 동적 경로: /posts/:id
+    const postDetailMatch = path.match(/^\/posts\/(\d+)$/);
+    if (postDetailMatch) {
+        const postId = postDetailMatch[1];
+        if (typeof showPostDetailScreen === 'function') {
+            showPostDetailScreen(postId);
+        } else {
+            console.error('❌ showPostDetailScreen 미정의');
+        }
+        return;
+    }
+
+    // 동적 경로: /notices/:id
+    const noticeDetailMatch = path.match(/^\/notices\/(\d+)$/);
+    if (noticeDetailMatch) {
+        const noticeId = noticeDetailMatch[1];
+        if (typeof showNoticeDetailScreen === 'function') {
+            showNoticeDetailScreen(noticeId);
+        } else {
+            console.error('❌ showNoticeDetailScreen 미정의');
+        }
+        return;
+    }
+
+    // 동적 경로: /schedules/:id
+    const scheduleDetailMatch = path.match(/^\/schedules\/(\d+)$/);
+    if (scheduleDetailMatch) {
+        const scheduleId = scheduleDetailMatch[1];
+        if (typeof showScheduleDetailScreen === 'function') {
+            showScheduleDetailScreen(scheduleId);
+        } else {
+            console.error('❌ showScheduleDetailScreen 미정의');
+        }
+        return;
+    }
+
     // 경로를 화면 이름으로 변환
     const pathToScreen = {
         '/': 'splash',
@@ -18,7 +54,7 @@ function navigateTo(path) {
         '/profile': 'profile',
         '/admin': 'admin'
     };
-    
+
     const screenName = pathToScreen[path];
     if (screenName) {
         navigateToScreen(screenName);
@@ -64,6 +100,11 @@ function navigateToScreen(screenName) {
             // 관리자 페이지 초기화
             if (typeof initAdminPage === 'function') {
                 initAdminPage();
+            }
+        } else if (screenName === 'posts') {
+            updateNavigation('posts');
+            if (typeof loadPostsScreen === 'function') {
+                loadPostsScreen();
             }
         }
         

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영등포 JC - 관리자</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- 로그인 화면 -->
+<div id="login-screen" class="login-screen">
+    <div class="login-box">
+        <div class="login-logo">
+            <h1>🏛️ 영등포 JC</h1>
+            <p>관리자 전용 페이지</p>
+        </div>
+        <form id="login-form">
+            <div class="form-group">
+                <label>이메일</label>
+                <input type="email" id="login-email" placeholder="admin@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>비밀번호</label>
+                <input type="password" id="login-password" placeholder="비밀번호 입력" required>
+            </div>
+            <div id="login-error" class="login-error" style="display:none;"></div>
+            <button type="submit" class="btn-login" id="login-btn">로그인</button>
+        </form>
+    </div>
+</div>
+
+<!-- 관리자 대시보드 -->
+<div id="admin-app" class="admin-app" style="display:none;">
+
+    <!-- 사이드바 -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>🏛️ JC 관리자</h2>
+            <p id="sidebar-user-name">-</p>
+        </div>
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-page="dashboard">
+                📊 대시보드
+            </button>
+            <button class="nav-item" data-page="pending">
+                ⏳ 승인 대기
+                <span class="badge" id="pending-badge" style="display:none;"></span>
+            </button>
+            <button class="nav-item" data-page="members">
+                👥 회원 관리
+            </button>
+            <button class="nav-item" data-page="content">
+                📋 콘텐츠 관리
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="btn-logout" onclick="logout()">로그아웃</button>
+        </div>
+    </aside>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main-content">
+
+        <!-- 대시보드 -->
+        <section id="page-dashboard" class="page active">
+            <div class="page-header">
+                <h2>대시보드</h2>
+            </div>
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <div class="stat-number" id="stat-members">-</div>
+                        <div class="stat-label">활성 회원</div>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-info">
+                        <div class="stat-number" id="stat-pending">-</div>
+                        <div class="stat-label">승인 대기</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-info">
+                        <div class="stat-number" id="stat-posts">-</div>
+                        <div class="stat-label">게시글</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📢</div>
+                    <div class="stat-info">
+                        <div class="stat-number" id="stat-notices">-</div>
+                        <div class="stat-label">공지사항</div>
+                    </div>
+                </div>
+            </div>
+            <div class="dashboard-hint">
+                <p>왼쪽 메뉴에서 관리 항목을 선택하세요.</p>
+            </div>
+        </section>
+
+        <!-- 승인 대기 -->
+        <section id="page-pending" class="page">
+            <div class="page-header">
+                <h2>승인 대기 회원</h2>
+                <button class="btn-refresh" onclick="loadPending()">🔄 새로고침</button>
+            </div>
+            <div id="pending-list" class="card-list">
+                <div class="loading">로딩 중...</div>
+            </div>
+        </section>
+
+        <!-- 회원 관리 -->
+        <section id="page-members" class="page">
+            <div class="page-header">
+                <h2>전체 회원 관리</h2>
+                <button class="btn-refresh" onclick="loadMembers()">🔄 새로고침</button>
+            </div>
+            <div class="filter-bar">
+                <input type="text" id="member-search"
+                    placeholder="이름 / 이메일 / 전화 검색"
+                    oninput="onMemberSearch(this.value)">
+                <select id="member-status-filter" onchange="onStatusFilter(this.value)">
+                    <option value="">전체 상태</option>
+                    <option value="active">활성</option>
+                    <option value="suspended">정지</option>
+                    <option value="pending">대기</option>
+                </select>
+            </div>
+            <div id="members-list" class="card-list">
+                <div class="loading">로딩 중...</div>
+            </div>
+        </section>
+
+        <!-- 콘텐츠 관리 -->
+        <section id="page-content" class="page">
+            <div class="page-header">
+                <h2>콘텐츠 관리</h2>
+                <button class="btn-refresh" onclick="loadContent()">🔄 새로고침</button>
+            </div>
+            <div id="content-list" class="card-list">
+                <div class="loading">로딩 중...</div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

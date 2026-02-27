@@ -96,6 +96,18 @@ function renderProfile(profile) {
                     ` : ''}
                 </div>
             </div>
+
+            ${['super_admin', 'admin'].includes(profile.role) ? `
+            <!-- 관리자 메뉴 -->
+            <div class="profile-section">
+                <button onclick="navigateToScreen('admin')" style="
+                    width:100%;padding:16px;background:#4f6ef7;color:#fff;
+                    border:none;border-radius:12px;font-size:16px;font-weight:600;
+                    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                    🔧 관리자 메뉴
+                </button>
+            </div>
+            ` : ''}
         </div>
     `;
 }

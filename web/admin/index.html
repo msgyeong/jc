@@ -3,152 +3,515 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>영등포 JC - 관리자</title>
+    <title>영등포 JC – 관리자 콘솔</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
 
-<!-- 로그인 화면 -->
-<div id="login-screen" class="login-screen">
-    <div class="login-box">
+<!-- ====================================================
+     AW001 · 로그인
+     ==================================================== -->
+<div id="login-page" class="login-page">
+    <div class="login-card">
         <div class="login-logo">
-            <h1>🏛️ 영등포 JC</h1>
-            <p>관리자 전용 페이지</p>
+            <div class="login-logo-icon">JC</div>
+            <div class="login-logo-title">ADMIN CONSOLE</div>
+            <div class="login-logo-sub">영등포 JC 관리자 전용</div>
         </div>
-        <form id="login-form">
-            <div class="form-group">
-                <label>이메일</label>
-                <input type="email" id="login-email" placeholder="admin@example.com" required>
+        <form id="login-form" novalidate>
+            <div class="field">
+                <label class="field-label" for="f-admin-id">아이디</label>
+                <input class="input" id="f-admin-id" type="text"
+                    placeholder="admin_id" autocomplete="username" required>
             </div>
-            <div class="form-group">
-                <label>비밀번호</label>
-                <input type="password" id="login-password" placeholder="비밀번호 입력" required>
+            <div class="field">
+                <label class="field-label" for="f-password">비밀번호</label>
+                <input class="input" id="f-password" type="password"
+                    placeholder="••••••••" autocomplete="current-password" required>
             </div>
-            <div id="login-error" class="login-error" style="display:none;"></div>
-            <button type="submit" class="btn-login" id="login-btn">로그인</button>
+            <div id="login-error" class="alert alert-danger" hidden></div>
+            <button type="submit" id="login-btn" class="btn btn-primary btn-full">
+                Login
+            </button>
         </form>
     </div>
 </div>
 
-<!-- 관리자 대시보드 -->
-<div id="admin-app" class="admin-app" style="display:none;">
+<!-- ====================================================
+     앱 레이아웃 (로그인 후)
+     ==================================================== -->
+<div id="app" hidden>
 
     <!-- 사이드바 -->
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <h2>🏛️ JC 관리자</h2>
-            <p id="sidebar-user-name">-</p>
+        <div class="sidebar-brand">
+            <span class="brand-mark">JC</span>
+            <span class="brand-name">Admin Console</span>
         </div>
-        <nav class="sidebar-nav">
-            <button class="nav-item active" data-page="dashboard">
-                📊 대시보드
+
+        <nav class="sidebar-nav" id="sidebar-nav">
+            <button class="menu-item" data-page="approval" data-require="super_admin">
+                <span class="menu-icon">⏳</span>
+                <span class="menu-label">가입 승인</span>
+                <span class="menu-badge" id="badge-approval" hidden>0</span>
             </button>
-            <button class="nav-item" data-page="pending">
-                ⏳ 승인 대기
-                <span class="badge" id="pending-badge" style="display:none;"></span>
+            <button class="menu-item" data-page="members" data-require="super_admin">
+                <span class="menu-icon">👥</span>
+                <span class="menu-label">회원 목록</span>
             </button>
-            <button class="nav-item" data-page="members">
-                👥 회원 관리
+            <button class="menu-item" data-page="roles" data-require="super_admin">
+                <span class="menu-icon">🔑</span>
+                <span class="menu-label">직책/권한 관리</span>
             </button>
-            <button class="nav-item" data-page="content">
-                📋 콘텐츠 관리
+            <div class="menu-divider"></div>
+            <button class="menu-item" data-page="boards" data-require="board_delete">
+                <span class="menu-icon">📋</span>
+                <span class="menu-label">게시판 관리</span>
+            </button>
+            <button class="menu-item" data-page="notices" data-require="notice_write">
+                <span class="menu-icon">📢</span>
+                <span class="menu-label">공지사항 관리</span>
+            </button>
+            <button class="menu-item" data-page="schedules" data-require="schedule_manage">
+                <span class="menu-icon">📅</span>
+                <span class="menu-label">일정 관리</span>
+            </button>
+            <div class="menu-divider"></div>
+            <button class="menu-item" data-page="security">
+                <span class="menu-icon">🔒</span>
+                <span class="menu-label">계정 보안</span>
             </button>
         </nav>
-        <div class="sidebar-footer">
-            <button class="btn-logout" onclick="logout()">로그아웃</button>
+
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar" id="sidebar-avatar">A</div>
+            <div class="sidebar-user-info">
+                <div class="sidebar-user-name" id="sidebar-name">-</div>
+                <div class="sidebar-user-role" id="sidebar-role">-</div>
+            </div>
+            <button class="btn-icon-logout" onclick="logout()" title="로그아웃">
+                ⏏
+            </button>
         </div>
     </aside>
+
+    <!-- 헤더 -->
+    <header class="header">
+        <h1 class="header-title" id="header-title">–</h1>
+        <div class="header-actions">
+            <button class="btn btn-ghost btn-sm" id="header-refresh-btn"
+                onclick="refreshCurrentPage()">
+                🔄 새로고침
+            </button>
+        </div>
+    </header>
 
     <!-- 메인 콘텐츠 -->
     <main class="main-content">
 
-        <!-- 대시보드 -->
-        <section id="page-dashboard" class="page active">
-            <div class="page-header">
-                <h2>대시보드</h2>
+        <!-- AW002 · 가입 승인 목록 -->
+        <section id="page-approval" class="page" hidden>
+            <div class="page-toolbar">
+                <span class="toolbar-count" id="approval-count">대기 0명</span>
             </div>
-            <div class="stats-grid" id="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">👥</div>
-                    <div class="stat-info">
-                        <div class="stat-number" id="stat-members">-</div>
-                        <div class="stat-label">활성 회원</div>
-                    </div>
-                </div>
-                <div class="stat-card warning">
-                    <div class="stat-icon">⏳</div>
-                    <div class="stat-info">
-                        <div class="stat-number" id="stat-pending">-</div>
-                        <div class="stat-label">승인 대기</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📝</div>
-                    <div class="stat-info">
-                        <div class="stat-number" id="stat-posts">-</div>
-                        <div class="stat-label">게시글</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📢</div>
-                    <div class="stat-info">
-                        <div class="stat-number" id="stat-notices">-</div>
-                        <div class="stat-label">공지사항</div>
-                    </div>
-                </div>
-            </div>
-            <div class="dashboard-hint">
-                <p>왼쪽 메뉴에서 관리 항목을 선택하세요.</p>
-            </div>
+            <div id="approval-list" class="card-stack"></div>
         </section>
 
-        <!-- 승인 대기 -->
-        <section id="page-pending" class="page">
-            <div class="page-header">
-                <h2>승인 대기 회원</h2>
-                <button class="btn-refresh" onclick="loadPending()">🔄 새로고침</button>
-            </div>
-            <div id="pending-list" class="card-list">
-                <div class="loading">로딩 중...</div>
-            </div>
-        </section>
-
-        <!-- 회원 관리 -->
-        <section id="page-members" class="page">
-            <div class="page-header">
-                <h2>전체 회원 관리</h2>
-                <button class="btn-refresh" onclick="loadMembers()">🔄 새로고침</button>
-            </div>
-            <div class="filter-bar">
-                <input type="text" id="member-search"
-                    placeholder="이름 / 이메일 / 전화 검색"
-                    oninput="onMemberSearch(this.value)">
-                <select id="member-status-filter" onchange="onStatusFilter(this.value)">
-                    <option value="">전체 상태</option>
-                    <option value="active">활성</option>
-                    <option value="suspended">정지</option>
-                    <option value="pending">대기</option>
+        <!-- AW003 · 회원 목록 -->
+        <section id="page-members" class="page" hidden>
+            <div class="page-toolbar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input class="search-input" id="member-q" type="text"
+                        placeholder="이름 / 기수 / 소속 검색"
+                        oninput="onMemberSearch()">
+                </div>
+                <select class="select" id="member-status" onchange="loadMembers()">
+                    <option value="">Status ▼</option>
+                    <option value="active">Active</option>
+                    <option value="pending">Pending</option>
+                    <option value="suspended">Suspended</option>
                 </select>
             </div>
-            <div id="members-list" class="card-list">
-                <div class="loading">로딩 중...</div>
+            <div class="table-wrap">
+                <table class="data-table" id="members-table">
+                    <thead>
+                        <tr>
+                            <th>이름</th>
+                            <th>기수</th>
+                            <th>소속</th>
+                            <th>상태</th>
+                            <th style="width:40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="members-tbody">
+                        <tr><td colspan="5" class="table-empty">로딩 중...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 
-        <!-- 콘텐츠 관리 -->
-        <section id="page-content" class="page">
-            <div class="page-header">
-                <h2>콘텐츠 관리</h2>
-                <button class="btn-refresh" onclick="loadContent()">🔄 새로고침</button>
+        <!-- AW005 · 직책/권한 관리 -->
+        <section id="page-roles" class="page" hidden>
+            <div class="page-toolbar">
+                <div class="toolbar-right">
+                    <button class="btn btn-primary" onclick="saveRoles()">
+                        Save Changes
+                    </button>
+                </div>
             </div>
-            <div id="content-list" class="card-list">
-                <div class="loading">로딩 중...</div>
+            <div class="table-wrap">
+                <table class="data-table" id="roles-table">
+                    <thead>
+                        <tr>
+                            <th>Role Name</th>
+                            <th class="text-center">notice_write</th>
+                            <th class="text-center">schedule_manage</th>
+                            <th class="text-center">board_delete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roles-tbody">
+                        <tr><td colspan="4" class="table-empty">로딩 중...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="hint-text mt-16">
+                * 최고 관리자 권한은 시스템 기본값으로 수정 불가
+            </p>
+        </section>
+
+        <!-- AW006 · 게시판 관리 -->
+        <section id="page-boards" class="page" hidden>
+            <div class="page-toolbar">
+                <span class="toolbar-count" id="boards-total">Total: 0</span>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>제목</th>
+                            <th style="width:100px;">작성자</th>
+                            <th style="width:110px;">작성일</th>
+                            <th style="width:60px;" class="text-center">댓글</th>
+                            <th style="width:40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="boards-tbody">
+                        <tr><td colspan="5" class="table-empty">로딩 중...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- AW007 · 공지사항 관리 -->
+        <section id="page-notices" class="page" hidden>
+            <div class="page-toolbar">
+                <div class="toolbar-right">
+                    <button class="btn btn-primary" onclick="openNoticeModal()">
+                        + Add Notice
+                    </button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th style="width:130px;">Created At</th>
+                            <th style="width:80px;" class="text-center">Pinned</th>
+                            <th style="width:80px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="notices-tbody">
+                        <tr><td colspan="4" class="table-empty">로딩 중...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- AW008 · 일정 관리 -->
+        <section id="page-schedules" class="page" hidden>
+            <div class="page-toolbar">
+                <div class="toolbar-right">
+                    <button class="btn btn-primary" onclick="openScheduleModal()">
+                        + Add Schedule
+                    </button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th style="width:120px;">Date</th>
+                            <th style="width:160px;">Location</th>
+                            <th style="width:80px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedules-tbody">
+                        <tr><td colspan="4" class="table-empty">로딩 중...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- AW009 · 계정 보안 -->
+        <section id="page-security" class="page" hidden>
+            <div class="form-card" style="max-width:480px;">
+                <h2 class="form-card-title">비밀번호 변경</h2>
+                <form id="pw-form" novalidate>
+                    <div class="field">
+                        <label class="field-label" for="f-cur-pw">현재 비밀번호</label>
+                        <input class="input" id="f-cur-pw" type="password"
+                            placeholder="현재 비밀번호 입력" required>
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="f-new-pw">새 비밀번호</label>
+                        <input class="input" id="f-new-pw" type="password"
+                            placeholder="새 비밀번호 입력" required>
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="f-confirm-pw">새 비밀번호 확인</label>
+                        <input class="input" id="f-confirm-pw" type="password"
+                            placeholder="새 비밀번호 확인" required>
+                    </div>
+                    <div id="pw-error" class="alert alert-danger" hidden></div>
+                    <div id="pw-success" class="alert alert-success" hidden></div>
+                    <div class="policy-box">
+                        <div class="policy-title">Password Policy</div>
+                        <ul class="policy-list">
+                            <li>최소 10자 이상 입력</li>
+                            <li>영문, 숫자, 특수문자 조합 포함</li>
+                            <li>최근 3회 사용한 비밀번호 재사용 금지</li>
+                        </ul>
+                    </div>
+                    <div class="btn-row-right">
+                        <button type="submit" class="btn btn-primary">
+                            Change Password
+                        </button>
+                    </div>
+                </form>
             </div>
         </section>
 
     </main>
+</div>
+
+<!-- ====================================================
+     AW004 · 회원 상세 Drawer
+     ==================================================== -->
+<div id="member-drawer" class="drawer" hidden>
+    <div class="drawer-panel">
+        <div class="drawer-header">
+            <h2 class="drawer-title" id="drawer-member-title">회원 상세</h2>
+            <button class="btn-icon" onclick="closeDrawer('member-drawer')">✕</button>
+        </div>
+        <div class="drawer-body">
+            <!-- 프로필 -->
+            <div class="member-profile-row">
+                <div class="profile-avatar" id="drawer-avatar">A</div>
+                <div class="profile-info">
+                    <div class="profile-name" id="drawer-name">-</div>
+                    <div class="profile-sub" id="drawer-sub">-</div>
+                    <span class="status-badge" id="drawer-status-badge">-</span>
+                </div>
+            </div>
+
+            <!-- 기본 정보 -->
+            <div class="info-section">
+                <div class="info-section-title">기본 정보</div>
+                <div class="info-row">
+                    <span class="info-key">Phone</span>
+                    <span class="info-val" id="drawer-phone">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">Joined</span>
+                    <span class="info-val" id="drawer-joined">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">Role</span>
+                    <span class="info-val" id="drawer-role-label">-</span>
+                </div>
+            </div>
+
+            <!-- 변경 이력 -->
+            <div class="info-section">
+                <div class="info-section-title">변경 이력 (Audit Log)</div>
+                <div id="drawer-audit-log" class="audit-log"></div>
+            </div>
+
+            <!-- 권한 설정 -->
+            <div class="info-section">
+                <div class="info-section-title">권한 설정 (Permissions)</div>
+                <div id="drawer-permissions" class="perm-list"></div>
+                <p class="hint-text mt-8">
+                    * 직책에 따른 기본 권한 외 추가 권한을 부여할 수 있습니다.
+                </p>
+            </div>
+
+            <!-- 액션 -->
+            <div class="drawer-footer">
+                <button class="btn btn-danger" id="drawer-suspend-btn"
+                    onclick="toggleMemberStatus()">Suspend</button>
+                <button class="btn btn-primary"
+                    onclick="saveMemberChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    <div class="drawer-backdrop" onclick="closeDrawer('member-drawer')"></div>
+</div>
+
+<!-- ====================================================
+     AW006 · 게시글 상세 Drawer
+     ==================================================== -->
+<div id="post-drawer" class="drawer" hidden>
+    <div class="drawer-panel">
+        <div class="drawer-header">
+            <h2 class="drawer-title" id="post-drawer-title">-</h2>
+            <button class="btn-icon" onclick="closeDrawer('post-drawer')">✕</button>
+        </div>
+        <div class="drawer-body">
+            <div class="post-meta-row">
+                <span id="post-author">-</span>
+                <span class="dot">·</span>
+                <span id="post-date">-</span>
+            </div>
+            <div class="post-content" id="post-content">-</div>
+
+            <div class="comments-header">
+                댓글 (<span id="post-comment-count">0</span>)
+            </div>
+            <div id="post-comments" class="comments-list"></div>
+
+            <div class="drawer-footer">
+                <button class="btn btn-danger" onclick="deleteCurrentPost()">
+                    게시글 삭제
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="drawer-backdrop" onclick="closeDrawer('post-drawer')"></div>
+</div>
+
+<!-- ====================================================
+     AW007 · 공지사항 모달
+     ==================================================== -->
+<div id="notice-modal" class="modal-overlay" hidden>
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="notice-modal-title">공지 추가</h3>
+            <button class="btn-icon" onclick="closeModal('notice-modal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="notice-form" novalidate>
+                <div class="field">
+                    <label class="field-label">
+                        Title <span class="req">*</span>
+                        <span class="field-hint">최대 100자</span>
+                    </label>
+                    <input class="input" id="n-title" type="text"
+                        maxlength="100" required placeholder="공지 제목">
+                </div>
+                <div class="field">
+                    <label class="field-label">
+                        Content <span class="req">*</span>
+                        <span class="field-hint">Markdown 지원</span>
+                    </label>
+                    <textarea class="textarea" id="n-content" rows="6"
+                        required placeholder="내용 입력"></textarea>
+                </div>
+                <div class="field field-check">
+                    <input type="checkbox" id="n-pinned" class="checkbox">
+                    <label for="n-pinned">상단 고정 (Pinned)</label>
+                </div>
+                <div id="notice-error" class="alert alert-danger" hidden></div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-danger" id="notice-delete-btn"
+                onclick="deleteCurrentNotice()" hidden>Delete</button>
+            <div style="flex:1;"></div>
+            <button class="btn btn-ghost" onclick="closeModal('notice-modal')">취소</button>
+            <button class="btn btn-primary" onclick="saveNotice()">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- ====================================================
+     AW008 · 일정 모달
+     ==================================================== -->
+<div id="schedule-modal" class="modal-overlay" hidden>
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="schedule-modal-title">일정 추가</h3>
+            <button class="btn-icon" onclick="closeModal('schedule-modal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="schedule-form" novalidate>
+                <div class="field">
+                    <label class="field-label">Title <span class="req">*</span></label>
+                    <input class="input" id="s-title" type="text"
+                        required placeholder="일정 제목">
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label class="field-label">
+                            Date <span class="req">*</span>
+                        </label>
+                        <input class="input" id="s-date" type="date" required>
+                    </div>
+                    <div class="field">
+                        <label class="field-label">
+                            Time
+                            <span class="field-hint">(Optional)</span>
+                        </label>
+                        <input class="input" id="s-time" type="time">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="field-label">Location</label>
+                    <input class="input" id="s-location" type="text"
+                        placeholder="장소 정보">
+                </div>
+                <div class="field">
+                    <label class="field-label">Description</label>
+                    <textarea class="textarea" id="s-desc" rows="4"
+                        placeholder="상세 설명"></textarea>
+                </div>
+                <div id="schedule-error" class="alert alert-danger" hidden></div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-danger" id="schedule-delete-btn"
+                onclick="deleteCurrentSchedule()" hidden>Delete</button>
+            <div style="flex:1;"></div>
+            <button class="btn btn-ghost" onclick="closeModal('schedule-modal')">취소</button>
+            <button class="btn btn-primary" onclick="saveSchedule()">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- ====================================================
+     공통 · 확인 다이얼로그
+     ==================================================== -->
+<div id="confirm-dialog" class="modal-overlay" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <h3 id="confirm-title">확인</h3>
+        </div>
+        <div class="modal-body">
+            <p id="confirm-message" style="margin-bottom:6px;"></p>
+            <p id="confirm-sub" class="hint-text"></p>
+        </div>
+        <div class="modal-footer">
+            <div style="flex:1;"></div>
+            <button class="btn btn-ghost"
+                onclick="closeModal('confirm-dialog')">취소</button>
+            <button class="btn btn-danger" id="confirm-ok-btn">확인</button>
+        </div>
+    </div>
 </div>
 
 <script src="admin.js"></script>

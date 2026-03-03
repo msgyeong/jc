@@ -74,6 +74,9 @@ app.use('/api/admin', adminRoutes);
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// 웹 정적 파일 제공 (API 라우트보다 뒤에 위치)
+app.use(express.static(path.join(__dirname, '../web')));
+
 // 404 핸들러
 app.use(notFoundHandler);
 

@@ -42,12 +42,20 @@ let editingSchedule = null;
    초기화
    ====================================================== */
 document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('admin_token');
+    const params = new URLSearchParams(window.location.search);
+    const forceLogin = params.get('forceLogin') === '1';
+
+    if (forceLogin) {
+        localStorage.removeItem('admin_token');
+    }
+
+    const token = !forceLogin && localStorage.getItem('admin_token');
     if (token) {
         verifyAndInit();
     } else {
         showLogin();
     }
+
     document.getElementById('login-form').addEventListener(
         'submit', onLoginSubmit,
     );
@@ -114,7 +122,7 @@ async function onLoginSubmit(e) {
 
     errEl.hidden = true;
     btn.disabled = true;
-    btn.textContent = '로그인 중...';
+    btn.innerHTML = '로그인 중...';
 
     try {
         const data = await request('/admin/auth/login', {
@@ -134,7 +142,13 @@ async function onLoginSubmit(e) {
         document.getElementById('f-admin-id').focus();
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Login';
+        btn.innerHTML =
+            '<span>로그인</span>' +
+            '<svg viewBox="0 0 20 20" fill="none" ' +
+            'xmlns="http://www.w3.org/2000/svg" width="18" height="18">' +
+            '<path d="M4 10h12M12 6l4 4-4 4" stroke="#fff" ' +
+            'stroke-width="1.8" stroke-linecap="round" ' +
+            'stroke-linejoin="round"/></svg>';
     }
 }
 

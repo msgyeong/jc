@@ -2,180 +2,279 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// 앱 테마 설정
-/// 디자인 시스템 문서를 기반으로 라이트 테마만 사용합니다.
+/// 디자인 시스템: Indigo 기반 모던 팔레트, Material 3
 class AppTheme {
-  // 색상 팔레트 (design-system/01-color-palette.md)
-  static const Color primaryColor = Color(0xFF1F4FD8);
-  static const Color secondaryColor = Color(0xFFE6ECFA);
-  static const Color accentColor = Color(0xFFF59E0B);
-  static const Color errorColor = Color(0xFFDC2626);
-  static const Color successColor = Color(0xFF10B981);
-  static const Color backgroundColor = Color(0xFFF9FAFB);
-  static const Color textPrimary = Color(0xFF111827);
-  static const Color textSecondary = Color(0xFF6B7280);
+  // ── 색상 팔레트 ────────────────────────────────────
+  static const Color primaryColor   = Color(0xFF4F46E5); // Indigo-600
+  static const Color primaryDark    = Color(0xFF3730A3); // Indigo-800
+  static const Color primaryLight   = Color(0xFFE0E7FF); // Indigo-100
+  static const Color secondaryColor = Color(0xFF06B6D4); // Cyan-500
+  static const Color accentColor    = Color(0xFFF59E0B); // Amber-400
+  static const Color errorColor     = Color(0xFFEF4444); // Red-500
+  static const Color successColor   = Color(0xFF10B981); // Emerald-500
+  static const Color warningColor   = Color(0xFFF59E0B); // Amber-400
 
-  /// 라이트 테마 반환
-  /// 라이트 테마만 사용하며, 다크 테마는 사용하지 않습니다.
+  // ── 중립 팔레트 ───────────────────────────────────
+  static const Color backgroundColor  = Color(0xFFF8FAFC); // Slate-50
+  static const Color surfaceColor     = Color(0xFFFFFFFF);
+  static const Color surfaceVariant   = Color(0xFFF1F5F9); // Slate-100
+  static const Color dividerColor     = Color(0xFFE2E8F0); // Slate-200
+  static const Color textPrimary      = Color(0xFF0F172A); // Slate-900
+  static const Color textSecondary    = Color(0xFF64748B); // Slate-500
+  static const Color textDisabled     = Color(0xFFCBD5E1); // Slate-300
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: ColorScheme.light(
-        primary: primaryColor,
-        secondary: secondaryColor,
-        error: errorColor,
-        surface: backgroundColor,
-        onPrimary: Colors.white,
-        onSecondary: textPrimary,
-        onError: Colors.white,
-        onSurface: textPrimary,
+        primary:        primaryColor,
+        primaryContainer: primaryLight,
+        secondary:      secondaryColor,
+        tertiary:       accentColor,
+        error:          errorColor,
+        surface:        surfaceColor,
+        surfaceContainerHighest: surfaceVariant,
+        onPrimary:      Colors.white,
+        onPrimaryContainer: primaryDark,
+        onSecondary:    Colors.white,
+        onError:        Colors.white,
+        onSurface:      textPrimary,
+        outline:        dividerColor,
+        outlineVariant: Color(0xFFF1F5F9),
       ),
       scaffoldBackgroundColor: backgroundColor,
       fontFamily: GoogleFonts.notoSansKr().fontFamily,
       textTheme: _textTheme,
       appBarTheme: _appBarTheme,
       elevatedButtonTheme: _elevatedButtonTheme,
+      outlinedButtonTheme: _outlinedButtonTheme,
       textButtonTheme: _textButtonTheme,
       inputDecorationTheme: _inputDecorationTheme,
       cardTheme: _cardTheme,
+      chipTheme: _chipTheme,
+      dividerTheme: DividerThemeData(
+        color: dividerColor,
+        thickness: 1,
+        space: 1,
+      ),
+      listTileTheme: const ListTileThemeData(
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        minLeadingWidth: 0,
+      ),
     );
   }
 
-  /// 텍스트 테마 (design-system/02-typography.md)
-  /// Noto Sans KR 폰트 사용
+  // ── 텍스트 테마 ───────────────────────────────────
   static TextTheme get _textTheme {
-    final baseTextStyle = GoogleFonts.notoSansKr();
-
+    final base = GoogleFonts.notoSansKr();
     return TextTheme(
-      // 제목1: 22sp, w700
-      displayLarge: baseTextStyle.copyWith(
-        fontSize: 22,
-        fontWeight: FontWeight.w700,
-        color: textPrimary,
-        height: 1.4,
+      // 대제목 (AppBar, 화면 타이틀)
+      headlineLarge: base.copyWith(
+        fontSize: 24, fontWeight: FontWeight.w700,
+        color: textPrimary, height: 1.3,
       ),
-      // 제목2: 18sp, w600
-      displayMedium: baseTextStyle.copyWith(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: textPrimary,
-        height: 1.4,
+      headlineMedium: base.copyWith(
+        fontSize: 20, fontWeight: FontWeight.w700,
+        color: textPrimary, height: 1.3,
       ),
-      // 본문1: 15sp, w400
-      bodyLarge: baseTextStyle.copyWith(
-        fontSize: 15,
-        fontWeight: FontWeight.w400,
-        color: textPrimary,
-        height: 1.5,
+      headlineSmall: base.copyWith(
+        fontSize: 18, fontWeight: FontWeight.w600,
+        color: textPrimary, height: 1.35,
       ),
-      // 본문2: 14sp, w400
-      bodyMedium: baseTextStyle.copyWith(
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        color: textPrimary,
-        height: 1.5,
+      // 본문
+      titleLarge: base.copyWith(
+        fontSize: 16, fontWeight: FontWeight.w600,
+        color: textPrimary, height: 1.4,
       ),
-      // 버튼: 15sp, w600
-      labelLarge: baseTextStyle.copyWith(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
-        height: 1.4,
+      titleMedium: base.copyWith(
+        fontSize: 15, fontWeight: FontWeight.w500,
+        color: textPrimary, height: 1.4,
       ),
-      // 캡션: 12sp, w400
-      bodySmall: baseTextStyle.copyWith(
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        color: textSecondary,
-        height: 1.4,
+      titleSmall: base.copyWith(
+        fontSize: 14, fontWeight: FontWeight.w500,
+        color: textPrimary, height: 1.4,
+      ),
+      bodyLarge: base.copyWith(
+        fontSize: 15, fontWeight: FontWeight.w400,
+        color: textPrimary, height: 1.6,
+      ),
+      bodyMedium: base.copyWith(
+        fontSize: 14, fontWeight: FontWeight.w400,
+        color: textPrimary, height: 1.6,
+      ),
+      bodySmall: base.copyWith(
+        fontSize: 13, fontWeight: FontWeight.w400,
+        color: textSecondary, height: 1.5,
+      ),
+      // 버튼/라벨
+      labelLarge: base.copyWith(
+        fontSize: 15, fontWeight: FontWeight.w600,
+        color: Colors.white, height: 1.4,
+        letterSpacing: 0.1,
+      ),
+      labelMedium: base.copyWith(
+        fontSize: 12, fontWeight: FontWeight.w500,
+        color: textSecondary, height: 1.4,
+        letterSpacing: 0.3,
+      ),
+      labelSmall: base.copyWith(
+        fontSize: 11, fontWeight: FontWeight.w500,
+        color: textSecondary, height: 1.4,
+        letterSpacing: 0.4,
       ),
     );
   }
 
-  /// AppBar 테마 (design-system/03-component-styles.md)
+  // ── AppBar ────────────────────────────────────────
   static AppBarTheme get _appBarTheme {
     return AppBarTheme(
-      backgroundColor: primaryColor,
-      foregroundColor: Colors.white,
+      backgroundColor: surfaceColor,
+      foregroundColor: textPrimary,
       elevation: 0,
+      scrolledUnderElevation: 1,
+      shadowColor: Colors.black12,
       centerTitle: false,
       titleTextStyle: GoogleFonts.notoSansKr(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+        color: textPrimary,
       ),
+      iconTheme: const IconThemeData(color: textPrimary, size: 22),
     );
   }
 
-  /// ElevatedButton 테마
-  /// 48dp 높이, 8dp cornerRadius
+  // ── ElevatedButton ────────────────────────────────
   static ElevatedButtonThemeData get _elevatedButtonTheme {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
-        minimumSize: const Size(double.infinity, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        disabledBackgroundColor: textDisabled,
+        minimumSize: const Size(double.infinity, 52),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
         ),
         elevation: 0,
+        shadowColor: Colors.transparent,
+        textStyle: GoogleFonts.notoSansKr(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
+        ),
       ),
     );
   }
 
-  /// TextButton 테마
+  // ── OutlinedButton ────────────────────────────────
+  static OutlinedButtonThemeData get _outlinedButtonTheme {
+    return OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primaryColor,
+        minimumSize: const Size(double.infinity, 52),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        side: const BorderSide(color: primaryColor, width: 1.5),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        textStyle: GoogleFonts.notoSansKr(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  // ── TextButton ────────────────────────────────────
   static TextButtonThemeData get _textButtonTheme {
     return TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: primaryColor,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle: GoogleFonts.notoSansKr(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
   }
 
-  /// InputDecoration 테마
-  /// 48dp 높이, 8dp cornerRadius
+  // ── InputDecoration ───────────────────────────────
   static InputDecorationTheme get _inputDecorationTheme {
+    const radius = BorderRadius.all(Radius.circular(12));
     return InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      fillColor: surfaceVariant,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: textSecondary.withOpacity(0.3)),
+        borderRadius: radius,
+        borderSide: const BorderSide(color: dividerColor),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: textSecondary.withOpacity(0.3)),
+        borderRadius: radius,
+        borderSide: const BorderSide(color: dividerColor),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: radius,
         borderSide: const BorderSide(color: primaryColor, width: 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: radius,
         borderSide: const BorderSide(color: errorColor),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: radius,
         borderSide: const BorderSide(color: errorColor, width: 2),
+      ),
+      hintStyle: GoogleFonts.notoSansKr(
+        fontSize: 14,
+        color: textDisabled,
+      ),
+      labelStyle: GoogleFonts.notoSansKr(
+        fontSize: 14,
+        color: textSecondary,
+      ),
+      floatingLabelStyle: GoogleFonts.notoSansKr(
+        fontSize: 12,
+        color: primaryColor,
+        fontWeight: FontWeight.w500,
       ),
     );
   }
 
-  /// Card 테마
-  /// 12dp cornerRadius, elevation 1~2
+  // ── Card ──────────────────────────────────────────
   static CardThemeData get _cardTheme {
     return CardThemeData(
-      elevation: 1,
+      elevation: 0,
+      color: surfaceColor,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: dividerColor),
       ),
-      color: Colors.white,
+      margin: EdgeInsets.zero,
+    );
+  }
+
+  // ── Chip ──────────────────────────────────────────
+  static ChipThemeData get _chipTheme {
+    return ChipThemeData(
+      backgroundColor: surfaceVariant,
+      selectedColor: primaryLight,
+      labelStyle: GoogleFonts.notoSansKr(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: textPrimary,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      side: const BorderSide(color: dividerColor),
     );
   }
 }

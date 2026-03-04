@@ -1,0 +1,46 @@
+---
+description: Railway 배포 공동작업 규칙 - git pull, 포트 설정, push 체크리스트
+alwaysApply: true
+---
+
+# 공동작업 배포 규칙 (Railway: nginx + Node.js)
+
+## 1. 작업 전 반드시 pull 먼저
+
+코드 수정 전 항상 최신 코드를 받아옵니다:
+
+```bash
+git pull origin main
+```
+
+## 2. `api/server.js` PORT 설정 절대 변경 금지
+
+이 프로젝트는 Railway에서 **nginx(정적 웹) + Node.js(API)** 구조로 동작합니다.
+
+```js
+// ✅ 반드시 이 형태를 유지
+const PORT = process.env.API_PORT || 3000;
+
+// ❌ 절대 이렇게 바꾸지 말 것
+const PORT = process.env.PORT || 3000;
+```
+
+`process.env.PORT`로 바꾸면 Node.js가 nginx와 같은 포트를 점유하여
+nginx 시작 실패 → **502/404 오류** 발생.
+
+## 3. push 전 체크리스트
+
+```bash
+# 문법 오류 확인
+node --check api/server.js
+node --check api/routes/admin.js
+
+# 포트 설정 확인 (API_PORT가 출력돼야 push 가능)
+grep "PORT" api/server.js
+```
+
+`API_PORT`가 출력에 보여야 push해도 됩니다.
+
+## 4. 머지 충돌 발생 시
+
+`api/server.js`에서 충돌이 나면 반드시 **`API_PORT` 버전(main 브랜치 버전)** 을 선택하세요.

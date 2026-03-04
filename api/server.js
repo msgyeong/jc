@@ -75,7 +75,19 @@ app.use('/api/admin', adminRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 웹 정적 파일 제공 (API 라우트보다 뒤에 위치)
-app.use(express.static(path.join(__dirname, '../web')));
+// admin 파일은 항상 최신 버전을 받도록 캐시 비활성화
+app.use(express.static(path.join(__dirname, '../web'), {
+    setHeaders: (res, filePath) => {
+        if (filePath.includes(`${path.sep}admin${path.sep}`)) {
+            res.setHeader(
+                'Cache-Control',
+                'no-store, no-cache, must-revalidate, proxy-revalidate',
+            );
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        }
+    },
+}));
 
 // 404 핸들러
 app.use(notFoundHandler);

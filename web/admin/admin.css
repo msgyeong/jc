@@ -43,56 +43,271 @@ body {
 }
 
 /* ======================================================
-   AW001 · 로그인
+   AW001 · 로그인 (스플릿 스크린)
    ====================================================== */
 .login-page {
     display: flex;
-    align-items: center;
-    justify-content: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+    background: #fff;
 }
 
-.login-card {
-    background: var(--c-bg-card);
-    border-radius: var(--card-radius);
-    padding: 40px 36px;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: var(--shadow-lg);
-}
-
-.login-logo {
-    text-align: center;
-    margin-bottom: 32px;
-}
-
-.login-logo-icon {
-    display: inline-flex;
+/* ── 왼쪽 브랜드 패널 ──────────────────────────────── */
+.login-brand {
+    position: relative;
+    flex: 0 0 480px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 56px;
-    height: 56px;
-    background: var(--c-primary);
+    background: linear-gradient(155deg, #312e81 0%, #4338ca 45%, #6366f1 100%);
+    padding: 60px 56px;
+    overflow: hidden;
+}
+
+.login-brand-inner {
+    position: relative;
+    z-index: 2;
     color: #fff;
-    font-size: 18px;
-    font-weight: 700;
-    border-radius: 14px;
-    margin-bottom: 12px;
-    letter-spacing: 1px;
+    width: 100%;
+    max-width: 340px;
 }
 
-.login-logo-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--c-text);
-    letter-spacing: 0.5px;
+/* 브랜드 로고 행 */
+.lbrand-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 52px;
+}
+.lbrand-logo svg {
+    flex-shrink: 0;
+    display: block;
+}
+.lbrand-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
 }
 
-.login-logo-sub {
+/* 헤드라인 */
+.lbrand-headline {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+}
+
+/* 설명 */
+.lbrand-desc {
+    font-size: 15px;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 36px;
+}
+
+/* 기능 목록 */
+.lbrand-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.lbrand-features li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+}
+.lbrand-feat-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    flex-shrink: 0;
+}
+
+/* 장식 원 */
+.lbrand-decoration {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+.lbrand-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+}
+.lbrand-circle--1 {
+    width: 420px;
+    height: 420px;
+    bottom: -120px;
+    right: -100px;
+}
+.lbrand-circle--2 {
+    width: 240px;
+    height: 240px;
+    top: -60px;
+    left: -80px;
+    background: rgba(255,255,255,0.04);
+}
+
+/* ── 오른쪽 폼 패널 ────────────────────────────────── */
+.login-form-panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    padding: 48px 40px;
+}
+
+.login-form-inner {
+    width: 100%;
+    max-width: 380px;
+}
+
+/* 폼 헤더 */
+.lform-header {
+    margin-bottom: 36px;
+}
+.lform-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+}
+.lform-sub {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+/* 필드 */
+.lform-field {
+    margin-bottom: 20px;
+}
+.lform-label {
+    display: block;
     font-size: 13px;
-    color: var(--c-text-sub);
-    margin-top: 4px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    letter-spacing: 0.1px;
+}
+.lform-input-wrap {
+    position: relative;
+}
+.lform-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    flex-shrink: 0;
+}
+.lform-input {
+    width: 100%;
+    height: 50px;
+    padding: 0 16px 0 42px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #0f172a;
+    background: #f8fafc;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.lform-input::placeholder { color: #cbd5e1; }
+.lform-input:focus {
+    border-color: #6366f1;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+
+/* 에러 메시지 */
+.login-error-msg {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+.login-error-msg[hidden] { display: none; }
+
+/* 로그인 버튼 */
+.login-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 52px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 12px;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(79,70,229,0.35);
+    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+.login-btn:hover {
+    background: #4338ca;
+    box-shadow: 0 6px 28px rgba(79,70,229,0.45);
+    transform: translateY(-1px);
+}
+.login-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(79,70,229,0.3);
+}
+.login-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 하단 텍스트 */
+.lform-footer {
+    text-align: center;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 28px;
+}
+
+/* 반응형 (모바일) */
+@media (max-width: 768px) {
+    .login-brand { display: none; }
+    .login-form-panel {
+        background: linear-gradient(
+            155deg, #312e81 0%, #4338ca 50%, #6366f1 100%
+        );
+        padding: 48px 24px;
+    }
+    .login-form-inner {
+        background: #fff;
+        border-radius: 20px;
+        padding: 36px 28px;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+    }
 }
 
 /* ======================================================

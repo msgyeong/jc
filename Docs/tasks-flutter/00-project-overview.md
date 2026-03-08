@@ -32,17 +32,15 @@
 - Railway PostgreSQL (백엔드)
 - GoRouter (라우팅)
 
-### 관리자 웹 (Next.js)
-- Next.js 14+ (App Router)
-- TypeScript
-- Zustand (상태 관리)
-- Tailwind CSS, shadcn/ui
+### 관리자 웹
+- HTML/JS (현재 구현)
+- Railway API 동일 백엔드 사용
 
 ### 백엔드
 - Railway PostgreSQL (데이터베이스)
-- Node.js API (Express)
-- JWT 인증
-- Cloudinary (파일 스토리지, 추후)
+- Node.js API (Express) — `api/` 폴더
+- JWT 인증 (bcryptjs, 7일 만료)
+- Multer 파일 업로드 (5MB 제한)
 
 ---
 

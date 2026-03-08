@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'notice_model.dart';
+part of 'post_model.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -16,35 +16,35 @@ final _privateConstructorUsedError = UnsupportedError(
 );
 
 /// @nodoc
-mixin _$NoticeModel {
+mixin _$PostModel {
   String get id => throw _privateConstructorUsedError;
   String get authorId => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   String get content => throw _privateConstructorUsedError;
   List<String>? get images => throw _privateConstructorUsedError;
+  String get category => throw _privateConstructorUsedError;
   bool get isPinned => throw _privateConstructorUsedError;
-  bool get hasAttendance => throw _privateConstructorUsedError;
   int get views => throw _privateConstructorUsedError;
   int get likesCount => throw _privateConstructorUsedError;
   int get commentsCount => throw _privateConstructorUsedError;
+  bool get readByCurrentUser => throw _privateConstructorUsedError;
+  bool get userHasLiked => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime? get updatedAt => throw _privateConstructorUsedError;
   String? get authorName => throw _privateConstructorUsedError;
   String? get authorImage => throw _privateConstructorUsedError;
 
-  /// Create a copy of NoticeModel
+  /// Create a copy of PostModel
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $NoticeModelCopyWith<NoticeModel> get copyWith =>
+  $PostModelCopyWith<PostModel> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $NoticeModelCopyWith<$Res> {
-  factory $NoticeModelCopyWith(
-    NoticeModel value,
-    $Res Function(NoticeModel) then,
-  ) = _$NoticeModelCopyWithImpl<$Res, NoticeModel>;
+abstract class $PostModelCopyWith<$Res> {
+  factory $PostModelCopyWith(PostModel value, $Res Function(PostModel) then) =
+      _$PostModelCopyWithImpl<$Res, PostModel>;
   @useResult
   $Res call({
     String id,
@@ -52,11 +52,13 @@ abstract class $NoticeModelCopyWith<$Res> {
     String title,
     String content,
     List<String>? images,
+    String category,
     bool isPinned,
-    bool hasAttendance,
     int views,
     int likesCount,
     int commentsCount,
+    bool readByCurrentUser,
+    bool userHasLiked,
     DateTime createdAt,
     DateTime? updatedAt,
     String? authorName,
@@ -65,16 +67,16 @@ abstract class $NoticeModelCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$NoticeModelCopyWithImpl<$Res, $Val extends NoticeModel>
-    implements $NoticeModelCopyWith<$Res> {
-  _$NoticeModelCopyWithImpl(this._value, this._then);
+class _$PostModelCopyWithImpl<$Res, $Val extends PostModel>
+    implements $PostModelCopyWith<$Res> {
+  _$PostModelCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of NoticeModel
+  /// Create a copy of PostModel
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -84,11 +86,13 @@ class _$NoticeModelCopyWithImpl<$Res, $Val extends NoticeModel>
     Object? title = null,
     Object? content = null,
     Object? images = freezed,
+    Object? category = null,
     Object? isPinned = null,
-    Object? hasAttendance = null,
     Object? views = null,
     Object? likesCount = null,
     Object? commentsCount = null,
+    Object? readByCurrentUser = null,
+    Object? userHasLiked = null,
     Object? createdAt = null,
     Object? updatedAt = freezed,
     Object? authorName = freezed,
@@ -116,13 +120,13 @@ class _$NoticeModelCopyWithImpl<$Res, $Val extends NoticeModel>
                 ? _value.images
                 : images // ignore: cast_nullable_to_non_nullable
                       as List<String>?,
+            category: null == category
+                ? _value.category
+                : category // ignore: cast_nullable_to_non_nullable
+                      as String,
             isPinned: null == isPinned
                 ? _value.isPinned
                 : isPinned // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            hasAttendance: null == hasAttendance
-                ? _value.hasAttendance
-                : hasAttendance // ignore: cast_nullable_to_non_nullable
                       as bool,
             views: null == views
                 ? _value.views
@@ -136,6 +140,14 @@ class _$NoticeModelCopyWithImpl<$Res, $Val extends NoticeModel>
                 ? _value.commentsCount
                 : commentsCount // ignore: cast_nullable_to_non_nullable
                       as int,
+            readByCurrentUser: null == readByCurrentUser
+                ? _value.readByCurrentUser
+                : readByCurrentUser // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            userHasLiked: null == userHasLiked
+                ? _value.userHasLiked
+                : userHasLiked // ignore: cast_nullable_to_non_nullable
+                      as bool,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -159,12 +171,12 @@ class _$NoticeModelCopyWithImpl<$Res, $Val extends NoticeModel>
 }
 
 /// @nodoc
-abstract class _$$NoticeModelImplCopyWith<$Res>
-    implements $NoticeModelCopyWith<$Res> {
-  factory _$$NoticeModelImplCopyWith(
-    _$NoticeModelImpl value,
-    $Res Function(_$NoticeModelImpl) then,
-  ) = __$$NoticeModelImplCopyWithImpl<$Res>;
+abstract class _$$PostModelImplCopyWith<$Res>
+    implements $PostModelCopyWith<$Res> {
+  factory _$$PostModelImplCopyWith(
+    _$PostModelImpl value,
+    $Res Function(_$PostModelImpl) then,
+  ) = __$$PostModelImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({
@@ -173,11 +185,13 @@ abstract class _$$NoticeModelImplCopyWith<$Res>
     String title,
     String content,
     List<String>? images,
+    String category,
     bool isPinned,
-    bool hasAttendance,
     int views,
     int likesCount,
     int commentsCount,
+    bool readByCurrentUser,
+    bool userHasLiked,
     DateTime createdAt,
     DateTime? updatedAt,
     String? authorName,
@@ -186,15 +200,15 @@ abstract class _$$NoticeModelImplCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$NoticeModelImplCopyWithImpl<$Res>
-    extends _$NoticeModelCopyWithImpl<$Res, _$NoticeModelImpl>
-    implements _$$NoticeModelImplCopyWith<$Res> {
-  __$$NoticeModelImplCopyWithImpl(
-    _$NoticeModelImpl _value,
-    $Res Function(_$NoticeModelImpl) _then,
+class __$$PostModelImplCopyWithImpl<$Res>
+    extends _$PostModelCopyWithImpl<$Res, _$PostModelImpl>
+    implements _$$PostModelImplCopyWith<$Res> {
+  __$$PostModelImplCopyWithImpl(
+    _$PostModelImpl _value,
+    $Res Function(_$PostModelImpl) _then,
   ) : super(_value, _then);
 
-  /// Create a copy of NoticeModel
+  /// Create a copy of PostModel
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -204,18 +218,20 @@ class __$$NoticeModelImplCopyWithImpl<$Res>
     Object? title = null,
     Object? content = null,
     Object? images = freezed,
+    Object? category = null,
     Object? isPinned = null,
-    Object? hasAttendance = null,
     Object? views = null,
     Object? likesCount = null,
     Object? commentsCount = null,
+    Object? readByCurrentUser = null,
+    Object? userHasLiked = null,
     Object? createdAt = null,
     Object? updatedAt = freezed,
     Object? authorName = freezed,
     Object? authorImage = freezed,
   }) {
     return _then(
-      _$NoticeModelImpl(
+      _$PostModelImpl(
         id: null == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
@@ -236,13 +252,13 @@ class __$$NoticeModelImplCopyWithImpl<$Res>
             ? _value._images
             : images // ignore: cast_nullable_to_non_nullable
                   as List<String>?,
+        category: null == category
+            ? _value.category
+            : category // ignore: cast_nullable_to_non_nullable
+                  as String,
         isPinned: null == isPinned
             ? _value.isPinned
             : isPinned // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        hasAttendance: null == hasAttendance
-            ? _value.hasAttendance
-            : hasAttendance // ignore: cast_nullable_to_non_nullable
                   as bool,
         views: null == views
             ? _value.views
@@ -256,6 +272,14 @@ class __$$NoticeModelImplCopyWithImpl<$Res>
             ? _value.commentsCount
             : commentsCount // ignore: cast_nullable_to_non_nullable
                   as int,
+        readByCurrentUser: null == readByCurrentUser
+            ? _value.readByCurrentUser
+            : readByCurrentUser // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        userHasLiked: null == userHasLiked
+            ? _value.userHasLiked
+            : userHasLiked // ignore: cast_nullable_to_non_nullable
+                  as bool,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -279,18 +303,20 @@ class __$$NoticeModelImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$NoticeModelImpl extends _NoticeModel {
-  const _$NoticeModelImpl({
+class _$PostModelImpl extends _PostModel {
+  const _$PostModelImpl({
     required this.id,
     required this.authorId,
     required this.title,
     required this.content,
     final List<String>? images,
+    this.category = 'general',
     this.isPinned = false,
-    this.hasAttendance = false,
     this.views = 0,
     this.likesCount = 0,
     this.commentsCount = 0,
+    this.readByCurrentUser = false,
+    this.userHasLiked = false,
     required this.createdAt,
     this.updatedAt,
     this.authorName,
@@ -318,10 +344,10 @@ class _$NoticeModelImpl extends _NoticeModel {
 
   @override
   @JsonKey()
-  final bool isPinned;
+  final String category;
   @override
   @JsonKey()
-  final bool hasAttendance;
+  final bool isPinned;
   @override
   @JsonKey()
   final int views;
@@ -331,6 +357,12 @@ class _$NoticeModelImpl extends _NoticeModel {
   @override
   @JsonKey()
   final int commentsCount;
+  @override
+  @JsonKey()
+  final bool readByCurrentUser;
+  @override
+  @JsonKey()
+  final bool userHasLiked;
   @override
   final DateTime createdAt;
   @override
@@ -342,29 +374,33 @@ class _$NoticeModelImpl extends _NoticeModel {
 
   @override
   String toString() {
-    return 'NoticeModel(id: $id, authorId: $authorId, title: $title, content: $content, images: $images, isPinned: $isPinned, hasAttendance: $hasAttendance, views: $views, likesCount: $likesCount, commentsCount: $commentsCount, createdAt: $createdAt, updatedAt: $updatedAt, authorName: $authorName, authorImage: $authorImage)';
+    return 'PostModel(id: $id, authorId: $authorId, title: $title, content: $content, images: $images, category: $category, isPinned: $isPinned, views: $views, likesCount: $likesCount, commentsCount: $commentsCount, readByCurrentUser: $readByCurrentUser, userHasLiked: $userHasLiked, createdAt: $createdAt, updatedAt: $updatedAt, authorName: $authorName, authorImage: $authorImage)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$NoticeModelImpl &&
+            other is _$PostModelImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.authorId, authorId) ||
                 other.authorId == authorId) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.content, content) || other.content == content) &&
             const DeepCollectionEquality().equals(other._images, _images) &&
+            (identical(other.category, category) ||
+                other.category == category) &&
             (identical(other.isPinned, isPinned) ||
                 other.isPinned == isPinned) &&
-            (identical(other.hasAttendance, hasAttendance) ||
-                other.hasAttendance == hasAttendance) &&
             (identical(other.views, views) || other.views == views) &&
             (identical(other.likesCount, likesCount) ||
                 other.likesCount == likesCount) &&
             (identical(other.commentsCount, commentsCount) ||
                 other.commentsCount == commentsCount) &&
+            (identical(other.readByCurrentUser, readByCurrentUser) ||
+                other.readByCurrentUser == readByCurrentUser) &&
+            (identical(other.userHasLiked, userHasLiked) ||
+                other.userHasLiked == userHasLiked) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -383,44 +419,48 @@ class _$NoticeModelImpl extends _NoticeModel {
     title,
     content,
     const DeepCollectionEquality().hash(_images),
+    category,
     isPinned,
-    hasAttendance,
     views,
     likesCount,
     commentsCount,
+    readByCurrentUser,
+    userHasLiked,
     createdAt,
     updatedAt,
     authorName,
     authorImage,
   );
 
-  /// Create a copy of NoticeModel
+  /// Create a copy of PostModel
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$NoticeModelImplCopyWith<_$NoticeModelImpl> get copyWith =>
-      __$$NoticeModelImplCopyWithImpl<_$NoticeModelImpl>(this, _$identity);
+  _$$PostModelImplCopyWith<_$PostModelImpl> get copyWith =>
+      __$$PostModelImplCopyWithImpl<_$PostModelImpl>(this, _$identity);
 }
 
-abstract class _NoticeModel extends NoticeModel {
-  const factory _NoticeModel({
+abstract class _PostModel extends PostModel {
+  const factory _PostModel({
     required final String id,
     required final String authorId,
     required final String title,
     required final String content,
     final List<String>? images,
+    final String category,
     final bool isPinned,
-    final bool hasAttendance,
     final int views,
     final int likesCount,
     final int commentsCount,
+    final bool readByCurrentUser,
+    final bool userHasLiked,
     required final DateTime createdAt,
     final DateTime? updatedAt,
     final String? authorName,
     final String? authorImage,
-  }) = _$NoticeModelImpl;
-  const _NoticeModel._() : super._();
+  }) = _$PostModelImpl;
+  const _PostModel._() : super._();
 
   @override
   String get id;
@@ -433,15 +473,19 @@ abstract class _NoticeModel extends NoticeModel {
   @override
   List<String>? get images;
   @override
-  bool get isPinned;
+  String get category;
   @override
-  bool get hasAttendance;
+  bool get isPinned;
   @override
   int get views;
   @override
   int get likesCount;
   @override
   int get commentsCount;
+  @override
+  bool get readByCurrentUser;
+  @override
+  bool get userHasLiked;
   @override
   DateTime get createdAt;
   @override
@@ -451,10 +495,10 @@ abstract class _NoticeModel extends NoticeModel {
   @override
   String? get authorImage;
 
-  /// Create a copy of NoticeModel
+  /// Create a copy of PostModel
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$NoticeModelImplCopyWith<_$NoticeModelImpl> get copyWith =>
+  _$$PostModelImplCopyWith<_$PostModelImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -1,39 +1,42 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'notice_model.freezed.dart';
-part 'notice_model.g.dart';
+part 'post_model.freezed.dart';
+part 'post_model.g.dart';
 
-/// 공지사항 모델 (schema notices 테이블 및 API 응답 구조)
 @Freezed(fromJson: false)
 @JsonSerializable(fieldRename: FieldRename.snake)
-class NoticeModel with _$NoticeModel {
-  const NoticeModel._();
+class PostModel with _$PostModel {
+  const PostModel._();
 
-  const factory NoticeModel({
+  const factory PostModel({
     required String id,
     required String authorId,
     required String title,
     required String content,
     List<String>? images,
+    @Default('general') String category,
     @Default(false) bool isPinned,
-    @Default(false) bool hasAttendance,
     @Default(0) int views,
     @Default(0) int likesCount,
     @Default(0) int commentsCount,
+    @Default(false) bool readByCurrentUser,
+    @Default(false) bool userHasLiked,
     required DateTime createdAt,
     DateTime? updatedAt,
     String? authorName,
     String? authorImage,
-  }) = _NoticeModel;
+  }) = _PostModel;
 
-  factory NoticeModel.fromJson(Map<String, dynamic> json) {
+  factory PostModel.fromJson(Map<String, dynamic> json) {
     final safe = Map<String, dynamic>.from(json);
     safe['likes_count'] ??= 0;
     safe['comments_count'] ??= 0;
-    return _$NoticeModelFromJson(safe);
+    safe['read_by_current_user'] ??= false;
+    safe['user_has_liked'] ??= false;
+    safe['is_pinned'] ??= false;
+    return _$PostModelFromJson(safe);
   }
 
-  /// 참석자 조사 활성화 여부 (문서: attendanceSurveyEnabled)
-  bool get attendanceSurveyEnabled => hasAttendance;
+  bool get isNotice => category == 'notice';
 }

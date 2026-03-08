@@ -20,24 +20,36 @@ router.get('/', authenticate, async (req, res) => {
         const limit = parseInt(req.query.limit) || 20;
         const offset = (page - 1) * limit;
         const userId = req.user.userId;
+        const category = req.query.category; // 'notice' or 'general'
 
-        const countResult = await query('SELECT COUNT(*) FROM posts');
+        // Category filter
+        const categoryFilter = category ? `WHERE p.category = '${category === 'notice' ? 'notice' : 'general'}'` : '';
+
+        const countResult = await query(
+            `SELECT COUNT(*) FROM posts p ${categoryFilter}`
+        );
         const total = parseInt(countResult.rows[0].count);
+
+        // Notice category: pinned first, then by date
+        const orderClause = category === 'notice'
+            ? 'ORDER BY p.is_pinned DESC NULLS LAST, p.created_at DESC'
+            : 'ORDER BY p.created_at DESC';
 
         let posts;
         try {
             const result = await query(
-                `SELECT 
+                `SELECT
                     p.id, p.title, p.content, p.images, p.category,
+                    p.is_pinned,
                     p.views, p.likes_count, p.comments_count,
                     p.created_at, p.updated_at,
-                    p.schedule_id,
                     u.id as author_id, u.name as author_name, u.profile_image as author_image,
                     pr.read_at as read_at
                  FROM posts p
                  LEFT JOIN users u ON p.author_id = u.id
                  LEFT JOIN post_reads pr ON pr.post_id = p.id AND pr.user_id = $3
-                 ORDER BY p.created_at DESC
+                 ${categoryFilter}
+                 ${orderClause}
                  LIMIT $1 OFFSET $2`,
                 [limit, offset, userId]
             );
@@ -47,15 +59,16 @@ router.get('/', authenticate, async (req, res) => {
             });
         } catch (e) {
             const msg = (e && e.message) || '';
-            if (msg.includes('post_reads') || msg.includes('schedule_id')) {
+            if (msg.includes('post_reads') || msg.includes('schedule_id') || msg.includes('is_pinned')) {
                 const result = await query(
-                    `SELECT 
+                    `SELECT
                         p.id, p.title, p.content, p.images, p.category,
                         p.views, p.likes_count, p.comments_count,
                         p.created_at, p.updated_at,
                         u.id as author_id, u.name as author_name, u.profile_image as author_image
                      FROM posts p
                      LEFT JOIN users u ON p.author_id = u.id
+                     ${categoryFilter}
                      ORDER BY p.created_at DESC
                      LIMIT $1 OFFSET $2`,
                     [limit, offset]
@@ -89,15 +102,33 @@ router.get('/', authenticate, async (req, res) => {
 router.get('/:id/comments', authenticate, async (req, res) => {
     try {
         const { id: postId } = req.params;
-        const q = await query(
-            `SELECT c.id, c.author_id, c.content, c.created_at, u.name as author_name, u.profile_image as author_image
-             FROM comments c
-             LEFT JOIN users u ON c.author_id = u.id
-             WHERE c.post_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
-             ORDER BY c.created_at ASC`,
-            [postId]
-        );
-        return res.json({ success: true, comments: q.rows || [] });
+        let comments;
+        try {
+            const q = await query(
+                `SELECT c.id, c.author_id, c.content, c.parent_comment_id, c.created_at, u.name as author_name, u.profile_image as author_image
+                 FROM comments c
+                 LEFT JOIN users u ON c.author_id = u.id
+                 WHERE c.post_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
+                 ORDER BY c.created_at ASC`,
+                [postId]
+            );
+            comments = q.rows || [];
+        } catch (e) {
+            if (e && e.message && e.message.includes('parent_comment_id')) {
+                const q = await query(
+                    `SELECT c.id, c.author_id, c.content, c.created_at, u.name as author_name, u.profile_image as author_image
+                     FROM comments c
+                     LEFT JOIN users u ON c.author_id = u.id
+                     WHERE c.post_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
+                     ORDER BY c.created_at ASC`,
+                    [postId]
+                );
+                comments = (q.rows || []).map(r => ({ ...r, parent_comment_id: null }));
+            } else {
+                throw e;
+            }
+        }
+        return res.json({ success: true, comments });
     } catch (err) {
         console.error('Get comments error:', err);
         return res.status(500).json({
@@ -114,7 +145,7 @@ router.get('/:id/comments', authenticate, async (req, res) => {
 router.post('/:id/comments', authenticate, async (req, res) => {
     try {
         const { id: postId } = req.params;
-        const { content } = req.body || {};
+        const { content, parent_comment_id } = req.body || {};
         const authorId = req.user.userId;
         if (!content || !String(content).trim()) {
             return res.status(400).json({
@@ -122,11 +153,23 @@ router.post('/:id/comments', authenticate, async (req, res) => {
                 message: '댓글 내용을 입력해주세요.'
             });
         }
-        await query(
-            `INSERT INTO comments (author_id, post_id, content)
-             VALUES ($1, $2, $3)`,
-            [authorId, postId, String(content).trim()]
-        );
+        try {
+            await query(
+                `INSERT INTO comments (author_id, post_id, content, parent_comment_id)
+                 VALUES ($1, $2, $3, $4)`,
+                [authorId, postId, String(content).trim(), parent_comment_id || null]
+            );
+        } catch (e) {
+            if (e && e.message && e.message.includes('parent_comment_id')) {
+                await query(
+                    `INSERT INTO comments (author_id, post_id, content)
+                     VALUES ($1, $2, $3)`,
+                    [authorId, postId, String(content).trim()]
+                );
+            } else {
+                throw e;
+            }
+        }
         const countResult = await query(
             'SELECT COUNT(*) FROM comments WHERE post_id = $1 AND (is_deleted = false OR is_deleted IS NULL)',
             [postId]
@@ -143,6 +186,46 @@ router.post('/:id/comments', authenticate, async (req, res) => {
             success: false,
             message: '댓글 등록에 실패했습니다.'
         });
+    }
+});
+
+/**
+ * DELETE /api/posts/:id/comments/:commentId
+ * 댓글 삭제 (soft delete)
+ */
+router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
+    try {
+        const { id: postId, commentId } = req.params;
+        const userId = req.user.userId;
+        const userRole = req.user.role;
+
+        const commentResult = await query(
+            'SELECT author_id FROM comments WHERE id = $1 AND post_id = $2',
+            [commentId, postId]
+        );
+        if (commentResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '댓글을 찾을 수 없습니다.' });
+        }
+
+        const isAuthor = commentResult.rows[0].author_id === userId;
+        const isAdmin = userRole && ['super_admin', 'admin'].includes(userRole);
+        if (!isAuthor && !isAdmin) {
+            return res.status(403).json({ success: false, message: '댓글 삭제 권한이 없습니다.' });
+        }
+
+        await query('UPDATE comments SET is_deleted = true WHERE id = $1', [commentId]);
+
+        const countResult = await query(
+            'SELECT COUNT(*) FROM comments WHERE post_id = $1 AND (is_deleted = false OR is_deleted IS NULL)',
+            [postId]
+        );
+        const comments_count = parseInt(countResult.rows[0]?.count || 0, 10);
+        await query('UPDATE posts SET comments_count = $1, updated_at = NOW() WHERE id = $2', [comments_count, postId]);
+
+        return res.json({ success: true, message: '댓글이 삭제되었습니다.', comments_count });
+    } catch (err) {
+        console.error('Delete comment error:', err);
+        return res.status(500).json({ success: false, message: '댓글 삭제에 실패했습니다.' });
     }
 });
 
@@ -293,10 +376,11 @@ router.get('/:id', authenticate, async (req, res) => {
  */
 router.post('/', authenticate, async (req, res) => {
     try {
-        const { title, content, images, category, schedule_id } = req.body;
+        const { title, content, images, category, schedule_id, is_pinned } = req.body;
         const authorId = req.user.userId;
         const role = req.user.role;
         const cat = (category && String(category).trim()) || 'general';
+        const pinned = cat === 'notice' && is_pinned ? true : false;
 
         if (!title || !content) {
             return res.status(400).json({
@@ -315,13 +399,14 @@ router.post('/', authenticate, async (req, res) => {
         let result;
         try {
             result = await query(
-                `INSERT INTO posts (author_id, title, content, images, category, schedule_id, created_at, updated_at)
-                 VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+                `INSERT INTO posts (author_id, title, content, images, category, is_pinned, schedule_id, created_at, updated_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
                  RETURNING id`,
-                [authorId, title, content, images || [], cat, schedule_id || null]
+                [authorId, title, content, images || [], cat, pinned, schedule_id || null]
             );
         } catch (e) {
-            if (e && e.message && e.message.includes('schedule_id')) {
+            const msg = (e && e.message) || '';
+            if (msg.includes('schedule_id') || msg.includes('is_pinned')) {
                 result = await query(
                     `INSERT INTO posts (author_id, title, content, images, category, created_at, updated_at)
                      VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
@@ -352,9 +437,10 @@ router.post('/', authenticate, async (req, res) => {
 router.put('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, content, images, category, schedule_id } = req.body;
+        const { title, content, images, category, schedule_id, is_pinned } = req.body;
         const userId = req.user.userId;
         const cat = (category && String(category).trim()) || 'general';
+        const pinned = cat === 'notice' && is_pinned ? true : false;
 
         const postResult = await query(
             'SELECT author_id, category FROM posts WHERE id = $1',
@@ -386,15 +472,16 @@ router.put('/:id', authenticate, async (req, res) => {
 
         try {
             await query(
-                `UPDATE posts 
-                 SET title = $1, content = $2, images = $3, category = $4, schedule_id = $5, updated_at = NOW()
-                 WHERE id = $6`,
-                [title, content, images || [], cat, schedule_id !== undefined ? schedule_id : null, id]
+                `UPDATE posts
+                 SET title = $1, content = $2, images = $3, category = $4, is_pinned = $5, schedule_id = $6, updated_at = NOW()
+                 WHERE id = $7`,
+                [title, content, images || [], cat, pinned, schedule_id !== undefined ? schedule_id : null, id]
             );
         } catch (e) {
-            if (e && e.message && e.message.includes('schedule_id')) {
+            const msg = (e && e.message) || '';
+            if (msg.includes('schedule_id') || msg.includes('is_pinned')) {
                 await query(
-                    `UPDATE posts 
+                    `UPDATE posts
                      SET title = $1, content = $2, images = $3, category = $4, updated_at = NOW()
                      WHERE id = $5`,
                     [title, content, images || [], cat, id]

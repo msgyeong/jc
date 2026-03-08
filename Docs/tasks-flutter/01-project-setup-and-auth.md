@@ -246,16 +246,16 @@
 
 > **역할**: 🤖 **Cursor(AI)** 전담
 
-### [ ] 회원 상태 확인 로직
-- [ ] `is_approved = false` → 승인 진행중 화면
-- [ ] `is_approved = false && rejection_reason IS NOT NULL` → 로그인 차단, 거절 사유 표시
-- [ ] `is_suspended = true` → 로그인 차단, 정지 안내
-- [ ] `withdrawn_at IS NOT NULL` → 로그인 차단
+### [x] 회원 상태 확인 로직
+- [x] `status = 'pending'` → 승인 진행중 화면 리다이렉트
+- [x] `status = 'suspended'` → 로그인 차단, 정지 안내
+- [x] `status = 'withdrawn'` → 로그인 차단
+- [x] Railway API `/api/auth/login` 응답에서 상태별 분기 처리
 
-### [ ] 승인 진행중 화면
-- [ ] `lib/screens/auth/pending_approval_screen.dart` 생성
-- [ ] "회원 가입이 승인 진행중입니다" 메시지
-- [ ] "확인" 버튼 (로그인 화면으로 복귀)
+### [x] 승인 진행중 화면
+- [x] `lib/screens/auth/pending_approval_screen.dart` 생성
+- [x] "회원 가입이 승인 진행중입니다" 메시지
+- [x] "확인" 버튼 (로그인 화면으로 복귀)
 
 ---
 
@@ -281,15 +281,13 @@
 
 ## 완료 기준
 
-- [x] 로그인 화면 정상 작동
+- [x] 로그인 화면 정상 작동 (Railway API JWT 인증)
 - [ ] 비밀번호 찾기/재설정 기능 정상 작동
 - [x] 회원가입 화면이 모든 필수 필드 수집 및 저장
-- [x] 프로필 사진 스토리지 업로드 성공
-  - 경로: `profiles/{userId}/avatar.jpg`
-  - 회원가입 순서: 계정 생성 → 업로드 → members INSERT
-- [ ] 미인증 사용자 보호된 화면 접근 차단
-- [ ] 회원 상태별 처리 정확히 동작
-- [ ] 스플래시 화면 표시 및 올바른 화면 전환
+- [x] 프로필 사진 업로드 성공 (Railway API `/api/upload`)
+- [x] 미인증 사용자 보호된 화면 접근 차단 (GoRouter redirect)
+- [x] 회원 상태별 처리 정확히 동작 (pending, suspended, withdrawn)
+- [x] 스플래시 화면 표시 및 올바른 화면 전환
 - [x] 디자인 시스템 기본 설정 완료
 - [x] 이미지 업로드 기본 유틸리티 생성 완료
 - [x] 하단 탭 네비게이션 기본 구조 생성 완료

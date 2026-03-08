@@ -21,36 +21,51 @@ async function loadHomeData() {
     }
 }
 
-// 공지사항 요약 로드
+// 공지사항 요약 로드 (게시판 category=notice 연동, 7일 이내, 최대 5개)
 async function loadNoticeSummary() {
     const container = document.getElementById('notice-summary');
     if (!container) return;
-    
+
     try {
         container.innerHTML = '<div class="content-loading">공지사항 로딩 중...</div>';
-        
-        // API로 공지사항 목록 조회 (최대 5개)
-        const result = await apiClient.getNotices(1, 5);
-        
-        if (result.success && result.notices && result.notices.length > 0) {
-            container.innerHTML = result.notices.map(notice => `
-                <div class="notice-card" onclick="navigateTo('/notices/${notice.id}')">
-                    <div class="notice-header">
-                        ${notice.is_pinned ? '<span class="badge badge-pinned">📌 고정</span>' : ''}
-                        ${isNewContent(notice.created_at) ? '<span class="badge badge-new">N</span>' : ''}
+
+        // 게시판 API에서 공지 카테고리 조회
+        const result = await apiClient.getPosts(1, 20, 'notice');
+
+        if (result.success && result.posts && result.posts.length > 0) {
+            // 7일 이내 게시글만 필터 (고정 공지 포함 모두 동일 적용)
+            const now = new Date();
+            const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+            const filtered = result.posts.filter(post => {
+                const created = new Date(post.created_at);
+                return (now - created) <= sevenDaysMs;
+            });
+
+            // 최대 5개
+            const notices = filtered.slice(0, 5);
+
+            if (notices.length > 0) {
+                container.innerHTML = notices.map(post => `
+                    <div class="notice-card" onclick="navigateTo('/posts/${post.id}')">
+                        <div class="notice-header">
+                            ${post.is_pinned ? '<span class="badge badge-pinned">📌 고정</span>' : ''}
+                            ${isNewContent(post.created_at) ? '<span class="badge badge-new">N</span>' : ''}
+                        </div>
+                        <h3 class="notice-title">${escapeHtml(post.title)}</h3>
+                        <div class="notice-meta">
+                            <span class="notice-date">${formatRelativeTime(post.created_at)}</span>
+                            ${post.comments_count > 0 ? `<span class="notice-comments">💬 ${post.comments_count}</span>` : ''}
+                            ${post.likes_count > 0 ? `<span class="notice-likes">❤️ ${post.likes_count}</span>` : ''}
+                        </div>
                     </div>
-                    <h3 class="notice-title">${escapeHtml(notice.title)}</h3>
-                    <div class="notice-meta">
-                        <span class="notice-date">${formatRelativeTime(notice.created_at)}</span>
-                        ${notice.comments_count > 0 ? `<span class="notice-comments">💬 ${notice.comments_count}</span>` : ''}
-                        ${notice.likes_count > 0 ? `<span class="notice-likes">❤️ ${notice.likes_count}</span>` : ''}
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
+            } else {
+                container.innerHTML = '<div class="empty-state">최근 공지사항이 없습니다.</div>';
+            }
         } else {
             container.innerHTML = '<div class="empty-state">등록된 공지사항이 없습니다.</div>';
         }
-        
+
     } catch (error) {
         console.error('공지사항 요약 로드 실패:', error);
         container.innerHTML = '<div class="error-state">공지사항을 불러올 수 없습니다.</div>';

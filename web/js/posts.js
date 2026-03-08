@@ -1,4 +1,4 @@
-// 게시판 기능 (Railway API 연동)
+// 게시판 기능 (Railway API 연동) — 서브탭 + 카드 재디자인
 
 const MAX_POST_IMAGES = 5;
 
@@ -9,47 +9,57 @@ let postsInfiniteScrollSetup = false;
 let postCreateImageUrls = [];
 let postEditImageUrls = [];
 
-// 게시글 목록 로드
+// ── 현재 활성 탭 카테고리 ──
+let currentBoardCategory = 'notice';
+
+// ── 게시글 목록 로드 (카테고리별) ──
 async function loadPosts(page = 1) {
     if (postsLoading) return;
-    
-    console.log(`📋 게시글 목록 로드 (페이지 ${page})`);
-    
+
     const container = document.getElementById('post-list');
     if (!container) return;
-    
+
     postsLoading = true;
-    
+
     try {
         if (page === 1) {
             container.innerHTML = '<div class="content-loading">게시글 로딩 중...</div>';
         }
-        
-        // API로 게시글 목록 조회
-        const result = await apiClient.getPosts(page, 20);
-        
+
+        const result = await apiClient.getPosts(page, 20, currentBoardCategory);
+
         if (result.success && result.posts) {
             if (result.posts.length === 0) {
                 if (page === 1) {
-                    container.innerHTML = '<div class="empty-state">등록된 게시글이 없습니다.</div>';
+                    const msg = currentBoardCategory === 'notice'
+                        ? '등록된 공지가 없습니다.'
+                        : '등록된 게시글이 없습니다.';
+                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-message">${msg}</div></div>`;
                 }
                 hasMorePosts = false;
             } else {
-                const postsHtml = result.posts.map(post => createPostCard(post)).join('');
-                
+                // 공지탭: pinned 상단 정렬
+                let posts = result.posts;
+                if (currentBoardCategory === 'notice' && page === 1) {
+                    const pinned = posts.filter(p => p.is_pinned);
+                    const rest = posts.filter(p => !p.is_pinned);
+                    posts = [...pinned, ...rest];
+                }
+
+                const postsHtml = posts.map(post => createPostCard(post)).join('');
+
                 if (page === 1) {
                     container.innerHTML = postsHtml;
                 } else {
                     container.insertAdjacentHTML('beforeend', postsHtml);
                 }
-                
+
                 currentPostsPage = page;
                 hasMorePosts = page < result.totalPages;
             }
         } else {
             container.innerHTML = '<div class="error-state">게시글을 불러올 수 없습니다.</div>';
         }
-        
     } catch (error) {
         console.error('게시글 목록 로드 실패:', error);
         container.innerHTML = '<div class="error-state">게시글을 불러올 수 없습니다.</div>';
@@ -58,52 +68,58 @@ async function loadPosts(page = 1) {
     }
 }
 
-// 게시글 카드 생성 (개인별 읽음: read_by_current_user 있으면 N 미표시)
+// ── 게시글 카드 생성 (재디자인) ──
 function createPostCard(post) {
     const isNew = isNewContent(post.created_at);
     const unread = isNew && (post.read_by_current_user !== true);
     const hasImages = post.images && post.images.length > 0;
     const firstImage = hasImages ? post.images[0] : null;
-    const isNotice = post.category === 'notice';
+    const isPinned = post.is_pinned === true;
+
+    const avatarHtml = post.author_image
+        ? `<img src="${post.author_image}" alt="" class="pc-avatar-img">`
+        : `<span class="pc-avatar-text">${post.author_name ? escapeHtml(post.author_name[0]) : '?'}</span>`;
+
+    const pinnedHtml = isPinned
+        ? `<span class="pc-pinned">📌 [고정]</span>`
+        : '';
+
+    const thumbnailHtml = firstImage
+        ? `<div class="pc-thumb"><img src="${firstImage}" alt="" onerror="this.parentElement.style.display='none'"></div>`
+        : '';
+
+    const nBadgeHtml = unread
+        ? `<span class="pc-badge-n">N</span>`
+        : '';
 
     return `
-        <div class="post-card" onclick="navigateTo('/posts/${post.id}')">
-            <div class="post-header">
-                <div class="post-author">
-                    ${post.author_image ? 
-                        `<img src="${post.author_image}" alt="${post.author_name}" class="author-avatar">` :
-                        `<div class="author-avatar-placeholder">${post.author_name ? post.author_name[0] : '?'}</div>`
-                    }
-                    <span class="author-name">${escapeHtml(post.author_name || '알 수 없음')}</span>
-                </div>
-                ${isNotice ? '<span class="badge badge-notice">공지</span>' : ''}
-                ${unread ? '<span class="badge badge-new">N</span>' : ''}
+        <div class="pc-card" onclick="navigateTo('/posts/${post.id}')">
+            <div class="pc-top">
+                <div class="pc-avatar">${avatarHtml}</div>
+                <span class="pc-author">${escapeHtml(post.author_name || '알 수 없음')}</span>
+                <span class="pc-dot">·</span>
+                <span class="pc-time">${formatRelativeTime(post.created_at)}</span>
+                <span class="pc-top-spacer"></span>
+                ${nBadgeHtml}
             </div>
-            
-            <h3 class="post-title">${escapeHtml(post.title)}</h3>
-            
-            ${post.content ? `
-                <p class="post-preview">${escapeHtml(post.content.substring(0, 100))}${post.content.length > 100 ? '...' : ''}</p>
-            ` : ''}
-            
-            ${firstImage ? `
-                <div class="post-thumbnail">
-                    <img src="${firstImage}" alt="게시글 이미지">
-                    ${post.images.length > 1 ? `<span class="image-count">+${post.images.length - 1}</span>` : ''}
+            <div class="pc-body">
+                <div class="pc-text">
+                    ${pinnedHtml}
+                    <h3 class="pc-title">${escapeHtml(post.title)}</h3>
+                    ${post.content ? `<p class="pc-preview">${escapeHtml(post.content.substring(0, 120))}${post.content.length > 120 ? '...' : ''}</p>` : ''}
                 </div>
-            ` : ''}
-            
-            <div class="post-meta">
-                <span class="post-date">${formatRelativeTime(post.created_at)}</span>
-                ${post.views > 0 ? `<span class="post-views">👁️ ${post.views}</span>` : ''}
-                ${post.comments_count > 0 ? `<span class="post-comments">💬 ${post.comments_count}</span>` : ''}
-                ${post.likes_count > 0 ? `<span class="post-likes">❤️ ${post.likes_count}</span>` : ''}
+                ${thumbnailHtml}
+            </div>
+            <div class="pc-stats">
+                <span class="pc-stat">💬 ${post.comments_count || 0}</span>
+                <span class="pc-stat">❤️ ${post.likes_count || 0}</span>
+                <span class="pc-stat">👁️ ${post.views || 0}</span>
             </div>
         </div>
     `;
 }
 
-// 무한 스크롤 처리 (하단 sentinel 감시)
+// ── 무한 스크롤 ──
 function setupPostsInfiniteScroll() {
     if (postsInfiniteScrollSetup) return;
     const sentinel = document.querySelector('#posts-screen .posts-scroll-sentinel');
@@ -120,15 +136,43 @@ function setupPostsInfiniteScroll() {
     postsInfiniteScrollSetup = true;
 }
 
-// 게시판 탭 진입 시 호출 (navigation.js에서 사용)
+// ── 게시판 탭 진입 ──
 async function loadPostsScreen() {
     currentPostsPage = 0;
     hasMorePosts = true;
     await loadPosts(1);
     setupPostsInfiniteScroll();
+    updateCreatePostBtnVisibility();
 }
 
-// 이미지 URL 배열 유효화 (최대 5개, 문자열만)
+// ── 서브탭 전환 ──
+function switchBoardTab(category) {
+    currentBoardCategory = category;
+
+    document.querySelectorAll('.board-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.category === category);
+    });
+
+    currentPostsPage = 0;
+    hasMorePosts = true;
+    loadPosts(1);
+    updateCreatePostBtnVisibility();
+}
+
+// ── FAB 노출: 공지탭은 관리자만 ──
+function updateCreatePostBtnVisibility() {
+    const btn = document.getElementById('create-post-btn');
+    if (!btn) return;
+
+    if (currentBoardCategory === 'notice') {
+        const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+        btn.style.display = userInfo.can_post_notice ? '' : 'none';
+    } else {
+        btn.style.display = '';
+    }
+}
+
+// ── 이미지 유틸 ──
 function sanitizeImageUrls(arr) {
     if (!Array.isArray(arr)) return [];
     return arr
@@ -151,6 +195,9 @@ function renderPostFormImages(containerId, urls, onRemove) {
         const btn = el.querySelector(`.post-form-image-remove[data-index="${idx}"]`);
         if (btn) btn.addEventListener('click', () => onRemove(idx));
     });
+    // 이미지 카운트 업데이트
+    const countEl = document.getElementById('post-create-images-count');
+    if (countEl) countEl.textContent = `(${list.length}/${MAX_POST_IMAGES})`;
 }
 
 function getPostCreateImages() {
@@ -161,38 +208,12 @@ function getPostEditImages() {
     return sanitizeImageUrls(postEditImageUrls);
 }
 
-// 작성 화면: URL 추가
-function handlePostCreateAddUrl() {
-    const input = document.getElementById('post-create-image-url');
-    if (!input || getPostCreateImages().length >= MAX_POST_IMAGES) return;
-    const url = (input.value || '').trim();
-    if (!url) return;
-    try {
-        new URL(url);
-    } catch (_) {
-        const errEl = document.getElementById('post-create-error');
-        if (errEl) {
-            errEl.textContent = '올바른 이미지 URL을 입력해주세요.';
-            errEl.classList.add('show');
-        }
-        return;
-    }
-    postCreateImageUrls = getPostCreateImages().concat([url]).slice(0, MAX_POST_IMAGES);
-    renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage);
-    input.value = '';
-    const errEl = document.getElementById('post-create-error');
-    if (errEl) {
-        errEl.textContent = '';
-        errEl.classList.remove('show');
-    }
-}
-
 function removePostCreateImage(idx) {
     postCreateImageUrls = getPostCreateImages().filter((_, i) => i !== idx);
     renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage);
 }
 
-// 작성 화면: 파일 업로드 후 URL 추가
+// ── 작성 화면: 파일 선택 ──
 async function handlePostCreateFileSelect(e) {
     const file = e.target && e.target.files && e.target.files[0];
     if (!file || getPostCreateImages().length >= MAX_POST_IMAGES) return;
@@ -213,127 +234,88 @@ async function handlePostCreateFileSelect(e) {
     }
 }
 
-// 수정 화면: URL 추가
-function handlePostEditAddUrl() {
-    const input = document.getElementById('post-edit-image-url');
-    if (!input || getPostEditImages().length >= MAX_POST_IMAGES) return;
-    const url = (input.value || '').trim();
-    if (!url) return;
-    try {
-        new URL(url);
-    } catch (_) {
-        const errEl = document.getElementById('post-edit-error');
-        if (errEl) {
-            errEl.textContent = '올바른 이미지 URL을 입력해주세요.';
-            errEl.classList.add('show');
-        }
-        return;
-    }
-    postEditImageUrls = getPostEditImages().concat([url]).slice(0, MAX_POST_IMAGES);
-    renderPostFormImages('post-edit-images-list', postEditImageUrls, removePostEditImage);
-    input.value = '';
-    const errEl = document.getElementById('post-edit-error');
-    if (errEl) {
-        errEl.textContent = '';
-        errEl.classList.remove('show');
-    }
-}
-
-function removePostEditImage(idx) {
-    postEditImageUrls = getPostEditImages().filter((_, i) => i !== idx);
-    renderPostFormImages('post-edit-images-list', postEditImageUrls, removePostEditImage);
-}
-
-async function handlePostEditFileSelect(e) {
-    const file = e.target && e.target.files && e.target.files[0];
-    if (!file || getPostEditImages().length >= MAX_POST_IMAGES) return;
-    e.target.value = '';
-    const errEl = document.getElementById('post-edit-error');
-    try {
-        const result = await apiClient.uploadPostImage(file);
-        if (result && result.url) {
-            postEditImageUrls = getPostEditImages().concat([result.url]).slice(0, MAX_POST_IMAGES);
-            renderPostFormImages('post-edit-images-list', postEditImageUrls, removePostEditImage);
-        }
-        if (errEl) {
-            errEl.textContent = '';
-            errEl.classList.remove('show');
-        }
-    } catch (err) {
-        if (errEl) {
-            errEl.textContent = err.message || '이미지 업로드에 실패했습니다.';
-            errEl.classList.add('show');
-        }
-    }
-}
-
-// 게시글 작성 버튼 클릭 → 작성 화면으로 이동
+// ── 게시글 작성 버튼 → 작성 화면 이동 ──
 function handleCreatePost() {
     postCreateImageUrls = [];
     renderPostFormImages('post-create-images-list', [], removePostCreateImage);
-    const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+
+    // 현재 탭의 카테고리 자동 적용
     const categoryEl = document.getElementById('post-create-category');
-    const helpEl = document.getElementById('post-create-category-help');
-    if (categoryEl) {
-        const noticeOpt = categoryEl.querySelector('option[value="notice"]');
-        if (noticeOpt) {
-            noticeOpt.disabled = !userInfo.can_post_notice;
-            noticeOpt.hidden = !userInfo.can_post_notice;
-        }
-        if (!userInfo.can_post_notice) categoryEl.value = 'general';
-    }
-    if (helpEl) helpEl.style.display = userInfo.can_post_notice ? 'none' : '';
+    if (categoryEl) categoryEl.value = currentBoardCategory;
+
+    // 공지 옵션 표시/숨김
+    const noticeOpts = document.getElementById('post-create-notice-options');
+    if (noticeOpts) noticeOpts.style.display = currentBoardCategory === 'notice' ? '' : 'none';
+
+    // 폼 초기화
+    const titleEl = document.getElementById('post-create-title');
+    const contentEl = document.getElementById('post-create-content');
+    const pinnedEl = document.getElementById('post-create-is-pinned');
+    if (titleEl) titleEl.value = '';
+    if (contentEl) contentEl.value = '';
+    if (pinnedEl) pinnedEl.checked = false;
+
     navigateToScreen('post-create');
 }
 
-// 게시글 작성 폼 제출
+// ── 게시글 작성 폼 제출 ──
 async function handlePostCreateSubmit(e) {
     e.preventDefault();
     const titleEl = document.getElementById('post-create-title');
     const contentEl = document.getElementById('post-create-content');
     const errorEl = document.getElementById('post-create-error');
     const submitBtn = document.getElementById('post-create-submit');
-    if (!titleEl || !contentEl || !errorEl || !submitBtn) return;
+    if (!titleEl || !contentEl || !submitBtn) return;
 
     const title = (titleEl.value || '').trim();
     const content = (contentEl.value || '').trim();
 
-    errorEl.textContent = '';
+    if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.classList.remove('show');
+    }
     if (!title) {
-        errorEl.textContent = '제목을 입력해주세요.';
+        if (errorEl) {
+            errorEl.textContent = '제목을 입력해주세요.';
+            errorEl.classList.add('show');
+        }
         titleEl.focus();
         return;
     }
     if (!content) {
-        errorEl.textContent = '내용을 입력해주세요.';
+        if (errorEl) {
+            errorEl.textContent = '내용을 입력해주세요.';
+            errorEl.classList.add('show');
+        }
         contentEl.focus();
         return;
     }
 
     const categoryEl = document.getElementById('post-create-category');
-    const scheduleIdEl = document.getElementById('post-create-schedule-id');
     const category = (categoryEl && categoryEl.value) || 'general';
-    const scheduleId = scheduleIdEl && scheduleIdEl.value && scheduleIdEl.value.trim()
-        ? parseInt(scheduleIdEl.value.trim(), 10) : null;
     if (category === 'notice') {
         const u = JSON.parse(localStorage.getItem('user_info') || '{}');
         if (!u.can_post_notice) {
-            errorEl.textContent = '공지사항은 관리자만 작성할 수 있습니다.';
-            errorEl.classList.add('show');
+            if (errorEl) {
+                errorEl.textContent = '공지사항은 관리자만 작성할 수 있습니다.';
+                errorEl.classList.add('show');
+            }
             return;
         }
     }
 
-    setButtonLoading(submitBtn, true);
+    submitBtn.disabled = true;
+    submitBtn.textContent = '등록 중...';
     try {
         const images = getPostCreateImages();
+        const isPinned = document.getElementById('post-create-is-pinned');
         const payload = {
             title,
             content,
             images,
-            category
+            category,
+            is_pinned: isPinned ? isPinned.checked : false,
         };
-        if (scheduleId > 0) payload.schedule_id = scheduleId;
         const result = await apiClient.createPost(payload);
         if (result.success) {
             if (typeof loadPostsScreen === 'function') {
@@ -348,19 +330,24 @@ async function handlePostCreateSubmit(e) {
             postCreateImageUrls = [];
             renderPostFormImages('post-create-images-list', [], removePostCreateImage);
         } else {
-            errorEl.textContent = result.message || '게시글 작성에 실패했습니다.';
-            errorEl.classList.add('show');
+            if (errorEl) {
+                errorEl.textContent = result.message || '게시글 작성에 실패했습니다.';
+                errorEl.classList.add('show');
+            }
         }
     } catch (err) {
         console.error('게시글 작성 실패:', err);
-        errorEl.textContent = err.message || '게시글 작성 중 오류가 발생했습니다.';
-        errorEl.classList.add('show');
+        if (errorEl) {
+            errorEl.textContent = err.message || '게시글 작성 중 오류가 발생했습니다.';
+            errorEl.classList.add('show');
+        }
     } finally {
-        setButtonLoading(submitBtn, false);
+        submitBtn.disabled = false;
+        submitBtn.textContent = '등록';
     }
 }
 
-// 작성 화면 취소(뒤로가기)
+// ── 작성 화면 취소 ──
 function handlePostCreateCancel() {
     navigateToScreen('posts');
     if (typeof updateNavigation === 'function') {
@@ -368,7 +355,7 @@ function handlePostCreateCancel() {
     }
 }
 
-// 게시글 상세 화면 표시 (navigation.js에서 호출)
+// ── 게시글 상세 화면 표시 ──
 function showPostDetailScreen(postId) {
     const detailScreen = document.getElementById('post-detail-screen');
     if (!detailScreen) return;
@@ -377,7 +364,7 @@ function showPostDetailScreen(postId) {
     loadPostDetail(postId);
 }
 
-// 게시글 상세 로드 및 렌더링
+// ── 게시글 상세 로드 ──
 async function loadPostDetail(postId) {
     const container = document.getElementById('post-detail-content');
     if (!container) return;
@@ -401,7 +388,7 @@ async function loadPostDetail(postId) {
     }
 }
 
-// 댓글 목록 로드 및 렌더
+// ── 댓글 목록 로드 ──
 async function loadCommentsForPost(postId) {
     const listEl = document.getElementById('post-detail-comments-list');
     if (!listEl) return;
@@ -424,7 +411,7 @@ async function loadCommentsForPost(postId) {
     }
 }
 
-// 공감 토글 처리 (이벤트 위임용)
+// ── 공감 토글 ──
 async function handlePostLikeClick(postId) {
     const btn = document.querySelector(`[data-action="like"][data-post-id="${postId}"]`);
     if (!btn || btn.disabled) return;
@@ -442,7 +429,7 @@ async function handlePostLikeClick(postId) {
     btn.disabled = false;
 }
 
-// 댓글 등록 처리 (이벤트 위임용)
+// ── 댓글 등록 ──
 async function handlePostCommentSubmit(postId, content) {
     content = String(content || '').trim();
     if (!content) return;
@@ -461,7 +448,7 @@ async function handlePostCommentSubmit(postId, content) {
     }
 }
 
-// 게시글 상세 HTML 생성
+// ── 게시글 상세 HTML ──
 function renderPostDetail(post) {
     const userInfo = typeof currentUser !== 'undefined'
         ? currentUser
@@ -525,7 +512,7 @@ function renderPostDetail(post) {
     `;
 }
 
-// 상세 화면 뒤로가기
+// ── 상세 뒤로가기 ──
 function handlePostDetailBack() {
     navigateToScreen('posts');
     if (typeof updateNavigation === 'function') {
@@ -533,7 +520,7 @@ function handlePostDetailBack() {
     }
 }
 
-// 게시글 수정 화면 표시 (상세에서 수정 버튼 클릭 시)
+// ── 수정 화면 ──
 function showPostEditScreen(postId) {
     const editScreen = document.getElementById('post-edit-screen');
     if (!editScreen) return;
@@ -543,7 +530,6 @@ function showPostEditScreen(postId) {
     loadPostForEdit(postId);
 }
 
-// 수정용 게시글 데이터 로드
 async function loadPostForEdit(postId) {
     const titleEl = document.getElementById('post-edit-title');
     const contentEl = document.getElementById('post-edit-content');
@@ -581,7 +567,6 @@ async function loadPostForEdit(postId) {
     }
 }
 
-// 수정 폼 제출
 async function handlePostEditSubmit(e) {
     e.preventDefault();
     const idEl = document.getElementById('post-edit-id');
@@ -596,16 +581,8 @@ async function handlePostEditSubmit(e) {
     const content = contentEl.value.trim();
 
     errorEl.textContent = '';
-    if (!title) {
-        errorEl.textContent = '제목을 입력해주세요.';
-        titleEl.focus();
-        return;
-    }
-    if (!content) {
-        errorEl.textContent = '내용을 입력해주세요.';
-        contentEl.focus();
-        return;
-    }
+    if (!title) { errorEl.textContent = '제목을 입력해주세요.'; titleEl.focus(); return; }
+    if (!content) { errorEl.textContent = '내용을 입력해주세요.'; contentEl.focus(); return; }
 
     const categoryEl = document.getElementById('post-edit-category');
     const scheduleIdEl = document.getElementById('post-edit-schedule-id');
@@ -634,7 +611,36 @@ async function handlePostEditSubmit(e) {
     }
 }
 
-// 수정 화면 취소(뒤로가기)
+// ── 수정 이미지 ──
+function handlePostEditAddUrl() {
+    const input = document.getElementById('post-edit-image-url');
+    if (!input || getPostEditImages().length >= MAX_POST_IMAGES) return;
+    const url = (input.value || '').trim();
+    if (!url) return;
+    try { new URL(url); } catch (_) { return; }
+    postEditImageUrls = getPostEditImages().concat([url]).slice(0, MAX_POST_IMAGES);
+    renderPostFormImages('post-edit-images-list', postEditImageUrls, removePostEditImage);
+    input.value = '';
+}
+
+function removePostEditImage(idx) {
+    postEditImageUrls = getPostEditImages().filter((_, i) => i !== idx);
+    renderPostFormImages('post-edit-images-list', postEditImageUrls, removePostEditImage);
+}
+
+async function handlePostEditFileSelect(e) {
+    const file = e.target && e.target.files && e.target.files[0];
+    if (!file || getPostEditImages().length >= MAX_POST_IMAGES) return;
+    e.target.value = '';
+    try {
+        const result = await apiClient.uploadPostImage(file);
+        if (result && result.url) {
+            postEditImageUrls = getPostEditImages().concat([result.url]).slice(0, MAX_POST_IMAGES);
+            renderPostFormImages('post-edit-images-list', postEditImageUrls, removePostEditImage);
+        }
+    } catch (_) {}
+}
+
 function handlePostEditBack() {
     const idEl = document.getElementById('post-edit-id');
     const postId = idEl ? idEl.value : null;
@@ -646,7 +652,6 @@ function handlePostEditBack() {
     }
 }
 
-// 상세에서 수정 버튼 클릭 → 수정 화면으로
 function handlePostEdit(postId) {
     showPostEditScreen(postId);
 }
@@ -666,9 +671,16 @@ function handlePostDelete(postId) {
         });
 }
 
-// 페이지 로드 시 초기화
+// ── DOMContentLoaded ──
 document.addEventListener('DOMContentLoaded', () => {
-    // 게시판 화면이 활성화될 때 데이터 로드
+    // 서브탭 클릭 이벤트
+    document.querySelectorAll('.board-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            switchBoardTab(tab.dataset.category);
+        });
+    });
+
+    // 게시판 화면 활성화 감지
     const postsScreen = document.getElementById('posts-screen');
     if (postsScreen) {
         const observer = new MutationObserver((mutations) => {
@@ -683,10 +695,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-        
         observer.observe(postsScreen, { attributes: true });
     }
-    
+
     // 게시글 작성 버튼
     const createPostBtn = document.getElementById('create-post-btn');
     if (createPostBtn) {
@@ -702,10 +713,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (postCreateBack) {
         postCreateBack.addEventListener('click', handlePostCreateCancel);
     }
-    const postCreateAddUrlBtn = document.getElementById('post-create-add-url-btn');
-    if (postCreateAddUrlBtn) {
-        postCreateAddUrlBtn.addEventListener('click', handlePostCreateAddUrl);
-    }
+
+    // 이미지 파일 선택
     const postCreateUploadBtn = document.getElementById('post-create-upload-btn');
     const postCreateFileInput = document.getElementById('post-create-image-file');
     if (postCreateUploadBtn && postCreateFileInput) {
@@ -714,6 +723,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (postCreateFileInput) {
         postCreateFileInput.addEventListener('change', handlePostCreateFileSelect);
     }
+
+    // 수정 화면 이벤트
     const postEditAddUrlBtn = document.getElementById('post-edit-add-url-btn');
     if (postEditAddUrlBtn) {
         postEditAddUrlBtn.addEventListener('click', handlePostEditAddUrl);
@@ -741,7 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
         postEditBack.addEventListener('click', handlePostEditBack);
     }
 
-    // 상세 화면: 공감 버튼·댓글 폼 (이벤트 위임)
+    // 상세: 공감/댓글 이벤트 위임
     document.addEventListener('click', (e) => {
         const likeBtn = e.target.closest('[data-action="like"][data-post-id]');
         if (likeBtn) {
@@ -762,4 +773,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-console.log('✅ Posts 모듈 로드 완료 (Railway API)');
+console.log('✅ Posts 모듈 로드 완료 (서브탭 + 카드 재디자인)');

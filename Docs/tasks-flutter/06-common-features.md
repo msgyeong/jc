@@ -36,9 +36,9 @@
 
 > **역할**: 🤖 **Cursor(AI)** 전담
 
-### [ ] 에러 처리 구현
-- [ ] `lib/utils/error_handler.dart` 생성
-  - 네트워크 에러 처리
+### [x] 에러 처리 구현
+- [x] `lib/utils/error_handler.dart` 생성
+  - HTTP 상태 코드 기반 에러 처리
   - API 에러 처리
   - 사용자 친화적 에러 메시지 변환
 - [ ] 에러 표시 위젯 (`lib/widgets/error_widget.dart`)
@@ -89,12 +89,12 @@
 
 > **역할**: 🤖 **Cursor(AI)** 전담
 
-### [ ] 이미지 업로드 유틸리티 확장 (기본 구조는 1단계에서 생성됨)
-- [ ] 이미지 리사이징 기능 추가 (필요시)
+### [x] 이미지 업로드 유틸리티 (Railway API 연동 완료)
+- [x] `lib/utils/image_uploader.dart` — Railway API `/api/upload` 연동
+  - 이미지 선택 (카메라/갤러리), 크롭, 업로드
+  - `pickAndUpload()` 통합 메서드
 - [ ] 다중 이미지 업로드 지원 확장
 - [ ] 이미지 업로드 재사용 가능한 위젯 (`lib/widgets/image_upload_field.dart`)
-- [ ] 이미지 업로드 에러 처리 개선
-- [ ] 업로드 진행 상태 UI 개선
 
 ---
 

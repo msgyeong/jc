@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../providers/notice_attendance_provider.dart';
 import '../../providers/notice_detail_provider.dart';
 import '../../providers/notice_list_provider.dart';
 import '../../services/notice_service.dart';
@@ -119,28 +120,8 @@ class NoticeDetailScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   const Divider(),
                   const SizedBox(height: 8),
-                  Text(
-                    '참석자 조사',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    '참석/불참/미정 선택 (추후 연동)',
-                    style: TextStyle(color: AppTheme.textSecondary),
-                  ),
+                  _AttendanceSurvey(noticeId: noticeId),
                 ],
-                const SizedBox(height: 24),
-                const Divider(),
-                const SizedBox(height: 8),
-                Text(
-                  '댓글',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  '댓글 목록 (추후 연동)',
-                  style: TextStyle(color: AppTheme.textSecondary),
-                ),
               ],
             ),
           );
@@ -153,7 +134,7 @@ class NoticeDetailScreen extends ConsumerWidget {
     );
   }
 
-  static void _confirmDelete(
+  void _confirmDelete(
     BuildContext context,
     WidgetRef ref,
     String id,
@@ -188,5 +169,183 @@ class NoticeDetailScreen extends ConsumerWidget {
         }
       }
     }
+  }
+}
+
+/// 참석자 조사 위젯
+class _AttendanceSurvey extends ConsumerStatefulWidget {
+  const _AttendanceSurvey({required this.noticeId});
+  final String noticeId;
+
+  @override
+  ConsumerState<_AttendanceSurvey> createState() => _AttendanceSurveyState();
+}
+
+class _AttendanceSurveyState extends ConsumerState<_AttendanceSurvey> {
+  bool _submitting = false;
+
+  Future<void> _vote(String status) async {
+    setState(() => _submitting = true);
+    final ok = await updateAttendance(widget.noticeId, status);
+    if (mounted) {
+      setState(() => _submitting = false);
+      if (ok) {
+        ref.invalidate(noticeAttendanceProvider(widget.noticeId));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('참석 상태 변경에 실패했습니다.')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncAttendance =
+        ref.watch(noticeAttendanceProvider(widget.noticeId));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('참석자 조사', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 12),
+        asyncAttendance.when(
+          data: (att) {
+            return Column(
+              children: [
+                Row(
+                  children: [
+                    _VoteChip(
+                      label: '참석',
+                      count: att.attending,
+                      selected: att.myStatus == 'attending',
+                      color: AppTheme.successColor,
+                      onTap: _submitting ? null : () => _vote('attending'),
+                    ),
+                    const SizedBox(width: 8),
+                    _VoteChip(
+                      label: '불참',
+                      count: att.notAttending,
+                      selected: att.myStatus == 'not_attending',
+                      color: AppTheme.errorColor,
+                      onTap: _submitting ? null : () => _vote('not_attending'),
+                    ),
+                    const SizedBox(width: 8),
+                    _VoteChip(
+                      label: '미정',
+                      count: att.undecided,
+                      selected: att.myStatus == 'undecided',
+                      color: AppTheme.textSecondary,
+                      onTap: _submitting ? null : () => _vote('undecided'),
+                    ),
+                  ],
+                ),
+                if (att.attendees.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  ...att.attendees.map((a) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          children: [
+                            Text(
+                              a['user_name'] as String? ?? '',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _statusLabel(a['status'] as String? ?? ''),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: _statusColor(a['status'] as String? ?? ''),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                ],
+              ],
+            );
+          },
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+          error: (e, _) => Text(
+            '참석 현황을 불러올 수 없습니다.',
+            style: TextStyle(color: AppTheme.errorColor),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _statusLabel(String status) {
+    return switch (status) {
+      'attending' => '참석',
+      'not_attending' => '불참',
+      _ => '미정',
+    };
+  }
+
+  Color _statusColor(String status) {
+    return switch (status) {
+      'attending' => AppTheme.successColor,
+      'not_attending' => AppTheme.errorColor,
+      _ => AppTheme.textSecondary,
+    };
+  }
+}
+
+class _VoteChip extends StatelessWidget {
+  const _VoteChip({
+    required this.label,
+    required this.count,
+    required this.selected,
+    required this.color,
+    this.onTap,
+  });
+  final String label;
+  final int count;
+  final bool selected;
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: selected ? color.withOpacity(0.15) : Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+            border: selected ? Border.all(color: color, width: 1.5) : null,
+          ),
+          child: Column(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                  color: selected ? color : AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: selected ? color : AppTheme.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

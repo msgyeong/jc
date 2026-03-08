@@ -6,12 +6,21 @@ import '../screens/auth/login_screen.dart';
 import '../screens/auth/pending_approval_screen.dart';
 import '../screens/auth/signup_screen.dart';
 import '../screens/splash_screen.dart';
+import '../screens/home_tab_screen.dart';
 import '../screens/profile_tab_screen.dart';
-import '../screens/tab_placeholder_screen.dart';
 import '../screens/notices/notice_list_screen.dart';
 import '../screens/notices/notice_detail_screen.dart';
 import '../screens/notices/notice_create_screen.dart';
 import '../screens/notices/notice_edit_screen.dart';
+import '../screens/posts/board_screen.dart';
+import '../screens/posts/post_detail_screen.dart';
+import '../screens/posts/post_create_screen.dart';
+import '../screens/posts/post_edit_screen.dart';
+import '../screens/schedules/schedule_list_screen.dart';
+import '../screens/schedules/schedule_detail_screen.dart';
+import '../screens/schedules/schedule_create_screen.dart';
+import '../screens/members/member_list_screen.dart';
+import '../screens/members/member_detail_screen.dart';
 import '../services/api_client.dart';
 import '../services/session_service.dart';
 import '../widgets/main_navigation.dart';
@@ -192,12 +201,37 @@ GoRouter createAppRouter() {
         routes: <RouteBase>[
           GoRoute(
             path: '/home',
-            builder: (_, __) =>
-                const TabPlaceholderScreen(title: '홈'),
+            builder: (_, __) => const HomeTabScreen(),
             routes: <RouteBase>[
               GoRoute(
                 path: 'board',
-                builder: (_, __) => const NoticeListScreen(),
+                builder: (_, __) => const BoardScreen(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'create',
+                    builder: (_, state) {
+                      final category =
+                          state.uri.queryParameters['category'] ?? 'general';
+                      return PostCreateScreen(category: category);
+                    },
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) {
+                      final id = state.pathParameters['id']!;
+                      return PostDetailScreen(postId: id);
+                    },
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: 'edit',
+                        builder: (_, state) {
+                          final id = state.pathParameters['id']!;
+                          return PostEditScreen(postId: id);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
               GoRoute(
                 path: 'notices',
@@ -227,13 +261,33 @@ GoRouter createAppRouter() {
               ),
               GoRoute(
                 path: 'schedule',
-                builder: (_, __) =>
-                    const TabPlaceholderScreen(title: '일정'),
+                builder: (_, __) => const ScheduleListScreen(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'create',
+                    builder: (_, __) => const ScheduleCreateScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (c, state) {
+                      final id = state.pathParameters['id']!;
+                      return ScheduleDetailScreen(scheduleId: id);
+                    },
+                  ),
+                ],
               ),
               GoRoute(
                 path: 'members',
-                builder: (_, __) =>
-                    const TabPlaceholderScreen(title: '회원'),
+                builder: (_, __) => const MemberListScreen(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: ':id',
+                    builder: (c, state) {
+                      final id = state.pathParameters['id']!;
+                      return MemberDetailScreen(memberId: id);
+                    },
+                  ),
+                ],
               ),
               GoRoute(
                 path: 'profile',

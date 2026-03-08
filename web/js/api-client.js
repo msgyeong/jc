@@ -129,8 +129,10 @@ class ApiClient {
     /**
      * 게시글 목록 조회
      */
-    async getPosts(page = 1, limit = 20) {
-        return this.request(`/posts?page=${page}&limit=${limit}`);
+    async getPosts(page = 1, limit = 20, category = null) {
+        let url = `/posts?page=${page}&limit=${limit}`;
+        if (category) url += `&category=${category}`;
+        return this.request(url);
     }
     
     /**

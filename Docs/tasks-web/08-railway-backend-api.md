@@ -9,9 +9,9 @@
 > - [x] 웹 프론트엔드 UI 구조 완성
 > - [x] Railway 배포 자동화 설정 완료
 
-> **참고**: 
-> - 기존 웹 코드는 Supabase 기반이지만, 실제 DB는 Railway PostgreSQL
-> - Supabase 클라이언트를 제거하고 직접 API 서버 구축 필요
+> **참고**:
+> - 실제 DB는 Railway PostgreSQL
+> - 직접 API 서버 구축 필요
 > - JWT 토큰 기반 인증 사용
 
 > **역할 구분**: 
@@ -23,9 +23,9 @@
 ## 현재 문제점
 
 ### ❌ 작동하지 않는 이유
-1. **백엔드 부재**: 웹 코드가 Supabase 클라이언트를 사용하지만 실제로는 Railway PostgreSQL 사용
+1. **백엔드 부재**: Railway PostgreSQL 사용하지만 API 서버 없음
 2. **API 서버 없음**: 정적 HTML만 배포되어 있어 데이터베이스 연결 불가
-3. **인증 미구현**: Supabase Auth 없이 JWT 기반 인증 필요
+3. **인증 미구현**: JWT 기반 인증 필요
 4. **데모 모드만 작동**: `config.js`의 `DEMO_MODE: true`로 샘플 데이터만 표시
 
 ### ✅ 해결 방안
@@ -434,7 +434,6 @@ window.apiClient = new ApiClient();
 
 **파일**: `web/js/config.js`
 
-- Supabase 관련 설정 **완전 제거**
 - `DEMO_MODE` **제거** (더 이상 필요 없음)
 - API 클라이언트만 사용
 
@@ -457,7 +456,7 @@ const STORAGE_KEYS = {
 
 **파일**: `web/js/auth.js`
 
-- Supabase 클라이언트 호출 **제거**
+- 레거시 클라이언트 호출 **제거**
 - `apiClient.login()` 사용
 - `apiClient.signup()` 사용
 - `apiClient.logout()` 사용
@@ -489,7 +488,7 @@ async function handleLogin(email, password) {
 **파일**: `web/js/signup.js`
 
 - `apiClient.signup()` 사용
-- Supabase 제거
+- 레거시 코드 제거
 
 ### [x] home.js 수정
 
@@ -537,13 +536,10 @@ async function handleLogin(email, password) {
 
 **파일**: `web/index.html`
 
-- Supabase CDN 스크립트 **제거**
+- 불필요한 외부 스크립트 **제거**
 - `api-client.js` 추가
 
 ```html
-<!-- Supabase 클라이언트 제거 -->
-<!-- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> -->
-
 <!-- 앱 스크립트 -->
 <script src="js/config.js"></script>
 <script src="js/api-client.js"></script>  <!-- 새로 추가 -->
@@ -915,7 +911,7 @@ git push origin main
 - [ ] 로컬 테스트 성공
 
 ### ✅ 프론트엔드
-- [ ] Supabase 클라이언트 완전 제거
+- [ ] 레거시 클라이언트 완전 제거
 - [ ] API 클라이언트 구현 완료
 - [ ] 모든 JS 파일 API 연동 완료
 - [ ] 로컬 테스트 성공

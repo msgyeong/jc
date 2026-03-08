@@ -9,12 +9,12 @@
 ## 🚀 프로젝트 구성
 
 ### 📱 Flutter 앱 (모바일)
-- **기술 스택**: Flutter, Supabase, Riverpod, GoRouter
+- **기술 스택**: Flutter, Riverpod, GoRouter
 - **플랫폼**: iOS, Android
 - **상태**: 개발 중
 
 ### 🌐 웹 애플리케이션
-- **기술 스택**: HTML, CSS, JavaScript, Supabase
+- **기술 스택**: HTML, CSS, JavaScript
 - **배포**: Railway (Docker + Nginx)
 - **상태**: ✅ 배포 완료
 
@@ -92,13 +92,13 @@ flutter run
 
 ### Flutter 앱
 - Flutter 3.x
-- Supabase (Auth, Database, Storage)
+- Railway PostgreSQL (Database)
 - Riverpod (상태 관리)
 - GoRouter (라우팅)
 
 ### 웹 앱
 - Vanilla JavaScript (ES6+)
-- Supabase JS Client
+- Node.js API (Express)
 - Nginx (웹 서버)
 - Docker (컨테이너)
 

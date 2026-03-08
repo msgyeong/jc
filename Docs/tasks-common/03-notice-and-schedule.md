@@ -50,9 +50,9 @@
 
 ### [x] 공지사항 서비스
 - [x] `lib/services/notice_service.dart` 생성
-- [x] 공지사항 목록 조회 (고정 공지 우선, Supabase from('notices'))
+- [x] 공지사항 목록 조회 (고정 공지 우선, API를 통한 notices 조회)
 - [x] 공지사항 상세 조회, 조회수 증가
-- [x] 공지사항 작성/수정/삭제 (RLS에서 권한 확인)
+- [x] 공지사항 작성/수정/삭제 (API 미들웨어에서 권한 확인)
 
 ---
 

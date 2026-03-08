@@ -11,7 +11,7 @@
 - **OS**: Windows 10
 - **브라우저**: Chrome/Edge (권장)
 - **서버**: Python http.server (포트 8000)
-- **백엔드**: Supabase (또는 데모 모드)
+- **백엔드**: Railway PostgreSQL + Node.js API (또는 데모 모드)
 
 ---
 
@@ -270,7 +270,7 @@
 2. **성능**: 무한 스크롤, 디바운싱 등 최적화 적용
 3. **사용자 경험**: 로딩 상태, 빈 상태, 에러 메시지 등 모든 상태 처리
 4. **반응형**: 모바일/데스크톱 모두 완벽 지원
-5. **데모 모드**: Supabase 없이도 테스트 가능
+5. **데모 모드**: 백엔드 없이도 테스트 가능
 6. **코드 품질**: 모듈화, 재사용성, 가독성 우수
 
 ---
@@ -294,9 +294,9 @@
 
 ## ⚠️ 주의 사항
 
-1. **데모 모드**: `config.js`에서 `DEMO_MODE: true`로 설정하면 Supabase 없이 테스트 가능
-2. **권한 관리**: 실제 Supabase 연동 시 `role_permissions` 테이블 확인 필요
-3. **이미지 저장**: Supabase Storage `profiles` 버킷 설정 필요
+1. **데모 모드**: `config.js`에서 `DEMO_MODE: true`로 설정하면 백엔드 없이 테스트 가능
+2. **권한 관리**: API 연동 시 `role_permissions` 테이블 확인 필요
+3. **이미지 저장**: 스토리지 서비스 (Cloudinary 등) 설정 필요
 4. **보안**: HTTPS 사용 권장, API 키 보안 주의
 
 ---

@@ -109,21 +109,13 @@ http://localhost:8000
 
 ## ⚙️ 설정
 
-### Supabase 연동
+### API 연동
 
-`web/js/config.js` 파일에서 Supabase 설정:
-
-```javascript
-const CONFIG = {
-    SUPABASE_URL: 'YOUR_SUPABASE_URL',
-    SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY',
-    DEMO_MODE: false  // true로 설정 시 샘플 데이터 사용
-};
-```
+`web/js/config.js` 파일에서 API 설정. 웹 앱은 Railway PostgreSQL에 연결된 Node.js API 서버와 통신합니다.
 
 ### 데모 모드
 
-Supabase 없이 테스트하려면 `DEMO_MODE: true`로 설정하세요.
+백엔드 없이 테스트하려면 `DEMO_MODE: true`로 설정하세요.
 
 ---
 
@@ -161,7 +153,7 @@ web/
 ├── styles/
 │   └── main.css           # 스타일시트
 ├── js/
-│   ├── config.js          # Supabase 설정
+│   ├── config.js          # API 설정
 │   ├── utils.js           # 유틸리티 함수
 │   ├── auth.js            # 인증 기능
 │   ├── signup.js          # 회원가입

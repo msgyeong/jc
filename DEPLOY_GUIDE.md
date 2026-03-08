@@ -96,20 +96,12 @@ git push -u origin main
 
 ## 🔧 배포 후 할 일
 
-### 1. Supabase 설정
-`web/js/config.js` 파일 수정:
-```javascript
-const CONFIG = {
-    SUPABASE_URL: 'YOUR_ACTUAL_SUPABASE_URL',
-    SUPABASE_ANON_KEY: 'YOUR_ACTUAL_ANON_KEY',
-    DEMO_MODE: false  // 실제 배포 시 false
-};
-```
+### 1. 데이터베이스 설정
+Railway에서 PostgreSQL 추가 후 `database/railway_init.sql` 실행
 
-### 2. 환경 변수 설정 (Vercel/Netlify)
-- Dashboard에서 Environment Variables 설정
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
+### 2. 환경 변수 설정
+- Railway Variables에서 DATABASE_URL 추가 (PostgreSQL Reference)
+- 필요 시 JWT_SECRET 등 추가
 
 ---
 

@@ -1,8 +1,8 @@
-# 🚂 Railway 전용 설정 가이드 (Supabase 없이)
+# 🚂 Railway 전용 설정 가이드 (별도 외부 서비스 없이)
 
 ## ✅ Railway 하나로 모두 해결!
 
-**Supabase 가입 필요 없음!** Railway에서 PostgreSQL을 바로 추가합니다.
+**별도 외부 서비스 가입 필요 없음!** Railway에서 PostgreSQL을 바로 추가합니다.
 
 ---
 
@@ -465,16 +465,16 @@ railway run psql $DATABASE_URL < backup.sql
 
 ## ❓ 자주 묻는 질문
 
-### Q1: Supabase vs Railway PostgreSQL 차이?
+### Q1: Railway PostgreSQL의 장점은?
 
-| 기능 | Supabase | Railway PostgreSQL |
-|------|----------|-------------------|
-| **데이터베이스** | ✅ PostgreSQL | ✅ PostgreSQL |
-| **인증 시스템** | ✅ 내장 (Auth) | ❌ 직접 구현 |
-| **파일 스토리지** | ✅ 내장 (Storage) | ❌ 외부 서비스 (Cloudinary 등) |
-| **관리 UI** | ✅ 강력한 대시보드 | ✅ 기본 Query 탭 |
-| **비용** | ✅ 무료 (500MB) | ✅ 무료 ($5 크레딧) |
-| **백업** | ✅ 자동 (Pro) | ✅ 자동 (유료) |
+| 기능 | Railway PostgreSQL |
+|------|-------------------|
+| **데이터베이스** | PostgreSQL |
+| **인증 시스템** | JWT 기반 직접 구현 |
+| **파일 스토리지** | 외부 서비스 (Cloudinary 등) |
+| **관리 UI** | 기본 Query 탭 |
+| **비용** | 무료 ($5 크레딧) |
+| **백업** | 자동 (유료) |
 
 **결론**: Railway만 써도 충분! 단순하고 관리 편함!
 
@@ -491,9 +491,9 @@ Railway는 HTTPS로 암호화되므로 전송은 안전합니다.
 - 대부분 **월 $5-10** 수준
 - 사용량 알림 설정으로 관리
 
-### Q4: Supabase보다 복잡한가요?
+### Q4: 설정이 복잡한가요?
 
-**아니요!** 오히려 더 간단:
+**아니요!** 매우 간단:
 - ✅ 가입 1개만 (Railway)
 - ✅ SQL 직접 실행 (더 직관적)
 - ✅ 모든 게 한 곳에 (웹 + DB)
@@ -504,7 +504,7 @@ Railway는 HTTPS로 암호화되므로 전송은 안전합니다.
 
 **Railway 하나로 끝!** 
 
-- ✅ Supabase 가입 불필요
+- ✅ 별도 외부 서비스 가입 불필요
 - ✅ PostgreSQL 바로 사용
 - ✅ 웹 + DB 한 곳에서 관리
 - ✅ 거의 무료 ($5 크레딧)

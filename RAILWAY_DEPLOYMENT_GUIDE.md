@@ -74,14 +74,10 @@ Railway가 자동으로 감지:
 
 현재는 `DEMO_MODE: true`로 설정되어 있어서 **바로 작동**합니다!
 
-#### Supabase 연동 시 (추후):
+#### PostgreSQL 연동 시:
 1. Railway Dashboard → 프로젝트 선택
 2. **"Variables"** 탭 클릭
-3. 환경 변수 추가:
-   ```
-   SUPABASE_URL = https://xxxxx.supabase.co
-   SUPABASE_ANON_KEY = eyJhbGc...
-   ```
+3. **"+ New Variable"** → **"Add Reference"** → PostgreSQL → **DATABASE_URL** 추가
 
 ---
 
@@ -128,41 +124,20 @@ Railway가 자동으로 감지:
 
 ## 📱 앱 버전 대비 설정
 
-### Supabase 백엔드 설정
+### Railway PostgreSQL 설정
 
-#### 1. Supabase 프로젝트 생성
-1. https://supabase.com 접속
-2. **"New project"** 클릭
-3. 프로젝트 이름: `yeongdeungpo-jc`
-4. 리전: **Northeast Asia (Seoul)**
-5. Database 비밀번호 설정
+#### 1. PostgreSQL 추가
+1. Railway 프로젝트 → **"+ New"** → **"Database"** → **"Add PostgreSQL"**
+2. 자동으로 PostgreSQL 생성
 
-#### 2. 스키마 실행
-1. Supabase Dashboard → **SQL Editor**
-2. `Docs/schema/schema.sql` 파일 내용 복사
-3. 붙여넣기 → **RUN**
+#### 2. 데이터베이스 초기화
+1. Railway PostgreSQL → **"Data"** → **"Query"**
+2. `database/railway_init.sql` 실행
+3. `database/create_admin.sql` 실행
 
-#### 3. Storage 설정
-1. **Storage** → **New bucket**
-2. 이름: `profiles`
-3. Public: **ON**
-
-#### 4. API 키 확인
-1. **Settings** → **API**
-2. **Project URL** 복사
-3. **anon public** 키 복사
-
-#### 5. 웹에 적용
-`web/js/config.js` 수정:
-```javascript
-const CONFIG = {
-    SUPABASE_URL: 'https://xxxxx.supabase.co',
-    SUPABASE_ANON_KEY: 'eyJhbGc...',
-    DEMO_MODE: false  // 실제 배포 시 false
-};
-```
-
-커밋 & Push → Railway 자동 재배포
+#### 3. 환경 변수 연결
+1. Railway 웹 앱 → Variables → **"Add Reference"** → PostgreSQL → **DATABASE_URL**
+2. 커밋 & Push → Railway 자동 재배포
 
 ---
 
@@ -219,11 +194,10 @@ flutter build appbundle --release
 └─────────────────────────────────┘
             ↓ ↑ API
 ┌─────────────────────────────────┐
-│  백엔드 (Supabase)               │
-│  - PostgreSQL                   │
-│  - Authentication               │
-│  - Storage (프로필 이미지)       │
-│  - Realtime                     │
+│  백엔드 (Railway)                │
+│  - Node.js API (Express)        │
+│  - Railway PostgreSQL           │
+│  - JWT 인증                     │
 └─────────────────────────────────┘
             ↓ ↑ API
 ┌─────────────────────────────────┐
@@ -247,12 +221,10 @@ flutter build appbundle --release
 - [ ] 웹사이트 접속 테스트
 - [ ] 데모 모드 테스트 (로그인/회원가입)
 
-### 추후 실행 (Supabase 연동)
-- [ ] Supabase 프로젝트 생성
-- [ ] 스키마 실행
-- [ ] Storage 설정
-- [ ] API 키 웹에 적용
-- [ ] Railway 환경 변수 설정
+### 추후 실행 (Railway PostgreSQL 연동)
+- [ ] Railway PostgreSQL 추가
+- [ ] 데이터베이스 초기화 (railway_init.sql)
+- [ ] 환경 변수 설정 (DATABASE_URL)
 - [ ] 실제 데이터로 테스트
 
 ### 앱 개발 시
@@ -298,10 +270,10 @@ Docker 이미지 빌드
 2. 도메인 확인: Settings → Domains
 3. 브라우저 캐시 삭제: Ctrl + Shift + R
 
-### Supabase 연결 실패
-1. API 키 확인: `web/js/config.js`
-2. CORS 설정: Supabase → Settings → API
-3. `DEMO_MODE: false` 확인
+### API 연결 실패
+1. DATABASE_URL 환경 변수 확인
+2. Node.js API 서버 로그 확인
+3. Railway → Logs 탭에서 에러 확인
 
 ---
 
@@ -316,9 +288,9 @@ Docker 이미지 빌드
 - $5/월 기본 + 사용량
 - 무제한 프로젝트
 
-### Supabase
-- ✅ **무료 티어**: 500MB 저장소, 2GB 전송
-- ✅ 소규모 프로젝트에 충분
+### PostgreSQL (Railway 포함)
+- Railway 무료 크레딧에 포함
+- 소규모 프로젝트에 충분
 
 ### Firebase
 - ✅ **무료 티어**: 1GB 저장소, 10GB/월 전송
@@ -329,7 +301,7 @@ Docker 이미지 빌드
 ## 📞 지원
 
 - **Railway 문서**: https://docs.railway.app
-- **Supabase 문서**: https://supabase.com/docs
+- **PostgreSQL 문서**: https://www.postgresql.org/docs/
 - **Flutter 문서**: https://flutter.dev/docs
 
 ---
@@ -337,7 +309,7 @@ Docker 이미지 빌드
 ## 🎯 다음 단계
 
 1. **지금**: Railway 배포 → 웹 테스트
-2. **1주 후**: Supabase 연동 → 실제 데이터
+2. **1주 후**: Railway PostgreSQL 연동 → 실제 데이터
 3. **1개월 후**: Flutter 앱 개발 시작
 4. **2개월 후**: Play Store 출시
 

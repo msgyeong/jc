@@ -15,7 +15,7 @@ database/
 
 ## 🔄 마이그레이션 실행
 
-### 방법 1: Railway PostgreSQL (권장!)
+### Railway PostgreSQL
 
 **Railway에서 바로 실행:**
 
@@ -24,18 +24,8 @@ database/
 3. **"Query"** 버튼 클릭
 4. `database/railway_init.sql` 파일 내용 전체 복사
 5. 붙여넣고 **"Run Query"** 클릭
-6. ✅ `Railway PostgreSQL 데이터베이스 초기화 완료!` 확인
+6. `Railway PostgreSQL 데이터베이스 초기화 완료!` 확인
 7. `database/create_admin.sql` 파일로 관리자 계정 생성
-
-### 방법 2: Supabase (선택)
-
-**Supabase SQL Editor에서 실행:**
-
-1. Supabase 대시보드 → **🗄️ SQL Editor**
-2. "+ New query" 클릭
-3. `migrations/001_initial_schema.sql` 파일 내용 전체 복사
-4. 붙여넣고 **"RUN"** 클릭
-5. ✅ `데이터베이스 테이블 생성 완료!` 메시지 확인
 
 ---
 
@@ -67,7 +57,7 @@ SELECT '✅ 마이그레이션 002 완료: position 필드 추가' AS message;
 ```
 
 **실행:**
-1. Supabase SQL Editor에서 위 내용 실행
+1. Railway PostgreSQL Query 탭에서 위 내용 실행
 2. 버전 확인:
 ```sql
 SELECT * FROM public.schema_migrations ORDER BY executed_at DESC;
@@ -114,30 +104,30 @@ SELECT * FROM public.schema_migrations ORDER BY executed_at DESC;
 
 ---
 
-## 🛡️ Row Level Security (RLS)
+## 🛡️ 접근 제어
 
-모든 테이블에 RLS가 활성화되어 있습니다.
+Railway 환경에서는 Node.js API 서버에서 JWT 인증 및 권한 검사를 수행합니다.
 
 ### 주요 정책:
 
 1. **회원 정보 (users)**
-   - ✅ 본인 정보는 누구나 조회 가능
-   - ✅ active 회원은 다른 회원 정보 조회 가능
-   - ✅ 본인 정보만 수정 가능
-   - ✅ 관리자는 모든 회원 정보 수정 가능
+   - 본인 정보는 누구나 조회 가능
+   - active 회원은 다른 회원 정보 조회 가능
+   - 본인 정보만 수정 가능
+   - 관리자는 모든 회원 정보 수정 가능
 
 2. **게시글 (posts)**
-   - ✅ active 회원만 조회 가능
-   - ✅ active 회원만 작성 가능
-   - ✅ 본인 게시글만 수정/삭제 가능
+   - active 회원만 조회 가능
+   - active 회원만 작성 가능
+   - 본인 게시글만 수정/삭제 가능
 
 3. **공지사항 (notices)**
-   - ✅ active 회원만 조회 가능
-   - ✅ 관리자만 작성/수정/삭제 가능
+   - active 회원만 조회 가능
+   - 관리자만 작성/수정/삭제 가능
 
 4. **일정 (schedules)**
-   - ✅ active 회원만 조회 가능
-   - ✅ 관리자만 작성/수정/삭제 가능
+   - active 회원만 조회 가능
+   - 관리자만 작성/수정/삭제 가능
 
 ---
 
@@ -151,11 +141,10 @@ SELECT * FROM public.schema_migrations ORDER BY executed_at DESC;
 -- 적용 테이블: users, posts, comments, notices, schedules
 ```
 
-### 2. 회원가입 시 프로필 자동 생성
-`auth.users` 테이블에 회원가입 시 `public.users` 테이블에 자동으로 프로필이 생성됩니다.
+### 2. 회원가입 시 프로필 생성
+회원가입 API 호출 시 Node.js 서버에서 `users` 테이블에 프로필을 생성합니다.
 
-```sql
--- 트리거: on_auth_user_created
+```
 -- 기본값: role='pending', status='pending'
 ```
 
@@ -236,27 +225,22 @@ ORDER BY executed_at DESC;
 
 ### 백업 방법
 
-#### 방법 1: 자동 스크립트 (권장)
-
-1. 프로젝트 루트의 `backup-supabase.bat` 파일 수정:
-   ```batch
-   SET PROJECT_ID=your-actual-project-id
-   ```
-
-2. 더블클릭으로 실행
-3. 백업 파일 확인: `C:\JC_Backups\jc_backup_YYYYMMDD_HHMMSS.sql`
-
-#### 방법 2: Supabase 대시보드
-
-1. Supabase → **🗄️ Database** → **Backups**
-2. "Create backup" 클릭
-3. 백업 파일 다운로드
-
-#### 방법 3: Supabase CLI
+#### 방법 1: Railway CLI
 
 ```bash
-supabase db dump --project-id your-project-id -f backup.sql
+# Railway CLI 설치
+npm install -g @railway/cli
+
+# 백업 생성
+railway run pg_dump $DATABASE_URL > backup.sql
 ```
+
+#### 방법 2: Railway 대시보드
+
+1. Railway PostgreSQL → **"Data"** 탭
+2. **"Backups"** 섹션
+3. **"Create Backup"** 클릭
+4. 백업 파일 다운로드
 
 ---
 
@@ -264,11 +248,12 @@ supabase db dump --project-id your-project-id -f backup.sql
 
 ⚠️ **주의**: 복구는 기존 데이터를 덮어씁니다!
 
-1. Supabase → **🗄️ SQL Editor**
-2. 백업 파일 (`.sql`) 내용을 텍스트 에디터로 열기
-3. 전체 내용 복사
-4. SQL Editor에 붙여넣기
-5. "RUN" 클릭
+```bash
+# Railway CLI로 복구
+railway run psql $DATABASE_URL < backup.sql
+```
+
+또는 Railway PostgreSQL → "Query" 탭에서 백업 SQL을 붙여넣어 실행합니다.
 
 ---
 
@@ -313,26 +298,21 @@ ORDER BY pg_total_relation_size(quote_ident(table_name)) DESC;
 
 ## 🔒 보안 체크리스트
 
-- ✅ RLS (Row Level Security) 활성화
-- ✅ 적절한 인증 정책 설정
-- ✅ API 키 분리 (anon vs service_role)
-- ✅ 민감한 정보 암호화 (비밀번호는 Supabase Auth가 자동 처리)
-- ✅ 정기 백업 (주 1회 이상)
-- ✅ 마이그레이션 버전 추적
+- API 서버에서 JWT 인증 및 권한 검사
+- 비밀번호 해싱 (bcrypt/pgcrypto)
+- 정기 백업 (주 1회 이상)
+- 마이그레이션 버전 추적
+- HTTPS 통신 (Railway 자동 제공)
 
 ---
 
 ## 📞 문제 해결
 
-### Q1: RLS 에러가 나요
+### Q1: 인증 에러가 나요
 
-```sql
--- RLS 일시 비활성화 (개발 중에만)
-ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
-
--- 테스트 후 다시 활성화
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-```
+- JWT 토큰이 만료되었는지 확인
+- API 서버 로그에서 에러 원인 확인
+- Railway 대시보드 → Logs 탭에서 서버 로그 확인
 
 ### Q2: 트리거가 작동하지 않아요
 
@@ -360,10 +340,8 @@ DELETE FROM public.schema_migrations WHERE version = '002';
 
 ## 📚 추가 자료
 
-- [Supabase 공식 문서](https://supabase.com/docs)
 - [PostgreSQL 공식 문서](https://www.postgresql.org/docs/)
-- [Row Level Security 가이드](https://supabase.com/docs/guides/auth/row-level-security)
-- [데이터베이스 백업 가이드](https://supabase.com/docs/guides/platform/backups)
+- [Railway 공식 문서](https://docs.railway.app)
 
 ---
 

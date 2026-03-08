@@ -7,17 +7,17 @@
 ## 1. 작업 개요
 
 ### 목적
-- Storage RLS 정책과 호환되도록 회원가입 플로우 순서 변경
-- 프로필 사진 경로를 `profiles/{auth.uid()}/avatar.jpg` 형태로 변경
+- Storage 정책과 호환되도록 회원가입 플로우 순서 변경
+- 프로필 사진 경로를 `profiles/{userId}/avatar.jpg` 형태로 변경
 - 버킷 이름을 `profiles`로 통일
 
 ### 변경 전 (현재)
-1. 프로필 사진 업로드 (Auth 없음)
-2. Auth 계정 생성 (`signUp`)
+1. 프로필 사진 업로드 (인증 없음)
+2. 계정 생성 (회원가입 API)
 3. members INSERT
 
 ### 변경 후 (목표)
-1. **Auth 계정 생성** (`signUp`) → 사용자 ID 획득
+1. **계정 생성** (회원가입 API) → 사용자 ID 획득
 2. **프로필 사진 업로드** → `profiles/{userId}/avatar.jpg`
 3. **members INSERT** → 회원 정보 저장
 
@@ -37,18 +37,18 @@ Future<void> submit() async {
   state = const AsyncValue.loading();
 
   try {
-    // 1. Supabase Auth 사용자 생성 (먼저!)
-    final authResponse = await SupabaseService.client.auth.signUp(
+    // 1. 계정 생성 (회원가입 API 호출)
+    final signupResponse = await ApiService.signup(
       email: _data.email!.trim(),
       password: _data.password!,
     );
 
-    if (authResponse.user == null) {
+    if (signupResponse.userId == null) {
       state = const AsyncValue.data(SignupFailure('회원가입에 실패했습니다.'));
       return;
     }
 
-    final userId = authResponse.user!.id;
+    final userId = signupResponse.userId!;
 
     // 2. 프로필 사진 업로드 (이제 userId가 있음)
     String? profilePhotoUrl;
@@ -61,20 +61,16 @@ Future<void> submit() async {
       );
     }
 
-    // 3. members 테이블 저장
+    // 3. members 테이블 저장 (API 호출)
     final memberData = {
-      'auth_user_id': userId,
+      'user_id': userId,
       'email': _data.email!.trim(),
       // ... 나머지 필드 ...
       'profile_photo_url': profilePhotoUrl,
       'is_approved': false,
     };
 
-    final memberResponse = await SupabaseService.client
-        .from('members')
-        .insert(memberData)
-        .select()
-        .single();
+    final memberResponse = await ApiService.createMember(memberData);
 
     // 4. educations, careers, families 저장
     // ... 기존 코드 유지 ...
@@ -88,7 +84,7 @@ Future<void> submit() async {
 ```
 
 #### 주요 변경점
-1. `signUp()`을 프로필 사진 업로드보다 **먼저** 호출
+1. 회원가입 API를 프로필 사진 업로드보다 **먼저** 호출
 2. 업로드 경로를 `$userId/avatar.jpg`로 변경 (기존: `profile_${timestamp}.jpg`)
 3. 버킷 이름 확인: `'profiles'`
 
@@ -123,20 +119,18 @@ static Future<String> uploadToStorage({
       contentType = 'image/webp';
     }
 
-    await _supabase.storage.from(bucket).uploadBinary(
-          path,
-          await file.readAsBytes(),
-          fileOptions: FileOptions(
-            upsert: true,
-            contentType: contentType,
-          ),
-        );
+    // 스토리지 서비스에 업로드 (Cloudinary 등 외부 서비스)
+    final publicUrl = await StorageService.upload(
+      file: file,
+      bucket: bucket,
+      path: path,
+      contentType: contentType,
+    );
 
     if (onProgress != null) {
       onProgress(1.0);
     }
 
-    final publicUrl = _supabase.storage.from(bucket).getPublicUrl(path);
     return publicUrl;
   } catch (e) {
     throw Exception('이미지 업로드 중 오류가 발생했습니다: $e');
@@ -176,8 +170,8 @@ static Future<String> uploadToStorage({
 
 회원가입 중 오류 발생 시:
 
-- **Auth 생성 성공 + 업로드 실패**: 재시도 안내 또는 Auth 사용자 삭제
-- **Auth + 업로드 성공 + members INSERT 실패**: 업로드된 파일 삭제 + Auth 사용자 삭제
+- **계정 생성 성공 + 업로드 실패**: 재시도 안내 또는 계정 삭제
+- **계정 + 업로드 성공 + members INSERT 실패**: 업로드된 파일 삭제 + 계정 삭제
 
 현재 코드는 롤백을 하지 않으므로, 필요시 롤백 로직 추가 검토.
 
@@ -186,6 +180,6 @@ static Future<String> uploadToStorage({
 ## 6. 관련 문서
 
 - `Docs/schema/README.md` - Storage 설계
-- `Docs/schema/schema.sql` - RLS 정책
+- `Docs/schema/schema.sql` - 스키마 정의
 - `Docs/prd/05-data-policy.md` - Storage 정책
 - `Docs/tasks-flutter/01-project-setup-and-auth.md` - 태스크

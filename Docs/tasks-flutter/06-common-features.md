@@ -39,7 +39,7 @@
 ### [ ] 에러 처리 구현
 - [ ] `lib/utils/error_handler.dart` 생성
   - 네트워크 에러 처리
-  - Supabase 에러 처리
+  - API 에러 처리
   - 사용자 친화적 에러 메시지 변환
 - [ ] 에러 표시 위젯 (`lib/widgets/error_widget.dart`)
   - SelectableText.rich 사용 (Error Color `#DC2626`)

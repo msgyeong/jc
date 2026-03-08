@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/notice_service.dart';
-import '../services/supabase_service.dart';
+import '../services/session_service.dart';
 import 'notice_list_provider.dart';
 
 /// 공지사항 작성 결과
@@ -25,7 +25,7 @@ class NoticeCreateNotifier extends StateNotifier<AsyncValue<NoticeCreateResult?>
     bool hasAttendance = false,
   }) async {
     state = const AsyncValue.loading();
-    final userId = SupabaseService.client.auth.currentUser?.id;
+    final userId = await SessionService.getUserId();
     if (userId == null) {
       state = const AsyncValue.data((
         success: false,
@@ -36,7 +36,7 @@ class NoticeCreateNotifier extends StateNotifier<AsyncValue<NoticeCreateResult?>
     }
     try {
       final id = await NoticeService.create(
-        authorId: userId,
+        authorId: userId.toString(),
         title: title,
         content: content,
         isPinned: isPinned,

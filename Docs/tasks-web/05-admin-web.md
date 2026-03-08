@@ -8,9 +8,9 @@
 > **선행 조건**: 
 > - [ ] 4단계 완료 (회원/프로필 및 홈 화면)
 
-> **참고**: 
+> **참고**:
 > - Next.js 14+ (App Router), TypeScript, Zustand, Tailwind CSS, shadcn/ui
-> - Supabase Service Role 키 사용 (서버 사이드만)
+> - Node.js API (Express) + JWT 인증
 > - `manager_###` 계정만 접근 가능
 
 > **역할 구분**: 
@@ -28,13 +28,12 @@
 - [ ] 폴더 구조 생성 (app/, components/, lib/, types/)
 - [ ] 의존성 설치
   - next, react, react-dom
-  - @supabase/supabase-js, zustand
+  - zustand
   - tailwindcss, @radix-ui/react-* (shadcn/ui)
   - date-fns
 
-### [ ] Supabase 클라이언트 설정
-- [ ] `lib/supabase/admin.ts` 생성 (Service Role 키, 서버 사이드만)
-- [ ] `lib/supabase/client.ts` 생성 (Anon 키, 클라이언트 사이드)
+### [ ] API 클라이언트 설정
+- [ ] `lib/api/client.ts` 생성 (API 호출 + JWT 인증)
 - [ ] shadcn/ui 초기 설정
 
 ---
@@ -197,7 +196,7 @@
   - 액션 버튼 (추가, 수정, 삭제)
 - [ ] 배너 추가/수정 화면
   - 제목 입력
-  - 이미지 업로드 (Supabase Storage)
+  - 이미지 업로드 (스토리지 서비스)
   - 설명 입력
   - 링크 URL 입력 (선택)
   - 표시 순서 입력
@@ -207,7 +206,7 @@
 ### [ ] 배너 관리 기능
 - [ ] 배너 목록 조회
 - [ ] 배너 추가/수정/삭제
-- [ ] 배너 이미지 업로드 (Supabase Storage)
+- [ ] 배너 이미지 업로드 (스토리지 서비스)
 - [ ] 표시 순서 업데이트
 
 ---
@@ -224,7 +223,7 @@
 - [ ] 변경 버튼
 
 ### [ ] 비밀번호 변경 기능
-- [ ] Supabase Auth API 사용
+- [ ] Node.js API를 통한 비밀번호 변경
 - [ ] 유효성 검증
 
 ---
@@ -236,12 +235,11 @@
 ### [ ] 환경 설정
 - [ ] Next.js 프로젝트 생성 및 초기 설정 검토
 - [ ] 환경 변수 설정 (.env.local)
-  - NEXT_PUBLIC_SUPABASE_URL
-  - NEXT_PUBLIC_SUPABASE_ANON_KEY
-  - SUPABASE_SERVICE_ROLE_KEY (서버 사이드만)
+  - API_BASE_URL
+  - JWT_SECRET (서버 사이드만)
 
 ### [ ] 관리자 계정 설정
-- [ ] Supabase Auth에서 `manager_###` 형식 계정 생성
+- [ ] Railway PostgreSQL에서 `manager_###` 형식 계정 생성 (SQL INSERT)
 - [ ] 초기 비밀번호 설정
 
 ### [ ] 테스트 및 검증

@@ -20,9 +20,9 @@
 > - [ ] Flutter SDK 설치 완료
 > - [ ] 개발 환경 설정 완료 (Android Studio / VS Code)
 
-> **참고**: 
-> - Supabase 프로젝트는 개발자가 직접 생성해야 함
-> - schema.sql 파일은 Supabase 대시보드에서 실행 필요
+> **참고**:
+> - Railway PostgreSQL 프로젝트는 개발자가 직접 생성해야 함
+> - schema.sql 파일은 Railway 대시보드 또는 psql에서 실행 필요
 
 > **역할 구분**: 
 > - 🤖 **Cursor(AI)**: Cursor가 혼자 진행 가능한 작업
@@ -37,7 +37,7 @@
 ### [x] Flutter 프로젝트 구조 생성
 - [x] 폴더 구조 생성 (lib/models, lib/providers, lib/screens, lib/widgets, lib/services, lib/utils)
 - [x] pubspec.yaml 의존성 추가
-  - flutter_riverpod, supabase_flutter, freezed_annotation, json_annotation
+  - flutter_riverpod, http, dio, freezed_annotation, json_annotation
   - go_router, cached_network_image, image_picker, image_cropper
   - flutter_dotenv, google_fonts, shared_preferences, intl
   - build_runner, freezed, json_serializable (dev)
@@ -47,14 +47,14 @@
   - 컴포넌트 스타일 참고 (design-system/03-component-styles.md)
   - **라이트 테마만 사용** (다크 테마 미사용)
 
-### [x] Supabase 클라이언트 설정
-- [x] `lib/services/supabase_service.dart` 생성
-- [x] 환경 변수에서 URL, anon key 읽기
+### [x] API 클라이언트 설정
+- [x] `lib/services/api_service.dart` 생성
+- [x] 환경 변수에서 API_BASE_URL 읽기
 - [x] 초기화 로직 구현
 
 ### [x] 환경 변수 관리
 - [x] `.env` 파일 생성 (gitignore에 추가)
-- [x] Supabase URL, Anon Key 설정 (사용자 작업: Supabase 프로젝트 생성 후 설정)
+- [x] API_BASE_URL 설정 (사용자 작업: Railway 프로젝트 생성 후 설정)
 - [x] flutter_dotenv 패키지 설정
 - [x] 환경별 설정 분리 (dev/prod)
 
@@ -75,7 +75,7 @@
 - [x] `lib/utils/image_uploader.dart` 생성 (기본 구조)
   - 이미지 선택 (카메라/갤러리)
   - 이미지 크롭 (image_cropper)
-  - Supabase Storage 업로드 기본 로직
+  - 스토리지 업로드 기본 로직
   - 업로드 진행 상태 관리 기본 구조
 
 ### [x] 기본 에러 처리 구조
@@ -112,7 +112,7 @@
 
 ### [x] 로그인 로직
 - [x] `lib/providers/auth_provider.dart` 생성
-- [x] Supabase Auth 로그인 로직
+- [x] JWT 인증 로그인 로직
 - [x] 회원 상태 확인 (is_approved, is_suspended, withdrawn_at)
 - [x] 상태별 리다이렉트 처리
 - [x] 유효성 검증 (이메일 형식, 비밀번호 8자리 이상)
@@ -139,14 +139,14 @@
 
 ### [x] 회원가입 기능
 - [x] 프로필 사진 업로드 (이미지 업로드 유틸리티 사용, 1매 필수, 500MB 이하)
-- [x] Supabase Storage 업로드
+- [x] 스토리지 업로드
 - [x] 입력 필드 특수 처리
   - 주민등록번호: 숫자 키패드, 자동 하이픈, 마스킹
   - 휴대폰: 숫자 키패드, 자동 하이픈
   - 주소: 주소 검색 API 연동 (Daum 우편번호 서비스, 상세 주소 선택)
 - [x] 유효성 검증 (실시간, 인라인 오류 표시)
 - [x] 회원가입 Provider 구현
-  - Supabase Auth 사용자 생성
+  - API를 통한 사용자 생성
   - members, educations, careers, families 테이블 저장
   - `is_approved = false` 설정
 - [x] 회원가입 완료 후 플로우
@@ -157,15 +157,15 @@
 ### [x] 회원가입 플로우 Storage 정책 적용 (리팩토링 완료)
 
 > **역할**: 🤖 **Cursor(AI)** 전담  
-> **목적**: Storage RLS 정책과 호환되도록 회원가입 순서 변경
+> **목적**: Storage 정책과 호환되도록 회원가입 순서 변경
 
 **적용된 순서**:
-1. **Auth 계정 생성** (`signUp`) → 사용자 ID 생성
+1. **계정 생성** (회원가입 API) → 사용자 ID 생성
 2. **프로필 사진 업로드** → `profiles/{userId}/avatar.jpg`
 3. **members INSERT** → 회원 정보 저장
 
 - [x] `lib/providers/signup_provider.dart` 수정
-  - `submit()` 메서드에서 순서 변경: signUp → upload → insert
+  - `submit()` 메서드에서 순서 변경: 회원가입 API → upload → insert
   - 업로드 경로: `profiles/${userId}/avatar.jpg`
   - 실패 시 롤백 처리 (Auth 사용자 삭제 등): 추후 검토
   - **디버깅 후**: `submit()` catch 블록의 디버깅용 로그 제거 (`developer.log('Signup submit error: ...')`, `developer.log('Stack: ...')` 및 `import 'dart:developer'` 제거)
@@ -197,7 +197,7 @@
 - [x] 미인증 사용자 자동 리다이렉트
 
 ### [x] 세션 관리
-- [x] Supabase 세션 갱신 로직
+- [x] JWT 토큰 갱신 로직
 - [x] 토큰 만료 처리
 - [x] 자동 로그아웃 처리 (장기 미사용 시)
 - [x] 세션 만료 시 로그인 화면으로 리다이렉트
@@ -218,28 +218,25 @@
 
 ### [x] 환경 설정
 - [x] Flutter SDK 버전 확인 (Flutter 3.x 권장)
-- [x] Supabase 프로젝트 생성
-- [x] schema.sql 파일 실행 (Supabase 대시보드)
-- [x] Storage 버킷 생성 및 정책 설정 (프로필 사진용)
-  - 버킷 이름: `profiles`
-  - Public: ON (URL 직접 접근 허용)
-  - RLS 정책 설정 (schema.sql 하단 주석 참고)
-    - SELECT: 로그인 사용자 전체 조회 가능
-    - INSERT/UPDATE/DELETE: 본인 폴더(`profiles/{auth.uid()}/`)만 허용
+- [x] Railway PostgreSQL 프로젝트 생성
+- [x] schema.sql 파일 실행 (Railway 대시보드 또는 psql)
+- [x] 스토리지 설정 (프로필 사진용, Cloudinary 등 추후)
+  - 경로 규칙: `profiles/{userId}/avatar.jpg`
+  - 접근 정책: API 미들웨어에서 권한 확인
 - [x] 환경 변수 설정 (.env 또는 flutter_dotenv)
   - `.env` 파일 생성 및 gitignore 추가
-  - Supabase URL, Anon Key 설정
+  - API_BASE_URL 설정
   - 환경별 설정 분리 (dev/prod): 현재는 단일 `.env`로 충분, 필요 시 추후 적용
 
-### [x] RLS 정책 확인
-- [x] Supabase RLS 정책 적용 확인
+### [x] API 접근 제어 확인
+- [x] API 미들웨어 접근 제어 확인
   - members: 신규 회원 INSERT, 자기 정보 조회/수정, 다른 회원 조회
   - educations, careers, families, children: 자기 정보 INSERT/조회
-- [x] Storage RLS 정책 적용 확인 (schema.sql 하단 주석 참고)
-  - profiles 버킷: SELECT(로그인 사용자 전체), INSERT/UPDATE/DELETE(본인 폴더만)
+- [x] 스토리지 접근 제어 확인
+  - profiles: 로그인 사용자 전체 조회, 본인 폴더만 업로드/수정/삭제
 - [x] 승인된 회원만 데이터 접근 가능 확인
 - [x] 권한 기반 접근 제어 확인
-- [x] 테스트 계정으로 RLS 정책 검증
+- [x] 테스트 계정으로 접근 제어 검증
 
 ### [ ] 테스트 및 검증
 - [ ] `flutter pub run build_runner build --delete-conflicting-outputs` 실행
@@ -286,7 +283,7 @@
 - [ ] 유효성 검증 (이메일 형식)
 
 ### [ ] 비밀번호 재설정 기능
-- [ ] Supabase Auth 비밀번호 재설정 이메일 발송
+- [ ] API를 통한 비밀번호 재설정 이메일 발송
 - [ ] 재설정 이메일 발송 완료 안내 화면
 - [ ] 재설정 링크 클릭 시 비밀번호 재설정 화면 (`lib/screens/auth/reset_password_screen.dart`)
 - [ ] 새 비밀번호 입력 및 확인
@@ -300,17 +297,17 @@
 - [x] 로그인 화면 정상 작동
 - [ ] 비밀번호 찾기/재설정 기능 정상 작동
 - [x] 회원가입 화면이 모든 필수 필드 수집 및 저장
-- [x] 프로필 사진 Supabase Storage 업로드 성공
-  - 경로: `profiles/{auth.uid()}/avatar.jpg`
-  - 회원가입 순서: Auth 생성 → 업로드 → members INSERT
+- [x] 프로필 사진 스토리지 업로드 성공
+  - 경로: `profiles/{userId}/avatar.jpg`
+  - 회원가입 순서: 계정 생성 → 업로드 → members INSERT
 - [x] **(웹)** 미인증 사용자 보호된 화면 접근 차단 (checkAuthStatus, navigateToScreen('login'))
 - [ ] 회원 상태별 처리 정확히 동작
 - [x] **(웹)** 스플래시 화면 표시 및 올바른 화면 전환
 - [x] 디자인 시스템 기본 설정 완료
 - [x] 이미지 업로드 기본 유틸리티 생성 완료
 - [x] 하단 탭 네비게이션 기본 구조 생성 완료
-- [x] DB RLS 정책 적용 확인 완료 (members, educations, careers, families, children)
-- [x] Storage RLS 정책 적용 확인 완료 (profiles 버킷)
+- [x] DB 접근 제어 확인 완료 (members, educations, careers, families, children)
+- [x] 스토리지 접근 제어 확인 완료 (profiles)
 
 ---
 

@@ -77,7 +77,7 @@
 - [x] 내 프로필 탭 전용 화면 (`lib/screens/profile_tab_screen.dart`)
 - [x] AppBar 타이틀: "내 프로필"
 - [x] AppBar 우측 상단 로그아웃 버튼
-  - 탭 시 Supabase `signOut()` 호출 → 인증 상태 변경 → 로그인 화면 리다이렉트
+  - 탭 시 로그아웃 API 호출 → 인증 상태 변경 → 로그인 화면 리다이렉트
 
 ---
 

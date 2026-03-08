@@ -14,10 +14,10 @@
 - shadcn/ui
 
 ### 백엔드
-- Supabase (PostgreSQL)
-- Supabase Authentication
-- Supabase Storage
-- Supabase Realtime
+- Railway PostgreSQL (데이터베이스)
+- Node.js API (Express)
+- JWT 인증
+- Cloudinary (파일 스토리지, 추후)
 - kakao, naver developers (로그인 연동)
 
 ### 배포

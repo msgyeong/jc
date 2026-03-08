@@ -14,7 +14,6 @@
     }
   ],
   "env": {
-    "SUPABASE_URL": "@supabase-url",
-    "SUPABASE_ANON_KEY": "@supabase-anon-key"
+    "API_BASE_URL": "@api-base-url"
   }
 }

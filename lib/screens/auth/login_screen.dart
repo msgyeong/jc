@@ -7,7 +7,7 @@ import '../../theme/app_theme.dart';
 
 /// 로그인 화면
 /// 이메일/비밀번호 입력, 로그인 유지 옵션, 비밀번호 찾기·회원가입 링크를 제공합니다.
-/// AuthNotifier와 연동하여 유효성 검증·Supabase 로그인·회원 상태 확인 후
+/// AuthNotifier와 연동하여 유효성 검증·로그인·회원 상태 확인 후
 /// 오류 메시지를 인라인(SelectableText.rich, 빨간색)으로 표시합니다.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({

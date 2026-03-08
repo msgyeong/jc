@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../services/supabase_service.dart';
+import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 
 /// 내 프로필 탭 화면
-/// 우측 상단 로그아웃 버튼으로 테스트(01) 및 일상 사용 지원
 class ProfileTabScreen extends StatelessWidget {
   const ProfileTabScreen({super.key});
 
@@ -31,7 +30,7 @@ class ProfileTabScreen extends StatelessWidget {
   }
 
   Future<void> _signOut(BuildContext context) async {
-    await SupabaseService.client.auth.signOut();
-    // onAuthStateChange → authStatusNotifier 갱신 → GoRouter 리다이렉트로 로그인 화면 이동
+    await SessionService.signOut();
+    // authStateStream이 false를 emit → GoRouter 리다이렉트로 로그인 화면 이동
   }
 }

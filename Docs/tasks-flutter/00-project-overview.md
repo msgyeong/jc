@@ -29,7 +29,7 @@
 - Flutter, Dart
 - Riverpod (상태 관리)
 - Freezed (불변 모델)
-- Supabase (백엔드)
+- Railway PostgreSQL (백엔드)
 - GoRouter (라우팅)
 
 ### 관리자 웹 (Next.js)
@@ -39,10 +39,10 @@
 - Tailwind CSS, shadcn/ui
 
 ### 백엔드
-- Supabase (PostgreSQL)
-- Supabase Authentication
-- Supabase Storage
-- Supabase Realtime
+- Railway PostgreSQL (데이터베이스)
+- Node.js API (Express)
+- JWT 인증
+- Cloudinary (파일 스토리지, 추후)
 
 ---
 

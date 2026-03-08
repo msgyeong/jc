@@ -57,7 +57,7 @@
 
 | 시스템 플로우 | 적용 플랫폼 | 연동 내용 |
 |---|---|---|
-| UF-SYS-001 (로그인/로그아웃) | 앱 | Supabase Auth 사용 |
+| UF-SYS-001 (로그인/로그아웃) | 앱 | JWT 인증 사용 |
 | UF-SYS-002 (로그인/로그아웃) | 관리자 웹 | 최고 관리자 인증 |
 | UF-SYS-003 (회원 가입) | 앱 | 가입 신청 → 관리자 웹 승인 필요 |
 
@@ -71,7 +71,7 @@
 
 | 시스템 플로우 | 적용 플랫폼 | 연동 내용 |
 |---|---|---|
-| UF-SYS-006 (데이터 동기화) | 앱, 관리자 웹 | Supabase 실시간 기능 활용 |
+| UF-SYS-006 (데이터 동기화) | 앱, 관리자 웹 | API 호출을 통한 데이터 동기화 |
 
 ---
 
@@ -82,11 +82,11 @@
 ```
 앱 (UF-SYS-003 회원 가입)
   ↓ is_approved = false
-Supabase DB
+Railway PostgreSQL DB
   ↓
 관리자 웹 (UF-AW-002 가입 승인)
   ↓ is_approved = true
-Supabase DB
+Railway PostgreSQL DB
   ↓
 앱 (UF-001 앱 진입) - 로그인 가능
 ```
@@ -96,7 +96,7 @@ Supabase DB
 ```
 관리자 웹 (UF-AW-005 공지 작성)
   ↓ INSERT INTO notices
-Supabase DB
+Railway PostgreSQL DB
   ↓ (실시간 동기화)
 앱 (UF-002 콘텐츠 탐색) - 홈/공지 목록에 표시
 ```
@@ -106,7 +106,7 @@ Supabase DB
 ```
 앱 (UF-003 게시글 작성)
   ↓ INSERT INTO posts
-Supabase DB
+Railway PostgreSQL DB
   ↓ (실시간 동기화)
 앱 (UF-002 콘텐츠 탐색) - 게시글 목록에 표시
 ```
@@ -116,7 +116,7 @@ Supabase DB
 ```
 관리자 웹 (UF-AW-003 회원 정보 수정)
   ↓ UPDATE members
-Supabase DB
+Railway PostgreSQL DB
   ↓ (실시간 동기화)
 앱 (UF-007 프로필 조회) - 프로필 정보 변경 반영
 ```
@@ -130,7 +130,7 @@ Supabase DB
 - 앱에서 생성된 콘텐츠(게시글, 댓글, 공감 등)는 **즉시 반영**되어야 한다
 
 ### 실시간 동기화
-- Supabase 실시간 기능 활용 (가능한 경우)
+- API 호출을 통한 데이터 동기화 (가능한 경우)
 - 또는 화면 진입 시 최신 데이터 조회
 
 ### 데이터 정합성

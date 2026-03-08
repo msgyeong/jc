@@ -61,14 +61,13 @@ python -m http.server 8000
 
 ## 📱 Flutter 앱 실행
 
-### 1. Supabase 설정 (필요 시)
+### 1. 환경 설정 (필요 시)
 ```bash
 # .env 파일 생성
 cp .env.example .env
 
-# .env 파일에 Supabase 정보 입력
-# SUPABASE_URL=your_url
-# SUPABASE_ANON_KEY=your_key
+# .env 파일에 Railway PostgreSQL 정보 입력
+# DATABASE_URL=your_railway_postgres_url
 ```
 
 ### 2. 앱 실행
@@ -107,7 +106,7 @@ jc/
 │   ├── models/            # 데이터 모델
 │   ├── providers/         # Riverpod 프로바이더
 │   ├── screens/           # 화면 UI
-│   ├── services/          # Supabase 서비스
+│   ├── services/          # API 서비스
 │   └── widgets/           # 재사용 위젯
 ├── web/                   # 웹 애플리케이션
 │   ├── js/               # JavaScript 파일

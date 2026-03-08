@@ -10,7 +10,7 @@
 ```
 웹 버전 (Vercel)
     ↓ ↑
-백엔드 (Supabase)
+백엔드 (Railway PostgreSQL + Node.js API)
     ↓ ↑
 앱 버전 (Flutter → Firebase/Play Store/App Store)
 ```
@@ -50,10 +50,7 @@ git push -u origin main
    - Build Command: (비워두기)
    - Output Directory: `.`
    - Install Command: (비워두기)
-6. **Environment Variables 추가:**
-   - `SUPABASE_URL` = (Supabase 프로젝트 URL)
-   - `SUPABASE_ANON_KEY` = (Supabase Anon Key)
-7. **Deploy** 클릭!
+6. **Deploy** 클릭!
 
 #### 방법 B: Vercel CLI
 ```powershell
@@ -115,77 +112,34 @@ flutter pub add firebase_analytics
 
 ---
 
-## 🗄️ 4단계: Supabase 프로젝트 설정
+## 🗄️ 4단계: Railway PostgreSQL 설정
 
-### Supabase 프로젝트 생성
-1. **https://supabase.com** 접속
-2. **"New project"** 클릭
-3. Organization: 선택 또는 생성
-4. **프로젝트 이름**: `yeongdeungpo-jc`
-5. **Database Password**: 강력한 비밀번호 생성
-6. **Region**: Northeast Asia (Seoul) - `ap-northeast-2`
-7. **Create new project** 클릭
+### Railway에서 PostgreSQL 추가
+1. Railway 프로젝트 화면에서 **"+ New"** 클릭
+2. **"Database"** → **"Add PostgreSQL"** 선택
+3. 자동으로 PostgreSQL 생성 (1분 소요)
 
-### 데이터베이스 설정
-1. Supabase Dashboard → **SQL Editor**
-2. `Docs/schema/schema.sql` 파일 내용 복사
-3. SQL Editor에 붙여넣기
-4. **RUN** 클릭
+### 데이터베이스 초기화
+1. Railway PostgreSQL → **"Data"** 탭 → **"Query"**
+2. `database/railway_init.sql` 파일 내용 복사
+3. 붙여넣기 → **"Run Query"**
 
-### Storage 설정
-1. **Storage** → **New bucket**
-2. Bucket name: `profiles`
-3. Public: **ON**
-4. **Create bucket**
-
-### RLS 정책 설정
-SQL Editor에서:
-```sql
--- Storage RLS 정책 (profiles 버킷)
-CREATE POLICY "Anyone can view profiles"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'profiles');
-
-CREATE POLICY "Users can upload to own folder"
-ON storage.objects FOR INSERT
-WITH CHECK (bucket_id = 'profiles' AND (storage.foldername(name))[1] = auth.uid()::text);
-
-CREATE POLICY "Users can update own folder"
-ON storage.objects FOR UPDATE
-USING (bucket_id = 'profiles' AND (storage.foldername(name))[1] = auth.uid()::text);
-
-CREATE POLICY "Users can delete from own folder"
-ON storage.objects FOR DELETE
-USING (bucket_id = 'profiles' AND (storage.foldername(name))[1] = auth.uid()::text);
-```
-
-### 환경 변수 가져오기
-1. **Settings** → **API**
-2. **Project URL** 복사
-3. **anon public** 키 복사
+### 환경 변수 연결
+1. Railway 웹 앱 서비스 → **Variables** 탭
+2. **"+ New Variable"** → **"Add Reference"** → PostgreSQL → **DATABASE_URL** 추가
 
 ---
 
 ## 🔧 5단계: 환경 변수 설정
 
-### 웹 버전 (web/js/config.js)
-```javascript
-const CONFIG = {
-    SUPABASE_URL: 'https://xxxxx.supabase.co',
-    SUPABASE_ANON_KEY: 'eyJhbGc...',
-    DEMO_MODE: false  // 실제 배포 시 false
-};
-```
-
-### Vercel 환경 변수
-Vercel Dashboard → **Settings** → **Environment Variables**
-- `SUPABASE_URL` = `https://xxxxx.supabase.co`
-- `SUPABASE_ANON_KEY` = `eyJhbGc...`
+### Railway 환경 변수
+Railway 프로젝트 → 웹 앱 서비스 → **Variables** 탭
+- `DATABASE_URL` = (PostgreSQL Reference로 자동 추가)
+- `JWT_SECRET` = (임의의 시크릿 키)
 
 ### Flutter 앱 (.env)
 ```env
-SUPABASE_URL=https://xxxxx.supabase.co
-SUPABASE_ANON_KEY=eyJhbGc...
+API_BASE_URL=https://your-app.up.railway.app/api
 ```
 
 ---
@@ -240,7 +194,7 @@ flutter build ios --release
 cd C:\jcK
 npx create-next-app@latest admin-web --typescript --tailwind --app
 cd admin-web
-npm install @supabase/supabase-js zustand
+npm install zustand
 ```
 
 ### Vercel 배포
@@ -257,9 +211,8 @@ vercel
 - [ ] GitHub Fork 완료
 - [ ] 로컬 → GitHub Push
 - [ ] Vercel 웹 배포
-- [ ] Supabase 프로젝트 생성
-- [ ] Supabase 스키마 실행
-- [ ] Supabase Storage 설정
+- [ ] Railway PostgreSQL 추가
+- [ ] 데이터베이스 초기화 (railway_init.sql)
 - [ ] 웹 버전 환경 변수 설정
 - [ ] 웹 버전 테스트 (로그인/회원가입)
 
@@ -280,7 +233,7 @@ vercel
 ### 개발 환경
 - **웹**: http://localhost:8000
 - **Flutter**: Android Emulator / iOS Simulator
-- **Supabase**: Local Development (선택)
+- **Database**: Local PostgreSQL (선택)
 
 ### 스테이징 환경
 - **웹**: https://jc-staging.vercel.app
@@ -295,10 +248,9 @@ vercel
 
 ## 🔐 보안 설정
 
-### Supabase RLS 확인
-- [ ] members 테이블 RLS 활성화
-- [ ] educations, careers, families RLS 활성화
-- [ ] Storage policies 설정
+### API 서버 권한 확인
+- [ ] API 엔드포인트 JWT 인증 적용
+- [ ] 회원/관리자 권한 검사 적용
 
 ### API 키 관리
 - [ ] .env 파일 .gitignore 추가
@@ -306,7 +258,7 @@ vercel
 - [ ] Vercel/Firebase에서만 키 설정
 
 ### CORS 설정
-Supabase → **Settings** → **API**
+Node.js API 서버에서 CORS 설정
 - Allowed origins: `https://jc.vercel.app`
 
 ---
@@ -339,9 +291,9 @@ Supabase → **Settings** → **API**
 → Root Directory 확인: `web`
 → Build Command 비워두기
 
-### Supabase 연결 실패
+### API 연결 실패
 → CORS 설정 확인
-→ API 키 확인
+→ DATABASE_URL 환경 변수 확인
 
 ### Flutter 빌드 오류
 → `flutter clean && flutter pub get`

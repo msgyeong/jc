@@ -3,9 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../services/supabase_service.dart';
+import '../services/api_client.dart';
 import '../utils/error_handler.dart';
-import '../utils/image_uploader.dart';
 
 // ---------------------------------------------------------------------------
 // 회원가입 결과 타입
@@ -13,7 +12,6 @@ import '../utils/image_uploader.dart';
 
 class SignupSuccess {
   const SignupSuccess({this.emailConfirmationRequired = false});
-  /// 이메일 인증이 필요한 경우 true (세션 없이 사용자만 생성된 상태)
   final bool emailConfirmationRequired;
 }
 
@@ -45,7 +43,7 @@ class SignupData {
   String? name;
   String? residentId;
   String? address;
-  String? addressDetail; // 상세 주소 (선택)
+  String? addressDetail;
   String? phone;
 
   // Step 3: 직장 정보 (선택)
@@ -72,7 +70,7 @@ class SignupData {
 }
 
 class EducationData {
-  String graduationDate; // 6자리
+  String graduationDate;
   String schoolName;
 
   EducationData({
@@ -82,7 +80,7 @@ class EducationData {
 }
 
 class CareerData {
-  String careerDate; // 6자리
+  String careerDate;
   String careerDescription;
 
   CareerData({
@@ -99,7 +97,6 @@ final _emailRegex = RegExp(
   r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
 );
 
-/// 필드 키를 한글 이름으로 변환
 String getFieldDisplayName(String key) {
   const fieldNames = {
     'email': '이메일',
@@ -117,7 +114,6 @@ String getFieldDisplayName(String key) {
   return fieldNames[key] ?? key;
 }
 
-/// Step 1 (로그인 정보) 검증
 Map<String, String> validateStep1(SignupData data) {
   final errors = <String, String>{};
 
@@ -142,7 +138,6 @@ Map<String, String> validateStep1(SignupData data) {
   return errors;
 }
 
-/// Step 2 (기본 정보) 검증
 Map<String, String> validateStep2(SignupData data) {
   final errors = <String, String>{};
 
@@ -179,7 +174,6 @@ Map<String, String> validateStep2(SignupData data) {
   return errors;
 }
 
-/// Step 5 (가족 정보) 검증
 Map<String, String> validateStep5(SignupData data) {
   final errors = <String, String>{};
 
@@ -198,7 +192,6 @@ Map<String, String> validateStep5(SignupData data) {
   return errors;
 }
 
-/// 전체 데이터 검증 (최종 제출 시)
 Map<String, String> _validateSignupData(SignupData data) {
   final errors = <String, String>{};
   errors.addAll(validateStep1(data));
@@ -221,31 +214,18 @@ class SignupNotifier extends Notifier<SignupState> {
 
   SignupData get data => _data;
 
-  /// Step 1 검증 (로그인 정보)
   Map<String, String> validateStep1Data() => validateStep1(_data);
-
-  /// Step 2 검증 (기본 정보)
   Map<String, String> validateStep2Data() => validateStep2(_data);
-
-  /// Step 5 검증 (가족 정보)
   Map<String, String> validateStep5Data() => validateStep5(_data);
 
-  /// 프로필 사진 업로드
   Future<void> uploadProfilePhoto(File photo) async {
-    try {
-      _data.profilePhoto = photo;
-      // Storage 업로드는 최종 제출 시 수행
-    } catch (e) {
-      // 에러 처리
-    }
+    _data.profilePhoto = photo;
   }
 
   /// 회원가입 제출
   Future<void> submit() async {
-    // 중복 제출 방지
     if (state.isLoading) return;
 
-    // 유효성 검증
     final errors = _validateSignupData(_data);
     if (errors.isNotEmpty) {
       state = AsyncValue.data(SignupValidationError(errors));
@@ -255,117 +235,71 @@ class SignupNotifier extends Notifier<SignupState> {
     state = const AsyncValue.loading();
 
     try {
-      // 1. Supabase Auth 사용자 생성 (먼저 수행 → RLS에서 auth.uid() 필요)
-      final authResponse =
-          await SupabaseService.client.auth.signUp(
-        email: _data.email!.trim(),
-        password: _data.password!,
-      );
-
-      if (authResponse.user == null) {
-        state = const AsyncValue.data(
-          SignupFailure('회원가입에 실패했습니다.'),
-        );
-        return;
-      }
-
-      final userId = authResponse.user!.id;
-      final hasSession = authResponse.session != null;
-
-      // 세션이 있을 때만 새로고침 (이메일 인증 필요 시 signUp 직후에는 세션 없음)
-      if (hasSession) {
-        await SupabaseService.client.auth.refreshSession();
-      }
-
-      // 이메일 인증이 필요한데 세션이 없으면, 프로필/DB 저장은 RLS로 불가 → 성공만 반환
-      if (!hasSession) {
-        state = const AsyncValue.data(
-          SignupSuccess(emailConfirmationRequired: true),
-        );
-        return;
-      }
-
-      // 2. 프로필 사진 업로드 (경로: profiles/{userId}/avatar.jpg)
-      String? profilePhotoUrl;
+      // 프로필 사진 업로드
+      String? profileImageUrl;
       if (_data.profilePhoto != null) {
-        const path = 'avatar.jpg';
-        profilePhotoUrl = await ImageUploader.uploadToStorage(
+        final uploadRes = await ApiClient.uploadFile(
+          '/api/upload',
           file: _data.profilePhoto!,
-          bucket: 'profiles',
-          path: '$userId/$path',
         );
+        if (uploadRes.success) {
+          profileImageUrl = uploadRes.data['url'] as String?;
+        }
       }
 
-      // 주소 결합 (기본 주소 + 상세 주소)
+      // 주소 결합
       final fullAddress = _data.addressDetail != null &&
               _data.addressDetail!.isNotEmpty
           ? '${_data.address} ${_data.addressDetail}'
           : _data.address!;
 
-      // 3. members 테이블 저장
-      final memberData = {
-        'auth_user_id': userId,
+      // 학력/경력 정보를 문자열로 변환 (API가 문자열 형태로 받음)
+      final educationStr = _data.educations
+          .map((e) => '${e.graduationDate} ${e.schoolName}')
+          .join('\n');
+      final careerStr = _data.careers
+          .map((c) => '${c.careerDate} ${c.careerDescription}')
+          .join('\n');
+
+      // 가족 정보를 문자열로 변환
+      final familyParts = <String>[];
+      if (_data.isMarried == true) {
+        familyParts.add('기혼');
+        if (_data.spouseName != null) familyParts.add('배우자: ${_data.spouseName}');
+        if (_data.spouseContact != null) familyParts.add('배우자 연락처: ${_data.spouseContact}');
+      } else {
+        familyParts.add('미혼');
+      }
+      if (_data.hasChildren == true) {
+        familyParts.add('자녀 있음');
+      }
+      final familyStr = familyParts.join('\n');
+
+      // 회원가입 API 호출
+      final res = await ApiClient.post('/api/auth/signup', body: {
         'email': _data.email!.trim(),
+        'password': _data.password!,
         'name': _data.name!.trim(),
-        'resident_id': _data.residentId,
-        'address': fullAddress,
         'phone': _data.phone,
-        'profile_photo_url': profilePhotoUrl,
-        'company_name': _data.companyName,
-        'company_position': _data.companyPosition,
-        'company_address': _data.companyAddress,
-        'job_type': _data.jobType,
-        'hobby': _data.hobby,
-        'specialty': _data.specialty,
-        'recommender': _data.recommender,
-        'is_approved': false,
-      };
+        'address': fullAddress,
+        'ssn': _data.residentId,
+        'profile_image': profileImageUrl,
+        'hobbies': _data.hobby,
+        'education': educationStr.isNotEmpty ? educationStr : null,
+        'career': careerStr.isNotEmpty ? careerStr : null,
+        'family': familyStr.isNotEmpty ? familyStr : null,
+        'company': _data.companyName,
+        'position': _data.companyPosition,
+        'work_address': _data.companyAddress,
+        'special_notes': _data.specialty,
+      });
 
-      final memberResponse = await SupabaseService.client
-          .from('members')
-          .insert(memberData)
-          .select()
-          .single();
-
-      final memberId = memberResponse['id'] as String;
-
-      // 4. educations 테이블 저장
-      if (_data.educations.isNotEmpty) {
-        final educationData = _data.educations
-            .map((e) => {
-                  'member_id': memberId,
-                  'graduation_date': e.graduationDate,
-                  'school_name': e.schoolName,
-                })
-            .toList();
-        await SupabaseService.client.from('educations').insert(educationData);
+      if (!res.success) {
+        state = AsyncValue.data(
+          SignupFailure(res.message ?? '회원가입에 실패했습니다.'),
+        );
+        return;
       }
-
-      // 5. careers 테이블 저장
-      if (_data.careers.isNotEmpty) {
-        final careerData = _data.careers
-            .map((c) => {
-                  'member_id': memberId,
-                  'career_date': c.careerDate,
-                  'career_description': c.careerDescription,
-                })
-            .toList();
-        await SupabaseService.client.from('careers').insert(careerData);
-      }
-
-      // 6. families 테이블 저장
-      final familyData = {
-        'member_id': memberId,
-        'is_married': _data.isMarried ?? false,
-        'spouse_name': _data.spouseName,
-        'spouse_contact': _data.spouseContact,
-        'spouse_birthdate': _data.spouseBirthdate,
-        'has_children': _data.hasChildren ?? false,
-      };
-      await SupabaseService.client.from('families').insert(familyData);
-
-      // 7. 로그아웃 (승인 대기 상태이므로)
-      await SupabaseService.client.auth.signOut();
 
       state = const AsyncValue.data(SignupSuccess());
     } catch (e, st) {
@@ -382,53 +316,38 @@ class SignupNotifier extends Notifier<SignupState> {
   }
 }
 
-/// 회원가입 Step1: 이메일 사용 가능 여부 (입력창 아래 멘트용)
-/// [emailToCheck]가 비어있거나 형식이 맞지 않으면 null 반환.
+/// 이메일 사용 가능 여부 확인
 final emailAvailabilityProvider =
     FutureProvider.family<bool?, String>((ref, emailToCheck) async {
   final trimmed = emailToCheck.trim();
   if (trimmed.isEmpty || !_emailRegex.hasMatch(trimmed)) return null;
   try {
-    final res = await SupabaseService.client.rpc(
-      'check_email_available',
-      params: {'p_email': trimmed},
-    );
-    return res as bool;
+    final res = await ApiClient.post('/api/auth/check-email', body: {
+      'email': trimmed,
+    });
+    if (res.statusCode == 400) return false; // 이미 사용 중
+    return true;
   } catch (_) {
     return null;
   }
 });
 
-/// 회원가입 Step2: 주민등록번호 중복 확인 (13자리 숫자만 전달)
+/// 주민등록번호 중복 확인
 final residentIdAvailabilityProvider =
     FutureProvider.family<bool?, String>((ref, residentIdToCheck) async {
   final digits = residentIdToCheck.replaceAll(RegExp(r'[^0-9]'), '');
   if (digits.length != 13) return null;
-  try {
-    final res = await SupabaseService.client.rpc(
-      'check_resident_id_available',
-      params: {'p_resident_id': digits},
-    );
-    return res as bool;
-  } catch (_) {
-    return null;
-  }
+  // Railway API에 별도 엔드포인트가 없으므로 회원가입 시 서버에서 검증
+  return null;
 });
 
-/// 회원가입 Step2: 휴대폰 번호 중복 확인
+/// 휴대폰 번호 중복 확인
 final phoneAvailabilityProvider =
     FutureProvider.family<bool?, String>((ref, phoneToCheck) async {
   final digits = phoneToCheck.replaceAll(RegExp(r'[^0-9]'), '');
   if (digits.length < 10) return null;
-  try {
-    final res = await SupabaseService.client.rpc(
-      'check_phone_available',
-      params: {'p_phone': phoneToCheck.trim()},
-    );
-    return res as bool;
-  } catch (_) {
-    return null;
-  }
+  // Railway API에 별도 엔드포인트가 없으므로 회원가입 시 서버에서 검증
+  return null;
 });
 
 final signupNotifierProvider =

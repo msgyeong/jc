@@ -109,23 +109,21 @@ git push
 
 ## 📱 앱 버전 개발 시 (추후)
 
-### Supabase 연동:
-1. **Supabase 프로젝트 생성**
-   - https://supabase.com
-   - 프로젝트 생성
+### Railway PostgreSQL 연동:
+1. **Railway에서 PostgreSQL 추가**
+   - 프로젝트 → "+ New" → "Database" → "Add PostgreSQL"
 
-2. **API 키 복사**
-   - Settings → API
-   - URL과 anon key 복사
+2. **데이터베이스 초기화**
+   - Railway PostgreSQL → Query 탭
+   - `database/railway_init.sql` 실행
 
 3. **웹에 적용**
-   - `web/js/config.js` 수정
-   - `DEMO_MODE: false`로 변경
+   - Railway Variables에 DATABASE_URL 추가
    - 커밋 & Push → 자동 재배포
 
 4. **Flutter 앱에 적용**
    - `.env` 파일 생성
-   - Supabase URL/Key 추가
+   - API 서버 URL 추가
    - APK 빌드
 
 ---
@@ -135,7 +133,6 @@ git push
 - **웹사이트**: [Railway 배포 URL]
 - **GitHub**: https://github.com/k50004950-ctrl/jc
 - **Railway Dashboard**: https://railway.app/dashboard
-- **Supabase**: https://supabase.com (추후)
 - **Firebase**: https://console.firebase.google.com (추후)
 
 ---
@@ -150,7 +147,7 @@ git push
 - [x] 데모 모드 활성화
 
 ### 🚧 다음 단계
-- [ ] Supabase 연동 (실제 DB)
+- [ ] Railway PostgreSQL 연동 (실제 DB)
 - [ ] Flutter 앱 개발
 - [ ] Play Store 출시
 - [ ] 관리자 웹 개발

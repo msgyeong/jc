@@ -6,8 +6,13 @@ import 'package:intl/intl.dart';
 import '../../providers/notice_detail_provider.dart';
 import '../../providers/notice_list_provider.dart';
 import '../../services/notice_service.dart';
-import '../../services/supabase_service.dart';
+import '../../services/session_service.dart';
 import '../../theme/app_theme.dart';
+
+/// 현재 사용자 ID Provider (캐시)
+final _currentUserIdProvider = FutureProvider<int?>((ref) async {
+  return SessionService.getUserId();
+});
 
 /// 공지사항 상세 (제목, 작성자, 본문, 공감, 참석조사, 댓글, 수정/삭제)
 class NoticeDetailScreen extends ConsumerWidget {
@@ -18,7 +23,8 @@ class NoticeDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncNotice = ref.watch(noticeDetailProvider(noticeId));
-    final userId = SupabaseService.client.auth.currentUser?.id;
+    final asyncUserId = ref.watch(_currentUserIdProvider);
+    final userId = asyncUserId.valueOrNull;
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -31,7 +37,7 @@ class NoticeDetailScreen extends ConsumerWidget {
             data: (notice) {
               if (notice == null) return null;
               final isAuthor =
-                  userId != null && notice.authorId == userId;
+                  userId != null && notice.authorId == userId.toString();
               if (!isAuthor) return null;
               return PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
@@ -101,10 +107,10 @@ class NoticeDetailScreen extends ConsumerWidget {
                   Row(
                     children: [
                       if (notice.likesCount > 0)
-                        Text('❤️ ${notice.likesCount}'),
+                        Text('${notice.likesCount}'),
                       if (notice.commentsCount > 0) ...[
                         const SizedBox(width: 16),
-                        Text('💬 ${notice.commentsCount}'),
+                        Text('${notice.commentsCount}'),
                       ],
                     ],
                   ),

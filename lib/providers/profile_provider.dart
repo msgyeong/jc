@@ -25,6 +25,10 @@ class ProfileNotifier extends AsyncNotifier<Map<String, dynamic>?> {
     String? address,
     String? birthDate,
     String? gender,
+    String? company,
+    String? position,
+    String? department,
+    String? workPhone,
   }) async {
     try {
       await ProfileService.updateProfile(
@@ -33,6 +37,10 @@ class ProfileNotifier extends AsyncNotifier<Map<String, dynamic>?> {
         address: address,
         birthDate: birthDate,
         gender: gender,
+        company: company,
+        position: position,
+        department: department,
+        workPhone: workPhone,
       );
       await refresh();
       return true;

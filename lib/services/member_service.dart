@@ -55,6 +55,10 @@ class MemberService {
       'status': raw['status'] ?? 'active',
       'birth_date': raw['birth_date'],
       'gender': raw['gender'],
+      'company': raw['company'] ?? '',
+      'position': raw['position'] ?? '',
+      'department': raw['department'] ?? '',
+      'work_phone': raw['work_phone'] ?? '',
       'created_at': raw['created_at'],
       'updated_at': raw['updated_at'],
     };

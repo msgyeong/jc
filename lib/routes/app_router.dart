@@ -19,6 +19,7 @@ import '../screens/posts/post_edit_screen.dart';
 import '../screens/schedules/schedule_list_screen.dart';
 import '../screens/schedules/schedule_detail_screen.dart';
 import '../screens/schedules/schedule_create_screen.dart';
+import '../screens/schedules/schedule_edit_screen.dart';
 import '../screens/members/member_list_screen.dart';
 import '../screens/members/member_detail_screen.dart';
 import '../services/api_client.dart';
@@ -273,6 +274,15 @@ GoRouter createAppRouter() {
                       final id = state.pathParameters['id']!;
                       return ScheduleDetailScreen(scheduleId: id);
                     },
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: 'edit',
+                        builder: (c, state) {
+                          final id = state.pathParameters['id']!;
+                          return ScheduleEditScreen(scheduleId: id);
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),

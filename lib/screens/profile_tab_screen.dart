@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../providers/profile_provider.dart';
+import '../services/profile_service.dart';
 import '../services/session_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/image_uploader.dart';
@@ -141,6 +142,13 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     );
   }
 
+  void _changePassword() {
+    showDialog(
+      context: context,
+      builder: (ctx) => const _ChangePasswordDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final profile = widget.profile;
@@ -152,6 +160,10 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     final role = profile['role'] as String? ?? 'member';
     final birthDate = profile['birth_date'] as String?;
     final gender = profile['gender'] as String?;
+    final company = profile['company'] as String? ?? '';
+    final position = profile['position'] as String? ?? '';
+    final department = profile['department'] as String? ?? '';
+    final workPhone = profile['work_phone'] as String? ?? '';
 
     String roleLabel = switch (role) {
       'super_admin' => '총괄관리자',
@@ -159,11 +171,15 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
       _ => '회원',
     };
 
+    final hasWorkInfo =
+        company.isNotEmpty || position.isNotEmpty || department.isNotEmpty;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           const SizedBox(height: 16),
+          // 프로필 이미지
           Stack(
             children: [
               CircleAvatar(
@@ -230,31 +246,56 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
             ),
           ),
           const SizedBox(height: 24),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _InfoRow(icon: Icons.email, label: '이메일', value: email),
-                  if (phone.isNotEmpty)
-                    _InfoRow(icon: Icons.phone, label: '연락처', value: phone),
-                  if (address.isNotEmpty)
-                    _InfoRow(
-                        icon: Icons.location_on, label: '주소', value: address),
-                  if (gender != null)
-                    _InfoRow(
-                      icon: Icons.person,
-                      label: '성별',
-                      value: gender == 'male' ? '남성' : '여성',
-                    ),
-                  if (birthDate != null)
-                    _InfoRow(
-                        icon: Icons.cake, label: '생년월일', value: birthDate),
-                ],
-              ),
-            ),
+
+          // 기본 정보
+          _SectionCard(
+            title: '기본 정보',
+            children: [
+              _InfoRow(icon: Icons.email, label: '이메일', value: email),
+              if (phone.isNotEmpty)
+                _InfoRow(icon: Icons.phone, label: '연락처', value: phone),
+              if (address.isNotEmpty)
+                _InfoRow(
+                    icon: Icons.location_on, label: '주소', value: address),
+              if (gender != null)
+                _InfoRow(
+                  icon: Icons.person,
+                  label: '성별',
+                  value: gender == 'male' ? '남성' : '여성',
+                ),
+              if (birthDate != null)
+                _InfoRow(
+                    icon: Icons.cake, label: '생년월일', value: birthDate),
+            ],
           ),
-          const SizedBox(height: 16),
+
+          // 직장 정보
+          if (hasWorkInfo) ...[
+            const SizedBox(height: 12),
+            _SectionCard(
+              title: '직장 정보',
+              children: [
+                if (company.isNotEmpty)
+                  _InfoRow(
+                      icon: Icons.business, label: '회사', value: company),
+                if (position.isNotEmpty)
+                  _InfoRow(
+                      icon: Icons.badge, label: '직책', value: position),
+                if (department.isNotEmpty)
+                  _InfoRow(
+                      icon: Icons.groups, label: '부서', value: department),
+                if (workPhone.isNotEmpty)
+                  _InfoRow(
+                      icon: Icons.phone_in_talk,
+                      label: '직장 전화',
+                      value: workPhone),
+              ],
+            ),
+          ],
+
+          const SizedBox(height: 20),
+
+          // 액션 버튼들
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -263,7 +304,47 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
               label: const Text('프로필 수정'),
             ),
           ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _changePassword,
+              icon: const Icon(Icons.lock_outline),
+              label: const Text('비밀번호 변경'),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── 섹션 카드 ──────────────────────────────────────────
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.title, required this.children});
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            ...children,
+          ],
+        ),
       ),
     );
   }
@@ -288,7 +369,7 @@ class _InfoRow extends StatelessWidget {
           Icon(icon, size: 20, color: AppTheme.textSecondary),
           const SizedBox(width: 12),
           SizedBox(
-            width: 56,
+            width: 64,
             child: Text(label,
                 style:
                     const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
@@ -302,7 +383,136 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-/// 프로필 수정 화면
+// ─── 비밀번호 변경 다이얼로그 ──────────────────────────────
+
+class _ChangePasswordDialog extends StatefulWidget {
+  const _ChangePasswordDialog();
+
+  @override
+  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _currentPwController = TextEditingController();
+  final _newPwController = TextEditingController();
+  final _confirmPwController = TextEditingController();
+  bool _submitting = false;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _currentPwController.dispose();
+    _newPwController.dispose();
+    _confirmPwController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _submitting = true;
+      _errorMessage = null;
+    });
+    try {
+      await ProfileService.changePassword(
+        currentPassword: _currentPwController.text,
+        newPassword: _newPwController.text,
+      );
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('비밀번호가 변경되었습니다.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _submitting = false;
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('비밀번호 변경'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: _currentPwController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: '현재 비밀번호',
+                border: OutlineInputBorder(),
+              ),
+              validator: (v) =>
+                  (v == null || v.isEmpty) ? '현재 비밀번호를 입력하세요.' : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _newPwController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: '새 비밀번호 (6자 이상)',
+                border: OutlineInputBorder(),
+              ),
+              validator: (v) {
+                if (v == null || v.isEmpty) return '새 비밀번호를 입력하세요.';
+                if (v.length < 6) return '6자 이상 입력하세요.';
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _confirmPwController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: '새 비밀번호 확인',
+                border: OutlineInputBorder(),
+              ),
+              validator: (v) {
+                if (v != _newPwController.text) return '비밀번호가 일치하지 않습니다.';
+                return null;
+              },
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _errorMessage!,
+                style: const TextStyle(color: AppTheme.errorColor, fontSize: 13),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.pop(context),
+          child: const Text('취소'),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          child: _submitting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('변경'),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── 프로필 수정 화면 ──────────────────────────────────────
+
 class _ProfileEditScreen extends ConsumerStatefulWidget {
   const _ProfileEditScreen({required this.profile});
   final Map<String, dynamic> profile;
@@ -317,6 +527,10 @@ class _ProfileEditScreenState extends ConsumerState<_ProfileEditScreen> {
   late final TextEditingController _phoneController;
   late final TextEditingController _addressController;
   late final TextEditingController _birthDateController;
+  late final TextEditingController _companyController;
+  late final TextEditingController _positionController;
+  late final TextEditingController _departmentController;
+  late final TextEditingController _workPhoneController;
   String? _gender;
   bool _submitting = false;
 
@@ -331,6 +545,14 @@ class _ProfileEditScreenState extends ConsumerState<_ProfileEditScreen> {
         TextEditingController(text: widget.profile['address'] as String? ?? '');
     _birthDateController = TextEditingController(
         text: widget.profile['birth_date'] as String? ?? '');
+    _companyController =
+        TextEditingController(text: widget.profile['company'] as String? ?? '');
+    _positionController =
+        TextEditingController(text: widget.profile['position'] as String? ?? '');
+    _departmentController = TextEditingController(
+        text: widget.profile['department'] as String? ?? '');
+    _workPhoneController = TextEditingController(
+        text: widget.profile['work_phone'] as String? ?? '');
     _gender = widget.profile['gender'] as String?;
   }
 
@@ -340,7 +562,26 @@ class _ProfileEditScreenState extends ConsumerState<_ProfileEditScreen> {
     _phoneController.dispose();
     _addressController.dispose();
     _birthDateController.dispose();
+    _companyController.dispose();
+    _positionController.dispose();
+    _departmentController.dispose();
+    _workPhoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickBirthDate() async {
+    final initial = DateTime.tryParse(_birthDateController.text) ??
+        DateTime(1990, 1, 1);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1940),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      _birthDateController.text =
+          '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+    }
   }
 
   Future<void> _submit() async {
@@ -352,6 +593,10 @@ class _ProfileEditScreenState extends ConsumerState<_ProfileEditScreen> {
           address: _addressController.text.trim(),
           birthDate: _birthDateController.text.trim(),
           gender: _gender,
+          company: _companyController.text.trim(),
+          position: _positionController.text.trim(),
+          department: _departmentController.text.trim(),
+          workPhone: _workPhoneController.text.trim(),
         );
     if (mounted) {
       setState(() => _submitting = false);
@@ -382,6 +627,15 @@ class _ProfileEditScreenState extends ConsumerState<_ProfileEditScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // 기본 정보 섹션
+            Text(
+              '기본 정보',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+            ),
+            const SizedBox(height: 12),
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
@@ -391,7 +645,7 @@ class _ProfileEditScreenState extends ConsumerState<_ProfileEditScreen> {
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? '이름을 입력하세요.' : null,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             TextFormField(
               controller: _phoneController,
               decoration: const InputDecoration(
@@ -400,7 +654,7 @@ class _ProfileEditScreenState extends ConsumerState<_ProfileEditScreen> {
               ),
               keyboardType: TextInputType.phone,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             TextFormField(
               controller: _addressController,
               decoration: const InputDecoration(
@@ -408,16 +662,21 @@ class _ProfileEditScreenState extends ConsumerState<_ProfileEditScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _birthDateController,
-              decoration: const InputDecoration(
-                labelText: '생년월일 (YYYY-MM-DD)',
-                border: OutlineInputBorder(),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: _pickBirthDate,
+              child: IgnorePointer(
+                child: TextFormField(
+                  controller: _birthDateController,
+                  decoration: const InputDecoration(
+                    labelText: '생년월일',
+                    border: OutlineInputBorder(),
+                    suffixIcon: Icon(Icons.calendar_today),
+                  ),
+                ),
               ),
-              keyboardType: TextInputType.datetime,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               value: _gender,
               decoration: const InputDecoration(
@@ -430,6 +689,51 @@ class _ProfileEditScreenState extends ConsumerState<_ProfileEditScreen> {
               ],
               onChanged: (v) => setState(() => _gender = v),
             ),
+
+            const SizedBox(height: 24),
+
+            // 직장 정보 섹션
+            Text(
+              '직장 정보',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _companyController,
+              decoration: const InputDecoration(
+                labelText: '회사명',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _positionController,
+              decoration: const InputDecoration(
+                labelText: '직책',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _departmentController,
+              decoration: const InputDecoration(
+                labelText: '부서',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _workPhoneController,
+              decoration: const InputDecoration(
+                labelText: '직장 전화번호',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+
             const SizedBox(height: 24),
             FilledButton(
               onPressed: _submitting ? null : _submit,

@@ -7,6 +7,22 @@ import '../../providers/schedule_list_provider.dart';
 import '../../services/session_service.dart';
 import '../../theme/app_theme.dart';
 
+const _categoryLabels = <String, String>{
+  'event': '행사',
+  'meeting': '정기회의',
+  'training': '교육',
+  'holiday': '공휴일',
+  'other': '기타',
+};
+
+const _categoryColors = <String, Color>{
+  'event': Color(0xFF1F4FD8),
+  'meeting': Color(0xFF059669),
+  'training': Color(0xFFF59E0B),
+  'holiday': Color(0xFFDC2626),
+  'other': Color(0xFF6B7280),
+};
+
 /// 일정 목록
 class ScheduleListScreen extends ConsumerWidget {
   const ScheduleListScreen({super.key});
@@ -25,7 +41,19 @@ class ScheduleListScreen extends ConsumerWidget {
       body: listAsync.when(
         data: (schedules) {
           if (schedules.isEmpty) {
-            return const Center(child: Text('등록된 일정이 없습니다.'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.event_busy, size: 64, color: Colors.grey.shade300),
+                  const SizedBox(height: 12),
+                  const Text(
+                    '등록된 일정이 없습니다.',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
+            );
           }
           return RefreshIndicator(
             onRefresh: () => ref.read(scheduleListProvider.notifier).load(),
@@ -41,8 +69,18 @@ class ScheduleListScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text('일정을 불러올 수 없습니다.',
-              style: TextStyle(color: AppTheme.errorColor)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('일정을 불러올 수 없습니다.',
+                  style: TextStyle(color: AppTheme.errorColor)),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => ref.read(scheduleListProvider.notifier).load(),
+                child: const Text('다시 시도'),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FutureBuilder<String?>(
@@ -72,15 +110,23 @@ class _ScheduleCard extends StatelessWidget {
     final endRaw = schedule['end_date'] as String?;
     final location = schedule['location'] as String? ?? '';
     final category = schedule['category'] as String? ?? '';
+    final categoryLabel = _categoryLabels[category] ?? category;
+    final categoryColor = _categoryColors[category] ?? AppTheme.primaryColor;
 
     String dateStr = '';
+    String timeStr = '';
     if (startRaw != null) {
       try {
         final start = DateTime.parse(startRaw);
-        dateStr = DateFormat('yyyy.MM.dd (E)', 'ko_KR').format(start);
+        dateStr = DateFormat('MM.dd (E)', 'ko_KR').format(start);
+        if (start.hour != 0 || start.minute != 0) {
+          timeStr = DateFormat('HH:mm').format(start);
+        }
         if (endRaw != null) {
           final end = DateTime.parse(endRaw);
-          if (!start.isAtSameMomentAs(end)) {
+          if (start.year != end.year ||
+              start.month != end.month ||
+              start.day != end.day) {
             dateStr += ' ~ ${DateFormat('MM.dd (E)', 'ko_KR').format(end)}';
           }
         }
@@ -96,7 +142,7 @@ class _ScheduleCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () => context.push('/home/schedule/${schedule['id']}'),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -107,12 +153,12 @@ class _ScheduleCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isPast
                       ? Colors.grey.shade200
-                      : AppTheme.primaryColor.withOpacity(0.1),
+                      : categoryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   Icons.event,
-                  color: isPast ? Colors.grey : AppTheme.primaryColor,
+                  color: isPast ? Colors.grey : categoryColor,
                 ),
               ),
               const SizedBox(width: 12),
@@ -120,39 +166,38 @@ class _ScheduleCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (category.isNotEmpty)
+                    if (categoryLabel.isNotEmpty)
                       Container(
                         margin: const EdgeInsets.only(bottom: 4),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppTheme.secondaryColor.withOpacity(0.1),
+                          color: categoryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          category,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppTheme.secondaryColor,
-                          ),
+                          categoryLabel,
+                          style: TextStyle(fontSize: 11, color: categoryColor),
                         ),
                       ),
                     Text(
                       schedule['title'] as String? ?? '',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: isPast ? Colors.grey : null,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: isPast ? Colors.grey : null,
+                              ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      [dateStr, location]
+                      [dateStr, timeStr, location]
                           .where((e) => e.isNotEmpty)
                           .join(' | '),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

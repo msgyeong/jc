@@ -7,6 +7,14 @@ import '../../providers/schedule_list_provider.dart';
 import '../../services/schedule_service.dart';
 import '../../theme/app_theme.dart';
 
+const _categoryOptions = <String, String>{
+  'event': '행사',
+  'meeting': '정기회의',
+  'training': '교육',
+  'holiday': '공휴일',
+  'other': '기타',
+};
+
 /// 일정 작성
 class ScheduleCreateScreen extends ConsumerStatefulWidget {
   const ScheduleCreateScreen({super.key});
@@ -21,9 +29,12 @@ class _ScheduleCreateScreenState extends ConsumerState<ScheduleCreateScreen> {
   final _titleController = TextEditingController();
   final _locationController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _categoryController = TextEditingController();
+
   DateTime _startDate = DateTime.now();
+  TimeOfDay? _startTime;
   DateTime? _endDate;
+  TimeOfDay? _endTime;
+  String _category = 'event';
   bool _submitting = false;
 
   @override
@@ -31,7 +42,6 @@ class _ScheduleCreateScreenState extends ConsumerState<ScheduleCreateScreen> {
     _titleController.dispose();
     _locationController.dispose();
     _descriptionController.dispose();
-    _categoryController.dispose();
     super.dispose();
   }
 
@@ -57,17 +67,44 @@ class _ScheduleCreateScreenState extends ConsumerState<ScheduleCreateScreen> {
     }
   }
 
+  Future<void> _pickTime({required bool isStart}) async {
+    final initial = isStart
+        ? (_startTime ?? TimeOfDay.now())
+        : (_endTime ?? _startTime ?? TimeOfDay.now());
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+    );
+    if (picked != null) {
+      setState(() {
+        if (isStart) {
+          _startTime = picked;
+        } else {
+          _endTime = picked;
+        }
+      });
+    }
+  }
+
+  String _buildIsoDate(DateTime date, TimeOfDay? time) {
+    if (time != null) {
+      return DateTime(date.year, date.month, date.day, time.hour, time.minute)
+          .toIso8601String();
+    }
+    return date.toIso8601String();
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
     try {
       final id = await ScheduleService.create(
         title: _titleController.text.trim(),
-        startDate: _startDate.toIso8601String(),
-        endDate: _endDate?.toIso8601String(),
+        startDate: _buildIsoDate(_startDate, _startTime),
+        endDate: _endDate != null ? _buildIsoDate(_endDate!, _endTime) : null,
         location: _locationController.text.trim(),
         description: _descriptionController.text.trim(),
-        category: _categoryController.text.trim(),
+        category: _category,
       );
       ref.read(scheduleListProvider.notifier).load();
       if (mounted) context.go('/home/schedule/$id');
@@ -106,30 +143,41 @@ class _ScheduleCreateScreenState extends ConsumerState<ScheduleCreateScreen> {
                   (v == null || v.trim().isEmpty) ? '제목을 입력하세요.' : null,
             ),
             const SizedBox(height: 16),
-            _DateField(
-              label: '시작일',
-              date: _startDate,
-              onTap: () => _pickDate(isStart: true),
+            DropdownButtonFormField<String>(
+              value: _category,
+              decoration: const InputDecoration(
+                labelText: '분류',
+                border: OutlineInputBorder(),
+              ),
+              items: _categoryOptions.entries
+                  .map((e) =>
+                      DropdownMenuItem(value: e.key, child: Text(e.value)))
+                  .toList(),
+              onChanged: (v) {
+                if (v != null) setState(() => _category = v);
+              },
             ),
             const SizedBox(height: 16),
-            _DateField(
+            _DateTimeField(
+              label: '시작일',
+              date: _startDate,
+              time: _startTime,
+              onTapDate: () => _pickDate(isStart: true),
+              onTapTime: () => _pickTime(isStart: true),
+            ),
+            const SizedBox(height: 16),
+            _DateTimeField(
               label: '종료일 (선택)',
               date: _endDate,
-              onTap: () => _pickDate(isStart: false),
+              time: _endTime,
+              onTapDate: () => _pickDate(isStart: false),
+              onTapTime: () => _pickTime(isStart: false),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _locationController,
               decoration: const InputDecoration(
                 labelText: '장소',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _categoryController,
-              decoration: const InputDecoration(
-                labelText: '분류 (예: 정기회의, 행사, 교육)',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -161,31 +209,66 @@ class _ScheduleCreateScreenState extends ConsumerState<ScheduleCreateScreen> {
   }
 }
 
-class _DateField extends StatelessWidget {
-  const _DateField({required this.label, this.date, required this.onTap});
+class _DateTimeField extends StatelessWidget {
+  const _DateTimeField({
+    required this.label,
+    this.date,
+    this.time,
+    required this.onTapDate,
+    required this.onTapTime,
+  });
   final String label;
   final DateTime? date;
-  final VoidCallback onTap;
+  final TimeOfDay? time;
+  final VoidCallback onTapDate;
+  final VoidCallback onTapTime;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          suffixIcon: const Icon(Icons.calendar_today),
-        ),
-        child: Text(
-          date != null
-              ? DateFormat('yyyy년 MM월 dd일').format(date!)
-              : '날짜를 선택하세요',
-          style: TextStyle(
-            color: date != null ? null : AppTheme.textSecondary,
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: InkWell(
+            onTap: onTapDate,
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: label,
+                border: const OutlineInputBorder(),
+                suffixIcon: const Icon(Icons.calendar_today, size: 20),
+              ),
+              child: Text(
+                date != null
+                    ? DateFormat('yyyy.MM.dd (E)', 'ko_KR').format(date!)
+                    : '날짜 선택',
+                style: TextStyle(
+                  color: date != null ? null : AppTheme.textSecondary,
+                ),
+              ),
+            ),
           ),
         ),
-      ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 2,
+          child: InkWell(
+            onTap: onTapTime,
+            child: InputDecorator(
+              decoration: const InputDecoration(
+                labelText: '시간',
+                border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.access_time, size: 20),
+              ),
+              child: Text(
+                time != null ? time!.format(context) : '시간 선택',
+                style: TextStyle(
+                  color: time != null ? null : AppTheme.textSecondary,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

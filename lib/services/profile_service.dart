@@ -19,6 +19,10 @@ class ProfileService {
     String? address,
     String? birthDate,
     String? gender,
+    String? company,
+    String? position,
+    String? department,
+    String? workPhone,
   }) async {
     final res = await ApiClient.put('/api/profile', body: {
       'name': name,
@@ -26,6 +30,10 @@ class ProfileService {
       'address': address,
       'birth_date': birthDate,
       'gender': gender,
+      'company': company,
+      'position': position,
+      'department': department,
+      'work_phone': workPhone,
     });
     if (!res.success) {
       throw Exception(res.message ?? '프로필 수정 실패');
@@ -42,6 +50,20 @@ class ProfileService {
     }
   }
 
+  /// 비밀번호 변경
+  static Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final res = await ApiClient.put('/api/profile/password', body: {
+      'current_password': currentPassword,
+      'new_password': newPassword,
+    });
+    if (!res.success) {
+      throw Exception(res.message ?? '비밀번호 변경 실패');
+    }
+  }
+
   static Map<String, dynamic> _normalize(Map<String, dynamic> raw) {
     return {
       'id': raw['id'].toString(),
@@ -54,6 +76,10 @@ class ProfileService {
       'status': raw['status'] ?? 'active',
       'birth_date': raw['birth_date'],
       'gender': raw['gender'],
+      'company': raw['company'] ?? '',
+      'position': raw['position'] ?? '',
+      'department': raw['department'] ?? '',
+      'work_phone': raw['work_phone'] ?? '',
       'created_at': raw['created_at'],
       'updated_at': raw['updated_at'],
     };

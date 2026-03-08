@@ -40,10 +40,11 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
                 autofocus: true,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
-                  hintText: '이름 검색...',
+                  hintText: '이름, 회사, 연락처 검색...',
                   hintStyle: TextStyle(color: Colors.white54),
                   border: InputBorder.none,
                 ),
+                onChanged: _onSearch,
                 onSubmitted: _onSearch,
               )
             : const Text('회원'),
@@ -67,7 +68,22 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
       body: listAsync.when(
         data: (members) {
           if (members.isEmpty) {
-            return const Center(child: Text('회원이 없습니다.'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.people_outline,
+                      size: 64, color: Colors.grey.shade300),
+                  const SizedBox(height: 12),
+                  Text(
+                    _showSearch && _searchController.text.isNotEmpty
+                        ? '검색 결과가 없습니다.'
+                        : '회원이 없습니다.',
+                    style: const TextStyle(color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
+            );
           }
           return RefreshIndicator(
             onRefresh: () => ref.read(memberListProvider.notifier).load(),
@@ -83,8 +99,18 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text('회원 목록을 불러올 수 없습니다.',
-              style: TextStyle(color: AppTheme.errorColor)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('회원 목록을 불러올 수 없습니다.',
+                  style: TextStyle(color: AppTheme.errorColor)),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => ref.read(memberListProvider.notifier).load(),
+                child: const Text('다시 시도'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -100,14 +126,27 @@ class _MemberCard extends StatelessWidget {
     final name = member['name'] as String? ?? '';
     final role = member['role'] as String? ?? 'member';
     final phone = member['phone'] as String? ?? '';
+    final company = member['company'] as String? ?? '';
+    final position = member['position'] as String? ?? '';
     final profileImage = member['profile_image'] as String?;
 
     String roleLabel = '';
+    Color? roleBgColor;
+    Color? roleTextColor;
     if (role == 'super_admin') {
       roleLabel = '총괄관리자';
+      roleBgColor = AppTheme.accentColor.withOpacity(0.15);
+      roleTextColor = AppTheme.accentColor;
     } else if (role == 'admin') {
       roleLabel = '관리자';
+      roleBgColor = AppTheme.primaryColor.withOpacity(0.1);
+      roleTextColor = AppTheme.primaryColor;
     }
+
+    // 소속 정보 (회사/직책)
+    final affiliation = [company, position]
+        .where((e) => e.isNotEmpty)
+        .join(' / ');
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -128,21 +167,26 @@ class _MemberCard extends StatelessWidget {
         ),
         title: Row(
           children: [
-            Text(name),
+            Flexible(
+              child: Text(
+                name,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             if (roleLabel.isNotEmpty) ...[
               const SizedBox(width: 6),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentColor.withOpacity(0.15),
+                  color: roleBgColor,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   roleLabel,
                   style: TextStyle(
                     fontSize: 11,
-                    color: AppTheme.accentColor,
+                    color: roleTextColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -150,8 +194,14 @@ class _MemberCard extends StatelessWidget {
             ],
           ],
         ),
-        subtitle: phone.isNotEmpty ? Text(phone) : null,
-        trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+        subtitle: Text(
+          [affiliation, phone].where((e) => e.isNotEmpty).join(' | '),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 13),
+        ),
+        trailing:
+            const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
         onTap: () => context.push('/home/members/${member['id']}'),
       ),
     );

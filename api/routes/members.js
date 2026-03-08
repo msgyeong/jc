@@ -21,9 +21,10 @@ router.get('/', authenticate, async (req, res) => {
 
         // 회원 목록 (활성 회원만)
         const result = await query(
-            `SELECT 
+            `SELECT
                 id, email, name, phone, address,
                 profile_image, role, status,
+                company, position, department,
                 created_at
              FROM users
              WHERE status = 'active'
@@ -66,9 +67,10 @@ router.get('/search', authenticate, async (req, res) => {
 
         // 검색 (이름, 이메일, 전화번호, 주소로 검색)
         const result = await query(
-            `SELECT 
+            `SELECT
                 id, email, name, phone, address,
                 profile_image, role, status,
+                company, position, department,
                 created_at
              FROM users
              WHERE status = 'active'
@@ -77,6 +79,7 @@ router.get('/search', authenticate, async (req, res) => {
                 OR email ILIKE $1
                 OR phone ILIKE $1
                 OR address ILIKE $1
+                OR company ILIKE $1
              )
              ORDER BY name ASC
              LIMIT 50`,
@@ -107,10 +110,11 @@ router.get('/:id', authenticate, async (req, res) => {
 
         // 회원 조회
         const result = await query(
-            `SELECT 
+            `SELECT
                 id, email, name, phone, address,
                 profile_image, role, status,
                 birth_date, gender,
+                company, position, department, work_phone,
                 created_at, updated_at
              FROM users
              WHERE id = $1`,

@@ -232,32 +232,40 @@ router.post('/reset-password', async (req, res) => {
             });
         }
 
-        // 유니코드 정규화(NFC) 적용 — 한글 자모 분리 방지
+        // 정규화: 소문자, 공백 제거, 유니코드 NFC
         const normalizedEmail = email.toLowerCase().trim().normalize('NFC');
-        const normalizedName = name.trim().normalize('NFC');
+        // 이름: 공백 제거 + NFC 정규화
+        const normalizedName = name.replace(/\s+/g, '').normalize('NFC');
 
-        // 이메일로 먼저 조회 후 이름 비교 (DB 측 정규화 포함)
+        // 이메일+이름 동시 조회 (DB 측에서도 공백 제거 비교)
         const result = await query(
-            'SELECT id, email, name, status FROM users WHERE LOWER(TRIM(email)) = $1',
-            [normalizedEmail]
+            "SELECT id, email, name, status FROM users WHERE LOWER(TRIM(email)) = $1 AND REPLACE(TRIM(name), ' ', '') = $2",
+            [normalizedEmail, normalizedName]
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: '등록되지 않은 이메일입니다.'
-            });
+            // 이메일만으로 재조회하여 원인 분류
+            const emailCheck = await query(
+                'SELECT id, name FROM users WHERE LOWER(TRIM(email)) = $1',
+                [normalizedEmail]
+            );
+            if (emailCheck.rows.length === 0) {
+                console.log('Reset-password: email not found -', normalizedEmail);
+                return res.status(404).json({
+                    success: false,
+                    message: '등록되지 않은 이메일입니다.\n이메일을 다시 확인해주세요.'
+                });
+            } else {
+                console.log('Reset-password: name mismatch - email:', normalizedEmail,
+                    'input:', normalizedName, 'db:', emailCheck.rows[0].name);
+                return res.status(404).json({
+                    success: false,
+                    message: '이름이 일치하지 않습니다.\n가입 시 등록한 이름을 입력해주세요.'
+                });
+            }
         }
 
-        // 이름 비교 (NFC 정규화 후 비교)
         const user = result.rows[0];
-        const dbName = (user.name || '').trim().normalize('NFC');
-        if (dbName !== normalizedName) {
-            return res.status(404).json({
-                success: false,
-                message: '일치하는 회원 정보를 찾을 수 없습니다.\n이메일과 이름을 다시 확인해주세요.'
-            });
-        }
 
         if (user.status === 'suspended') {
             return res.status(403).json({

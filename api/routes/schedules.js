@@ -65,12 +65,6 @@ router.get('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // 조회수 증가
-        await query(
-            'UPDATE schedules SET views = views + 1 WHERE id = $1',
-            [id]
-        );
-
         // 일정 조회
         const result = await query(
             `SELECT 

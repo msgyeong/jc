@@ -102,33 +102,16 @@ router.get('/', authenticate, async (req, res) => {
 router.get('/:id/comments', authenticate, async (req, res) => {
     try {
         const { id: postId } = req.params;
-        let comments;
-        try {
-            const q = await query(
-                `SELECT c.id, c.author_id, c.content, c.parent_comment_id, c.created_at, u.name as author_name, u.profile_image as author_image
-                 FROM comments c
-                 LEFT JOIN users u ON c.author_id = u.id
-                 WHERE c.post_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
-                 ORDER BY c.created_at ASC`,
-                [postId]
-            );
-            comments = q.rows || [];
-        } catch (e) {
-            if (e && e.message && e.message.includes('parent_comment_id')) {
-                const q = await query(
-                    `SELECT c.id, c.author_id, c.content, c.created_at, u.name as author_name, u.profile_image as author_image
-                     FROM comments c
-                     LEFT JOIN users u ON c.author_id = u.id
-                     WHERE c.post_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
-                     ORDER BY c.created_at ASC`,
-                    [postId]
-                );
-                comments = (q.rows || []).map(r => ({ ...r, parent_comment_id: null }));
-            } else {
-                throw e;
-            }
-        }
-        return res.json({ success: true, comments });
+        const result = await query(
+            `SELECT c.id, c.author_id, c.content, c.parent_id, c.created_at,
+                    u.name as author_name, u.profile_image as author_image
+             FROM comments c
+             LEFT JOIN users u ON c.author_id = u.id
+             WHERE c.post_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
+             ORDER BY c.created_at ASC`,
+            [postId]
+        );
+        return res.json({ success: true, comments: result.rows || [] });
     } catch (err) {
         console.error('Get comments error:', err);
         return res.status(500).json({
@@ -145,7 +128,7 @@ router.get('/:id/comments', authenticate, async (req, res) => {
 router.post('/:id/comments', authenticate, async (req, res) => {
     try {
         const { id: postId } = req.params;
-        const { content, parent_comment_id } = req.body || {};
+        const { content, parent_id } = req.body || {};
         const authorId = req.user.userId;
         if (!content || !String(content).trim()) {
             return res.status(400).json({
@@ -153,23 +136,11 @@ router.post('/:id/comments', authenticate, async (req, res) => {
                 message: '댓글 내용을 입력해주세요.'
             });
         }
-        try {
-            await query(
-                `INSERT INTO comments (author_id, post_id, content, parent_comment_id)
-                 VALUES ($1, $2, $3, $4)`,
-                [authorId, postId, String(content).trim(), parent_comment_id || null]
-            );
-        } catch (e) {
-            if (e && e.message && e.message.includes('parent_comment_id')) {
-                await query(
-                    `INSERT INTO comments (author_id, post_id, content)
-                     VALUES ($1, $2, $3)`,
-                    [authorId, postId, String(content).trim()]
-                );
-            } else {
-                throw e;
-            }
-        }
+        await query(
+            `INSERT INTO comments (author_id, post_id, content, parent_id)
+             VALUES ($1, $2, $3, $4)`,
+            [authorId, postId, String(content).trim(), parent_id || null]
+        );
         const countResult = await query(
             'SELECT COUNT(*) FROM comments WHERE post_id = $1 AND (is_deleted = false OR is_deleted IS NULL)',
             [postId]
@@ -236,13 +207,13 @@ router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
 router.post('/:id/like', authenticate, async (req, res) => {
     try {
         const { id: postId } = req.params;
-        const memberId = req.user.userId;
+        const userId = req.user.userId;
         const existing = await query(
-            'SELECT id FROM likes WHERE member_id = $1 AND post_id = $2',
-            [memberId, postId]
+            'SELECT id FROM likes WHERE user_id = $1 AND post_id = $2',
+            [userId, postId]
         );
         if (existing.rows.length > 0) {
-            await query('DELETE FROM likes WHERE member_id = $1 AND post_id = $2', [memberId, postId]);
+            await query('DELETE FROM likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
             const countResult = await query(
                 'SELECT COUNT(*) FROM likes WHERE post_id = $1',
                 [postId]
@@ -255,8 +226,8 @@ router.post('/:id/like', authenticate, async (req, res) => {
             return res.json({ success: true, liked: false, likes_count });
         }
         await query(
-            'INSERT INTO likes (member_id, post_id, created_at) VALUES ($1, $2, NOW())',
-            [memberId, postId]
+            'INSERT INTO likes (user_id, post_id, created_at) VALUES ($1, $2, NOW())',
+            [userId, postId]
         );
         const countResult = await query(
             'SELECT COUNT(*) FROM likes WHERE post_id = $1',
@@ -291,35 +262,17 @@ router.get('/:id', authenticate, async (req, res) => {
             [id]
         );
 
-        let result;
-        try {
-            result = await query(
-                `SELECT 
-                    p.id, p.title, p.content, p.images, p.category,
-                    p.views, p.likes_count, p.comments_count,
-                    p.created_at, p.updated_at,
-                    p.schedule_id,
-                    u.id as author_id, u.name as author_name, u.profile_image as author_image
-                 FROM posts p
-                 LEFT JOIN users u ON p.author_id = u.id
-                 WHERE p.id = $1`,
-                [id]
-            );
-        } catch (e) {
-            if ((e && e.message && e.message.includes('schedule_id')) || !e) {
-                result = await query(
-                    `SELECT 
-                        p.id, p.title, p.content, p.images, p.category,
-                        p.views, p.likes_count, p.comments_count,
-                        p.created_at, p.updated_at,
-                        u.id as author_id, u.name as author_name, u.profile_image as author_image
-                     FROM posts p
-                     LEFT JOIN users u ON p.author_id = u.id
-                     WHERE p.id = $1`,
-                    [id]
-                );
-            } else throw e;
-        }
+        const result = await query(
+            `SELECT
+                p.id, p.title, p.content, p.images, p.category,
+                p.views, p.likes_count, p.comments_count,
+                p.created_at, p.updated_at,
+                u.id as author_id, u.name as author_name, u.profile_image as author_image
+             FROM posts p
+             LEFT JOIN users u ON p.author_id = u.id
+             WHERE p.id = $1`,
+            [id]
+        );
 
         if (result.rows.length === 0) {
             return res.status(404).json({
@@ -332,11 +285,11 @@ router.get('/:id', authenticate, async (req, res) => {
         let user_has_liked = false;
         try {
             const likeRow = await query(
-                'SELECT 1 FROM likes WHERE member_id = $1 AND post_id = $2',
+                'SELECT 1 FROM likes WHERE user_id = $1 AND post_id = $2',
                 [userId, id]
             );
             user_has_liked = (likeRow.rows && likeRow.rows.length > 0);
-        } catch (_) { /* post_likes 사용 시: user_id/post_id */ }
+        } catch (_) { }
         if (!user_has_liked) {
             try {
                 const pl = await query(

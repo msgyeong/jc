@@ -47,7 +47,7 @@ router.get('/', authenticate, async (req, res) => {
                     pr.read_at as read_at
                  FROM posts p
                  LEFT JOIN users u ON p.author_id = u.id
-                 LEFT JOIN post_reads pr ON pr.post_id = p.id AND pr.user_id = $3
+                 LEFT JOIN read_status pr ON pr.post_id = p.id AND pr.user_id = $3
                  ${categoryFilter}
                  ${orderClause}
                  LIMIT $1 OFFSET $2`,
@@ -59,7 +59,7 @@ router.get('/', authenticate, async (req, res) => {
             });
         } catch (e) {
             const msg = (e && e.message) || '';
-            if (msg.includes('post_reads') || msg.includes('schedule_id') || msg.includes('is_pinned')) {
+            if (msg.includes('read_status') || msg.includes('schedule_id') || msg.includes('is_pinned')) {
                 const result = await query(
                     `SELECT
                         p.id, p.title, p.content, p.images, p.category,
@@ -347,12 +347,12 @@ router.get('/:id', authenticate, async (req, res) => {
 
         try {
             await query(
-                `INSERT INTO post_reads (user_id, post_id, read_at)
+                `INSERT INTO read_status (user_id, post_id, read_at)
                  VALUES ($1, $2, NOW())
                  ON CONFLICT (user_id, post_id) DO UPDATE SET read_at = NOW()`,
                 [userId, id]
             );
-        } catch (_) { /* post_reads 미적용 시 무시 */ }
+        } catch (_) { /* read_status 미적용 시 무시 */ }
 
         res.json({
             success: true,

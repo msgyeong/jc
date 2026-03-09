@@ -233,8 +233,8 @@ router.post('/reset-password', async (req, res) => {
         }
 
         const result = await query(
-            'SELECT id, email, name, status FROM users WHERE email = $1 AND name = $2',
-            [email.toLowerCase(), name.trim()]
+            'SELECT id, email, name, status FROM users WHERE LOWER(TRIM(email)) = $1 AND TRIM(name) = $2',
+            [email.toLowerCase().trim(), name.trim()]
         );
 
         if (result.rows.length === 0) {

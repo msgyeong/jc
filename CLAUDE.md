@@ -47,7 +47,6 @@ E:/app/jc/
 │   ├── middleware/          # auth.js (JWT), errorHandler.js
 │   ├── routes/             # auth, posts, notices, schedules, members, profile
 │   └── utils/              # jwt.js, password.js
-├── lib/                    # Flutter 코드 (레거시 — 사용하지 않음)
 ├── web/                    # 프론트엔드 웹앱 (실제 서비스 코드)
 │   ├── index.html          # SPA 메인 페이지
 │   ├── js/                 # JavaScript 모듈 (app, auth, api-client, 각 화면별)
@@ -61,7 +60,6 @@ E:/app/jc/
 ├── start.sh                # 컨테이너 시작 스크립트
 └── Docs/                   # PRD, 태스크, 디자인 시스템 문서
     ├── prd/                # 00-overview ~ 08-design
-    ├── tasks-flutter/      # Flutter 구현 태스크
     ├── tasks-web/          # 웹 구현 태스크
     ├── tasks-common/       # 공통 체크리스트
     ├── design-system/      # 색상, 타이포, 컴포넌트
@@ -148,8 +146,6 @@ E:/app/jc/
 
 - PRD: `Docs/prd/` (00~08)
 - 게시판 정책: `Docs/tasks-common/02-0-board-and-schedule-policy.md`
-- 게시판 태스크: `Docs/tasks-flutter/02-post-features.md`
-- 공지/일정 태스크: `Docs/tasks-flutter/03-notice-and-schedule.md`
 - 디자인 시스템: `Docs/design-system/`
 - 와이어프레임: `Docs/wireframes/`
 - 팀 지시문: `Docs/team-board-directives.md`

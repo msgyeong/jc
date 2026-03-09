@@ -218,6 +218,69 @@ router.get('/me', authenticate, async (req, res) => {
 });
 
 /**
+ * POST /api/auth/reset-password
+ * 비밀번호 재설정 (이메일 + 이름 확인 → 임시 비밀번호 발급)
+ */
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { email, name } = req.body;
+
+        if (!email || !name) {
+            return res.status(400).json({
+                success: false,
+                message: '이메일과 이름을 모두 입력해주세요.'
+            });
+        }
+
+        const result = await query(
+            'SELECT id, email, name, status FROM users WHERE email = $1 AND name = $2',
+            [email.toLowerCase(), name.trim()]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '일치하는 회원 정보를 찾을 수 없습니다.\n이메일과 이름을 다시 확인해주세요.'
+            });
+        }
+
+        const user = result.rows[0];
+
+        if (user.status === 'suspended') {
+            return res.status(403).json({
+                success: false,
+                message: '정지된 계정입니다. 관리자에게 문의하세요.'
+            });
+        }
+
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+        let tempPassword = '';
+        for (let i = 0; i < 10; i++) {
+            tempPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        const passwordHash = await hashPassword(tempPassword);
+
+        await query(
+            'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+            [passwordHash, user.id]
+        );
+
+        res.json({
+            success: true,
+            message: '임시 비밀번호가 발급되었습니다. 로그인 후 비밀번호를 변경해주세요.',
+            tempPassword
+        });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({
+            success: false,
+            message: '비밀번호 재설정 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+/**
  * POST /api/auth/logout
  * 로그아웃 (클라이언트에서 토큰 삭제)
  */

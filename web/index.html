@@ -79,6 +79,70 @@
             </div>
         </div>
 
+        <!-- 비밀번호 찾기 화면 -->
+        <div id="forgot-password-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="navigateToScreen('login')">
+                    <span class="icon">←</span>
+                </button>
+                <h1 class="app-bar-title">비밀번호 찾기</h1>
+            </div>
+            <div class="screen-content">
+                <div class="info-box">
+                    가입 시 등록한 이메일과 이름을 입력하면<br>임시 비밀번호가 발급됩니다.
+                </div>
+
+                <form id="forgot-password-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="forgot-email">이메일</label>
+                        <input 
+                            type="email" 
+                            id="forgot-email" 
+                            placeholder="가입 시 사용한 이메일"
+                            required
+                        >
+                        <span class="error-message" id="forgot-email-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="forgot-name">이름</label>
+                        <input 
+                            type="text" 
+                            id="forgot-name" 
+                            placeholder="가입 시 등록한 이름"
+                            required
+                        >
+                        <span class="error-message" id="forgot-name-error"></span>
+                    </div>
+
+                    <div class="inline-error-message" id="forgot-inline-error"></div>
+
+                    <button type="submit" class="btn btn-primary btn-forgot-password">
+                        <span class="btn-text">임시 비밀번호 발급</span>
+                        <span class="btn-loading" style="display: none;">
+                            <span class="spinner"></span>
+                        </span>
+                    </button>
+                </form>
+
+                <div id="forgot-password-result" class="forgot-result" style="display: none;">
+                    <div class="result-box success-box">
+                        <h3>임시 비밀번호가 발급되었습니다</h3>
+                        <div class="temp-password-display">
+                            <span id="temp-password-value"></span>
+                            <button type="button" class="btn-copy" id="copy-temp-password" title="복사">
+                                복사
+                            </button>
+                        </div>
+                        <p class="result-notice">로그인 후 반드시 비밀번호를 변경해주세요.</p>
+                        <button type="button" class="btn btn-primary" onclick="navigateToScreen('login')">
+                            로그인하러 가기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 회원가입 화면 (간소화 버전) -->
         <div id="signup-screen" class="screen">
             <div class="app-bar">

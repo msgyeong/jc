@@ -20,6 +20,7 @@ async function initApp() {
         console.log('🔹 Step 2: UI 이벤트 설정');
         // auth.js에서 이미 설정되므로 여기서는 추가 설정만
         setupBottomNavigation();
+        setupSignupEvents();
         setupFABButtons();
         setupViewAllButtons();
         

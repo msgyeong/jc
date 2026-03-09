@@ -90,11 +90,19 @@ function navigateToScreen(screenName) {
             }
             clearAllErrors();
         } else if (screenName === 'signup') {
-            // 회원가입 화면으로 갈 때 폼 초기화
             const form = document.getElementById('signup-form');
             if (form) {
                 form.reset();
             }
+            clearAllErrors();
+        } else if (screenName === 'forgot-password') {
+            const form = document.getElementById('forgot-password-form');
+            if (form) {
+                form.reset();
+                form.style.display = 'block';
+            }
+            const result = document.getElementById('forgot-password-result');
+            if (result) result.style.display = 'none';
             clearAllErrors();
         } else if (screenName === 'admin') {
             // 관리자 페이지 초기화
@@ -244,13 +252,74 @@ function setupSignupEvents() {
         });
     }
     
-    // 비밀번호 찾기 (TODO)
+    // 비밀번호 찾기
     const forgotPasswordLink = document.getElementById('forgot-password-link');
     if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', () => {
-            alert('비밀번호 찾기 기능은 개발 중입니다.');
+            navigateToScreen('forgot-password');
         });
     }
     
-    console.log('✅ 회원가입 관련 이벤트 설정 완료');
+    // 비밀번호 찾기 폼
+    const forgotForm = document.getElementById('forgot-password-form');
+    if (forgotForm) {
+        forgotForm.addEventListener('submit', handleForgotPassword);
+    }
+    
+    // 임시 비밀번호 복사 버튼
+    const copyBtn = document.getElementById('copy-temp-password');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            const pw = document.getElementById('temp-password-value').textContent;
+            navigator.clipboard.writeText(pw).then(() => {
+                copyBtn.textContent = '복사됨!';
+                setTimeout(() => { copyBtn.textContent = '복사'; }, 2000);
+            });
+        });
+    }
+    
+    console.log('✅ 회원가입/비밀번호 찾기 이벤트 설정 완료');
+}
+
+// 비밀번호 찾기 폼 처리
+async function handleForgotPassword(event) {
+    event.preventDefault();
+    clearAllErrors();
+    
+    const email = document.getElementById('forgot-email').value.trim().toLowerCase();
+    const name = document.getElementById('forgot-name').value.trim();
+    
+    let isValid = true;
+    
+    if (!email) {
+        showError('forgot-email-error', '이메일을 입력하세요.');
+        isValid = false;
+    } else if (!validateEmail(email)) {
+        showError('forgot-email-error', '올바른 이메일 형식이 아닙니다.');
+        isValid = false;
+    }
+    
+    if (!name) {
+        showError('forgot-name-error', '이름을 입력하세요.');
+        isValid = false;
+    }
+    
+    if (!isValid) return;
+    
+    const submitBtn = document.querySelector('.btn-forgot-password');
+    setButtonLoading(submitBtn, true);
+    
+    try {
+        const result = await apiClient.resetPassword(email, name);
+        
+        if (result.success && result.tempPassword) {
+            document.getElementById('forgot-password-form').style.display = 'none';
+            document.getElementById('temp-password-value').textContent = result.tempPassword;
+            document.getElementById('forgot-password-result').style.display = 'block';
+        }
+    } catch (error) {
+        showInlineError('forgot-inline-error', error.message || '비밀번호 재설정에 실패했습니다.');
+    } finally {
+        setButtonLoading(submitBtn, false);
+    }
 }

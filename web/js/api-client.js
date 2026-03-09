@@ -112,6 +112,16 @@ class ApiClient {
         return this.request('/auth/me');
     }
     
+    /**
+     * 비밀번호 재설정 (이메일 + 이름 확인)
+     */
+    async resetPassword(email, name) {
+        return this.request('/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify({ email, name })
+        });
+    }
+    
     // ============================================
     // 게시판 API
     // ============================================

@@ -51,8 +51,8 @@ router.post('/members', async (req, res) => {
 
         for (const m of members) {
             await query(
-                `INSERT INTO users (email, password, name, phone, company, position, department, gender, birth_date, role, status, is_approved, created_at, updated_at)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', true, NOW(), NOW())
+                `INSERT INTO users (email, password_hash, name, phone, company, position, department, gender, birth_date, role, status, created_at, updated_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', NOW(), NOW())
                  ON CONFLICT (email) DO NOTHING`,
                 [m.email, hashedPw, m.name, m.phone, m.company, m.position, m.department, m.gender, m.birth_date, m.role]
             );

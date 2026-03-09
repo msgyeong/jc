@@ -232,19 +232,32 @@ router.post('/reset-password', async (req, res) => {
             });
         }
 
+        // 유니코드 정규화(NFC) 적용 — 한글 자모 분리 방지
+        const normalizedEmail = email.toLowerCase().trim().normalize('NFC');
+        const normalizedName = name.trim().normalize('NFC');
+
+        // 이메일로 먼저 조회 후 이름 비교 (DB 측 정규화 포함)
         const result = await query(
-            'SELECT id, email, name, status FROM users WHERE LOWER(TRIM(email)) = $1 AND TRIM(name) = $2',
-            [email.toLowerCase().trim(), name.trim()]
+            'SELECT id, email, name, status FROM users WHERE LOWER(TRIM(email)) = $1',
+            [normalizedEmail]
         );
 
         if (result.rows.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: '일치하는 회원 정보를 찾을 수 없습니다.\n이메일과 이름을 다시 확인해주세요.'
+                message: '등록되지 않은 이메일입니다.'
             });
         }
 
+        // 이름 비교 (NFC 정규화 후 비교)
         const user = result.rows[0];
+        const dbName = (user.name || '').trim().normalize('NFC');
+        if (dbName !== normalizedName) {
+            return res.status(404).json({
+                success: false,
+                message: '일치하는 회원 정보를 찾을 수 없습니다.\n이메일과 이름을 다시 확인해주세요.'
+            });
+        }
 
         if (user.status === 'suspended') {
             return res.status(403).json({

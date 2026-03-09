@@ -30,3 +30,6 @@ node_modules/
 .env.local
 .env.*.local
 *.zip
+
+# Agent logs (contains DB credentials and sensitive info)
+Docs/agent-logs/

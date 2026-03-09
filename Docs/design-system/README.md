@@ -21,10 +21,62 @@
 - App Bar, 버튼, 텍스트 필드, 카드, 리스트 아이템, 탭 바 등
 - 각 컴포넌트의 기본 형태, 색상 규칙, 상태 변화 정의
 
-## 색상 팔레트 요약
+### [04-design-audit.md](./04-design-audit.md) — NEW (2026-03-09)
+- 전체 디자인 일관성 점검 보고서
+- 화면별 문제점 목록 (홈, 게시판, 일정, 회원, 프로필)
+- CSS 하드코딩/중복 선언 분석
+- 개선 우선순위
+
+### [05-component-improvement.md](./05-component-improvement.md) — NEW (2026-03-09)
+- 홈 배너 기본 UI 개선안 (그라디언트 카드)
+- 게시글 카드 디자인 강화안 (shadow, 구분선, 고정 배지)
+- 프로필 카드 + 정보 그룹 + 액션 메뉴 개선안
+- 하단 네비게이션 SVG 아이콘 전환안
+- 홈 공지/일정 요약 카드 개선안
+
+### [06-badge-tag-guide.md](./06-badge-tag-guide.md) — NEW (2026-03-09)
+- N 배지 겹침 문제 해결안 (flex 레이아웃 규칙)
+- 배지 유형 분류: 상태, 역할, 콘텐츠, 카테고리
+- 각 배지별 크기/색상/배치 스펙
+- 디자인 토큰 확장 제안 (CSS 변수)
+
+### [07-unified-design-guide.md](./07-unified-design-guide.md) — NEW (2026-03-09)
+- **통합 디자인 가이드**: 관리자 웹 + 회원 모바일 웹 톤 통일
+- Primary 색상 통일: `#1F4FD8` → `#2563EB`
+- 통일 디자인 토큰 35종 정의
+- Shadow 3단계 체계 (sm/md/lg)
+- 플랫폼별 허용 차이 정의
+
+### [08-admin-web-design-guide.md](./08-admin-web-design-guide.md) — NEW (2026-03-09)
+- **관리자 웹 전용 디자인 가이드**
+- 레이아웃: Sidebar 240px + Header 64px + Main Content
+- 컴포넌트 스펙: 버튼, 인풋, 테이블, 배지, 카드, 모달, Drawer
+- 로그인 페이지 스플릿 스크린 디자인
+- 반응형 규칙
+
+### [09-mobile-color-alignment.md](./09-mobile-color-alignment.md) — NEW (2026-03-09)
+- **회원 모바일 웹 색상 통일 가이드**
+- CSS 변수 Before/After 명세 (변경 2건 + 신규 16건)
+- 컴포넌트별 적용 가이드 (앱바, 버튼, 카드, 캘린더, 배지, 인풋)
+- 시각적 변화 예상 분석
+
+### [10-css-variable-migration.md](./10-css-variable-migration.md) — NEW (2026-03-09)
+- **CSS 하드코딩 → 변수 전환 방안**
+- 전환 대상 30건 (Primary, 상태, 캘린더, 관리자, 배지)
+- 중복 선언 정리 3건
+- 4단계 Phase 전환 계획 (변수 추가 → 하드코딩 전환 → Primary 변경 → 중복 정리)
+- 검증 체크리스트
+
+## 색상 팔레트 요약 (최신)
+
+### 통일 Primary (2026-03-09 갱신)
+- 주 색상: **`#2563EB`** (Primary) — 기존 `#1F4FD8`에서 변경
+- Primary Hover: `#1D4ED8`
+- Primary Light: `#93C5FD`
+- Primary BG: `#EFF6FF`
 
 ### 라이트 테마
-- 주 색상: `#1F4FD8` (Primary)
+- 주 색상: `#2563EB` (Primary)
 - 보조 색상: `#E6ECFA` (Secondary)
 - 강조 색상: `#F59E0B` (Accent)
 - 배경 색상: `#F9FAFB` (Background)
@@ -77,8 +129,9 @@
 
 ## 사용 방법
 
-개발 중 UI 구현 시 이 문서의 색상 팔레트, 타이포그래피 시스템, 컴포넌트 스타일을 참고하세요.
-각 색상은 HEX 코드와 함께 사용 목적이 명확히 정의되어 있고, 텍스트 스타일은 Flutter 적용 값이 포함되어 있으며, 컴포넌트는 기본 형태와 상태 변화가 정의되어 있어 바로 적용할 수 있습니다.
+- **07~10번 문서가 최신 기준**입니다. 관리자 웹 명세를 반영한 통합 가이드입니다.
+- **프론트엔드 에이전트에게**: `10-css-variable-migration.md`의 Phase 1~4 순서로 CSS 변경을 진행하세요.
+- **색상 기준은 07번 문서의 Unified Design Tokens**를 따릅니다.
 
 ## 관련 문서
 

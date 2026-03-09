@@ -238,19 +238,9 @@ router.post('/reset-password', async (req, res) => {
         );
 
         if (result.rows.length === 0) {
-            // 이메일만으로 조회하여 원인 파악
-            const emailOnly = await query(
-                'SELECT id, name FROM users WHERE LOWER(TRIM(email)) = $1',
-                [email.toLowerCase().trim()]
-            );
             return res.status(404).json({
                 success: false,
-                message: '일치하는 회원 정보를 찾을 수 없습니다.\n이메일과 이름을 다시 확인해주세요.',
-                debug: {
-                    emailMatch: emailOnly.rows.length > 0,
-                    storedName: emailOnly.rows[0]?.name || null,
-                    inputName: name.trim()
-                }
+                message: '일치하는 회원 정보를 찾을 수 없습니다.\n이메일과 이름을 다시 확인해주세요.'
             });
         }
 

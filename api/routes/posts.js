@@ -116,7 +116,8 @@ router.get('/:id/comments', authenticate, async (req, res) => {
         console.error('Get comments error:', err);
         return res.status(500).json({
             success: false,
-            message: '댓글 목록 조회에 실패했습니다.'
+            message: '댓글 목록 조회에 실패했습니다.',
+            debug: err.message
         });
     }
 });

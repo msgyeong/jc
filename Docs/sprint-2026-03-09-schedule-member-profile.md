@@ -9,7 +9,7 @@
 | 역할 | 담당 | 설명 |
 |------|------|------|
 | PM/기획 | 기획자 수민 | 요구사항 분석, 태스크 정의, QA 기준 수립 |
-| 프론트엔드 | 프론트 지현 | Flutter UI 구현, 라우터 연결 |
+| 프론트엔드 | 프론트 지현 | 웹앱 (web/js) UI 구현 |
 | 백엔드 | 백엔드 준호 | Express API 확장, DB 쿼리 최적화 |
 | QA | 테스터 은비 | 코드 리뷰, 엣지 케이스 점검, 정합성 검증 |
 
@@ -69,38 +69,41 @@
 
 ---
 
-## 2. 프론트 지현 작업 로그
+## 2. 프론트 지현 작업 로그 (web/js 기반)
 
-### 2-1. 일정 수정 화면 (schedule_edit_screen.dart) — 신규 생성
-- 작성 화면과 동일한 폼 구조, 기존 데이터 프리필
-- ScheduleService.update() 호출
-- 카테고리: DropdownButtonFormField로 변경 (5개 선택지)
-- 시간 선택: showTimePicker 추가
-- 완료 후 상세 화면으로 복귀 + provider invalidate
+> **주의**: 초기에 Flutter(lib/)로 구현했으나, 프로젝트가 하이브리드 웹앱 전용이므로
+> web/js 기반으로 전면 재구현함. Flutter 코드는 레거시이며 배포에 포함되지 않음.
 
-### 2-2. 라우터 업데이트 (app_router.dart)
-- `/home/schedule/:id/edit` 경로 추가
-- ScheduleEditScreen import 추가
+### 2-1. 일정 모듈 전면 재작성 (web/js/schedules.js)
+- 카테고리 드롭다운 (행사/정기회의/교육/공휴일/기타) — `<select>` 요소
+- 카테고리별 한글 라벨 + 색상 매핑 (CATEGORY_LABELS, CATEGORY_COLORS)
+- 시작/종료 날짜+시간 분리 입력 → ISO 형식으로 API 전송
+- **API 필드 매핑 수정**: `event_date`/`start_time`/`end_time` → `start_date`/`end_date` (TIMESTAMPTZ)
+- 상세 화면에 수정/삭제 버튼 (작성자 또는 관리자)
+- 일정 작성/수정 폼 공용 `renderScheduleForm()` 함수
+- 카드에 카테고리 뱃지 + 시간 표시
 
-### 2-3. 일정 상세 화면 수정 (schedule_detail_screen.dart)
-- 수정 버튼 추가 (작성자 또는 관리자)
-- 카테고리 한글 표시 매핑
+### 2-2. 회원 모듈 전면 재작성 (web/js/members.js)
+- `loadMembersScreen()` 함수 추가 (탭 전환 시 호출)
+- `showMemberDetailScreen(memberId)` — 회원 상세 화면 구현
+  - 프로필 아바타, 이름, 역할 뱃지
+  - 기본 정보 (이메일, 연락처+복사, 주소, 성별, 생년월일, 가입일)
+  - 직장 정보 (회사, 직책, 부서, 직장 전화+복사)
+- `copyToClipboard()` 유틸리티 (navigator.clipboard + fallback)
+- `createMemberCard()` — 소속 정보(회사/직책) 표시
 
-### 2-4. 일정 작성 화면 개선 (schedule_create_screen.dart)
-- 카테고리: 자유 텍스트 → 드롭다운
-- 시간 선택기 추가
+### 2-3. 프로필 모듈 전면 재작성 (web/js/profile.js)
+- 프로필 표시: 기본 정보 + 직장 정보(회사/직책/부서/직장전화) 섹션
+- 프로필 수정 폼: 9개 필드 (이름, 연락처, 주소, 생년월일, 성별, 회사, 직책, 부서, 직장전화)
+- 비밀번호 변경: 현재 비밀번호 + 새 비밀번호 + 확인 — 6자 미만/불일치 검증
+- 로그아웃 버튼 추가
+- 관리자 메뉴 버튼 (admin 역할만)
 
-### 2-5. 회원 상세 화면 개선 (member_detail_screen.dart)
-- 직장 정보 섹션 추가 (회사, 직책, 부서)
-- 전화번호 길게 눌러 복사
+### 2-4. 네비게이션 업데이트 (web/js/navigation.js)
+- `/members/:id` 동적 경로 핸들러 추가
 
-### 2-6. 프로필 화면 개선 (profile_tab_screen.dart)
-- 직장 정보 표시
-- 프로필 수정 폼에 직장 정보 필드 추가
-- 비밀번호 변경 버튼 + 다이얼로그
-
-### 2-7. MemberService / ProfileService 확장
-- normalize 함수에 새 필드 추가
+### 2-5. API 클라이언트 확장 (web/js/api-client.js)
+- `changePassword()` 메서드 추가
 
 ---
 
@@ -122,31 +125,32 @@
 
 ## 4. 테스터 은비 검증 로그
 
-### 4-1. 코드 리뷰 결과
+### 4-1. 코드 리뷰 결과 (web/js 재구현 기준)
 
-**일정 관련 (Schedule)**
-- [x] schedule_edit_screen.dart: 기존 데이터 정상 로딩 및 프리필 확인
-- [x] schedule_create_screen.dart: 카테고리 드롭다운 5개 옵션, 시간 선택기 추가 확인
-- [x] schedule_detail_screen.dart: 수정/삭제 버튼 권한 분기 (작성자 OR 관리자) 확인
-- [x] schedule_list_screen.dart: 카테고리별 색상 매핑, 한글 라벨 정상
-- [x] app_router.dart: `/home/schedule/:id/edit` 경로 추가 확인
-- [x] 에러 상태에 "다시 시도" 버튼 추가됨, 빈 상태에 아이콘 추가됨
+**일정 관련 (web/js/schedules.js)**
+- [x] 카테고리 드롭다운 5개 옵션 (`<select>`) 확인
+- [x] 시작/종료 날짜+시간 분리 입력 → ISO 합성 확인
+- [x] API 필드 매핑: start_date/end_date (TIMESTAMPTZ) 정상 사용
+- [x] 상세 화면: 수정/삭제 버튼 권한 분기 (작성자 OR 관리자) 확인
+- [x] 카테고리별 색상/한글 라벨 매핑 정상
+- [x] 작성/수정 폼 공용 함수 `renderScheduleForm()` 확인
 
-**회원 관련 (Members)**
-- [x] member_detail_screen.dart: 직장 정보 섹션 (회사/직책/부서/직장전화) 추가 확인
-- [x] member_detail_screen.dart: 전화번호 길게 눌러 복사 (Clipboard) 동작 확인
-- [x] member_list_screen.dart: 카드에 소속 정보 (회사/직책) 표시 추가 확인
-- [x] member_list_screen.dart: 검색 onChanged로 실시간 검색 지원 추가
-- [x] member_service.dart: normalize에 company, position, department, work_phone 추가 확인
+**회원 관련 (web/js/members.js)**
+- [x] 회원 상세 화면: 직장 정보 섹션 (회사/직책/부서/직장전화) 확인
+- [x] 전화번호 눌러서 복사 (navigator.clipboard + fallback) 확인
+- [x] 카드에 소속 정보 (회사/직책) 표시 확인
+- [x] 디바운싱 검색 (300ms) 정상
 
-**프로필 관련 (Profile)**
-- [x] profile_tab_screen.dart: 직장 정보 섹션 표시 확인
-- [x] _ProfileEditScreen: 직장 정보 4개 필드 (회사, 직책, 부서, 직장전화) 추가 확인
-- [x] _ProfileEditScreen: 생년월일 날짜 선택기 (showDatePicker) 추가 — 직접 입력 불가, UX 개선
-- [x] _ChangePasswordDialog: 현재 비밀번호 + 새 비밀번호 + 확인 3단계 검증
-- [x] _ChangePasswordDialog: 6자 미만 검증, 비밀번호 불일치 검증, 서버 에러 표시
-- [x] profile_service.dart: changePassword() 메서드 추가 확인
-- [x] profile_provider.dart: updateProfile에 직장 필드 4개 파라미터 추가 확인
+**프로필 관련 (web/js/profile.js)**
+- [x] 직장 정보 섹션 표시 확인
+- [x] 프로필 수정 폼: 9개 필드 (기본 5 + 직장 4) 확인
+- [x] 비밀번호 변경: 3단계 검증 (현재/새/확인) 확인
+- [x] 6자 미만 검증, 비밀번호 불일치 검증, 서버 에러 표시 확인
+- [x] 로그아웃 버튼 + 확인 다이얼로그 확인
+- [x] api-client.js: changePassword() 메서드 확인
+
+**네비게이션 (web/js/navigation.js)**
+- [x] `/members/:id` 동적 경로 핸들러 추가 확인
 
 **백엔드 API**
 - [x] members.js: 3개 엔드포인트 모두 company/position/department 필드 추가 확인
@@ -183,21 +187,28 @@
 
 ## 변경 파일 요약
 
+### 웹앱 프론트엔드 (배포 대상)
+
 | 구분 | 파일 | 변경 |
 |------|------|------|
-| 신규 | `lib/screens/schedules/schedule_edit_screen.dart` | 일정 수정 화면 |
-| 수정 | `lib/screens/schedules/schedule_create_screen.dart` | 카테고리 드롭다운, 시간 선택기 |
-| 수정 | `lib/screens/schedules/schedule_detail_screen.dart` | 수정 버튼, 카테고리 한글화, 카드 레이아웃 |
-| 수정 | `lib/screens/schedules/schedule_list_screen.dart` | 카테고리 색상/한글, 빈상태/에러상태 개선 |
-| 수정 | `lib/screens/members/member_list_screen.dart` | 소속 정보 표시, 실시간 검색 |
-| 수정 | `lib/screens/members/member_detail_screen.dart` | 직장 정보 섹션, 전화번호 복사 |
-| 수정 | `lib/screens/profile_tab_screen.dart` | 직장 정보, 비밀번호 변경, 날짜 선택기 |
-| 수정 | `lib/services/member_service.dart` | normalize에 직장 필드 추가 |
-| 수정 | `lib/services/profile_service.dart` | 직장 필드 + changePassword() |
-| 수정 | `lib/providers/profile_provider.dart` | updateProfile 직장 필드 파라미터 |
-| 수정 | `lib/routes/app_router.dart` | schedule edit 라우트 추가 |
+| 수정 | `web/js/schedules.js` | 전면 재작성 — 카테고리 드롭다운, 시간 입력, API 필드 수정, 수정/삭제 |
+| 수정 | `web/js/members.js` | 전면 재작성 — 상세 화면, 직장 정보, 전화 복사 |
+| 수정 | `web/js/profile.js` | 전면 재작성 — 직장 정보, 프로필 수정 폼, 비밀번호 변경, 로그아웃 |
+| 수정 | `web/js/navigation.js` | `/members/:id` 동적 경로 추가 |
+| 수정 | `web/js/api-client.js` | changePassword() 메서드 추가 |
+
+### 백엔드 API (배포 대상)
+
+| 구분 | 파일 | 변경 |
+|------|------|------|
 | 수정 | `api/routes/members.js` | 3개 엔드포인트 직장 필드 반환 |
 | 수정 | `api/routes/profile.js` | 직장 필드 + 비밀번호 변경 API |
-| 신규 | `Docs/sprint-2026-03-09-schedule-member-profile.md` | 이 문서 |
+
+### 문서
+
+| 구분 | 파일 | 변경 |
+|------|------|------|
+| 수정 | `CLAUDE.md` | Flutter 미사용 명시, 웹앱 전용 프로젝트 구조로 수정 |
+| 수정 | `Docs/sprint-2026-03-09-schedule-member-profile.md` | 이 문서 (web/js 기준으로 업데이트) |
 
 ---

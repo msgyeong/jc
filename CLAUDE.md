@@ -17,12 +17,18 @@
 
 | 영역 | 기술 |
 |------|------|
-| **앱 프론트엔드** | Flutter (Dart), Riverpod, Freezed, GoRouter |
+| **프론트엔드 (웹앱)** | HTML, CSS, Vanilla JavaScript (SPA 방식) |
 | **백엔드 API** | Node.js Express, JWT (jsonwebtoken + bcrypt) |
 | **데이터베이스** | Railway PostgreSQL (pg 라이브러리) |
-| **관리자 웹** | Next.js 14+ (App Router), TypeScript, Zustand, Tailwind CSS, shadcn/ui |
+| **관리자 웹** | web/admin/ (HTML + JS, 동일 SPA 구조) |
 | **배포** | Docker (Nginx + Node.js) → Railway 자동 배포 (main 브랜치 push) |
 | **파일 스토리지** | Cloudinary (추후) |
+
+### ⚠️ Flutter는 사용하지 않음
+- 이 프로젝트는 **하이브리드 웹앱** 단일 버전으로 개발합니다.
+- `web/` 폴더(HTML/JS/CSS)가 실제 서비스되는 프론트엔드입니다.
+- `lib/` 폴더의 Flutter 코드는 **레거시**이며, 신규 기능은 반드시 `web/js/`에 구현하세요.
+- Flutter, Dart, Riverpod, GoRouter 관련 코드를 신규로 작성하지 마세요.
 
 ### ⚠️ Supabase는 사용하지 않음
 - Supabase 관련 코드, 패키지, 설정을 절대 추가하지 마세요.
@@ -41,14 +47,13 @@ E:/app/jc/
 │   ├── middleware/          # auth.js (JWT), errorHandler.js
 │   ├── routes/             # auth, posts, notices, schedules, members, profile
 │   └── utils/              # jwt.js, password.js
-├── lib/                    # Flutter 앱 소스
-│   ├── models/             # Freezed 모델
-│   ├── services/           # API 호출 서비스
-│   ├── providers/          # Riverpod Provider
-│   ├── screens/            # 화면 (board/, notices/, schedules/, members/, profile/)
-│   ├── widgets/            # 공용 위젯
-│   └── router/             # GoRouter (app_router.dart)
-├── web/                    # Flutter 웹 빌드 출력 + 정적 HTML/JS (레거시)
+├── lib/                    # Flutter 코드 (레거시 — 사용하지 않음)
+├── web/                    # 프론트엔드 웹앱 (실제 서비스 코드)
+│   ├── index.html          # SPA 메인 페이지
+│   ├── js/                 # JavaScript 모듈 (app, auth, api-client, 각 화면별)
+│   ├── styles/main.css     # 전체 스타일
+│   ├── admin/              # 관리자 콘솔 (별도 SPA)
+│   └── image/              # 이미지 리소스
 ├── admin-web/              # 관리자 웹 (Next.js) — 미구현
 ├── database/migrations/    # SQL 마이그레이션 파일
 ├── Dockerfile              # Multi-stage: Node.js + Nginx

@@ -40,6 +40,18 @@ function navigateTo(path) {
         return;
     }
 
+    // 동적 경로: /members/:id
+    const memberDetailMatch = path.match(/^\/members\/(\d+)$/);
+    if (memberDetailMatch) {
+        const memberId = memberDetailMatch[1];
+        if (typeof showMemberDetailScreen === 'function') {
+            showMemberDetailScreen(memberId);
+        } else {
+            console.error('❌ showMemberDetailScreen 미정의');
+        }
+        return;
+    }
+
     // 경로를 화면 이름으로 변환
     const pathToScreen = {
         '/': 'splash',

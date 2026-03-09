@@ -380,6 +380,16 @@ class ApiClient {
             body: JSON.stringify({ profile_image: imageUrl })
         });
     }
+
+    /**
+     * 비밀번호 변경
+     */
+    async changePassword(currentPassword, newPassword) {
+        return this.request('/profile/password', {
+            method: 'PUT',
+            body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+        });
+    }
 }
 
 // 전역 API 클라이언트 인스턴스

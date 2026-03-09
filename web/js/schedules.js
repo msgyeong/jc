@@ -28,8 +28,8 @@ function canCreateSchedule() {
 
 async function loadSchedulesScreen() {
     const now = new Date();
-    if (!calYear) calYear = now.getFullYear();
-    if (!calMonth) calMonth = now.getMonth();
+    if (calYear == null) calYear = now.getFullYear();
+    if (calMonth == null) calMonth = now.getMonth();
     if (!calSelectedDate) calSelectedDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
     checkScheduleCreatePermission();
@@ -43,8 +43,10 @@ async function loadMonthSchedules() {
     schedulesLoading = true;
     try {
         const result = await apiClient.getSchedulesByMonth(calYear, calMonth + 1);
-        if (result.success && Array.isArray(result.schedules)) {
-            calSchedules = result.schedules;
+        // API 응답 호환: result.schedules 또는 result.data.schedules
+        const schedules = result.schedules || (result.data && (result.data.schedules || result.data.items)) || [];
+        if (result.success && Array.isArray(schedules)) {
+            calSchedules = schedules;
         } else {
             calSchedules = [];
         }

@@ -32,11 +32,12 @@ async function loadNoticeSummary() {
         // 게시판 API에서 공지 카테고리 조회
         const result = await apiClient.getPosts(1, 20, 'notice');
 
-        if (result.success && result.posts && result.posts.length > 0) {
+        const posts = result.posts || (result.data && (result.data.posts || result.data.items)) || [];
+        if (result.success && posts.length > 0) {
             // 7일 이내 게시글만 필터 (고정 공지 포함 모두 동일 적용)
             const now = new Date();
             const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-            const filtered = result.posts.filter(post => {
+            const filtered = posts.filter(post => {
                 const created = new Date(post.created_at);
                 return (now - created) <= sevenDaysMs;
             });
@@ -83,26 +84,37 @@ async function loadScheduleSummary() {
         // API로 다가오는 일정 조회 (최대 5개)
         const result = await apiClient.getSchedules(true);
         
-        if (result.success && result.schedules && result.schedules.length > 0) {
-            // 최대 5개만 표시
-            const schedules = result.schedules.slice(0, 5);
-            
-            container.innerHTML = schedules.map(schedule => `
-                <div class="schedule-card" onclick="navigateTo('/schedules/${schedule.id}')">
-                    <div class="schedule-date">
-                        <div class="schedule-day">${formatDate(schedule.event_date, 'DD')}</div>
-                        <div class="schedule-month">${formatDate(schedule.event_date, 'MM월')}</div>
+        // API 응답 호환: result.schedules 또는 result.data.schedules
+        const schedules = result.schedules || (result.data && (result.data.schedules || result.data.items)) || [];
+        if (result.success && schedules.length > 0) {
+            const items = schedules.slice(0, 5);
+
+            container.innerHTML = items.map(schedule => {
+                const dateField = schedule.start_date || schedule.event_date || '';
+                const dateObj = dateField ? new Date(dateField) : null;
+                const day = dateObj ? String(dateObj.getDate()).padStart(2, '0') : '--';
+                const month = dateObj ? `${dateObj.getMonth() + 1}월` : '';
+                let timeStr = '';
+                if (dateField && dateField.includes('T')) {
+                    const t = dateField.split('T')[1]?.substring(0, 5);
+                    if (t && t !== '00:00') timeStr = t;
+                }
+                return `
+                <div class="home-schedule-card" onclick="navigateTo('/schedules/${schedule.id}')">
+                    <div class="home-schedule-date-box">
+                        <div class="home-schedule-day">${day}</div>
+                        <div class="home-schedule-month">${month}</div>
                     </div>
-                    <div class="schedule-info">
-                        <h3 class="schedule-title">${escapeHtml(schedule.title)}</h3>
-                        <div class="schedule-meta">
-                            ${schedule.start_time ? `<span class="schedule-time">⏰ ${schedule.start_time}</span>` : ''}
-                            ${schedule.location ? `<span class="schedule-location">📍 ${escapeHtml(schedule.location)}</span>` : ''}
+                    <div class="home-schedule-info">
+                        <h3 class="home-schedule-title">${escapeHtml(schedule.title)}</h3>
+                        <div class="home-schedule-meta">
+                            ${timeStr ? `<span>⏰ ${timeStr}</span>` : ''}
+                            ${schedule.location ? `<span>📍 ${escapeHtml(schedule.location)}</span>` : ''}
                         </div>
                     </div>
-                    ${isNewContent(schedule.created_at) ? '<span class="badge badge-new">N</span>' : ''}
-                </div>
-            `).join('');
+                    ${isNewContent(schedule.created_at) ? '<span class="home-badge-new">N</span>' : ''}
+                </div>`;
+            }).join('');
         } else {
             container.innerHTML = '<div class="empty-state">예정된 일정이 없습니다.</div>';
         }
@@ -113,49 +125,66 @@ async function loadScheduleSummary() {
     }
 }
 
-// 1x1 투명 픽셀 데이터 URI (404 방지용 플레이스홀더)
-var BANNER_PLACEHOLDER_DATA = 'data:image/svg+xml,' + encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200">' +
-    '<rect width="800" height="200" fill="#E6ECFA"/>' +
-    '<text x="400" y="110" text-anchor="middle" fill="#1F4FD8" font-family="sans-serif" font-size="18">영등포 JC</text>' +
-    '</svg>'
-);
+// 배너 SVG 생성 함수
+function createBannerSvg(bgGradient, title, subtitle, icon) {
+    return 'data:image/svg+xml,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200">' +
+        '<defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">' + bgGradient + '</linearGradient></defs>' +
+        '<rect width="800" height="200" fill="url(#bg)"/>' +
+        '<text x="400" y="85" text-anchor="middle" fill="white" font-family="sans-serif" font-size="28" font-weight="bold">' + icon + ' ' + title + '</text>' +
+        '<text x="400" y="130" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-family="sans-serif" font-size="16">' + subtitle + '</text>' +
+        '</svg>'
+    );
+}
 
-// 배너 로드 (샘플 데이터, 404 없음)
+// 배너 로드
 function loadBannerSummary() {
     const container = document.getElementById('banner-slider');
     if (!container) return;
-    
-    // 샘플 배너 (실제 이미지 없을 때 데이터 URI 사용 → 콘솔 404 제거)
+
     const banners = [
-        { id: 1, image: BANNER_PLACEHOLDER_DATA, title: '영등포 JC 회원관리 시스템', link: null },
-        { id: 2, image: BANNER_PLACEHOLDER_DATA, title: '영등포 JC', link: null },
-        { id: 3, image: BANNER_PLACEHOLDER_DATA, title: '회원관리 앱', link: null }
+        {
+            id: 1,
+            image: createBannerSvg(
+                '<stop offset="0%" style="stop-color:#1F4FD8"/><stop offset="100%" style="stop-color:#3B82F6"/>',
+                '영등포 JC', '회원관리 커뮤니티 앱에 오신 것을 환영합니다', ''
+            ),
+            title: '영등포 JC 환영'
+        },
+        {
+            id: 2,
+            image: createBannerSvg(
+                '<stop offset="0%" style="stop-color:#059669"/><stop offset="100%" style="stop-color:#10B981"/>',
+                '일정 확인', '다가오는 모임과 행사 일정을 확인하세요', ''
+            ),
+            title: '일정 안내'
+        },
+        {
+            id: 3,
+            image: createBannerSvg(
+                '<stop offset="0%" style="stop-color:#7C3AED"/><stop offset="100%" style="stop-color:#A78BFA"/>',
+                '회원 소통', '공지사항과 게시판을 통해 소식을 나누세요', ''
+            ),
+            title: '회원 소통'
+        }
     ];
-    
-    if (banners.length > 0) {
-        container.innerHTML = banners.map(banner => `
-            <div class="banner-slide ${banner.link ? 'clickable' : ''}" 
-                 ${banner.link ? `onclick="window.location.href='${banner.link}'"` : ''}>
-                <img src="${banner.image}" alt="${banner.title}">
-            </div>
+
+    container.innerHTML = banners.map(banner => `
+        <div class="banner-slide">
+            <img src="${banner.image}" alt="${banner.title}">
+        </div>
+    `).join('');
+
+    const indicators = document.getElementById('banner-indicators');
+    if (indicators && banners.length > 0) {
+        indicators.innerHTML = banners.map((_, index) => `
+            <span class="banner-indicator ${index === 0 ? 'active' : ''}"
+                  data-index="${index}" aria-label="배너 ${index + 1}"></span>
         `).join('');
-        
-        // 배너 인디케이터
-        const indicators = document.getElementById('banner-indicators');
-        if (indicators && banners.length > 0) {
-            indicators.innerHTML = banners.map((_, index) => `
-                <span class="banner-indicator ${index === 0 ? 'active' : ''}" 
-                      data-index="${index}" aria-label="배너 ${index + 1}"></span>
-            `).join('');
-        }
-        
-        // 자동 슬라이드 회전 (5초마다)
-        if (banners.length > 1) {
-            startBannerAutoRotate();
-        }
-    } else {
-        container.innerHTML = '<div class="banner-empty">배너가 없습니다.</div>';
+    }
+
+    if (banners.length > 1) {
+        startBannerAutoRotate();
     }
 }
 

@@ -93,7 +93,7 @@ function navigateToScreen(screenName) {
         if (screenName === 'home') {
             updateNavigation('home');
             if (typeof updateUserDisplay === 'function') updateUserDisplay();
-            loadHomeScreen(); // 홈 화면 로드
+            loadHomeData(); // 홈 화면 로드
         } else if (screenName === 'login') {
             // 로그인 화면으로 돌아갈 때 폼 초기화
             const form = document.getElementById('login-form');
@@ -203,7 +203,7 @@ async function switchTab(tab) {
             targetScreen = document.getElementById('home-screen');
             if (targetScreen) {
                 targetScreen.classList.add('active');
-                await loadHomeScreen();
+                await loadHomeData();
             }
             break;
             

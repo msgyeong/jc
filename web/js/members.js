@@ -17,25 +17,29 @@ async function loadMembers(page = 1) {
     membersLoading = true;
     try {
         if (page === 1) {
-            container.innerHTML = '<div class="content-loading">회원 목록을 불러오는 중...</div>';
+            container.innerHTML = '<div class="content-loading"><div class="loading-spinner"></div><p>회원 목록을 불러오는 중...</p></div>';
         }
         const result = await apiClient.getMembers(page, 50);
-        if (result.success && result.members) {
-            const badge = document.getElementById('member-count-badge');
-            if (badge) badge.textContent = `${result.total || result.members.length}명`;
+        // API 응답 형식 호환: result.members 또는 result.data.members 또는 result.data.items
+        const members = result.members || (result.data && (result.data.members || result.data.items)) || [];
+        const total = result.total || (result.data && result.data.total) || members.length;
 
-            if (result.members.length === 0) {
-                container.innerHTML = '<div class="empty-state">등록된 회원이 없습니다.</div>';
+        if (result.success && members) {
+            const badge = document.getElementById('member-count-badge');
+            if (badge) badge.textContent = `${total}명`;
+
+            if (members.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>등록된 회원이 없습니다.</p></div>';
             } else {
-                container.innerHTML = renderMemberGrid(result.members);
+                container.innerHTML = renderMemberGrid(members);
                 currentMembersPage = page;
             }
         } else {
-            container.innerHTML = '<div class="error-state">회원 목록을 불러올 수 없습니다.</div>';
+            container.innerHTML = '<div class="error-state"><div class="error-state-icon">⚠️</div><p>회원 목록을 불러올 수 없습니다.</p><button class="btn btn-secondary btn-sm" onclick="loadMembers(1)">다시 시도</button></div>';
         }
     } catch (error) {
         console.error('회원 목록 로드 실패:', error);
-        container.innerHTML = '<div class="error-state">회원 목록을 불러올 수 없습니다.</div>';
+        container.innerHTML = '<div class="error-state"><div class="error-state-icon">⚠️</div><p>회원 목록을 불러올 수 없습니다.</p><button class="btn btn-secondary btn-sm" onclick="loadMembers(1)">다시 시도</button></div>';
     } finally {
         membersLoading = false;
     }
@@ -50,13 +54,14 @@ async function searchMembers(query) {
     try {
         container.innerHTML = '<div class="content-loading">검색 중...</div>';
         const result = await apiClient.searchMembers(query);
-        if (result.success && result.members) {
+        const members = result.members || (result.data && (result.data.members || result.data.items)) || [];
+        if (result.success && members) {
             const badge = document.getElementById('member-count-badge');
-            if (badge) badge.textContent = `${result.members.length}명`;
-            if (result.members.length === 0) {
+            if (badge) badge.textContent = `${members.length}명`;
+            if (members.length === 0) {
                 container.innerHTML = '<div class="empty-state">검색 결과가 없습니다.</div>';
             } else {
-                container.innerHTML = renderMemberGrid(result.members);
+                container.innerHTML = renderMemberGrid(members);
             }
         } else {
             container.innerHTML = '<div class="error-state">검색에 실패했습니다.</div>';

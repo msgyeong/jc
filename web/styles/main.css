@@ -2923,3 +2923,333 @@ input[type="date"]:focus {
     transform: translateX(-50%) translateY(0);
 }
 
+/* ==================== 홈 화면 일정 카드 (개선) ==================== */
+.home-schedule-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+
+.home-schedule-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-color);
+}
+
+.home-schedule-date-box {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    background: var(--secondary-color);
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.home-schedule-day {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.home-schedule-month {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.2;
+}
+
+.home-schedule-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.home-schedule-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-schedule-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.home-badge-new {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--error-color);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+/* ==================== 홈 공지 카드 (개선) ==================== */
+.notice-card {
+    padding: 12px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.notice-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-color);
+}
+
+.notice-header {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.notice-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+    line-height: 1.4;
+}
+
+.notice-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.notice-date,
+.notice-comments,
+.notice-likes {
+    font-size: 12px;
+}
+
+.badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1.2;
+}
+
+.badge-pinned {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.badge-new {
+    background: var(--error-color);
+    color: white;
+    font-size: 10px;
+    min-width: 16px;
+    text-align: center;
+}
+
+/* ==================== 게시판 카드 디자인 개선 ==================== */
+.post-list {
+    padding: var(--spacing-md);
+}
+
+.card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+}
+
+.card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+    flex: 1;
+}
+
+.card-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.card-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* 빈 상태 개선 */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.empty-state-icon,
+.error-state-icon {
+    font-size: 36px;
+    margin-bottom: 8px;
+}
+
+.error-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.error-state .btn {
+    margin-top: 12px;
+}
+
+.empty-state-mini {
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* ==================== 배너 섹션 개선 ==================== */
+.banner-slide img {
+    border-radius: 0;
+}
+
+.banner-section {
+    margin: 0 calc(-1 * var(--spacing-lg)) var(--spacing-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+/* ==================== 프로필 화면 개선 ==================== */
+.profile-v2 {
+    padding: 0 16px 24px;
+}
+
+.profile-hero {
+    text-align: center;
+    padding: 28px 0 24px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #3B82F6 100%);
+    margin: 0 -16px 20px;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.profile-hero .profile-avatar-xl {
+    border: 3px solid white;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.profile-hero .profile-hero-name {
+    color: white;
+}
+
+.profile-hero .profile-hero-role {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.info-section {
+    margin-bottom: 12px;
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.profile-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: var(--border-radius-lg);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: var(--font-family);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* ==================== 로딩 스피너 개선 ==================== */
+.content-loading {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.content-loading .loading-spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--border-color);
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+

@@ -102,22 +102,35 @@ router.get('/', authenticate, async (req, res) => {
 router.get('/:id/comments', authenticate, async (req, res) => {
     try {
         const { id: postId } = req.params;
-        const result = await query(
-            `SELECT c.id, c.author_id, c.content, c.parent_id, c.created_at,
-                    u.name as author_name, u.profile_image as author_image
-             FROM comments c
-             LEFT JOIN users u ON c.author_id = u.id
-             WHERE c.post_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
-             ORDER BY c.created_at ASC`,
-            [postId]
-        );
+        let result;
+        try {
+            result = await query(
+                `SELECT c.id, c.author_id, c.content, c.parent_id, c.is_deleted, c.created_at,
+                        u.name as author_name, u.profile_image as author_image
+                 FROM comments c
+                 LEFT JOIN users u ON c.author_id = u.id
+                 WHERE c.post_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
+                 ORDER BY c.created_at ASC`,
+                [postId]
+            );
+        } catch (e) {
+            // 프로덕션 DB에 is_deleted, parent_id 컬럼이 없을 수 있음
+            result = await query(
+                `SELECT c.id, c.author_id, c.content, c.created_at,
+                        u.name as author_name, u.profile_image as author_image
+                 FROM comments c
+                 LEFT JOIN users u ON c.author_id = u.id
+                 WHERE c.post_id = $1
+                 ORDER BY c.created_at ASC`,
+                [postId]
+            );
+        }
         return res.json({ success: true, comments: result.rows || [] });
     } catch (err) {
         console.error('Get comments error:', err);
         return res.status(500).json({
             success: false,
-            message: '댓글 목록 조회에 실패했습니다.',
-            debug: err.message
+            message: '댓글 목록 조회에 실패했습니다.'
         });
     }
 });
@@ -137,15 +150,32 @@ router.post('/:id/comments', authenticate, async (req, res) => {
                 message: '댓글 내용을 입력해주세요.'
             });
         }
-        await query(
-            `INSERT INTO comments (author_id, post_id, content, parent_id)
-             VALUES ($1, $2, $3, $4)`,
-            [authorId, postId, String(content).trim(), parent_id || null]
-        );
-        const countResult = await query(
-            'SELECT COUNT(*) FROM comments WHERE post_id = $1 AND (is_deleted = false OR is_deleted IS NULL)',
-            [postId]
-        );
+        try {
+            await query(
+                `INSERT INTO comments (author_id, post_id, content, parent_id)
+                 VALUES ($1, $2, $3, $4)`,
+                [authorId, postId, String(content).trim(), parent_id || null]
+            );
+        } catch (e) {
+            // parent_id 컬럼이 없을 경우 폴백
+            await query(
+                `INSERT INTO comments (author_id, post_id, content)
+                 VALUES ($1, $2, $3)`,
+                [authorId, postId, String(content).trim()]
+            );
+        }
+        let countResult;
+        try {
+            countResult = await query(
+                'SELECT COUNT(*) FROM comments WHERE post_id = $1 AND (is_deleted = false OR is_deleted IS NULL)',
+                [postId]
+            );
+        } catch (e) {
+            countResult = await query(
+                'SELECT COUNT(*) FROM comments WHERE post_id = $1',
+                [postId]
+            );
+        }
         const comments_count = parseInt(countResult.rows[0]?.count || 0, 10);
         await query(
             'UPDATE posts SET comments_count = $1, updated_at = NOW() WHERE id = $2',
@@ -185,12 +215,25 @@ router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
             return res.status(403).json({ success: false, message: '댓글 삭제 권한이 없습니다.' });
         }
 
-        await query('UPDATE comments SET is_deleted = true WHERE id = $1', [commentId]);
+        try {
+            await query('UPDATE comments SET is_deleted = true WHERE id = $1', [commentId]);
+        } catch (e) {
+            // is_deleted 컬럼이 없으면 실제 삭제
+            await query('DELETE FROM comments WHERE id = $1', [commentId]);
+        }
 
-        const countResult = await query(
-            'SELECT COUNT(*) FROM comments WHERE post_id = $1 AND (is_deleted = false OR is_deleted IS NULL)',
-            [postId]
-        );
+        let countResult;
+        try {
+            countResult = await query(
+                'SELECT COUNT(*) FROM comments WHERE post_id = $1 AND (is_deleted = false OR is_deleted IS NULL)',
+                [postId]
+            );
+        } catch (e) {
+            countResult = await query(
+                'SELECT COUNT(*) FROM comments WHERE post_id = $1',
+                [postId]
+            );
+        }
         const comments_count = parseInt(countResult.rows[0]?.count || 0, 10);
         await query('UPDATE posts SET comments_count = $1, updated_at = NOW() WHERE id = $2', [comments_count, postId]);
 

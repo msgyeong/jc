@@ -24,11 +24,12 @@
 | **배포** | Docker (Nginx + Node.js) → Railway 자동 배포 (main 브랜치 push) |
 | **파일 스토리지** | Cloudinary (추후) |
 
-### ⚠️ Flutter는 사용하지 않음
+### ⚠️ Flutter는 절대 사용하지 않음 — 최우선 규칙
 - 이 프로젝트는 **하이브리드 웹앱** 단일 버전으로 개발합니다.
-- `web/` 폴더(HTML/JS/CSS)가 실제 서비스되는 프론트엔드입니다.
-- `lib/` 폴더의 Flutter 코드는 **레거시**이며, 신규 기능은 반드시 `web/js/`에 구현하세요.
+- `web/` 폴더(HTML/JS/CSS)가 **유일한** 프론트엔드입니다.
+- `lib/` 폴더(Flutter)는 **완전 삭제됨**. Flutter 관련 파일/코드를 절대 생성하지 마세요.
 - Flutter, Dart, Riverpod, GoRouter 관련 코드를 신규로 작성하지 마세요.
+- **모든 신규 기능은 반드시 `web/js/`(프론트) + `api/routes/`(백엔드)에 구현하세요.**
 
 ### ⚠️ Supabase는 사용하지 않음
 - Supabase 관련 코드, 패키지, 설정을 절대 추가하지 마세요.
@@ -139,6 +140,21 @@ E:/app/jc/
 4. **하드코딩 금지** — 상수는 constants 파일에
 5. **soft delete 사용** — deleted_at 필드 설정
 6. **Supabase 코드 금지** — Railway PostgreSQL + Express API만 사용
+
+---
+
+## 팀 에이전트 구성
+
+이 프로젝트는 **팀 에이전트** 체제로 운영됩니다. 각 역할을 인지하고 협업하세요.
+
+| 역할 | 설명 |
+|------|------|
+| **사장** | 최종 의사결정자, 지시 및 방향 설정 (사용자) |
+| **프론트엔드 에이전트** | `web/js/`, `web/styles/`, `web/index.html` 담당 |
+| **백엔드 에이전트** | `api/` (Express 라우트, 미들웨어, DB 쿼리) 담당 |
+| **테스터 에이전트** | 기능 테스트, API 테스트, 배포 검증 |
+| **기획자 에이전트** | PRD, 유저 플로우, 요구사항 정의 (`Docs/`) |
+| **디자이너 에이전트** | UI/UX 디자인, 디자인 시스템 (`Docs/design-system/`) |
 
 ---
 

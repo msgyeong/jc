@@ -10,9 +10,11 @@ const { authenticate } = require('../middleware/auth');
 router.get('/', authenticate, async (req, res) => {
     try {
         const upcoming = req.query.upcoming === 'true';
+        const year = parseInt(req.query.year);
+        const month = parseInt(req.query.month);
 
         let sqlQuery = `
-            SELECT 
+            SELECT
                 s.id, s.title, s.start_date, s.end_date,
                 s.location, s.description, s.category,
                 s.created_at, s.updated_at,
@@ -21,11 +23,20 @@ router.get('/', authenticate, async (req, res) => {
             LEFT JOIN users u ON s.created_by = u.id
         `;
 
+        const conditions = [];
         const params = [];
 
-        // 다가오는 일정만 조회 (오늘 이후)
-        if (upcoming) {
-            sqlQuery += ' WHERE s.start_date >= CURRENT_DATE';
+        // 월별 조회 (캘린더용)
+        if (year && month) {
+            params.push(year, month);
+            conditions.push(`EXTRACT(YEAR FROM s.start_date) = $${params.length - 1}`);
+            conditions.push(`EXTRACT(MONTH FROM s.start_date) = $${params.length}`);
+        } else if (upcoming) {
+            conditions.push('s.start_date >= CURRENT_DATE');
+        }
+
+        if (conditions.length > 0) {
+            sqlQuery += ' WHERE ' + conditions.join(' AND ');
         }
 
         sqlQuery += ' ORDER BY s.start_date ASC';

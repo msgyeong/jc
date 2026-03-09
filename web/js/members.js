@@ -1,4 +1,4 @@
-// 회원 관련 기능 (Railway API 연동)
+// 회원 관련 기능 - 개선판 (Railway API 연동)
 
 let currentMembersPage = 1;
 let membersLoading = false;
@@ -11,24 +11,23 @@ async function loadMembersScreen() {
 // 회원 목록 로드
 async function loadMembers(page = 1) {
     if (membersLoading) return;
-
     const container = document.getElementById('member-list');
     if (!container) return;
 
     membersLoading = true;
-
     try {
         if (page === 1) {
-            container.innerHTML = '<div class="content-loading">회원 목록 로딩 중...</div>';
+            container.innerHTML = '<div class="content-loading">회원 목록을 불러오는 중...</div>';
         }
-
         const result = await apiClient.getMembers(page, 50);
-
         if (result.success && result.members) {
+            const badge = document.getElementById('member-count-badge');
+            if (badge) badge.textContent = `${result.total || result.members.length}명`;
+
             if (result.members.length === 0) {
                 container.innerHTML = '<div class="empty-state">등록된 회원이 없습니다.</div>';
             } else {
-                container.innerHTML = result.members.map(member => createMemberCard(member)).join('');
+                container.innerHTML = renderMemberGrid(result.members);
                 currentMembersPage = page;
             }
         } else {
@@ -44,24 +43,20 @@ async function loadMembers(page = 1) {
 
 // 회원 검색
 async function searchMembers(query) {
-    if (!query || query.trim() === '') {
-        loadMembers(1);
-        return;
-    }
-
+    if (!query || query.trim() === '') { loadMembers(1); return; }
     const container = document.getElementById('member-list');
     if (!container) return;
 
     try {
         container.innerHTML = '<div class="content-loading">검색 중...</div>';
-
         const result = await apiClient.searchMembers(query);
-
         if (result.success && result.members) {
+            const badge = document.getElementById('member-count-badge');
+            if (badge) badge.textContent = `${result.members.length}명`;
             if (result.members.length === 0) {
                 container.innerHTML = '<div class="empty-state">검색 결과가 없습니다.</div>';
             } else {
-                container.innerHTML = result.members.map(member => createMemberCard(member)).join('');
+                container.innerHTML = renderMemberGrid(result.members);
             }
         } else {
             container.innerHTML = '<div class="error-state">검색에 실패했습니다.</div>';
@@ -72,30 +67,40 @@ async function searchMembers(query) {
     }
 }
 
+// 회원 목록 그리드 렌더링
+function renderMemberGrid(members) {
+    return '<div class="member-grid">' +
+        members.map(member => createMemberCard(member)).join('') +
+    '</div>';
+}
+
 // 회원 카드 생성
 function createMemberCard(member) {
+    const name = member.name || '이름 없음';
+    const initial = name[0] || '?';
     const company = member.company || '';
     const position = member.position || '';
-    const affiliation = [company, position].filter(Boolean).join(' / ');
+    const roleBadge = member.role === 'super_admin' ? '<span class="member-role-badge role-super">총관리자</span>'
+        : member.role === 'admin' ? '<span class="member-role-badge role-admin">관리자</span>' : '';
+    const avatarColors = ['#1F4FD8', '#059669', '#F59E0B', '#DC2626', '#7C3AED', '#EC4899', '#0891B2', '#EA580C'];
+    const colorIdx = name.charCodeAt(0) % avatarColors.length;
+    const bgColor = avatarColors[colorIdx];
 
     return `
-        <div class="member-card" onclick="navigateTo('/members/${member.id}')">
-            <div class="member-avatar">
-                ${member.profile_image ?
-                    `<img src="${member.profile_image}" alt="${member.name}">` :
-                    `<div class="member-avatar-placeholder">${member.name ? member.name[0] : '?'}</div>`
+        <div class="member-card-v2" onclick="navigateTo('/members/${member.id}')">
+            <div class="member-avatar-v2" style="background:${bgColor}">
+                ${member.profile_image
+                    ? `<img src="${member.profile_image}" alt="${escapeHtml(name)}">`
+                    : `<span>${escapeHtml(initial)}</span>`
                 }
             </div>
-
-            <div class="member-info">
-                <div class="member-name-row">
-                    <h3 class="member-name">${escapeHtml(member.name || '이름 없음')}</h3>
-                    ${member.role === 'super_admin' ? '<span class="badge badge-admin">총관리자</span>' : ''}
-                    ${member.role === 'admin' ? '<span class="badge badge-admin">관리자</span>' : ''}
+            <div class="member-info-v2">
+                <div class="member-name-row-v2">
+                    <span class="member-name-v2">${escapeHtml(name)}</span>
+                    ${roleBadge}
                 </div>
-
-                ${affiliation ? `<div class="member-company">🏢 ${escapeHtml(affiliation)}</div>` : ''}
-                ${member.phone ? `<div class="member-phone">📞 ${escapeHtml(member.phone)}</div>` : ''}
+                ${position ? `<div class="member-position-v2">${escapeHtml(position)}</div>` : ''}
+                ${company ? `<div class="member-company-v2">${escapeHtml(company)}</div>` : ''}
             </div>
         </div>
     `;
@@ -105,10 +110,13 @@ function createMemberCard(member) {
 async function showMemberDetailScreen(memberId) {
     const screen = document.getElementById('members-screen');
     const container = document.getElementById('member-list');
+    const searchWrap = document.querySelector('.member-search-wrap');
     if (!screen || !container) return;
-    document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     screen.classList.add('active');
-    container.innerHTML = '<div class="content-loading">회원 정보 로딩 중...</div>';
+    if (searchWrap) searchWrap.style.display = 'none';
+    container.innerHTML = '<div class="content-loading">회원 정보를 불러오는 중...</div>';
 
     try {
         const res = await apiClient.getMember(memberId);
@@ -117,53 +125,43 @@ async function showMemberDetailScreen(memberId) {
             return;
         }
         const m = res.member;
-        const roleLabel = m.role === 'super_admin' ? '총괄관리자' : m.role === 'admin' ? '관리자' : '회원';
+        const roleLabel = m.role === 'super_admin' ? '총관리자' : m.role === 'admin' ? '관리자' : '회원';
         const genderLabel = m.gender === 'male' ? '남성' : m.gender === 'female' ? '여성' : '';
-        const company = m.company || '';
-        const position = m.position || '';
-        const department = m.department || '';
-        const workPhone = m.work_phone || '';
-        const hasWorkInfo = company || position || department;
+        const avatarColors = ['#1F4FD8', '#059669', '#F59E0B', '#DC2626', '#7C3AED', '#EC4899', '#0891B2', '#EA580C'];
+        const colorIdx = (m.name || '?').charCodeAt(0) % avatarColors.length;
 
         container.innerHTML = `
-            <div class="post-detail">
-                <div class="post-detail-actions" style="margin-bottom:12px">
-                    <button class="btn btn-secondary btn-sm" onclick="loadMembersScreen()">← 목록</button>
-                </div>
-                <div style="text-align:center;margin-bottom:24px;">
-                    <div style="width:80px;height:80px;border-radius:50%;background:#E6ECFA;display:inline-flex;align-items:center;justify-content:center;font-size:32px;color:#1F4FD8;font-weight:bold;overflow:hidden;">
-                        ${m.profile_image ?
-                            `<img src="${m.profile_image}" alt="${m.name}" style="width:100%;height:100%;object-fit:cover;">` :
-                            (m.name ? m.name[0] : '?')
+            <div class="detail-view">
+                <button class="btn-back" onclick="backToMemberList()">← 회원 목록</button>
+                <div class="profile-hero">
+                    <div class="profile-avatar-xl" style="background:${avatarColors[colorIdx]}">
+                        ${m.profile_image
+                            ? `<img src="${m.profile_image}" alt="${escapeHtml(m.name)}">`
+                            : `<span>${escapeHtml((m.name || '?')[0])}</span>`
                         }
                     </div>
-                    <h2 style="margin:8px 0 4px;">${escapeHtml(m.name || '')}</h2>
-                    <span class="badge" style="background:#E6ECFA;color:#1F4FD8;padding:3px 10px;border-radius:12px;">${roleLabel}</span>
+                    <h2 class="profile-hero-name">${escapeHtml(m.name || '')}</h2>
+                    <span class="profile-hero-role">${roleLabel}</span>
                 </div>
 
-                <div class="profile-section">
-                    <h3 class="profile-section-title">기본 정보</h3>
-                    <div class="profile-info-grid">
-                        ${m.email ? `<div class="profile-info-item"><span class="profile-info-label">이메일</span><span class="profile-info-value">${escapeHtml(m.email)}</span></div>` : ''}
-                        ${m.phone ? `<div class="profile-info-item"><span class="profile-info-label">연락처</span><span class="profile-info-value" style="cursor:pointer;" onclick="copyToClipboard('${escapeHtml(m.phone)}')">${escapeHtml(m.phone)} <small style="color:#6B7280;">(눌러서 복사)</small></span></div>` : ''}
-                        ${m.address ? `<div class="profile-info-item"><span class="profile-info-label">주소</span><span class="profile-info-value">${escapeHtml(m.address)}</span></div>` : ''}
-                        ${genderLabel ? `<div class="profile-info-item"><span class="profile-info-label">성별</span><span class="profile-info-value">${genderLabel}</span></div>` : ''}
-                        ${m.birth_date ? `<div class="profile-info-item"><span class="profile-info-label">생년월일</span><span class="profile-info-value">${formatDate(m.birth_date, 'YYYY-MM-DD')}</span></div>` : ''}
-                        ${m.created_at ? `<div class="profile-info-item"><span class="profile-info-label">가입일</span><span class="profile-info-value">${formatDate(m.created_at, 'YYYY-MM-DD')}</span></div>` : ''}
-                    </div>
+                <div class="info-section">
+                    <h3 class="info-section-title">기본 정보</h3>
+                    ${infoRow('이메일', m.email)}
+                    ${infoRow('연락처', m.phone, true)}
+                    ${infoRow('주소', m.address)}
+                    ${genderLabel ? infoRow('성별', genderLabel) : ''}
+                    ${m.birth_date ? infoRow('생년월일', formatDate(m.birth_date, 'YYYY-MM-DD')) : ''}
+                    ${m.created_at ? infoRow('가입일', formatDate(m.created_at, 'YYYY-MM-DD')) : ''}
                 </div>
 
-                ${hasWorkInfo ? `
-                <div class="profile-section">
-                    <h3 class="profile-section-title">직장 정보</h3>
-                    <div class="profile-info-grid">
-                        ${company ? `<div class="profile-info-item"><span class="profile-info-label">회사</span><span class="profile-info-value">${escapeHtml(company)}</span></div>` : ''}
-                        ${position ? `<div class="profile-info-item"><span class="profile-info-label">직책</span><span class="profile-info-value">${escapeHtml(position)}</span></div>` : ''}
-                        ${department ? `<div class="profile-info-item"><span class="profile-info-label">부서</span><span class="profile-info-value">${escapeHtml(department)}</span></div>` : ''}
-                        ${workPhone ? `<div class="profile-info-item"><span class="profile-info-label">직장 전화</span><span class="profile-info-value" style="cursor:pointer;" onclick="copyToClipboard('${escapeHtml(workPhone)}')">${escapeHtml(workPhone)} <small style="color:#6B7280;">(눌러서 복사)</small></span></div>` : ''}
-                    </div>
-                </div>
-                ` : ''}
+                ${(m.company || m.position || m.department) ? `
+                <div class="info-section">
+                    <h3 class="info-section-title">직장 정보</h3>
+                    ${infoRow('회사', m.company)}
+                    ${infoRow('직책', m.position)}
+                    ${infoRow('부서', m.department)}
+                    ${m.work_phone ? infoRow('직장 전화', m.work_phone, true) : ''}
+                </div>` : ''}
             </div>
         `;
     } catch (_) {
@@ -171,54 +169,59 @@ async function showMemberDetailScreen(memberId) {
     }
 }
 
+function backToMemberList() {
+    const searchWrap = document.querySelector('.member-search-wrap');
+    if (searchWrap) searchWrap.style.display = '';
+    loadMembers(currentMembersPage);
+}
+
+function infoRow(label, value, copyable = false) {
+    if (!value) return '';
+    const copyAttr = copyable ? `onclick="event.stopPropagation();copyToClipboard('${escapeHtml(value)}')" style="cursor:pointer"` : '';
+    return `<div class="info-row">
+        <span class="info-label">${label}</span>
+        <span class="info-value" ${copyAttr}>${escapeHtml(value)}${copyable ? ' <small style="color:var(--text-secondary)">(복사)</small>' : ''}</span>
+    </div>`;
+}
+
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        alert(text + ' 복사됨');
+        showToast(text + ' 복사됨');
     }).catch(() => {
-        // fallback
         const ta = document.createElement('textarea');
         ta.value = text;
         document.body.appendChild(ta);
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        alert(text + ' 복사됨');
+        showToast(text + ' 복사됨');
     });
+}
+
+function showToast(msg) {
+    let toast = document.getElementById('toast-msg');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast-msg';
+        toast.className = 'toast-msg';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
 }
 
 // 검색 입력 처리 (디바운싱)
 function handleMemberSearch(event) {
     const query = event.target.value.trim();
-    if (searchTimeout) {
-        clearTimeout(searchTimeout);
-    }
-    searchTimeout = setTimeout(() => {
-        searchMembers(query);
-    }, 300);
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => searchMembers(query), 300);
 }
 
-// 페이지 로드 시 초기화
+// 이벤트 바인딩
 document.addEventListener('DOMContentLoaded', () => {
-    const membersScreen = document.getElementById('members-screen');
-    if (membersScreen) {
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.attributeName === 'class') {
-                    if (membersScreen.classList.contains('active')) {
-                        if (currentMembersPage === 0) {
-                            loadMembers(1);
-                        }
-                    }
-                }
-            });
-        });
-        observer.observe(membersScreen, { attributes: true });
-    }
-
     const searchInput = document.getElementById('member-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', handleMemberSearch);
-    }
+    if (searchInput) searchInput.addEventListener('input', handleMemberSearch);
 });
 
 console.log('✅ Members 모듈 로드 완료 (Railway API)');

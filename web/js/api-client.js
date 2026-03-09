@@ -288,6 +288,10 @@ class ApiClient {
     async getSchedules(upcoming = true) {
         return this.request(`/schedules?upcoming=${upcoming}`);
     }
+
+    async getSchedulesByMonth(year, month) {
+        return this.request(`/schedules?year=${year}&month=${month}`);
+    }
     
     /**
      * 일정 상세 조회

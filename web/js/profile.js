@@ -9,7 +9,7 @@ async function loadProfile() {
     if (!container) return;
 
     try {
-        container.innerHTML = '<div class="content-loading">프로필을 불러오는 중...</div>';
+        container.innerHTML = renderSkeleton('list');
         const result = await apiClient.getProfile();
         if (result.success && result.profile) {
             currentProfile = result.profile;
@@ -17,11 +17,11 @@ async function loadProfile() {
             profileLoaded = true;
             if (result.profile.id) loadProfileTitleHistory(result.profile.id);
         } else {
-            container.innerHTML = '<div class="error-state">프로필을 불러올 수 없습니다.</div>';
+            container.innerHTML = renderErrorState('프로필을 불러올 수 없습니다', '잠시 후 다시 시도해주세요', 'loadProfile()');
         }
     } catch (error) {
         console.error('프로필 로드 실패:', error);
-        container.innerHTML = '<div class="error-state">프로필을 불러올 수 없습니다.</div>';
+        container.innerHTML = renderErrorState('프로필을 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'loadProfile()');
     }
 }
 
@@ -240,7 +240,7 @@ async function handlePasswordChange(event) {
     try {
         const result = await apiClient.changePassword(current, newPw);
         if (result.success) {
-            alert('비밀번호가 변경되었습니다.');
+            showToast('비밀번호가 변경되었습니다.', 'success');
             await loadProfile();
         } else {
             showInlineError('pw-change-error', result.message || '비밀번호 변경에 실패했습니다.');

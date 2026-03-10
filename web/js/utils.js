@@ -178,9 +178,72 @@ function formatDate(dateString) {
     if (diffHours < 24) return `${diffHours}시간 전`;
     if (diffDays < 7) return `${diffDays}일 전`;
     
-    return date.toLocaleDateString('ko-KR', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+    return date.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
     });
+}
+
+// ========== 토스트 알림 ==========
+function showToast(message, type = 'success') {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    const iconMap = {
+        success: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>',
+        error: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+        info: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+    };
+    const toast = document.createElement('div');
+    toast.className = 'toast toast--' + type;
+    toast.innerHTML = (iconMap[type] || '') + '<span>' + escapeHtml(message) + '</span>';
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('toast--exit');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ========== 빈 상태 HTML 생성 ==========
+function renderEmptyState(iconType, title, desc, cta) {
+    const icons = {
+        document: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+        calendar: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+        edit: '<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+        search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+        chat: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+        users: '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
+    };
+    let html = '<div class="empty-state"><div class="empty-state-icon">' + (icons[iconType] || icons.document) + '</div>';
+    html += '<div class="empty-state-title">' + title + '</div>';
+    if (desc) html += '<div class="empty-state-desc">' + desc + '</div>';
+    if (cta) html += '<button class="empty-state-cta" onclick="' + cta.action + '">' + cta.label + '</button>';
+    html += '</div>';
+    return html;
+}
+
+// ========== 에러 상태 HTML 생성 ==========
+function renderErrorState(title, desc, retryFn) {
+    let html = '<div class="error-state">';
+    html += '<div class="error-state-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>';
+    html += '<div class="error-state-title">' + title + '</div>';
+    if (desc) html += '<div class="error-state-desc">' + desc + '</div>';
+    if (retryFn) html += '<button class="error-state-retry" onclick="' + retryFn + '">다시 시도</button>';
+    html += '</div>';
+    return html;
+}
+
+// ========== 스켈레톤 로딩 HTML ==========
+function renderSkeleton(type) {
+    if (type === 'schedule-detail') {
+        return '<div style="padding:16px"><div class="skeleton skeleton--title" style="width:40%;margin-bottom:8px"></div><div class="skeleton skeleton--title" style="width:80%"></div><div class="skeleton skeleton--text" style="width:70%;margin-top:16px"></div><div class="skeleton skeleton--text" style="width:60%"></div><div class="skeleton skeleton--text" style="width:50%"></div><div class="skeleton skeleton--text" style="width:40%"></div><div style="margin-top:16px"><div class="skeleton skeleton--text" style="width:90%"></div><div class="skeleton skeleton--text" style="width:80%"></div><div class="skeleton skeleton--text" style="width:70%"></div></div></div>';
+    }
+    if (type === 'list') {
+        let html = '';
+        for (let i = 0; i < 4; i++) {
+            html += '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #F3F4F6"><div class="skeleton skeleton--avatar"></div><div style="flex:1"><div class="skeleton skeleton--title" style="width:' + (60 + i * 5) + '%"></div><div class="skeleton skeleton--text" style="width:' + (70 + i * 3) + '%"></div></div></div>';
+        }
+        return html;
+    }
+    return '<div style="padding:24px;text-align:center"><div class="loading-spinner"></div></div>';
 }

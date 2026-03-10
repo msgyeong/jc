@@ -23,7 +23,7 @@ async function loadPosts(page = 1) {
 
     try {
         if (page === 1) {
-            container.innerHTML = '<div class="content-loading">게시글 로딩 중...</div>';
+            container.innerHTML = renderSkeleton('list');
         }
 
         const result = await apiClient.getPosts(page, 20, currentBoardCategory);
@@ -32,9 +32,12 @@ async function loadPosts(page = 1) {
             if (result.posts.length === 0) {
                 if (page === 1) {
                     const msg = currentBoardCategory === 'notice'
-                        ? '등록된 공지가 없습니다.'
-                        : '등록된 게시글이 없습니다.';
-                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-message">${msg}</div></div>`;
+                        ? '등록된 공지가 없습니다'
+                        : '등록된 게시글이 없습니다';
+                    const cta = currentBoardCategory === 'general'
+                        ? { label: '글 작성하기', action: 'handleCreatePost()' }
+                        : null;
+                    container.innerHTML = renderEmptyState('document', msg, null, cta);
                 }
                 hasMorePosts = false;
             } else {
@@ -58,11 +61,11 @@ async function loadPosts(page = 1) {
                 hasMorePosts = page < result.totalPages;
             }
         } else {
-            container.innerHTML = '<div class="error-state">게시글을 불러올 수 없습니다.</div>';
+            container.innerHTML = renderErrorState('게시글을 불러올 수 없습니다', '잠시 후 다시 시도해주세요', 'loadPosts(1)');
         }
     } catch (error) {
         console.error('게시글 목록 로드 실패:', error);
-        container.innerHTML = '<div class="error-state">게시글을 불러올 수 없습니다.</div>';
+        container.innerHTML = renderErrorState('게시글을 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'loadPosts(1)');
     } finally {
         postsLoading = false;
     }
@@ -369,7 +372,7 @@ async function loadPostDetail(postId) {
     const container = document.getElementById('post-detail-content');
     if (!container) return;
 
-    container.innerHTML = '<div class="content-loading">로딩 중...</div>';
+    container.innerHTML = renderSkeleton('list');
 
     try {
         const result = await apiClient.getPost(postId);
@@ -377,14 +380,11 @@ async function loadPostDetail(postId) {
             container.innerHTML = renderPostDetail(result.post);
             loadCommentsForPost(postId);
         } else {
-            container.innerHTML = '<div class="error-state">게시글을 불러올 수 없습니다.</div>';
+            container.innerHTML = renderErrorState('게시글을 불러올 수 없습니다', null, `loadPostDetail(${postId})`);
         }
     } catch (err) {
         console.error('게시글 상세 로드 실패:', err);
-        container.innerHTML =
-            '<div class="error-state">' +
-            (err.message || '게시글을 불러올 수 없습니다.') +
-            '</div>';
+        container.innerHTML = renderErrorState('게시글을 불러올 수 없습니다', '네트워크 연결을 확인해주세요', `loadPostDetail(${postId})`);
     }
 }
 
@@ -404,10 +404,10 @@ async function loadCommentsForPost(postId) {
                 </div>
             `).join('');
         } else {
-            listEl.innerHTML = '<p class="text-muted">댓글이 없습니다.</p>';
+            listEl.innerHTML = renderEmptyState('chat', '댓글이 없습니다', '첫 댓글을 남겨보세요');
         }
     } catch (_) {
-        listEl.innerHTML = '<p class="text-muted">댓글을 불러올 수 없습니다.</p>';
+        listEl.innerHTML = renderErrorState('댓글을 불러올 수 없습니다', null, `loadCommentsForPost(${postId})`);
     }
 }
 
@@ -444,7 +444,7 @@ async function handlePostCommentSubmit(postId, content) {
             if (form) form.reset();
         }
     } catch (err) {
-        alert(err.message || '댓글 등록에 실패했습니다.');
+        showToast(err.message || '댓글 등록에 실패했습니다.', 'error');
     }
 }
 
@@ -663,11 +663,11 @@ function handlePostDelete(postId) {
             if (result && result.success) {
                 handlePostDetailBack();
             } else {
-                alert(result.message || '삭제에 실패했습니다.');
+                showToast(result.message || '삭제에 실패했습니다.', 'error');
             }
         })
         .catch((err) => {
-            alert(err.message || '삭제 중 오류가 발생했습니다.');
+            showToast(err.message || '삭제 중 오류가 발생했습니다.', 'error');
         });
 }
 

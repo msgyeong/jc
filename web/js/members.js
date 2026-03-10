@@ -18,7 +18,7 @@ async function loadMembers(page = 1) {
     membersLoading = true;
     try {
         if (page === 1) {
-            container.innerHTML = '<div class="content-loading"><div class="loading-spinner"></div><p>회원 목록을 불러오는 중...</p></div>';
+            container.innerHTML = renderSkeleton('list');
         }
         const result = await apiClient.getMembers(page, 50);
         // API 응답 형식 호환: result.members 또는 result.data.members 또는 result.data.items
@@ -30,17 +30,17 @@ async function loadMembers(page = 1) {
             if (badge) badge.textContent = `${total}명`;
 
             if (members.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>등록된 회원이 없습니다.</p></div>';
+                container.innerHTML = renderEmptyState('users', '등록된 회원이 없습니다');
             } else {
                 container.innerHTML = renderMemberGrid(members);
                 currentMembersPage = page;
             }
         } else {
-            container.innerHTML = '<div class="error-state"><div class="error-state-icon">⚠️</div><p>회원 목록을 불러올 수 없습니다.</p><button class="btn btn-secondary btn-sm" onclick="loadMembers(1)">다시 시도</button></div>';
+            container.innerHTML = renderErrorState('회원 목록을 불러올 수 없습니다', '잠시 후 다시 시도해주세요', 'loadMembers(1)');
         }
     } catch (error) {
         console.error('회원 목록 로드 실패:', error);
-        container.innerHTML = '<div class="error-state"><div class="error-state-icon">⚠️</div><p>회원 목록을 불러올 수 없습니다.</p><button class="btn btn-secondary btn-sm" onclick="loadMembers(1)">다시 시도</button></div>';
+        container.innerHTML = renderErrorState('회원 목록을 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'loadMembers(1)');
     } finally {
         membersLoading = false;
     }
@@ -53,23 +53,23 @@ async function searchMembers(query) {
     if (!container) return;
 
     try {
-        container.innerHTML = '<div class="content-loading">검색 중...</div>';
+        container.innerHTML = renderSkeleton('list');
         const result = await apiClient.searchMembers(query);
         const members = result.members || (result.data && (result.data.members || result.data.items)) || [];
         if (result.success && members) {
             const badge = document.getElementById('member-count-badge');
             if (badge) badge.textContent = `${members.length}명`;
             if (members.length === 0) {
-                container.innerHTML = '<div class="empty-state">검색 결과가 없습니다.</div>';
+                container.innerHTML = renderEmptyState('search', '검색 결과가 없습니다', '다른 이름으로 검색해보세요');
             } else {
                 container.innerHTML = renderMemberGrid(members);
             }
         } else {
-            container.innerHTML = '<div class="error-state">검색에 실패했습니다.</div>';
+            container.innerHTML = renderErrorState('검색에 실패했습니다', null, `searchMembers('${query}')`);
         }
     } catch (error) {
         console.error('회원 검색 실패:', error);
-        container.innerHTML = '<div class="error-state">검색에 실패했습니다.</div>';
+        container.innerHTML = renderErrorState('검색에 실패했습니다', '네트워크 연결을 확인해주세요', `searchMembers('${query}')`);
     }
 }
 
@@ -136,7 +136,7 @@ async function toggleFavorite(memberId, currentState, btnEl) {
             btnEl.onclick = function(e) { e.stopPropagation(); toggleFavorite(memberId, true, btnEl); };
         }
     } catch (e) {
-        alert(e.message || '즐겨찾기 변경에 실패했습니다.');
+        showToast(e.message || '즐겨찾기 변경에 실패했습니다.', 'error');
     }
 }
 
@@ -203,12 +203,12 @@ async function showMemberDetailScreen(memberId) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     screen.classList.add('active');
     if (searchWrap) searchWrap.style.display = 'none';
-    container.innerHTML = '<div class="content-loading">회원 정보를 불러오는 중...</div>';
+    container.innerHTML = renderSkeleton('list');
 
     try {
         const res = await apiClient.getMember(memberId);
         if (!res.success || !res.member) {
-            container.innerHTML = '<div class="error-state">회원 정보를 불러오지 못했습니다.</div>';
+            container.innerHTML = renderErrorState('회원 정보를 불러오지 못했습니다', null, `showMemberDetailScreen(${memberId})`);
             return;
         }
         const m = res.member;
@@ -252,7 +252,7 @@ async function showMemberDetailScreen(memberId) {
         `;
         loadTitleHistory(memberId);
     } catch (_) {
-        container.innerHTML = '<div class="error-state">회원 정보를 불러오지 못했습니다.</div>';
+        container.innerHTML = renderErrorState('회원 정보를 불러오지 못했습니다', '네트워크 연결을 확인해주세요', `showMemberDetailScreen(${memberId})`);
     }
 }
 
@@ -327,18 +327,7 @@ function copyToClipboard(text) {
     });
 }
 
-function showToast(msg) {
-    let toast = document.getElementById('toast-msg');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toast-msg';
-        toast.className = 'toast-msg';
-        document.body.appendChild(toast);
-    }
-    toast.textContent = msg;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2000);
-}
+// showToast는 utils.js의 글로벌 함수 사용
 
 // 검색 입력 처리 (디바운싱)
 function handleMemberSearch(event) {

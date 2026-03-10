@@ -63,7 +63,8 @@ async function loadNoticeSummary() {
                             ${post.likes_count > 0 ? `<span class="notice-likes">❤️ ${post.likes_count}</span>` : ''}
                         </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
             } else {
                 container.innerHTML = '<div class="empty-state">최근 공지사항이 없습니다.</div>';
             }

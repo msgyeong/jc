@@ -126,11 +126,48 @@ PASS | 32 auth-block           (인증 없는 요청 → 401)
 
 ---
 
+## 세션 3: 2026-03-10 (중기 스프린트 전체 검증)
+
+### 작업 요약
+- **목적**: 출석투표·즐겨찾기·직함이력 신규 기능 + 전화걸기 UX + 디자인·보안 검증
+- **범위**: JS 문법, 백엔드 3개 신규 API, 라우터 등록, 프론트엔드 4개 UI, 디자인 일관성, 보안
+
+### 검증 결과: 11/11 (100%)
+
+| # | 항목 | 결과 | 비고 |
+|---|------|------|------|
+| 1 | JS 문법 검증 | ✅ | web/js/ 15파일 + api/routes/ 12파일 + server.js 전체 통과 |
+| 2 | 출석투표 API (attendance.js) | ✅ | 6개 엔드포인트: POST /, PUT /:configId, GET /:scheduleId, POST /:configId/vote, GET /:configId/results, POST /:configId/close |
+| 3 | 즐겨찾기 API (favorites.js) | ✅ | 3개 엔드포인트: POST /:targetId, DELETE /:targetId, GET / |
+| 4 | 직함이력 API (titles.js) | ✅ | 4개 엔드포인트: GET /:userId, POST /:userId, PUT /:userId/:titleId, DELETE /:userId/:titleId |
+| 5 | 라우터 등록 (server.js) | ✅ | attendance, favorites, titles 3개 모두 require + app.use 등록 확인 |
+| 6 | 전화걸기 UI (tel:) | ✅ | members.js: tel: 링크 + call-btn + formatPhone / profile.js: tel: + phone-link / main.css: .call-btn, .phone-link 스타일 |
+| 7 | 출석투표 UI | ✅ | schedules.js: attendance-section, loadAttendanceVote, submitVote, vote-btn / main.css: .attendance-section, .vote-btn, .vote-attend |
+| 8 | 즐겨찾기 UI | ✅ | members.js: favorites-section, loadFavorites, toggleFavorite, favorite-btn / main.css: .favorite-btn, .favorites-section |
+| 9 | 직함이력 UI | ✅ | members.js + profile.js: title-history-section, loadTitleHistory, title-item / main.css: .title-history-section, .title-item |
+| 10 | 디자인 일관성 | ✅ | 초록색 잔여 0건, 캐시 버스팅 main.css?v=20260310e 확인 |
+| 11 | 보안 | ✅ | Authorization Bearer 중앙관리(api-client.js), ssnFront/ssnBack 분리수신+유효성검증(auth.js) |
+
+### 신규 파일 확인
+- `api/routes/attendance.js` — 출석투표 CRUD + 투표 + 결과 + 마감 (6 endpoints)
+- `api/routes/favorites.js` — 즐겨찾기 추가/삭제/목록 (3 endpoints)
+- `api/routes/titles.js` — 직함이력 조회/추가/수정/삭제 (4 endpoints, 관리자 권한 보호)
+
+### 미테스트 항목 (이월)
+
+- [ ] 프론트엔드 브라우저 렌더링 (캘린더, 배너, N배지 등)
+- [ ] 이미지 업로드 (POST /api/upload) — Cloudinary 연동 여부
+- [ ] 회원가입 전체 플로우 (6단계 폼)
+- [ ] 관리자 콘솔 (web/admin/) 기능
+- [ ] 모바일 반응형 UI
+- [ ] 신규 API 실 호출 테스트 (프로덕션 DB 연동)
+
+---
+
 ## 다음 작업 (TODO)
 
-1. 백엔드/프론트엔드 변경사항 회귀 테스트 (API 32항목 재검증)
-2. 신규 기능 테스트 (변경 내역에 따라 결정)
-3. 브라우저 기반 E2E 테스트 (프론트엔드 렌더링 검증)
-4. 회원가입 → 승인 → 로그인 전체 플로우 테스트
-5. 관리자 콘솔 기능 테스트
-6. 부하/스트레스 테스트 (선택)
+1. 신규 3개 API 프로덕션 실 호출 테스트 (attendance, favorites, titles)
+2. 브라우저 기반 E2E 테스트 (프론트엔드 렌더링 검증)
+3. 회원가입 → 승인 → 로그인 전체 플로우 테스트
+4. 관리자 콘솔 기능 테스트
+5. 부하/스트레스 테스트 (선택)

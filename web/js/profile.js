@@ -33,7 +33,7 @@ function renderProfile(p) {
         <div class="profile-v2">
             <!-- 프로필 히어로 -->
             <div class="profile-hero">
-                <div class="profile-avatar-xl" style="background:#DBEAFE; color:#2563EB">
+                <div class="profile-avatar-xl" style="background:#DBEAFE; color:#1E40AF">
                     ${p.profile_image
                         ? `<img src="${p.profile_image}" alt="${escapeHtml(p.name)}">`
                         : `<span>${escapeHtml((p.name || '?')[0])}</span>`

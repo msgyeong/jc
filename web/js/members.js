@@ -88,7 +88,7 @@ function createMemberCard(member) {
     const roleBadge = member.role === 'super_admin' ? '<span class="member-role-badge role-super">총관리자</span>'
         : member.role === 'admin' ? '<span class="member-role-badge role-admin">관리자</span>' : '';
     const bgColor = '#DBEAFE';
-    const avatarTextColor = '#2563EB';
+    const avatarTextColor = '#1E40AF';
 
     return `
         <div class="member-card-v2" onclick="navigateTo('/members/${member.id}')">
@@ -135,7 +135,7 @@ async function showMemberDetailScreen(memberId) {
             <div class="detail-view">
                 <button class="btn-back" onclick="backToMemberList()">← 회원 목록</button>
                 <div class="profile-hero">
-                    <div class="profile-avatar-xl" style="background:#DBEAFE; color:#2563EB">
+                    <div class="profile-avatar-xl" style="background:#DBEAFE; color:#1E40AF">
                         ${m.profile_image
                             ? `<img src="${m.profile_image}" alt="${escapeHtml(m.name)}">`
                             : `<span>${escapeHtml((m.name || '?')[0])}</span>`

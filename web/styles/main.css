@@ -1545,8 +1545,8 @@ input::-ms-clear {
 }
 
 .badge-member {
-    background-color: #E0F2FE;
-    color: #0369A1;
+    background-color: #DBEAFE;
+    color: #1E40AF;
 }
 
 .badge-pending {
@@ -2672,8 +2672,8 @@ input[type="date"]:focus {
 }
 
 .member-role-badge.role-super {
-    background: var(--warning-bg);
-    color: var(--warning-text);
+    background: #2563EB;
+    color: white;
 }
 
 .member-role-badge.role-admin {

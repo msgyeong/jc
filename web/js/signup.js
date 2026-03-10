@@ -131,6 +131,8 @@ async function handleSignup(event) {
         const department = document.getElementById('signup-department').value.trim();
         const work_phone = document.getElementById('signup-work-phone').value.trim();
         const work_address = document.getElementById('signup-work-address').value.trim();
+        const industry = document.getElementById('signup-industry')?.value || '';
+        const industry_detail = document.getElementById('signup-industry-detail')?.value?.trim() || '';
         
         // Step 4: 학력/경력 정보
         
@@ -213,6 +215,8 @@ async function handleSignup(event) {
             department,
             work_phone,
             work_address,
+            industry: industry || undefined,
+            industry_detail: industry_detail || undefined,
             // Step 4
             education,
             career,

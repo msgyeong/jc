@@ -1,12 +1,61 @@
 // 회원 관련 기능 - 개선판 (Railway API 연동)
 
+// M-13: 업종 카테고리 상수
+const INDUSTRY_CATEGORIES = [
+    { code: 'law', name: '법률/법무' },
+    { code: 'finance', name: '금융/보험' },
+    { code: 'medical', name: '의료/건강' },
+    { code: 'construction', name: '건설/부동산' },
+    { code: 'it', name: 'IT/기술' },
+    { code: 'manufacturing', name: '제조/생산' },
+    { code: 'food', name: '요식/식음료' },
+    { code: 'retail', name: '유통/판매' },
+    { code: 'service', name: '서비스' },
+    { code: 'realestate', name: '부동산/임대' },
+    { code: 'culture', name: '문화/예술' },
+    { code: 'public', name: '공공/기관' },
+    { code: 'other', name: '기타' }
+];
+
+function getIndustryName(code) {
+    if (!code) return '';
+    const found = INDUSTRY_CATEGORIES.find(c => c.code === code);
+    return found ? found.name : code;
+}
+
 let currentMembersPage = 1;
 let membersLoading = false;
 let searchTimeout = null;
+let currentIndustryFilter = '';
 
 async function loadMembersScreen() {
+    currentIndustryFilter = '';
+    renderIndustryFilter();
     await loadFavorites();
     await loadMembers(1);
+}
+
+// M-13: 업종 필터 드롭다운 렌더링
+function renderIndustryFilter() {
+    const wrap = document.querySelector('.member-search-wrap');
+    if (!wrap) return;
+    let filterEl = document.getElementById('industry-filter-wrap');
+    if (filterEl) return; // 이미 있으면 스킵
+    filterEl = document.createElement('div');
+    filterEl.id = 'industry-filter-wrap';
+    filterEl.className = 'industry-filter-wrap';
+    filterEl.innerHTML = `
+        <select id="industry-filter" class="industry-filter-select" onchange="handleIndustryFilterChange(this.value)">
+            <option value="">업종: 전체</option>
+            ${INDUSTRY_CATEGORIES.map(c => `<option value="${c.code}">${c.name}</option>`).join('')}
+        </select>
+    `;
+    wrap.appendChild(filterEl);
+}
+
+function handleIndustryFilterChange(value) {
+    currentIndustryFilter = value;
+    loadMembers(1);
 }
 
 // 회원 목록 로드
@@ -20,7 +69,9 @@ async function loadMembers(page = 1) {
         if (page === 1) {
             container.innerHTML = renderSkeleton('list');
         }
-        const result = await apiClient.getMembers(page, 50);
+        let membersUrl = `/members?page=${page}&limit=50`;
+        if (currentIndustryFilter) membersUrl += `&industry=${encodeURIComponent(currentIndustryFilter)}`;
+        const result = await apiClient.request(membersUrl);
         // API 응답 형식 호환: result.members 또는 result.data.members 또는 result.data.items
         const members = result.members || (result.data && (result.data.members || result.data.items)) || [];
         const total = result.total || (result.data && result.data.total) || members.length;
@@ -54,7 +105,9 @@ async function searchMembers(query) {
 
     try {
         container.innerHTML = renderSkeleton('list');
-        const result = await apiClient.searchMembers(query);
+        let searchUrl = `/members/search?q=${encodeURIComponent(query)}`;
+        if (currentIndustryFilter) searchUrl += `&industry=${encodeURIComponent(currentIndustryFilter)}`;
+        const result = await apiClient.request(searchUrl);
         const members = result.members || (result.data && (result.data.members || result.data.items)) || [];
         if (result.success && members) {
             const badge = document.getElementById('member-count-badge');
@@ -186,6 +239,7 @@ function createMemberCard(member) {
                 </div>
                 ${position ? `<div class="member-position-v2">${escapeHtml(position)}</div>` : ''}
                 ${company ? `<div class="member-company-v2">${escapeHtml(company)}</div>` : ''}
+                ${member.industry ? `<span class="industry-tag">${escapeHtml(getIndustryName(member.industry))}</span>` : ''}
             </div>
             ${callBtn}
             ${favBtn}
@@ -238,12 +292,13 @@ async function showMemberDetailScreen(memberId) {
                     ${m.created_at ? infoRow('가입일', formatDate(m.created_at, 'YYYY-MM-DD')) : ''}
                 </div>
 
-                ${(m.company || m.position || m.department) ? `
+                ${(m.company || m.position || m.department || m.industry) ? `
                 <div class="info-section">
                     <h3 class="info-section-title">직장 정보</h3>
                     ${infoRow('회사', m.company)}
                     ${infoRow('직책', m.position)}
                     ${infoRow('부서', m.department)}
+                    ${m.industry ? infoRow('업종', getIndustryName(m.industry) + (m.industry_detail ? ' · ' + m.industry_detail : '')) : ''}
                     ${m.work_phone ? infoRow('직장 전화', m.work_phone, true) : ''}
                 </div>` : ''}
 

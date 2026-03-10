@@ -54,12 +54,13 @@ function renderProfile(p) {
                 ${p.gender ? profileInfoRow('성별', getGenderText(p.gender), 'person') : ''}
             </div>
 
-            ${hasWorkInfo ? `
+            ${hasWorkInfo || p.industry ? `
             <div class="info-section">
                 <h3 class="info-section-title">직장 정보</h3>
                 ${p.company ? profileInfoRow('회사', p.company, 'company') : ''}
                 ${p.position ? profileInfoRow('직책', p.position, 'badge') : ''}
                 ${p.department ? profileInfoRow('부서', p.department, 'group') : ''}
+                ${p.industry ? profileInfoRow('업종', (typeof getIndustryName === 'function' ? getIndustryName(p.industry) : p.industry) + (p.industry_detail ? ' · ' + p.industry_detail : ''), 'company') : ''}
                 ${p.work_phone ? profileInfoRow('직장 전화', p.work_phone, 'phone') : ''}
             </div>` : ''}
 
@@ -151,6 +152,13 @@ function showEditProfileForm() {
                     <div class="form-group"><label>회사</label><input type="text" id="edit-company" value="${escapeHtml(p.company || '')}"></div>
                     <div class="form-group"><label>직책</label><input type="text" id="edit-position" value="${escapeHtml(p.position || '')}"></div>
                     <div class="form-group"><label>부서</label><input type="text" id="edit-department" value="${escapeHtml(p.department || '')}"></div>
+                    <div class="form-group"><label>업종</label>
+                        <select id="edit-industry">
+                            <option value="">선택 안 함</option>
+                            ${(typeof INDUSTRY_CATEGORIES !== 'undefined' ? INDUSTRY_CATEGORIES : []).map(c => `<option value="${c.code}" ${p.industry === c.code ? 'selected' : ''}>${c.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group"><label>업종 상세</label><input type="text" id="edit-industry-detail" value="${escapeHtml(p.industry_detail || '')}" placeholder="상세 업종 (예: 소프트웨어 개발)" maxlength="100"></div>
                     <div class="form-group"><label>직장 전화</label><input type="tel" id="edit-work-phone" value="${escapeHtml(p.work_phone || '')}"></div>
                 </div>
                 <div id="profile-edit-error" class="inline-error-message"></div>
@@ -180,7 +188,9 @@ async function handleProfileEditSubmit(event) {
         company: document.getElementById('edit-company').value.trim() || null,
         position: document.getElementById('edit-position').value.trim() || null,
         department: document.getElementById('edit-department').value.trim() || null,
-        work_phone: document.getElementById('edit-work-phone').value.trim() || null
+        work_phone: document.getElementById('edit-work-phone').value.trim() || null,
+        industry: document.getElementById('edit-industry')?.value || null,
+        industry_detail: document.getElementById('edit-industry-detail')?.value?.trim() || null
     };
 
     setButtonLoading(submitBtn, true);

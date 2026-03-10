@@ -65,11 +65,12 @@ router.get('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // 일정 조회
+        // 일정 조회 (linked_post_id 포함)
         const result = await query(
-            `SELECT 
+            `SELECT
                 s.id, s.title, s.start_date, s.end_date,
                 s.location, s.description, s.category,
+                s.linked_post_id,
                 s.created_at, s.updated_at,
                 s.created_by as author_id, u.name as author_name, u.profile_image as author_image
              FROM schedules s
@@ -85,9 +86,26 @@ router.get('/:id', authenticate, async (req, res) => {
             });
         }
 
+        const schedule = result.rows[0];
+
+        // 연결된 공지 정보 조회
+        if (schedule.linked_post_id) {
+            try {
+                const postResult = await query(
+                    `SELECT p.id, p.title, p.created_at, u.name as author_name
+                     FROM posts p LEFT JOIN users u ON p.author_id = u.id
+                     WHERE p.id = $1`,
+                    [schedule.linked_post_id]
+                );
+                schedule.linked_post = postResult.rows[0] || null;
+            } catch (_) {
+                schedule.linked_post = null;
+            }
+        }
+
         res.json({
             success: true,
-            schedule: result.rows[0]
+            schedule
         });
     } catch (error) {
         console.error('Get schedule error:', error);

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { query } = require('../config/database');
+const { query, transaction } = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 
 /**
@@ -309,6 +309,7 @@ router.get('/:id', authenticate, async (req, res) => {
         const result = await query(
             `SELECT
                 p.id, p.title, p.content, p.images, p.category,
+                p.is_pinned, p.linked_schedule_id,
                 p.views, p.likes_count, p.comments_count,
                 p.created_at, p.updated_at,
                 u.id as author_id, u.name as author_name, u.profile_image as author_image
@@ -326,6 +327,20 @@ router.get('/:id', authenticate, async (req, res) => {
         }
 
         const post = result.rows[0];
+
+        // 연결된 일정 정보 조회
+        if (post.linked_schedule_id) {
+            try {
+                const schedResult = await query(
+                    `SELECT id, title, start_date, end_date, location, category FROM schedules WHERE id = $1`,
+                    [post.linked_schedule_id]
+                );
+                post.linked_schedule = schedResult.rows[0] || null;
+            } catch (_) {
+                post.linked_schedule = null;
+            }
+        }
+
         let user_has_liked = false;
         try {
             const likeRow = await query(
@@ -370,10 +385,11 @@ router.get('/:id', authenticate, async (req, res) => {
 /**
  * POST /api/posts
  * 게시글 작성. 공지(category=notice)는 관리자만 가능.
+ * body.schedule 객체가 있으면 트랜잭션으로 일정도 동시 생성 (M-12 공지-일정 연동).
  */
 router.post('/', authenticate, async (req, res) => {
     try {
-        const { title, content, images, category, schedule_id, is_pinned } = req.body;
+        const { title, content, images, category, is_pinned, schedule, vote_config } = req.body;
         const authorId = req.user.userId;
         const role = req.user.role;
         const cat = (category && String(category).trim()) || 'general';
@@ -393,25 +409,78 @@ router.post('/', authenticate, async (req, res) => {
             });
         }
 
-        let result;
-        try {
-            result = await query(
-                `INSERT INTO posts (author_id, title, content, images, category, is_pinned, schedule_id, created_at, updated_at)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-                 RETURNING id`,
-                [authorId, title, content, images || [], cat, pinned, schedule_id || null]
-            );
-        } catch (e) {
-            const msg = (e && e.message) || '';
-            if (msg.includes('schedule_id') || msg.includes('is_pinned')) {
-                result = await query(
-                    `INSERT INTO posts (author_id, title, content, images, category, created_at, updated_at)
-                     VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+        // schedule 객체가 있으면 트랜잭션으로 공지+일정 동시 생성
+        if (schedule && cat === 'notice') {
+            const result = await transaction(async (client) => {
+                // 1. 공지 생성
+                const postResult = await client.query(
+                    `INSERT INTO posts (author_id, title, content, images, category, is_pinned, created_at, updated_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
                      RETURNING id`,
-                    [authorId, title, content, images || [], cat]
+                    [authorId, title, content, images || [], cat, pinned]
                 );
-            } else throw e;
+                const postId = postResult.rows[0].id;
+
+                // 2. 일정 생성
+                const schedResult = await client.query(
+                    `INSERT INTO schedules (created_by, title, start_date, end_date, location, description, category, linked_post_id, created_at, updated_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+                     RETURNING id`,
+                    [
+                        authorId,
+                        schedule.title || title,
+                        schedule.start_date,
+                        schedule.end_date || null,
+                        schedule.location || null,
+                        schedule.description || null,
+                        schedule.category || 'event',
+                        postId
+                    ]
+                );
+                const scheduleId = schedResult.rows[0].id;
+
+                // 3. 양방향 참조: posts.linked_schedule_id 업데이트
+                await client.query(
+                    'UPDATE posts SET linked_schedule_id = $1 WHERE id = $2',
+                    [scheduleId, postId]
+                );
+
+                // 4. 투표 설정이 있으면 생성
+                if (vote_config) {
+                    await client.query(
+                        `INSERT INTO attendance_config (schedule_id, vote_type, deadline, quorum_count, quorum_basis, created_by, created_at, updated_at)
+                         VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
+                        [
+                            scheduleId,
+                            vote_config.vote_type || 'general',
+                            vote_config.deadline || null,
+                            vote_config.quorum_count || null,
+                            vote_config.quorum_basis || null,
+                            authorId
+                        ]
+                    );
+                }
+
+                return { postId, scheduleId };
+            });
+
+            return res.status(201).json({
+                success: true,
+                message: '공지와 일정이 함께 작성되었습니다.',
+                data: {
+                    post: { id: result.postId, linked_schedule_id: result.scheduleId },
+                    schedule: { id: result.scheduleId, linked_post_id: result.postId }
+                }
+            });
         }
+
+        // 일정 연동 없는 일반 게시글/공지 작성
+        const result = await query(
+            `INSERT INTO posts (author_id, title, content, images, category, is_pinned, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+             RETURNING id`,
+            [authorId, title, content, images || [], cat, pinned]
+        );
 
         res.status(201).json({
             success: true,
@@ -429,18 +498,19 @@ router.post('/', authenticate, async (req, res) => {
 
 /**
  * PUT /api/posts/:id
- * 게시글 수정. category를 notice로 바꾸는 경우 관리자만 가능.
+ * 게시글 수정. schedule 객체 포함 시 연결 일정 동기화 (M-12).
+ * schedule: null → 연결 해제, schedule: {...} → 연결 일정 업데이트 또는 신규 생성
  */
 router.put('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, content, images, category, schedule_id, is_pinned } = req.body;
+        const { title, content, images, category, is_pinned, schedule } = req.body;
         const userId = req.user.userId;
         const cat = (category && String(category).trim()) || 'general';
         const pinned = cat === 'notice' && is_pinned ? true : false;
 
         const postResult = await query(
-            'SELECT author_id, category FROM posts WHERE id = $1',
+            'SELECT author_id, category, linked_schedule_id FROM posts WHERE id = $1',
             [id]
         );
 
@@ -467,23 +537,62 @@ router.put('/:id', authenticate, async (req, res) => {
             });
         }
 
-        try {
+        const existingScheduleId = postResult.rows[0].linked_schedule_id;
+
+        // schedule 파라미터가 명시적으로 전달된 경우 트랜잭션으로 처리
+        if (schedule !== undefined) {
+            await transaction(async (client) => {
+                // 게시글 업데이트
+                if (schedule === null) {
+                    // 연결 해제
+                    await client.query(
+                        `UPDATE posts SET title=$1, content=$2, images=$3, category=$4, is_pinned=$5, linked_schedule_id=NULL, updated_at=NOW() WHERE id=$6`,
+                        [title, content, images || [], cat, pinned, id]
+                    );
+                    if (existingScheduleId) {
+                        await client.query(
+                            'UPDATE schedules SET linked_post_id = NULL WHERE id = $1',
+                            [existingScheduleId]
+                        );
+                    }
+                } else if (existingScheduleId) {
+                    // 연결 일정 업데이트
+                    await client.query(
+                        `UPDATE posts SET title=$1, content=$2, images=$3, category=$4, is_pinned=$5, updated_at=NOW() WHERE id=$6`,
+                        [title, content, images || [], cat, pinned, id]
+                    );
+                    await client.query(
+                        `UPDATE schedules SET title=$1, start_date=$2, end_date=$3, location=$4, description=$5, category=$6, updated_at=NOW() WHERE id=$7`,
+                        [
+                            schedule.title || title,
+                            schedule.start_date,
+                            schedule.end_date || null,
+                            schedule.location || null,
+                            schedule.description || null,
+                            schedule.category || 'event',
+                            existingScheduleId
+                        ]
+                    );
+                } else {
+                    // 신규 일정 생성 + 연결
+                    const schedResult = await client.query(
+                        `INSERT INTO schedules (created_by, title, start_date, end_date, location, description, category, linked_post_id, created_at, updated_at)
+                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+                         RETURNING id`,
+                        [userId, schedule.title || title, schedule.start_date, schedule.end_date || null, schedule.location || null, schedule.description || null, schedule.category || 'event', id]
+                    );
+                    await client.query(
+                        `UPDATE posts SET title=$1, content=$2, images=$3, category=$4, is_pinned=$5, linked_schedule_id=$6, updated_at=NOW() WHERE id=$7`,
+                        [title, content, images || [], cat, pinned, schedResult.rows[0].id, id]
+                    );
+                }
+            });
+        } else {
+            // schedule 파라미터 없으면 기존 로직
             await query(
-                `UPDATE posts
-                 SET title = $1, content = $2, images = $3, category = $4, is_pinned = $5, schedule_id = $6, updated_at = NOW()
-                 WHERE id = $7`,
-                [title, content, images || [], cat, pinned, schedule_id !== undefined ? schedule_id : null, id]
+                `UPDATE posts SET title=$1, content=$2, images=$3, category=$4, is_pinned=$5, updated_at=NOW() WHERE id=$6`,
+                [title, content, images || [], cat, pinned, id]
             );
-        } catch (e) {
-            const msg = (e && e.message) || '';
-            if (msg.includes('schedule_id') || msg.includes('is_pinned')) {
-                await query(
-                    `UPDATE posts
-                     SET title = $1, content = $2, images = $3, category = $4, updated_at = NOW()
-                     WHERE id = $5`,
-                    [title, content, images || [], cat, id]
-                );
-            } else throw e;
         }
 
         res.json({
@@ -501,17 +610,17 @@ router.put('/:id', authenticate, async (req, res) => {
 
 /**
  * DELETE /api/posts/:id
- * 게시글 삭제
+ * 게시글 삭제. ?delete_linked_schedule=true 시 연결 일정도 삭제 (M-12).
  */
 router.delete('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.userId;
         const userRole = req.user.role;
+        const deleteLinkedSchedule = req.query.delete_linked_schedule === 'true';
 
-        // 게시글 소유자 확인
         const postResult = await query(
-            'SELECT author_id FROM posts WHERE id = $1',
+            'SELECT author_id, linked_schedule_id FROM posts WHERE id = $1',
             [id]
         );
 
@@ -522,7 +631,6 @@ router.delete('/:id', authenticate, async (req, res) => {
             });
         }
 
-        // 작성자 본인이거나 관리자인 경우만 삭제 가능
         const isAuthor = postResult.rows[0].author_id === userId;
         const isAdmin = ['super_admin', 'admin'].includes(userRole);
 
@@ -533,8 +641,22 @@ router.delete('/:id', authenticate, async (req, res) => {
             });
         }
 
-        // 게시글 삭제
-        await query('DELETE FROM posts WHERE id = $1', [id]);
+        const linkedScheduleId = postResult.rows[0].linked_schedule_id;
+
+        await transaction(async (client) => {
+            if (linkedScheduleId) {
+                if (deleteLinkedSchedule) {
+                    // 연결 일정도 함께 삭제
+                    await client.query('UPDATE posts SET linked_schedule_id = NULL WHERE id = $1', [id]);
+                    await client.query('DELETE FROM schedules WHERE id = $1', [linkedScheduleId]);
+                } else {
+                    // 연결만 해제, 일정은 독립 유지
+                    await client.query('UPDATE posts SET linked_schedule_id = NULL WHERE id = $1', [id]);
+                    await client.query('UPDATE schedules SET linked_post_id = NULL WHERE id = $1', [linkedScheduleId]);
+                }
+            }
+            await client.query('DELETE FROM posts WHERE id = $1', [id]);
+        });
 
         res.json({
             success: true,

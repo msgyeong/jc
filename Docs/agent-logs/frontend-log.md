@@ -456,6 +456,49 @@
 
 ---
 
+## 세션 #7 — 2026-03-11 (화)
+
+### 작업: Web Push 알림 프론트엔드 구현
+- **상태**: 완료
+- **커밋**: `41380b3` → `origin main` 푸시 완료 (Railway 자동 배포)
+- **기준 문서**: `Docs/features/web-push-notification.md`, `Docs/design-system/18-notification-ui.md`
+
+#### 신규 파일 (6개)
+| 파일 | 설명 |
+|------|------|
+| `web/sw.js` | Service Worker — push 수신, showNotification, notificationclick 이동, skipWaiting/claim |
+| `web/manifest.json` | PWA manifest — standalone, 아이콘 4종, theme_color #2563EB |
+| `web/js/push.js` | 푸시 구독 모듈 — initPush, subscribePush, unsubscribePush, VAPID키 변환, iOS 분기, 구독 유도 배너, PWA 설치 안내 배너+가이드 모달 |
+| `web/js/notifications.js` | 알림 센터 — loadNotifications, markAsRead, markAllRead, 유형별 아이콘(N-01~N-05), 시간 포맷(방금/N분전/N시간전/어제/N일전/M/D), 앱바 배지 업데이트 |
+| `web/js/notification-settings.js` | 알림 설정 — 마스터 스위치+하위 4개 토글, 즉시 API PUT, 마스터 OFF시 하위 비활성, 푸시 상태 표시, 재구독 버튼 |
+| `web/image/icon-*.png, badge-72.png, apple-touch-icon.png` | PWA 아이콘 placeholder (6종 PNG + 3종 SVG) — 프로덕션 시 디자인 교체 필요 |
+
+#### 수정 파일 (6개)
+| 파일 | 변경 내용 |
+|------|----------|
+| `web/index.html` | manifest/theme-color/apple-touch-icon 메타 추가, 앱바에 알림 벨+배지 (logout 버튼 대체), 알림 센터/설정 화면 HTML 추가, push/notifications/notification-settings 스크립트 추가, 캐시 버스팅 v=20260311a |
+| `web/js/app.js` | 로그인 성공 시 initPush()+fetchUnreadNotificationCount() 호출 |
+| `web/js/navigation.js` | notifications/notification-settings 화면 전환 처리 |
+| `web/js/profile.js` | 프로필 액션에 '알림 설정' 버튼 추가 (비밀번호 변경 위) |
+| `web/styles/main.css` | +380줄 — 앱바 배지, 알림 센터(리스트/아이템/빈상태), 알림 설정(토글/마스터/섹션), 구독 배너(slide-up/down), PWA 설치 배너+가이드 모달, 반응형 |
+| `nginx.conf` | sw.js 캐시 방지(no-cache), manifest.json 서빙(application/manifest+json), gzip 타입 추가 |
+
+#### 검증 결과
+- `node -c web/js/*.js` 전체 11파일 통과
+- `web/sw.js` 존재 및 유효
+- `web/manifest.json` 유효 JSON
+- 기존 기능 미파괴 (logout은 프로필 화면에서 제공)
+
+#### 구현 상세
+1. **앱바 벨 아이콘**: SVG 24px 흰색, 미읽음 수 빨간 배지(#DC2626), 바운스 애니메이션
+2. **알림 센터**: 별도 SPA 화면, 유형별 아이콘(공지/일정/리마인더/댓글), 읽음/안읽음 구분, 모두 읽음 처리
+3. **알림 설정**: 마스터+4개 토글, iOS 스타일, 마스터 OFF시 하위 opacity 0.5+pointer-events none
+4. **푸시 구독 배너**: 하단 고정, 7일 후 재표시, 3회 닫기 시 영구 숨김
+5. **iOS 대응**: isIOS()+isStandalone() 체크, PWA 필수 안내, 설치 가이드 모달(Android/iOS)
+6. **SW 클릭 이동**: postMessage로 기존 창 focus → navigateTo() 호출
+
+---
+
 ## 알려진 이슈 (수정 안 함, 동작 영향 없음)
 
 1. `formatDate` 함수가 `utils.js`와 `home.js`에 중복 정의 — home.js가 덮어씀. 통합 필요.

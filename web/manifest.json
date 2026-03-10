@@ -1,0 +1,16 @@
+{
+  "name": "영등포 JC",
+  "short_name": "영등포JC",
+  "description": "영등포청년회의소 회원관리 커뮤니티",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#2563EB",
+  "background_color": "#F9FAFB",
+  "icons": [
+    { "src": "/image/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/image/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/image/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/image/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

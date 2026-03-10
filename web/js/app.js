@@ -81,7 +81,13 @@ async function showInitialScreen() {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     navigateToScreen(targetScreen);
-    
+
+    // 로그인 상태이면 푸시 초기화 + 안읽은 알림 수 조회
+    if (targetScreen === 'home') {
+        if (typeof initPush === 'function') initPush();
+        if (typeof fetchUnreadNotificationCount === 'function') fetchUnreadNotificationCount();
+    }
+
     console.log('✅ 초기 화면 표시 완료:', targetScreen);
 }
 

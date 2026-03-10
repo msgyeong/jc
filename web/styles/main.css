@@ -4580,3 +4580,679 @@ input[type="date"]:focus {
     margin-top: 4px;
 }
 
+/* ================================================
+   Web Push 알림 UI
+   ================================================ */
+
+/* 앱바 우측 영역 */
+.app-bar-right {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+/* 앱바 알림 아이콘 래퍼 */
+.notification-badge-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.notification-badge-wrap:active {
+    opacity: 0.7;
+}
+
+.notification-badge-wrap svg {
+    width: 24px;
+    height: 24px;
+    color: #FFFFFF;
+}
+
+/* 미읽음 배지 */
+.notification-badge-count {
+    position: absolute;
+    top: 2px;
+    right: 0;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: #DC2626;
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 9px;
+    border: 2px solid var(--primary-color, #2563EB);
+    z-index: 1;
+    pointer-events: none;
+    box-sizing: border-box;
+}
+
+.notification-badge-count:empty,
+.notification-badge-count[data-count="0"] {
+    display: none;
+}
+
+@keyframes notification-badge-bounce {
+    0% { transform: scale(0.5); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.notification-badge-count.animate {
+    animation: notification-badge-bounce 0.3s ease;
+}
+
+/* 앱바 텍스트 버튼 (모두 읽음) */
+.app-bar-action-text {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 12px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.app-bar-action-text:active {
+    opacity: 0.7;
+}
+
+/* ---- 알림 센터 ---- */
+
+.notification-list {
+    background: #F9FAFB;
+    min-height: calc(100vh - 56px - 64px);
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E5E7EB;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.notification-item:active {
+    background: #F3F4F6;
+}
+
+.notification-item.unread {
+    background: #EFF6FF;
+}
+
+.notification-item.unread:active {
+    background: #DBEAFE;
+}
+
+.notification-dot {
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    border-radius: 50%;
+    background: #2563EB;
+    margin-top: 14px;
+    flex-shrink: 0;
+}
+
+.notification-item:not(.unread) .notification-dot {
+    visibility: hidden;
+}
+
+.notification-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.notification-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.notification-icon--notice,
+.notification-icon--schedule,
+.notification-icon--comment {
+    background: #DBEAFE;
+    color: #2563EB;
+}
+
+.notification-icon--reminder {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.notification-item:not(.unread) .notification-title {
+    font-weight: 500;
+    color: #6B7280;
+}
+
+.notification-body {
+    font-size: 13px;
+    font-weight: 400;
+    color: #374151;
+    line-height: 1.4;
+    margin-top: 2px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.notification-item:not(.unread) .notification-body {
+    color: #9CA3AF;
+}
+
+.notification-time {
+    font-size: 12px;
+    font-weight: 400;
+    color: #9CA3AF;
+    margin-top: 4px;
+}
+
+/* 빈 상태 */
+.notification-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    padding: 48px 24px;
+}
+
+.notification-empty svg {
+    width: 64px;
+    height: 64px;
+    color: #D1D5DB;
+}
+
+.notification-empty p {
+    font-size: 15px;
+    color: #9CA3AF;
+    margin-top: 16px;
+}
+
+/* ---- 알림 설정 ---- */
+
+.alert-settings-page {
+    background: #F9FAFB;
+    min-height: calc(100vh - 56px - 64px);
+}
+
+.alert-settings-master {
+    background: #FFFFFF;
+    padding: 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.alert-settings-master .alert-settings-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.alert-settings-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #9CA3AF;
+    padding: 24px 16px 8px;
+    letter-spacing: 0.5px;
+}
+
+.alert-settings-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 16px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.alert-settings-icon {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    color: #2563EB;
+    margin-right: 12px;
+    margin-top: 1px;
+}
+
+.alert-settings-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.alert-settings-text {
+    flex: 1;
+}
+
+.alert-settings-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+}
+
+.alert-settings-desc {
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-top: 2px;
+    line-height: 1.4;
+}
+
+/* 토글 스위치 */
+.alert-settings-toggle {
+    position: relative;
+    width: 48px;
+    height: 28px;
+    min-width: 48px;
+    margin-left: auto;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.alert-settings-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.alert-settings-toggle .toggle-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #D1D5DB;
+    border-radius: 14px;
+    transition: background 0.2s ease;
+}
+
+.alert-settings-toggle input:checked + .toggle-track {
+    background: #2563EB;
+}
+
+.alert-settings-toggle .toggle-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background: #FFFFFF;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    transition: left 0.2s ease;
+    pointer-events: none;
+}
+
+.alert-settings-toggle input:checked ~ .toggle-knob {
+    left: 22px;
+}
+
+/* 마스터 OFF → 하위 비활성 */
+.alert-settings-group.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.alert-settings-group.disabled .toggle-track {
+    background: #E5E7EB !important;
+}
+
+.alert-settings-group.disabled .toggle-knob {
+    background: #F9FAFB;
+}
+
+/* 푸시 상태 섹션 */
+.alert-settings-status {
+    background: #FFFFFF;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #111827;
+}
+
+.alert-settings-status .status-dot,
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-dot.active {
+    background: #10B981;
+}
+
+.status-dot.inactive {
+    background: #DC2626;
+}
+
+/* ---- 푸시 구독 유도 배너 ---- */
+
+.push-subscribe-banner {
+    position: fixed;
+    bottom: 72px;
+    left: 16px;
+    right: 16px;
+    max-width: 430px;
+    margin: 0 auto;
+    background: #FFFFFF;
+    border: 1px solid #DBEAFE;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+    z-index: 900;
+    animation: push-banner-slide-up 0.3s ease;
+}
+
+.push-subscribe-banner.hiding {
+    animation: push-banner-slide-down 0.2s ease forwards;
+}
+
+@keyframes push-banner-slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes push-banner-slide-down {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(20px); }
+}
+
+.push-subscribe-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.push-subscribe-message svg {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    color: #2563EB;
+    margin-top: 1px;
+}
+
+.push-subscribe-message p {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.push-subscribe-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.push-subscribe-btn {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.push-subscribe-btn--primary {
+    background: #2563EB;
+    color: #FFFFFF;
+}
+
+.push-subscribe-btn--primary:active {
+    background: #1D4ED8;
+}
+
+.push-subscribe-btn--ghost {
+    background: transparent;
+    color: #6B7280;
+    font-weight: 500;
+    padding: 10px 16px;
+}
+
+.push-subscribe-btn--ghost:active {
+    background: #F3F4F6;
+}
+
+/* ---- PWA 설치 안내 배너 ---- */
+
+.push-install-banner {
+    position: fixed;
+    top: 64px;
+    left: 16px;
+    right: 16px;
+    max-width: 430px;
+    margin: 0 auto;
+    background: #EFF6FF;
+    border: 1px solid #DBEAFE;
+    border-radius: 12px;
+    padding: 14px 16px;
+    padding-right: 40px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    z-index: 800;
+    animation: push-banner-slide-down-enter 0.3s ease;
+}
+
+@keyframes push-banner-slide-down-enter {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.push-install-banner.hiding {
+    animation: push-banner-slide-up-exit 0.2s ease forwards;
+}
+
+@keyframes push-banner-slide-up-exit {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-12px); }
+}
+
+.push-install-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 20px;
+    height: 20px;
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    padding: 0;
+}
+
+.push-install-close svg {
+    width: 20px;
+    height: 20px;
+}
+
+.push-install-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.push-install-message svg {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    color: #2563EB;
+    margin-top: 1px;
+}
+
+.push-install-message p {
+    font-size: 13px;
+    font-weight: 500;
+    color: #111827;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.push-install-action {
+    margin-top: 8px;
+    margin-left: 30px;
+}
+
+.push-install-action button {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2563EB;
+    background: transparent;
+    padding: 8px 0;
+    border: none;
+    cursor: pointer;
+}
+
+/* PWA 가이드 모달 */
+.pwa-guide-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.pwa-guide-modal {
+    background: #FFFFFF;
+    border-radius: 16px;
+    max-width: 360px;
+    width: 100%;
+    padding: 24px;
+    position: relative;
+}
+
+.pwa-guide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.pwa-guide-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.pwa-guide-close {
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    padding: 0;
+}
+
+.pwa-guide-section {
+    margin-bottom: 16px;
+}
+
+.pwa-guide-section h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2563EB;
+    margin: 20px 0 12px;
+}
+
+.pwa-guide-section ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pwa-guide-section li {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.6;
+    padding: 2px 0;
+}
+
+.pwa-guide-note {
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-top: 12px;
+}
+
+/* ---- 반응형 ---- */
+
+@media (max-width: 429px) {
+    .push-subscribe-banner,
+    .push-install-banner {
+        left: 12px;
+        right: 12px;
+    }
+
+    .notification-item {
+        padding: 14px;
+    }
+}
+
+@media (max-width: 359px) {
+    .push-subscribe-banner,
+    .push-install-banner {
+        border-radius: 8px;
+    }
+
+    .notification-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+    }
+
+    .notification-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .notification-title {
+        font-size: 13px;
+    }
+
+    .notification-body {
+        font-size: 12px;
+    }
+}
+

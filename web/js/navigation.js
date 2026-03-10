@@ -121,6 +121,11 @@ function navigateToScreen(screenName) {
             if (typeof initAdminPage === 'function') {
                 initAdminPage();
             }
+        } else if (screenName === 'notifications') {
+            // 알림 센터 — 네비 업데이트 없음 (독립 화면)
+        } else if (screenName === 'notification-settings') {
+            // 알림 설정 — 프로필 탭 활성
+            updateNavigation('profile');
         } else if (screenName === 'posts') {
             updateNavigation('posts');
             if (typeof loadPostsScreen === 'function') {

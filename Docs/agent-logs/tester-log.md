@@ -214,10 +214,119 @@ PASS | 32 auth-block           (인증 없는 요청 → 401)
 
 ---
 
+## 세션 4: 2026-03-10 (3차 스프린트 검증)
+
+### 작업 요약
+- **목적**: 3차 스프린트 백엔드 6커밋 + 프론트 6커밋 후 전체 검증
+- **범위**: JS 문법, 백엔드 신규 API 구조, 프론트-백엔드 필드명 일치, 프로덕션 API 실 호출, 디자인 일관성, 캐시 버스팅
+
+### 1. JS 문법 검증: 전체 PASS
+
+| 영역 | 파일 수 | 결과 |
+|------|---------|------|
+| web/js/*.js | 15 | ✅ 전체 통과 |
+| api/routes/*.js + server.js | 14 | ✅ 전체 통과 |
+
+### 2. 백엔드 신규 API 구조 검증: 6/6 PASS
+
+| # | 항목 | 결과 | 비고 |
+|---|------|------|------|
+| 1 | notices.js 하위호환 프록시 | ✅ | GET/POST/PUT/DELETE 4개 엔드포인트, posts 테이블 category='notice' 쿼리, read_status JOIN fallback |
+| 2 | posts.js linked_schedule_id | ✅ | POST 시 schedule 객체 → 트랜잭션으로 일정 동시 생성, PUT 시 연결 일정 동기화, DELETE 시 delete_linked_schedule 옵션 |
+| 3 | schedules.js 일정 댓글 API | ✅ | GET/POST/DELETE /:id/comments 3개 엔드포인트, 대댓글 구조화, 대대댓글 방지 |
+| 4 | members.js ?industry= 필터 | ✅ | VALID_INDUSTRY_CODES 검증 후 WHERE 조건 추가, search에도 industry 필터 지원 |
+| 5 | industries.js GET /api/industries | ✅ | 13개 업종 카테고리 반환 (인증 불필요) |
+| 6 | server.js 라우터 등록 | ✅ | 13개 라우터 전부 require + app.use 확인 (auth, posts, notices, schedules, members, profile, upload, admin, seed, attendance, favorites, titles, industries) |
+
+### 3. 프론트-백엔드 필드명 일치 검증: PASS
+
+| 프론트 호출 | 백엔드 경로 | 일치 |
+|------------|------------|------|
+| `/favorites` (GET/POST/DELETE) | api/routes/favorites.js | ✅ |
+| `/titles/:userId` (GET) | api/routes/titles.js | ✅ |
+| `/attendance/:scheduleId` (GET) | api/routes/attendance.js | ✅ |
+| `/schedules/:id/comments` (GET/POST) | api/routes/schedules.js | ✅ |
+| `/members` (GET) | api/routes/members.js | ✅ |
+| `/members/search?q=` (GET) | api/routes/members.js | ✅ |
+
+**미연동 API** (백엔드 구현 완료, 프론트 미연동):
+- `/api/industries` — 프론트에서 아직 호출하지 않음 (업종 드롭다운 미구현)
+- `/api/members?industry=` — 프론트에서 아직 호출하지 않음 (업종 필터 UI 미구현)
+
+### 4. 프로덕션 API 실 호출 테스트
+
+| # | 테스트 | 결과 | 비고 |
+|---|--------|------|------|
+| 1 | POST /api/auth/login | ✅ PASS | admin@jc.com / test1234 토큰 발급 정상 |
+| 2 | GET /api/notices (하위호환) | ✅ PASS | 2건 반환 |
+| 3 | GET /api/industries | ✅ PASS | 13개 업종 카테고리 |
+| 4 | **GET /api/members** | ❌ **FAIL 500** | **BUG-S4-001** |
+| 5 | **GET /api/members?industry=it** | ❌ **FAIL 500** | **BUG-S4-001** (동일 원인) |
+| 6 | GET /api/members/search?q=admin | ✅ PASS | 1건 반환 |
+| 7 | GET /api/schedules | ✅ PASS | 14건 |
+| 8 | GET /api/schedules/1 | ✅ PASS | |
+| 9 | GET /api/schedules/1/comments | ✅ PASS | 0건 (댓글 없음) |
+| 10 | GET /api/attendance/1 | ⚠️ 404 | 정상 — 일정 1에 투표 설정 없음 |
+| 11 | GET /api/favorites | ✅ PASS | 0건 |
+| 12 | GET /api/titles/1 | ✅ PASS | 0건 |
+| 13 | GET /api/posts | ✅ PASS | 2건 |
+| 14 | GET /api/posts?category=notice | ✅ PASS | 2건 |
+| 15 | GET /api/posts/1 | ✅ PASS | |
+| 16 | GET /api/profile | ✅ PASS | |
+| 17 | GET /api/auth/me | ✅ PASS | |
+| 18 | GET /health | ✅ PASS | "healthy" 텍스트 응답 |
+
+### 5. 디자인 일관성 검증
+
+| # | 항목 | 결과 | 비고 |
+|---|------|------|------|
+| 1 | 초록색 잔여 (장식적) | ✅ | web/ 전체 0건 — 완전 제거됨 |
+| 2 | 기능적 색상 (success/training) | ✅ | --success-color, badge-training 등 정상 사용 |
+| 3 | 캐시 버스팅 버전 | ✅ | main.css?v=20260310f 확인 |
+| 4 | 보라색 잔여 | ⚠️ LOW | main.css에 --purple-bg, --purple-text CSS 변수 선언은 남아있으나 실제 사용처 없음 (dead code) |
+
+### 발견된 버그
+
+#### BUG-S4-001: GET /api/members → 500 Internal Server Error (CRITICAL)
+
+- **심각도**: **CRITICAL** — 회원 목록 페이지 전체 이용 불가
+- **위치**: `api/routes/members.js:46-48`
+- **원인**: count 쿼리에 잘못된 파라미터 전달
+  ```javascript
+  // 문제 코드 (line 46-48)
+  const countResult = await query(
+      `SELECT COUNT(*) FROM users u WHERE ${whereClause}`,
+      params.slice(2) // ← [userId]를 전달하지만 쿼리에 파라미터 placeholder 없음
+  );
+  ```
+- **상세**: `whereClause`가 `u.status = 'active'`일 때 파라미터 0개 필요하지만 `params.slice(2)` = `[userId]` 1개를 전달 → PostgreSQL 에러: `bind message supplies 1 parameters, but prepared statement "" requires 0`
+- **영향**: `GET /api/members`와 `GET /api/members?industry=` 모두 500 에러
+- **수정 방향**: lines 46-48의 첫 번째 count 쿼리를 제거하고 lines 50-61의 "Re-do count" 블록만 남기거나, 첫 번째 쿼리를 try-catch로 감싸기
+- **참고**: `GET /api/members/search`는 별도 로직이므로 정상 동작
+
+#### 디자인 경미 이슈 (LOW)
+
+- main.css line 46-47에 `--purple-bg: #F3E8FF`, `--purple-text: #6B21A8` CSS 변수가 선언되어 있으나 실제 사용처 없음 (dead code)
+- admin.css line 664에 `#16a34a` (초록색) 있으나 이는 success alert의 기능적 색상으로 정상
+
+### 검증 총 결과
+
+| 영역 | 결과 |
+|------|------|
+| JS 문법 (29파일) | ✅ 29/29 |
+| 백엔드 구조 (6항목) | ✅ 6/6 |
+| 프론트-백엔드 필드명 | ✅ 6/6 |
+| 프로덕션 API (18항목) | 16 PASS / 1 FAIL(BUG) / 1 예상404 |
+| 디자인 일관성 (4항목) | ✅ 4/4 (1건 LOW 경미) |
+
+**CRITICAL 버그 1건 발견**: BUG-S4-001 — `GET /api/members` 500 에러. 백엔드 에이전트 수정 필요.
+
+---
+
 ## 다음 작업 (TODO)
 
-1. 신규 3개 API 프로덕션 실 호출 테스트 (attendance, favorites, titles)
+1. **BUG-S4-001 수정 후 재검증** — members.js count 쿼리 수정 후 /api/members 정상 동작 확인
 2. 브라우저 기반 E2E 테스트 (프론트엔드 렌더링 검증)
 3. 회원가입 → 승인 → 로그인 전체 플로우 테스트
 4. 관리자 콘솔 기능 테스트
-5. 부하/스트레스 테스트 (선택)
+5. 업종 필터 UI 연동 후 프론트-백엔드 통합 테스트

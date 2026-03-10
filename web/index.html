@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 </head>
 <body>
     <div id="app">
@@ -228,20 +229,32 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="signup-ssn">
+                        <label for="signup-ssn-front">
                             주민등록번호 <span class="required-badge">필수</span>
                         </label>
-                        <div class="ssn-input-wrapper" id="signup-ssn-wrapper">
-                            <input 
-                                type="text" 
-                                id="signup-ssn" 
-                                placeholder="900101-1******"
-                                maxlength="8"
+                        <div class="ssn-split-wrapper" id="signup-ssn-wrapper">
+                            <input
+                                type="text"
+                                id="signup-ssn-front"
+                                class="ssn-front"
+                                placeholder="생년월일"
+                                maxlength="6"
+                                inputmode="numeric"
                                 required
                             >
-                            <span class="ssn-mask" id="signup-ssn-mask" aria-hidden="true">******</span>
+                            <span class="ssn-dash">-</span>
+                            <input
+                                type="text"
+                                id="signup-ssn-back"
+                                class="ssn-back"
+                                placeholder="●"
+                                maxlength="1"
+                                inputmode="numeric"
+                                required
+                            >
+                            <span class="ssn-fixed-mask">●●●●●●</span>
                         </div>
-                        <small class="help-text">생년월일 6자리 + 성별 1자리만 입력하세요 (예: 900101-1******)</small>
+                        <small class="help-text">생년월일 6자리 + 성별 1자리를 입력하세요</small>
                         <span class="error-message" id="signup-ssn-error"></span>
                     </div>
 
@@ -262,11 +275,14 @@
                         <label for="signup-address">
                             주소 <span class="required-badge">필수</span>
                         </label>
-                        <input 
-                            type="text" 
-                            id="signup-address" 
-                            placeholder="주소 입력"
+                        <input
+                            type="text"
+                            id="signup-address"
+                            placeholder="클릭하여 주소 검색"
+                            readonly
                             required
+                            onclick="openAddressSearch()"
+                            style="cursor:pointer; background:var(--background-color);"
                         >
                         <span class="error-message" id="signup-address-error"></span>
                     </div>
@@ -544,23 +560,23 @@
             <!-- 하단 네비게이션 -->
             <nav class="bottom-nav">
                 <button class="nav-item active" data-tab="home">
-                    <span class="nav-icon">🏠</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
                     <span class="nav-label">홈</span>
                 </button>
                 <button class="nav-item" data-tab="posts">
-                    <span class="nav-icon">📋</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
                     <span class="nav-label">게시판</span>
                 </button>
                 <button class="nav-item" data-tab="schedules">
-                    <span class="nav-icon">📅</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
                     <span class="nav-label">일정</span>
                 </button>
                 <button class="nav-item" data-tab="members">
-                    <span class="nav-icon">👥</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                     <span class="nav-label">회원</span>
                 </button>
                 <button class="nav-item" data-tab="profile">
-                    <span class="nav-icon">👤</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
                     <span class="nav-label">프로필</span>
                 </button>
             </nav>
@@ -584,23 +600,23 @@
             </div>
             <nav class="bottom-nav">
                 <button class="nav-item" data-tab="home">
-                    <span class="nav-icon">🏠</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
                     <span class="nav-label">홈</span>
                 </button>
                 <button class="nav-item active" data-tab="posts">
-                    <span class="nav-icon">📋</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
                     <span class="nav-label">게시판</span>
                 </button>
                 <button class="nav-item" data-tab="schedules">
-                    <span class="nav-icon">📅</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
                     <span class="nav-label">일정</span>
                 </button>
                 <button class="nav-item" data-tab="members">
-                    <span class="nav-icon">👥</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                     <span class="nav-label">회원</span>
                 </button>
                 <button class="nav-item" data-tab="profile">
-                    <span class="nav-icon">👤</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
                     <span class="nav-label">프로필</span>
                 </button>
             </nav>
@@ -741,23 +757,23 @@
             </div>
             <nav class="bottom-nav">
                 <button class="nav-item" data-tab="home">
-                    <span class="nav-icon">🏠</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
                     <span class="nav-label">홈</span>
                 </button>
                 <button class="nav-item" data-tab="posts">
-                    <span class="nav-icon">📋</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
                     <span class="nav-label">게시판</span>
                 </button>
                 <button class="nav-item" data-tab="schedules">
-                    <span class="nav-icon">📅</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
                     <span class="nav-label">일정</span>
                 </button>
                 <button class="nav-item" data-tab="members">
-                    <span class="nav-icon">👥</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                     <span class="nav-label">회원</span>
                 </button>
                 <button class="nav-item" data-tab="profile">
-                    <span class="nav-icon">👤</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
                     <span class="nav-label">프로필</span>
                 </button>
             </nav>
@@ -795,23 +811,23 @@
             </div>
             <nav class="bottom-nav">
                 <button class="nav-item" data-tab="home">
-                    <span class="nav-icon">🏠</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
                     <span class="nav-label">홈</span>
                 </button>
                 <button class="nav-item" data-tab="posts">
-                    <span class="nav-icon">📋</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
                     <span class="nav-label">게시판</span>
                 </button>
                 <button class="nav-item active" data-tab="schedules">
-                    <span class="nav-icon">📅</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
                     <span class="nav-label">일정</span>
                 </button>
                 <button class="nav-item" data-tab="members">
-                    <span class="nav-icon">👥</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                     <span class="nav-label">회원</span>
                 </button>
                 <button class="nav-item" data-tab="profile">
-                    <span class="nav-icon">👤</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
                     <span class="nav-label">프로필</span>
                 </button>
             </nav>
@@ -836,23 +852,23 @@
             </div>
             <nav class="bottom-nav">
                 <button class="nav-item" data-tab="home">
-                    <span class="nav-icon">🏠</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
                     <span class="nav-label">홈</span>
                 </button>
                 <button class="nav-item" data-tab="posts">
-                    <span class="nav-icon">📋</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
                     <span class="nav-label">게시판</span>
                 </button>
                 <button class="nav-item" data-tab="schedules">
-                    <span class="nav-icon">📅</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
                     <span class="nav-label">일정</span>
                 </button>
                 <button class="nav-item active" data-tab="members">
-                    <span class="nav-icon">👥</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                     <span class="nav-label">회원</span>
                 </button>
                 <button class="nav-item" data-tab="profile">
-                    <span class="nav-icon">👤</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
                     <span class="nav-label">프로필</span>
                 </button>
             </nav>
@@ -870,23 +886,23 @@
             </div>
             <nav class="bottom-nav">
                 <button class="nav-item" data-tab="home">
-                    <span class="nav-icon">🏠</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
                     <span class="nav-label">홈</span>
                 </button>
                 <button class="nav-item" data-tab="posts">
-                    <span class="nav-icon">📋</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
                     <span class="nav-label">게시판</span>
                 </button>
                 <button class="nav-item" data-tab="schedules">
-                    <span class="nav-icon">📅</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
                     <span class="nav-label">일정</span>
                 </button>
                 <button class="nav-item" data-tab="members">
-                    <span class="nav-icon">👥</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                     <span class="nav-label">회원</span>
                 </button>
                 <button class="nav-item active" data-tab="profile">
-                    <span class="nav-icon">👤</span>
+                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
                     <span class="nav-label">프로필</span>
                 </button>
             </nav>

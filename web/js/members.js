@@ -87,13 +87,12 @@ function createMemberCard(member) {
     const position = member.position || '';
     const roleBadge = member.role === 'super_admin' ? '<span class="member-role-badge role-super">총관리자</span>'
         : member.role === 'admin' ? '<span class="member-role-badge role-admin">관리자</span>' : '';
-    const avatarColors = ['#1F4FD8', '#059669', '#F59E0B', '#DC2626', '#7C3AED', '#EC4899', '#0891B2', '#EA580C'];
-    const colorIdx = name.charCodeAt(0) % avatarColors.length;
-    const bgColor = avatarColors[colorIdx];
+    const bgColor = '#DBEAFE';
+    const avatarTextColor = '#2563EB';
 
     return `
         <div class="member-card-v2" onclick="navigateTo('/members/${member.id}')">
-            <div class="member-avatar-v2" style="background:${bgColor}">
+            <div class="member-avatar-v2" style="background:${bgColor}; color:${avatarTextColor}">
                 ${member.profile_image
                     ? `<img src="${member.profile_image}" alt="${escapeHtml(name)}">`
                     : `<span>${escapeHtml(initial)}</span>`
@@ -132,14 +131,11 @@ async function showMemberDetailScreen(memberId) {
         const m = res.member;
         const roleLabel = m.role === 'super_admin' ? '총관리자' : m.role === 'admin' ? '관리자' : '회원';
         const genderLabel = m.gender === 'male' ? '남성' : m.gender === 'female' ? '여성' : '';
-        const avatarColors = ['#1F4FD8', '#059669', '#F59E0B', '#DC2626', '#7C3AED', '#EC4899', '#0891B2', '#EA580C'];
-        const colorIdx = (m.name || '?').charCodeAt(0) % avatarColors.length;
-
         container.innerHTML = `
             <div class="detail-view">
                 <button class="btn-back" onclick="backToMemberList()">← 회원 목록</button>
                 <div class="profile-hero">
-                    <div class="profile-avatar-xl" style="background:${avatarColors[colorIdx]}">
+                    <div class="profile-avatar-xl" style="background:#DBEAFE; color:#2563EB">
                         ${m.profile_image
                             ? `<img src="${m.profile_image}" alt="${escapeHtml(m.name)}">`
                             : `<span>${escapeHtml((m.name || '?')[0])}</span>`

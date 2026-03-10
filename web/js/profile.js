@@ -26,8 +26,6 @@ async function loadProfile() {
 
 // 프로필 렌더링
 function renderProfile(p) {
-    const avatarColors = ['#1F4FD8', '#059669', '#F59E0B', '#DC2626', '#7C3AED', '#EC4899', '#0891B2', '#EA580C'];
-    const colorIdx = (p.name || '?').charCodeAt(0) % avatarColors.length;
     const roleLabel = getRoleText(p.role);
     const hasWorkInfo = p.company || p.position || p.department || p.work_phone;
 
@@ -35,7 +33,7 @@ function renderProfile(p) {
         <div class="profile-v2">
             <!-- 프로필 히어로 -->
             <div class="profile-hero">
-                <div class="profile-avatar-xl" style="background:${avatarColors[colorIdx]}">
+                <div class="profile-avatar-xl" style="background:#DBEAFE; color:#2563EB">
                     ${p.profile_image
                         ? `<img src="${p.profile_image}" alt="${escapeHtml(p.name)}">`
                         : `<span>${escapeHtml((p.name || '?')[0])}</span>`

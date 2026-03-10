@@ -46,11 +46,15 @@ async function loadNoticeSummary() {
             const notices = filtered.slice(0, 5);
 
             if (notices.length > 0) {
-                container.innerHTML = notices.map(post => `
+                let nBadgeCount = 0;
+                container.innerHTML = notices.map(post => {
+                    const showN = isNewContent(post.created_at) && nBadgeCount < 2;
+                    if (showN) nBadgeCount++;
+                    return `
                     <div class="notice-card" onclick="navigateTo('/posts/${post.id}')">
                         <div class="notice-header">
                             ${post.is_pinned ? '<span class="badge badge-pinned">📌 고정</span>' : ''}
-                            ${isNewContent(post.created_at) ? '<span class="badge badge-new">N</span>' : ''}
+                            ${showN ? '<span class="badge badge-new">N</span>' : ''}
                         </div>
                         <h3 class="notice-title">${escapeHtml(post.title)}</h3>
                         <div class="notice-meta">
@@ -89,6 +93,7 @@ async function loadScheduleSummary() {
         if (result.success && schedules.length > 0) {
             const items = schedules.slice(0, 5);
 
+            let schedNBadgeCount = 0;
             container.innerHTML = items.map(schedule => {
                 const dateField = schedule.start_date || schedule.event_date || '';
                 const dateObj = dateField ? new Date(dateField) : null;
@@ -112,7 +117,7 @@ async function loadScheduleSummary() {
                             ${schedule.location ? `<span>📍 ${escapeHtml(schedule.location)}</span>` : ''}
                         </div>
                     </div>
-                    ${isNewContent(schedule.created_at) ? '<span class="home-badge-new">N</span>' : ''}
+                    ${(() => { const show = isNewContent(schedule.created_at) && schedNBadgeCount < 2; if (show) schedNBadgeCount++; return show ? '<span class="home-badge-new">N</span>' : ''; })()}
                 </div>`;
             }).join('');
         } else {
@@ -146,7 +151,7 @@ function loadBannerSummary() {
         {
             id: 1,
             image: createBannerSvg(
-                '<stop offset="0%" style="stop-color:#1F4FD8"/><stop offset="100%" style="stop-color:#3B82F6"/>',
+                '<stop offset="0%" style="stop-color:#2563EB"/><stop offset="100%" style="stop-color:#60A5FA"/>',
                 '영등포 JC', '회원관리 커뮤니티 앱에 오신 것을 환영합니다', ''
             ),
             title: '영등포 JC 환영'
@@ -154,7 +159,7 @@ function loadBannerSummary() {
         {
             id: 2,
             image: createBannerSvg(
-                '<stop offset="0%" style="stop-color:#059669"/><stop offset="100%" style="stop-color:#10B981"/>',
+                '<stop offset="0%" style="stop-color:#1E40AF"/><stop offset="100%" style="stop-color:#3B82F6"/>',
                 '일정 확인', '다가오는 모임과 행사 일정을 확인하세요', ''
             ),
             title: '일정 안내'
@@ -162,7 +167,7 @@ function loadBannerSummary() {
         {
             id: 3,
             image: createBannerSvg(
-                '<stop offset="0%" style="stop-color:#7C3AED"/><stop offset="100%" style="stop-color:#A78BFA"/>',
+                '<stop offset="0%" style="stop-color:#1D4ED8"/><stop offset="100%" style="stop-color:#93C5FD"/>',
                 '회원 소통', '공지사항과 게시판을 통해 소식을 나누세요', ''
             ),
             title: '회원 소통'

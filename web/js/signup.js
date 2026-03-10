@@ -43,13 +43,17 @@ function validateSignupForm() {
         isValid = false;
     }
     
-    // 주민등록번호 검증
-    const ssn = document.getElementById('signup-ssn').value.trim();
-    if (!ssn) {
+    // 주민등록번호 검증 (분할 입력)
+    const ssnFront = document.getElementById('signup-ssn-front').value.trim();
+    const ssnBack = document.getElementById('signup-ssn-back').value.trim();
+    if (!ssnFront || !ssnBack) {
         showError('signup-ssn-error', '주민등록번호를 입력하세요.');
         isValid = false;
-    } else if (ssn.replace(/-/g, '').length !== 7) {
-        showError('signup-ssn-error', '주민등록번호 7자리를 입력하세요 (예: 900101-1******).');
+    } else if (ssnFront.length !== 6 || !/^\d{6}$/.test(ssnFront)) {
+        showError('signup-ssn-error', '생년월일 6자리를 정확히 입력하세요.');
+        isValid = false;
+    } else if (ssnBack.length !== 1 || !/^[1-4]$/.test(ssnBack)) {
+        showError('signup-ssn-error', '성별 1자리를 입력하세요 (1~4).');
         isValid = false;
     }
     
@@ -115,7 +119,9 @@ async function handleSignup(event) {
         
         // Step 2: 기본 정보
         const name = document.getElementById('signup-name').value.trim();
-        const ssn = document.getElementById('signup-ssn').value.trim();
+        const ssnFrontVal = document.getElementById('signup-ssn-front').value.trim();
+        const ssnBackVal = document.getElementById('signup-ssn-back').value.trim();
+        const ssn = ssnFrontVal + '-' + ssnBackVal;
         const phone = document.getElementById('signup-phone').value.trim();
         const address = document.getElementById('signup-address').value.trim();
         const address_detail = document.getElementById('signup-address-detail').value.trim();
@@ -423,31 +429,21 @@ function formatPhoneNumber(input) {
     }
 }
 
-// 주민등록번호 ****** 표시 갱신 (7자리 입력 시)
-function updateSSNMaskVisible() {
-    const input = document.getElementById('signup-ssn');
-    const wrapper = document.getElementById('signup-ssn-wrapper');
-    if (!input || !wrapper) return;
-    const full = input.value.replace(/[^0-9]/g, '');
-    wrapper.classList.toggle('has-value', full.length === 7);
+// 주민등록번호 분할 입력 숫자만 허용
+function filterNumericInput(input, maxLen) {
+    input.value = input.value.replace(/[^0-9]/g, '').slice(0, maxLen);
 }
 
-// 주민등록번호 자동 하이픈 추가 (앞 6자리 + 뒤 1자리만)
-function formatSSN(input) {
-    let value = input.value.replace(/[^0-9]/g, '');
-    
-    // 최대 7자리까지만 입력
-    if (value.length > 7) {
-        value = value.slice(0, 7);
-    }
-    
-    if (value.length <= 6) {
-        input.value = value;
-    } else {
-        input.value = value.slice(0, 6) + '-' + value.slice(6, 7);
-    }
-    
-    updateSSNMaskVisible();
+// 카카오(다음) 주소 검색
+function openAddressSearch() {
+    new daum.Postcode({
+        oncomplete: function(data) {
+            const addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
+            document.getElementById('signup-address').value = addr;
+            const detailInput = document.getElementById('signup-address-detail');
+            if (detailInput) detailInput.focus();
+        }
+    }).open();
 }
 
 // 페이지 로드 시 이벤트 리스너 등록
@@ -469,19 +465,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // 주민등록번호 입력 필드
-    const ssnInput = document.getElementById('signup-ssn');
-    if (ssnInput) {
-        ssnInput.addEventListener('input', function() {
-            formatSSN(this);
+    // 주민등록번호 분할 입력 필드
+    const ssnFrontInput = document.getElementById('signup-ssn-front');
+    const ssnBackInput = document.getElementById('signup-ssn-back');
+    if (ssnFrontInput) {
+        ssnFrontInput.addEventListener('input', function() {
+            filterNumericInput(this, 6);
+            if (this.value.length === 6 && ssnBackInput) ssnBackInput.focus();
         });
-        ssnInput.addEventListener('paste', function() {
-            setTimeout(function() {
-                formatSSN(ssnInput);
-            }, 0);
+    }
+    if (ssnBackInput) {
+        ssnBackInput.addEventListener('input', function() {
+            filterNumericInput(this, 1);
         });
-        ssnInput.addEventListener('keyup', updateSSNMaskVisible);
-        ssnInput.addEventListener('focus', updateSSNMaskVisible);
     }
     
     // 비상 연락처 입력 필드

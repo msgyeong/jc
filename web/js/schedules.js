@@ -8,7 +8,7 @@ const CATEGORY_LABELS = {
     event: '행사', meeting: '정기회의', training: '교육', holiday: '공휴일', other: '기타'
 };
 const CATEGORY_COLORS = {
-    event: '#1F4FD8', meeting: '#059669', training: '#F59E0B', holiday: '#DC2626', other: '#6B7280'
+    event: '#2563EB', meeting: '#2563EB', training: '#F59E0B', holiday: '#DC2626', other: '#6B7280'
 };
 
 function getCurrentUserSafe() {

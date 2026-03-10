@@ -321,12 +321,24 @@ PASS | 32 auth-block           (인증 없는 요청 → 401)
 
 **CRITICAL 버그 1건 발견**: BUG-S4-001 — `GET /api/members` 500 에러. 백엔드 에이전트 수정 필요.
 
+### BUG-S4-001 수정 확인 (커밋 7205857)
+
+백엔드 에이전트가 `members.js` count 쿼리 바인딩 버그를 수정함. 프로덕션 재검증 결과:
+
+| # | 테스트 | 결과 | 비고 |
+|---|--------|------|------|
+| 1 | GET /api/members (필터 없음) | ✅ PASS | total=33, page=1, totalPages=1 |
+| 2 | GET /api/members?industry=construction | ✅ PASS | total=0 (해당 업종 회원 없음) |
+| 3 | GET /api/members?industry=it | ✅ PASS | total=0 (해당 업종 회원 없음) |
+| 4 | GET /api/members?industry=invalidcode | ✅ PASS | total=33 (유효하지 않은 코드 무시, 전체 반환) |
+
+**BUG-S4-001: 수정 완료 확인** ✅
+
 ---
 
 ## 다음 작업 (TODO)
 
-1. **BUG-S4-001 수정 후 재검증** — members.js count 쿼리 수정 후 /api/members 정상 동작 확인
-2. 브라우저 기반 E2E 테스트 (프론트엔드 렌더링 검증)
-3. 회원가입 → 승인 → 로그인 전체 플로우 테스트
-4. 관리자 콘솔 기능 테스트
-5. 업종 필터 UI 연동 후 프론트-백엔드 통합 테스트
+1. 브라우저 기반 E2E 테스트 (프론트엔드 렌더링 검증)
+2. 회원가입 → 승인 → 로그인 전체 플로우 테스트
+3. 관리자 콘솔 기능 테스트
+4. 업종 필터 UI 연동 후 프론트-백엔드 통합 테스트

@@ -5,6 +5,79 @@
 
 ---
 
+## 2026-03-11 세션 3: 관리자 웹 Phase 1 — 백엔드 API 구축
+
+### DB 테이블 생성
+- `audit_log` — 관리자 감사 로그 (admin_id, action, target_type, target_id, before_value, after_value, description, ip_address)
+- 인덱스 2개: idx_audit_log_admin, idx_audit_log_target
+- 마이그레이션 파일: `database/migrations/007_audit_log.sql`
+
+### 신규 파일
+| 파일 | 용도 |
+|------|------|
+| `api/middleware/adminAuth.js` | 관리자 전용 미들웨어 (requireAdmin + adminAuth 배열) |
+| `api/utils/auditLog.js` | writeAuditLog() 헬퍼 — 모든 관리자 액션 기록 |
+| `database/migrations/007_audit_log.sql` | audit_log DDL |
+
+### admin.js 대폭 강화 (기존 엔드포인트 유지 + 신규 추가)
+
+#### 신규 API 엔드포인트
+| 메서드 | 경로 | 용도 |
+|--------|------|------|
+| GET | `/api/admin/auth/me` | 관리자 계정 정보 |
+| PUT | `/api/admin/auth/password` | 비밀번호 변경 (정책 검증 + 토큰 재발급) |
+| GET | `/api/admin/dashboard/stats` | 대시보드 통계 (회원/게시글/일정/댓글, 이번달 분리) |
+| GET | `/api/admin/dashboard/recent-activity` | 최근 활동 (가입 5명, 게시글 5개, 일정 5개) |
+| GET | `/api/admin/members/:id` | 회원 상세 (전체 필드) |
+| PUT | `/api/admin/members/:id/status` | 상태 변경 (active/pending/suspended/withdrawn) |
+| DELETE | `/api/admin/members/:id` | 회원 삭제 (soft delete → withdrawn) |
+| POST | `/api/admin/members/:id/reset-password` | 임시 비밀번호 발급 (8자 랜덤) |
+| GET | `/api/admin/members/:id/audit-log` | 회원 변경 이력 (페이지네이션) |
+| POST | `/api/admin/members/:id/approve` | 가입 승인 (POST, 명세서 기준) |
+| POST | `/api/admin/members/:id/reject` | 가입 거절 (사유 필수) |
+| GET | `/api/admin/posts/:id` | 게시글 상세 (댓글 포함) |
+| PUT | `/api/admin/posts/:id` | 게시글 수정 |
+| POST | `/api/admin/posts/:id/pin` | 고정/해제 토글 |
+| DELETE | `/api/admin/posts/:postId/comments/:commentId` | 댓글 삭제 (soft delete + count 갱신) |
+
+#### 기존 API 강화
+| 엔드포인트 | 변경 내용 |
+|-----------|----------|
+| GET /api/admin/members | role 필터, sort/order 파라미터, position/department/join_number/industry 필드 추가 |
+| GET /api/admin/posts | 검색(title/author), category 필터, pinned 필터, 정렬, 페이지네이션 |
+| PUT /api/admin/members/:id | industry/industry_detail/educations/careers/hobbies/special_notes 필드 + audit log 기록 |
+| GET /api/admin/notices | notices 테이블 → posts 테이블(category='notice') 기반으로 전환 |
+| POST /api/admin/notices | posts 테이블에 INSERT (notices 테이블 대신) |
+| PUT /api/admin/notices/:id | posts 테이블에서 UPDATE |
+| GET /api/admin/schedules | month(YYYY-MM), category 필터 추가 |
+
+#### Audit Log 기록 추가된 액션
+- member.approve, member.reject, member.update, member.status_change, member.delete, member.reset_password, member.role_change
+- post.update, post.delete, post.pin_toggle, comment.delete
+- notice.create, notice.update, notice.delete
+- schedule.create, schedule.update, schedule.delete
+- admin.password_change
+
+### 주요 설계 결정
+1. **기존 admin.js 단일 파일 강화** — 별도 파일 분리 대신 기존 라우터에 통합 (라우트 충돌 방지)
+2. **하위호환 유지** — PATCH approve/reject/role/suspend/activate 경로 모두 유지
+3. **공지 테이블 전환** — notices 테이블 → posts(category='notice') 기반 (M-02 일관성)
+4. **soft delete 댓글** — is_deleted=true + comments_count 자동 갱신
+5. **비밀번호 정책** — 최소 8자, 영문+숫자+특수문자 검증 (PUT /api/admin/auth/password)
+
+### admin 비밀번호 메모
+- admin@jc.com 비밀번호: `test1234` (admin1234 아님!)
+
+### 프론트엔드(관리자 웹) 전달사항
+1. 대시보드: `GET /api/admin/dashboard/stats` + `GET /api/admin/dashboard/recent-activity`
+2. 회원 관리카드: `GET /api/admin/members/:id` (전체 필드) + `GET /api/admin/members/:id/audit-log`
+3. 가입 승인: `POST /api/admin/members/:id/approve` / `POST /api/admin/members/:id/reject` (사유 필수)
+4. 게시판 관리: `GET /api/admin/posts?search=&category=&pinned=&sort=&order=` + `POST /api/admin/posts/:id/pin`
+5. 공지: notices API가 posts(category='notice') 기반으로 전환됨
+6. 비밀번호 변경: `PUT /api/admin/auth/password` (토큰 재발급)
+
+---
+
 ## 2026-03-11 세션 2: Web Push 알림 백엔드 구현 (Phase 1 MVP)
 
 ### 신규 패키지

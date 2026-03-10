@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영등포 JC - 회원관리 앱</title>
     <!-- Build: 2026-02-06 v2.1 -->
-    <link rel="stylesheet" href="styles/main.css?v=20260310f">
+    <link rel="stylesheet" href="styles/main.css?v=20260310g">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
@@ -307,10 +307,40 @@
 
                     <div class="form-group">
                         <label for="signup-work-address">직장 주소</label>
-                        <input 
-                            type="text" 
-                            id="signup-work-address" 
+                        <input
+                            type="text"
+                            id="signup-work-address"
                             placeholder="직장 주소"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-industry">업종</label>
+                        <select id="signup-industry">
+                            <option value="">선택 안 함</option>
+                            <option value="law">법률/법무</option>
+                            <option value="finance">금융/보험</option>
+                            <option value="medical">의료/건강</option>
+                            <option value="construction">건설/부동산</option>
+                            <option value="it">IT/기술</option>
+                            <option value="manufacturing">제조/생산</option>
+                            <option value="food">요식/식음료</option>
+                            <option value="retail">유통/판매</option>
+                            <option value="service">서비스</option>
+                            <option value="realestate">부동산/임대</option>
+                            <option value="culture">문화/예술</option>
+                            <option value="public">공공/기관</option>
+                            <option value="other">기타</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-industry-detail">업종 상세</label>
+                        <input
+                            type="text"
+                            id="signup-industry-detail"
+                            placeholder="상세 업종 (예: 소프트웨어 개발)"
+                            maxlength="100"
                         >
                     </div>
 
@@ -705,6 +735,8 @@
                             <span>상단 고정</span>
                         </label>
                     </div>
+                    <!-- M-12: 일정 첨부 섹션 (JS에서 동적 렌더링) -->
+                    <div id="post-create-schedule-attach"></div>
                 </form>
             </div>
         </div>

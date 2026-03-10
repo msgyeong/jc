@@ -5,6 +5,30 @@
 
 ---
 
+## 2026-03-11 세션 1: 댓글 인코딩 깨짐 조사 및 수정
+
+### 현상
+- 배포 사이트에서 '신나는 월례회'(post_id=1) 게시글의 댓글 id 1~4가 한글 깨짐 (◆□◆T 같은 문자로 표시)
+
+### 원인 분석
+- DB 인코딩: `server_encoding = UTF8`, `client_encoding = UTF8` — 정상
+- Express body parser: `express.json()` + `express.urlencoded()` — UTF-8 기본값, 정상
+- **근본 원인**: 댓글 id 1~4는 EUC-KR/CP949 인코딩 데이터가 UTF-8 DB에 저장될 때 U+FFFD(대체 문자, hex: `efbfbd`)로 치환됨
+  - 초기 시드 또는 비-UTF-8 클라이언트에서 작성된 것으로 추정
+  - hex 확인: 모든 한글 바이트가 `efbfbd`로 대체 → **원본 복구 불가**
+
+### 수정 작업
+1. 깨진 댓글 4개 삭제: `DELETE FROM comments WHERE post_id = 1 AND id IN (1, 2, 3, 4)` — 4건 삭제
+2. `posts.comments_count` 동기화: 2 (남은 정상 댓글: id=5 "final", id=6 "final test")
+3. 한글 인코딩 검증: 새 한글 댓글 INSERT → 정상 UTF-8 저장 확인 → 테스트 댓글 삭제
+
+### 결론
+- API/DB 인코딩 설정에 문제 없음 — 코드 수정 불필요
+- 깨진 데이터는 초기 테스트 시 잘못된 인코딩으로 작성된 것
+- 현재 시스템에서 한글 댓글 정상 동작 확인
+
+---
+
 ## 2026-03-10 일일 요약
 
 > 세션 1~8 총 8회 작업 수행

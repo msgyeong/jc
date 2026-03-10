@@ -7,7 +7,7 @@
 
 ## 2026-03-10 일일 요약
 
-> 세션 1~6 총 6회 작업 수행
+> 세션 1~7 총 7회 작업 수행
 
 ### 오늘 완료된 작업 (커밋 순)
 
@@ -24,6 +24,7 @@
 | 9 | `01d47f6` | M-12: 공지-일정 연동 API (트랜잭션 동시생성/동기화/삭제) | 세션 6 |
 | 10 | `5fd783b` | M-13: 업종 검색 API (GET /api/industries + members 필터 + profile 업종) | 세션 6 |
 | 11 | `26f3a2d` | 일정 댓글 API (GET/POST/DELETE /api/schedules/:id/comments) | 세션 6 |
+| 12 | `7205857` | BUG-S4-001: GET /api/members 500 에러 수정 (count 쿼리 바인딩) | 세션 7 |
 
 ### 오늘 생성된 DB 테이블
 
@@ -92,6 +93,20 @@
 7. **[신규]** 회원 목록에 업종 필터 드롭다운 추가 (?industry= 파라미터)
 8. **[신규]** 프로필 수정에 업종 선택 필드 추가 (GET /api/industries로 목록 조회)
 9. **[신규]** 일정 상세에 댓글 섹션 추가 (GET/POST /api/schedules/:id/comments)
+
+---
+
+## 2026-03-10 세션 7: 긴급 버그 수정 (BUG-S4-001)
+
+### BUG-S4-001: GET /api/members → 500 Internal Server Error
+- **위치**: `api/routes/members.js` 46~48행
+- **원인**: 세션 6 M-13 업종 검색 구현 시 count 쿼리가 중복 작성됨
+  - 1차 count 쿼리: `WHERE u.status = 'active'` (placeholder 0개) + `params.slice(2)` = `[userId]` (1개) → **바인딩 불일치 에러**
+  - 2차 count 쿼리: 올바르게 구성 (industry 필터 시에만 `$1` 추가)
+- **수정**: 1차 count 쿼리(46~49행) 5줄 삭제, 2차 count 쿼리만 유지
+- **검증**: 프로덕션 DB 직접 쿼리 — 필터 없이/있이 모두 정상 동작 확인
+- **커밋**: `7205857` — fix: GET /api/members 500 에러 수정
+- **배포**: `git push origin main` → Railway 자동 배포
 
 ---
 

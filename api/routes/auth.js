@@ -55,9 +55,15 @@ router.post('/signup', async (req, res) => {
         const careers = career ? JSON.stringify(career.split('\n').filter(c => c.trim()).map(c => ({ description: c.trim() }))) : '[]';
         const families = family ? JSON.stringify(family.split('\n').filter(f => f.trim()).map(f => ({ description: f.trim() }))) : '[]';
         
-        // 주민등록번호 마스킹 (앞 6자리-뒤 1자리만 입력받고, 나머지는 ******로 저장)
-        // 입력: 900101-1 → 저장: 900101-1******
-        const maskedSsn = ssn ? (ssn + '******') : null;
+        // 주민등록번호: 앞 6자리(생년월일) + 뒤 1자리(성별)만 저장
+        // 전체 주민번호가 전송되더라도 서버에서 7자리만 추출하여 개인정보 보호
+        let maskedSsn = null;
+        if (ssn) {
+            const digits = ssn.replace(/[^0-9]/g, '');
+            if (digits.length >= 7) {
+                maskedSsn = digits.slice(0, 6) + '-' + digits[6] + '******';
+            }
+        }
 
         // 사용자 생성 (6단계 전체 정보 저장)
         const result = await query(

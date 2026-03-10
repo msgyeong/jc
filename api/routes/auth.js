@@ -14,7 +14,7 @@ router.post('/signup', async (req, res) => {
         const { 
             email, password, name, phone, address, address_detail,
             // Step 2: 기본 정보 추가
-            ssn, postal_code, profile_image, birth_date, gender,
+            ssnFront, ssnBack, postal_code, profile_image, birth_date, gender,
             // Step 3: 직장 정보
             company, position, department, work_phone, work_address,
             // Step 4: 학력/경력 정보 (문자열)
@@ -55,14 +55,41 @@ router.post('/signup', async (req, res) => {
         const careers = career ? JSON.stringify(career.split('\n').filter(c => c.trim()).map(c => ({ description: c.trim() }))) : '[]';
         const families = family ? JSON.stringify(family.split('\n').filter(f => f.trim()).map(f => ({ description: f.trim() }))) : '[]';
         
-        // 주민등록번호: 앞 6자리(생년월일) + 뒤 1자리(성별)만 저장
-        // 전체 주민번호가 전송되더라도 서버에서 7자리만 추출하여 개인정보 보호
+        // 주민등록번호: ssnFront(앞6자리) + ssnBack(뒤1자리) 분리 수신
+        // DB 저장 형식: "XXXXXX-X" (뒷번호 2~7자리는 절대 저장하지 않음)
         let maskedSsn = null;
-        if (ssn) {
-            const digits = ssn.replace(/[^0-9]/g, '');
-            if (digits.length >= 7) {
-                maskedSsn = digits.slice(0, 6) + '-' + digits[6] + '******';
+        if (ssnFront && ssnBack) {
+            const front = String(ssnFront).replace(/[^0-9]/g, '');
+            const back = String(ssnBack).replace(/[^0-9]/g, '');
+
+            // ssnFront: 정확히 6자리 숫자
+            if (front.length !== 6) {
+                return res.status(400).json({
+                    success: false,
+                    message: '주민번호 앞자리는 6자리 숫자여야 합니다.'
+                });
             }
+
+            // ssnFront: YYMMDD 날짜 유효성 검증
+            const yy = parseInt(front.slice(0, 2), 10);
+            const mm = parseInt(front.slice(2, 4), 10);
+            const dd = parseInt(front.slice(4, 6), 10);
+            if (mm < 1 || mm > 12 || dd < 1 || dd > 31) {
+                return res.status(400).json({
+                    success: false,
+                    message: '주민번호 앞자리의 생년월일이 유효하지 않습니다.'
+                });
+            }
+
+            // ssnBack: 정확히 1자리 숫자 (1~4)
+            if (back.length !== 1 || !['1','2','3','4'].includes(back)) {
+                return res.status(400).json({
+                    success: false,
+                    message: '주민번호 뒷자리 첫째 자리는 1~4 중 하나여야 합니다.'
+                });
+            }
+
+            maskedSsn = front + '-' + back;
         }
 
         // 사용자 생성 (6단계 전체 정보 저장)
@@ -99,9 +126,7 @@ router.post('/signup', async (req, res) => {
         console.error('Signup error:', error);
         res.status(500).json({
             success: false,
-            message: '회원가입 처리 중 오류가 발생했습니다.',
-            debug: error.message,
-            stack: error.stack
+            message: '회원가입 처리 중 오류가 발생했습니다.'
         });
     }
 });

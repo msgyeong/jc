@@ -326,10 +326,13 @@ body {
     position: relative;
 }
 
-/* 브라우저 기본 비밀번호 아이콘 제거 */
+/* 브라우저 자동완성 아이콘 숨기기 */
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-contacts-auto-fill-button,
 input::-ms-reveal,
 input::-ms-clear {
-    display: none;
+    display: none !important;
+    visibility: hidden !important;
 }
 
 .toggle-password {
@@ -494,13 +497,13 @@ input::-ms-clear {
 
 /* ==================== 정보 박스 ==================== */
 .info-box {
-    background-color: var(--warning-bg);
-    border-left: 4px solid var(--accent-color);
+    background-color: #EFF6FF;
+    border-left: 4px solid #2563EB;
     padding: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
     border-radius: var(--border-radius);
     font-size: 14px;
-    color: var(--text-primary);
+    color: #1E40AF;
 }
 
 /* ==================== 승인 대기 화면 ==================== */

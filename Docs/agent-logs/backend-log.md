@@ -5,6 +5,234 @@
 
 ---
 
+## 2026-03-10 일일 요약
+
+> 세션 1~6 총 6회 작업 수행
+
+### 오늘 완료된 작업 (커밋 순)
+
+| # | 커밋 | 작업 내용 | 세션 |
+|---|------|-----------|------|
+| 1 | — (DB만) | 테스트 게시글 6건 삭제 (프로덕션 DB) | 세션 1 |
+| 2 | — (DB만) | 경민수 테스트 계정(id=7) 삭제 + 남은 테스트 게시글 2건 삭제 | 세션 2 |
+| 3 | `5f171bd` | SSN 보안 강화 — 서버에서 7자리만 추출 저장 | 세션 2 |
+| 4 | — | 긴급 장애 조사 — 백엔드 정상 확인 (프론트엔드 문제) | 세션 3 |
+| 5 | `aea28ee` | 주민번호 API ssnFront+ssnBack 분리 수신 + 유효성 검증 + debug 노출 제거 | 세션 4 |
+| 6 | `29badd0` | 출석투표/즐겨찾기/직함이력 API 신규 생성 + DB 테이블 4개 생성 | 세션 5 |
+| 7 | `759fe93` | Sprint 3 DB 마이그레이션 (linked_schedule_id, linked_post_id, industry, schedule comments) | 세션 6 |
+| 8 | `2828e7f` | M-02: 공지 라우트 통합 (notices.js → posts 테이블 기반 하위호환 프록시) | 세션 6 |
+| 9 | `01d47f6` | M-12: 공지-일정 연동 API (트랜잭션 동시생성/동기화/삭제) | 세션 6 |
+| 10 | `5fd783b` | M-13: 업종 검색 API (GET /api/industries + members 필터 + profile 업종) | 세션 6 |
+| 11 | `26f3a2d` | 일정 댓글 API (GET/POST/DELETE /api/schedules/:id/comments) | 세션 6 |
+
+### 오늘 생성된 DB 테이블
+
+| 테이블 | 용도 | 세션 |
+|--------|------|------|
+| `attendance_config` | 일정별 투표 설정 (유형/마감/성원/비용) | 5 |
+| `attendance_votes` | 회원별 투표 기록 (UPSERT) | 5 |
+| `favorites` | 회원 즐겨찾기 | 5 |
+| `title_history` | 연도별 직함 이력 | 5 |
+
+### 오늘 추가된 DB 컬럼 (세션 6)
+
+| 테이블 | 컬럼 | 용도 |
+|--------|------|------|
+| `posts` | `linked_schedule_id` | 공지-일정 연동 (FK → schedules) |
+| `schedules` | `linked_post_id` | 일정-공지 연동 (FK → posts) |
+| `users` | `industry` VARCHAR(30) | 업종 대분류 코드 |
+| `users` | `industry_detail` VARCHAR(100) | 업종 상세 |
+| `comments` | `schedule_id` | 일정 댓글용 (FK → schedules) |
+
+### 오늘 생성된 API 엔드포인트
+
+| 라우트 파일 | 엔드포인트 | 메서드 | 용도 |
+|-------------|-----------|--------|------|
+| `attendance.js` | `/api/attendance` | POST | 투표 설정 생성 (관리자) |
+| | `/api/attendance/:configId` | PUT | 투표 설정 수정 (관리자) |
+| | `/api/attendance/:scheduleId` | GET | 투표 현황 조회 |
+| | `/api/attendance/:configId/vote` | POST | 투표하기 (UPSERT) |
+| | `/api/attendance/:configId/results` | GET | 투표 결과 상세 |
+| | `/api/attendance/:configId/close` | POST | 조기 마감 (관리자) |
+| `favorites.js` | `/api/favorites/:targetId` | POST | 즐겨찾기 추가 |
+| | `/api/favorites/:targetId` | DELETE | 즐겨찾기 해제 |
+| | `/api/favorites` | GET | 내 즐겨찾기 목록 |
+| `titles.js` | `/api/titles/:userId` | GET | 직함 이력 조회 |
+| | `/api/titles/:userId` | POST | 직함 추가 (관리자) |
+| | `/api/titles/:userId/:titleId` | PUT | 직함 수정 (관리자) |
+| | `/api/titles/:userId/:titleId` | DELETE | 직함 삭제 (관리자) |
+| `industries.js` | `/api/industries` | GET | 업종 카테고리 목록 (13개) |
+| `schedules.js` | `/api/schedules/:id/comments` | GET | 일정 댓글 목록 |
+| | `/api/schedules/:id/comments` | POST | 일정 댓글 작성 |
+| | `/api/schedules/:id/comments/:commentId` | DELETE | 일정 댓글 삭제 |
+
+### 오늘 수정된 기존 파일
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `api/routes/auth.js` | SSN ssnFront+ssnBack 분리, 유효성 검증, debug/stack 제거 |
+| `api/routes/members.js` | is_favorited 필드 + industry 필터 + industry_name 매핑 |
+| `api/routes/notices.js` | notices 테이블 → posts 테이블 기반 하위호환 프록시로 전환 |
+| `api/routes/posts.js` | 공지-일정 연동 (트랜잭션 생성/동기화/삭제), linked_schedule 조회 |
+| `api/routes/schedules.js` | linked_post 조회 + 일정 댓글 CRUD |
+| `api/routes/profile.js` | industry/industry_detail 필드 조회/수정 + 유효성 검증 |
+| `api/server.js` | attendance, favorites, titles, industries 라우터 등록 |
+
+### Must-have 진행률 (기획자 전달 기준)
+- **완료**: M-02 (공지 통합), M-11 (참석 투표), M-12 (공지-일정 연동), M-13 (업종 검색), M-14 (직함 관리), M-17 (즐겨찾기) — **6/7 완료**
+- **미착수**: M-10 (관리자 지정 필드 수정 제한)
+
+### 프론트엔드 전달사항
+1. 회원가입 API `ssn` → `ssnFront` + `ssnBack` 분리 전송 필요 (`web/js/auth.js`)
+2. 즐겨찾기 UI 구현 필요 (별표 토글 + 회원 목록 즐겨찾기 섹션)
+3. 출석 투표 UI 구현 필요 (일정 상세 내 투표 카드)
+4. 직함 이력 UI 구현 필요 (회원 상세에서 연도별 직함 표시)
+5. **[신규]** 공지 작성 폼에 "일정 첨부" 토글 + 일정 정보 입력 섹션 추가 필요 (schedule 객체 전송)
+6. **[신규]** 일정 상세에서 "연결된 공지" 링크 표시 (linked_post 필드 활용)
+7. **[신규]** 회원 목록에 업종 필터 드롭다운 추가 (?industry= 파라미터)
+8. **[신규]** 프로필 수정에 업종 선택 필드 추가 (GET /api/industries로 목록 조회)
+9. **[신규]** 일정 상세에 댓글 섹션 추가 (GET/POST /api/schedules/:id/comments)
+
+---
+
+## 2026-03-10 세션 6: 3차 스프린트 (M-02, M-12, M-13, 일정 댓글)
+
+### DB 마이그레이션 (Railway PostgreSQL)
+- `posts.linked_schedule_id` INTEGER REFERENCES schedules(id) ON DELETE SET NULL
+- `schedules.linked_post_id` INTEGER REFERENCES posts(id) ON DELETE SET NULL
+- `users.industry` VARCHAR(30), `users.industry_detail` VARCHAR(100)
+- `comments.schedule_id` INTEGER REFERENCES schedules(id) ON DELETE CASCADE
+- 인덱스 4개 생성 (idx_posts_linked_schedule, idx_schedules_linked_post, idx_users_industry, idx_comments_schedule_id)
+- 마이그레이션 파일: `database/migrations/005_sprint3_schema.sql`
+
+### M-02: 공지 라우트 통합
+- `api/routes/notices.js`를 notices 테이블 → posts 테이블 (category='notice') 기반으로 전환
+- 모든 CRUD (GET/POST/PUT/DELETE) + 목록/상세 조회가 posts 테이블 참조
+- 하위호환 유지: 기존 `/api/notices` 엔드포인트 그대로 동작
+- 주의: 구 notices 테이블 데이터는 posts 테이블에 없음 (프론트에서 이미 posts 사용 중이므로 무관)
+
+### M-12: 공지-일정 연동 API
+- POST /api/posts: `schedule` 객체 포함 시 트랜잭션으로 일정 동시 생성 + `vote_config` 지원
+- PUT /api/posts/:id: `schedule` 객체로 연결 일정 동기화 (업데이트/신규/해제)
+- DELETE /api/posts/:id: `?delete_linked_schedule=true` 옵션으로 연결 일정 동시 삭제
+- GET /api/posts/:id: `linked_schedule` 객체 포함 (id, title, start_date, end_date, location, category)
+- GET /api/schedules/:id: `linked_post` 객체 포함 (id, title, created_at, author_name)
+- `database.js`의 `transaction()` 헬퍼 활용
+
+### M-13: 업종 검색 API
+- GET /api/members: `?industry=it` 쿼리 파라미터로 업종 필터링
+- GET /api/members/search: `?q=` + `?industry=` AND 조합 검색
+- GET /api/members/:id: industry, industry_detail, industry_name 필드 추가
+- GET /api/industries: 업종 카테고리 13개 목록 반환 (law, finance, medical, ...)
+- PUT /api/profile: industry, industry_detail 수정 + 코드 유효성 + 100자 제한 검증
+- GET /api/profile: industry, industry_detail 필드 포함
+
+### 일정 댓글 API
+- GET /api/schedules/:id/comments: 댓글 목록 (대댓글 구조화, author 객체 포함)
+- POST /api/schedules/:id/comments: 댓글 작성 (대대댓글 방지 검증)
+- DELETE /api/schedules/:id/comments/:commentId: 댓글 삭제 (soft delete)
+- comments 테이블의 schedule_id 컬럼 활용 (post_id와 별도)
+
+### 커밋
+- `759fe93` — db: Sprint 3 스키마 마이그레이션
+- `2828e7f` — refactor(M-02): 공지 라우트 통합
+- `01d47f6` — feat(M-12): 공지-일정 연동 API
+- `5fd783b` — feat(M-13): 업종 검색 API
+- `26f3a2d` — feat: 일정 댓글 API
+
+### 프로덕션 DB 스키마 (세션 6 이후)
+```
+posts: ... + linked_schedule_id (FK → schedules, ON DELETE SET NULL)
+schedules: ... + linked_post_id (FK → posts, ON DELETE SET NULL)
+users: ... + industry VARCHAR(30), industry_detail VARCHAR(100)
+comments: ... + schedule_id (FK → schedules, ON DELETE CASCADE)
+```
+
+---
+
+## 2026-03-10 세션 5: 출석투표/즐겨찾기/직함이력 API + DB 테이블
+
+### DB 테이블 생성 (Railway PostgreSQL)
+1. **attendance_config** — 투표 설정 (schedule_id, vote_type, deadline, quorum, cost, is_active, closed_at)
+2. **attendance_votes** — 투표 기록 (config_id, user_id, vote: attend/absent/undecided, UPSERT)
+3. **favorites** — 즐겨찾기 (user_id, target_member_id, UNIQUE)
+4. **title_history** — 직함 이력 (user_id, year, title, position, UNIQUE(user_id,year))
+
+### 신규 API 라우트
+- `api/routes/attendance.js` — POST 생성, PUT 수정, GET 현황, POST 투표, GET 결과, POST 마감
+- `api/routes/favorites.js` — POST 추가, DELETE 해제, GET 목록
+- `api/routes/titles.js` — GET 이력, POST 추가, PUT 수정, DELETE 삭제
+
+### 기존 API 수정
+- `api/routes/members.js` — GET /api/members에 `is_favorited` 필드 추가 (LEFT JOIN favorites)
+- `api/server.js` — 3개 라우터 등록 (/api/attendance, /api/favorites, /api/titles)
+
+### 커밋
+- `29badd0` — feat: 출석투표/즐겨찾기/직함이력 API + DB 테이블 (프론트 커밋에 포함)
+- Railway 자동 배포 완료
+
+### 프로덕션 DB 스키마 추가
+```
+attendance_config: id, schedule_id(UNIQUE), vote_type, quorum_count, quorum_basis, cost_per_person, deadline, is_active, closed_at, created_by, created_at, updated_at
+attendance_votes: id, config_id, user_id, vote(attend/absent/undecided), voted_at, updated_at, UNIQUE(config_id,user_id)
+favorites: id, user_id, target_member_id, created_at, UNIQUE(user_id,target_member_id)
+title_history: id, user_id, year, title, position, created_at, UNIQUE(user_id,year)
+```
+
+---
+
+## 2026-03-10 세션 4: 중복회원 확인 + SSN API 개선
+
+### 작업 1: 중복 회원(id=7) 확인
+- DB 조회 결과: id=7 이미 세션 2에서 삭제 완료 (rows: [])
+- `minsoo@jc.com` 검색 결과도 0건 — 정리 완료 상태
+
+### 작업 2: 주민번호 API 분리 수신 (ssnFront + ssnBack)
+- 파일: `api/routes/auth.js` 58~93행
+- **변경 전**: 단일 `ssn` 필드 수신 → 서버에서 숫자 파싱
+- **변경 후**: `ssnFront`(앞6자리) + `ssnBack`(뒤1자리) 분리 수신
+- **유효성 검증 추가**:
+  - ssnFront: 정확히 6자리 숫자 + YYMMDD 날짜 유효성 (월 1~12, 일 1~31)
+  - ssnBack: 정확히 1자리, 1~4만 허용
+- **DB 저장 형식**: `XXXXXX-X` (뒷번호 2~7자리 절대 미저장)
+- **보안 수정**: signup 에러 응답에서 `debug`, `stack` 필드 제거
+
+### 커밋
+- `aea28ee` — fix: 주민번호 API 분리수신(ssnFront+ssnBack) + 유효성 검증 + debug 노출 제거
+- Railway 자동 배포 트리거됨
+
+### ⚠️ 프론트엔드 전달사항
+- 회원가입 API 요청 본문 변경: `ssn` → `ssnFront` + `ssnBack` 분리 전송 필요
+- 프론트 `web/js/auth.js` 수정 필요 (백엔드는 web/ 수정 불가)
+
+---
+
+## 2026-03-10 세션 3: 긴급 장애 조사
+
+### 증상
+- 배포 사이트 모든 페이지에서 데이터 로딩 실패 (홈/게시판/회원/프로필)
+
+### 조사 결과: 백엔드 API 100% 정상
+- 프로덕션 서버 기동 정상 (`/health` → `healthy`)
+- 로그인 정상 (`POST /api/auth/login` → 200, 토큰 발급)
+- 전체 엔드포인트 테스트 8/8 통과:
+  - `/api/auth/me` → 200 (사용자 정보 정상)
+  - `/api/posts` → 200 (2건)
+  - `/api/posts?category=notice` → 200 (2건)
+  - `/api/posts?category=general` → 200 (0건)
+  - `/api/notices` → 200 (1건)
+  - `/api/schedules` → 200 (14건)
+  - `/api/members` → 200 (33명)
+  - `/api/profile` → 200 (프로필 정상)
+- SSN 보안 수정은 `signup` 라우트 내부만 변경 → 인증/라우팅 영향 없음
+
+### 원인 추정 (백엔드 아님)
+1. **nginx 캐시 설정**: JS 파일 `expires 1y + immutable` (nginx.conf 64행) → 브라우저에 구버전 JS 캐시 가능
+2. **프론트엔드 JS 오류**: `web/js/` 코드 문제 → 프론트엔드 에이전트 확인 필요
+3. **해결 시도**: 사용자에게 Ctrl+Shift+R (하드 리로드) 권장
+
+---
+
 ## 2026-03-10 세션 2 작업 요약
 
 ### 작업 1: 경민수 테스트 계정 삭제
@@ -145,11 +373,11 @@ read_status: id, user_id, post_id, notice_id, schedule_id, read_at  ← post_rea
 #### Must-have (앱)
 - [ ] M-02: 공지 라우트 통합 (notices.js 폐기 → posts.js category='notice')
 - [ ] M-10: 관리자 지정 필드 수정 제한 (JC직책/소속/기수)
-- [ ] M-11: 참석 투표 데이터 모델+API → `vision-roadmap.md` R-02
+- [x] M-11: 참석 투표 데이터 모델+API → **세션 5에서 완료** (attendance_config + attendance_votes + 6개 엔드포인트)
 - [ ] M-12: 공지-일정 연동 API → `vision-roadmap.md` R-07
 - [ ] M-13: 업종 검색 API (GET /api/members/search?industry=)
-- [ ] M-14: 직함 관리 (변경→즉시 반영+권한 연동)
-- [ ] M-17: 즐겨찾기 API (favorites 테이블)
+- [x] M-14: 직함 관리 (변경→즉시 반영+권한 연동) → **세션 5에서 완료** (title_history + CRUD API)
+- [x] M-17: 즐겨찾기 API (favorites 테이블) → **세션 5에서 완료** (favorites + 3개 엔드포인트 + members에 is_favorited)
 
 #### Must-have (관리자 웹 API)
 - [ ] Audit Log 테이블 생성 → `admin-web/03-features.md` §9
@@ -165,7 +393,7 @@ read_status: id, user_id, post_id, notice_id, schedule_id, read_at  ← post_rea
 | comments.parent_comment_id 삭제 | 레거시 컬럼, 코드 미사용 | 낮음 |
 | likes 테이블 member_id → user_id 통일 | DB ALTER + 코드 수정 필요 | 중간 |
 | schedules에 views 컬럼 추가 | 조회수 기능 필요 시 | 낮음 |
-| auth.js signup 에러에 debug/stack 노출 | 프로덕션에서 제거 필요 (보안) | 높음 |
+| ~~auth.js signup 에러에 debug/stack 노출~~ | **세션 4에서 제거 완료** | ~~높음~~ 완료 |
 
 ---
 

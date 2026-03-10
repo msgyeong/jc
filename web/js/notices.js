@@ -68,9 +68,9 @@ function createNoticeCard(notice) {
     return `
         <div class="notice-card ${isPinned ? 'pinned' : ''}" onclick="navigateTo('/notices/${notice.id}')">
             <div class="notice-header">
-                ${isPinned ? '<span class="badge badge-pinned">📌 고정</span>' : ''}
+                ${isPinned ? '<span class="badge badge-pinned">고정</span>' : ''}
                 ${isNew ? '<span class="badge badge-new">N</span>' : ''}
-                ${notice.attendance_survey_enabled ? '<span class="badge badge-survey">📝 참석조사</span>' : ''}
+                ${notice.attendance_survey_enabled ? '<span class="badge badge-survey">참석조사</span>' : ''}
             </div>
             <h3 class="notice-title">${escapeHtml(notice.title)}</h3>
             ${notice.content ? `<p class="notice-preview">${escapeHtml(notice.content.substring(0, 100))}${notice.content.length > 100 ? '...' : ''}</p>` : ''}
@@ -84,9 +84,9 @@ function createNoticeCard(notice) {
                 </div>
                 <div class="notice-info">
                     <span class="notice-date">${formatRelativeTime(notice.created_at)}</span>
-                    ${notice.views > 0 ? `<span class="notice-views">👁️ ${notice.views}</span>` : ''}
-                    ${notice.comments_count > 0 ? `<span class="notice-comments">💬 ${notice.comments_count}</span>` : ''}
-                    ${notice.likes_count > 0 ? `<span class="notice-likes">❤️ ${notice.likes_count}</span>` : ''}
+                    ${notice.views > 0 ? `<span class="notice-views"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${notice.views}</span>` : ''}
+                    ${notice.comments_count > 0 ? `<span class="notice-comments"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${notice.comments_count}</span>` : ''}
+                    ${notice.likes_count > 0 ? `<span class="notice-likes"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg> ${notice.likes_count}</span>` : ''}
                 </div>
             </div>
         </div>
@@ -120,7 +120,7 @@ async function showNoticeDetailScreen(noticeId) {
                 <div class="post-detail-meta">
                     <span>작성자: ${escapeHtml(notice.author_name || '알 수 없음')}</span>
                     <span>${formatRelativeTime(notice.created_at)}</span>
-                    <span>👁️ ${notice.views || 0}</span>
+                    <span><svg class="icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${notice.views || 0}</span>
                 </div>
                 <div class="post-detail-body">${escapeHtml(notice.content || '').replace(/\n/g, '<br>')}</div>
                 ${notice.attendance_survey_enabled ? `

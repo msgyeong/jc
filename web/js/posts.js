@@ -81,7 +81,7 @@ function createPostCard(post) {
         : `<span class="pc-avatar-text">${post.author_name ? escapeHtml(post.author_name[0]) : '?'}</span>`;
 
     const pinnedHtml = isPinned
-        ? `<span class="pc-pinned">📌 [고정]</span>`
+        ? `<span class="pc-pinned">[고정]</span>`
         : '';
 
     const thumbnailHtml = firstImage
@@ -111,9 +111,9 @@ function createPostCard(post) {
                 ${thumbnailHtml}
             </div>
             <div class="pc-stats">
-                <span class="pc-stat">💬 ${post.comments_count || 0}</span>
-                <span class="pc-stat">❤️ ${post.likes_count || 0}</span>
-                <span class="pc-stat">👁️ ${post.views || 0}</span>
+                <span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${post.comments_count || 0}</span>
+                <span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg> ${post.likes_count || 0}</span>
+                <span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${post.views || 0}</span>
             </div>
         </div>
     `;
@@ -423,7 +423,7 @@ async function handlePostLikeClick(postId) {
             const countEl = btn.querySelector('.post-detail-likes-count');
             if (countEl) countEl.textContent = result.likes_count || 0;
             btn.setAttribute('aria-pressed', result.liked ? 'true' : 'false');
-            btn.innerHTML = (result.liked ? '❤️' : '🤍') + ' <span class="post-detail-likes-count">' + (result.likes_count || 0) + '</span>';
+            btn.innerHTML = '<svg class="icon-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"' + (result.liked ? ' fill="#DC2626" stroke="#DC2626"' : '') + '/></svg> <span class="post-detail-likes-count">' + (result.likes_count || 0) + '</span>';
         }
     } catch (_) {}
     btn.disabled = false;
@@ -494,10 +494,10 @@ function renderPostDetail(post) {
             <div class="post-detail-body">${escapeHtml(post.content || '').replace(/\n/g, '<br>')}</div>
             ${imagesHtml}
             <div class="post-detail-meta">
-                ${post.views > 0 ? `<span>👁️ ${post.views}</span>` : ''}
-                <span class="post-detail-comments-count">💬 <span class="num">${post.comments_count || 0}</span></span>
+                ${post.views > 0 ? `<span><svg class="icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${post.views}</span>` : ''}
+                <span class="post-detail-comments-count"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <span class="num">${post.comments_count || 0}</span></span>
                 <button type="button" class="btn-like" data-action="like" data-post-id="${post.id}" aria-pressed="${liked ? 'true' : 'false'}">
-                    ${liked ? '❤️' : '🤍'} <span class="post-detail-likes-count">${post.likes_count || 0}</span>
+                    <svg class="icon-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"${liked ? ' fill="#DC2626" stroke="#DC2626"' : ''}/></svg> <span class="post-detail-likes-count">${post.likes_count || 0}</span>
                 </button>
             </div>
             <div class="post-detail-comments">

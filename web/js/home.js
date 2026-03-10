@@ -53,14 +53,14 @@ async function loadNoticeSummary() {
                     return `
                     <div class="notice-card" onclick="navigateTo('/posts/${post.id}')">
                         <div class="notice-header">
-                            ${post.is_pinned ? '<span class="badge badge-pinned">📌 고정</span>' : ''}
+                            ${post.is_pinned ? '<span class="badge badge-pinned">고정</span>' : ''}
                             ${showN ? '<span class="badge badge-new">N</span>' : ''}
                         </div>
                         <h3 class="notice-title">${escapeHtml(post.title)}</h3>
                         <div class="notice-meta">
                             <span class="notice-date">${formatRelativeTime(post.created_at)}</span>
-                            ${post.comments_count > 0 ? `<span class="notice-comments">💬 ${post.comments_count}</span>` : ''}
-                            ${post.likes_count > 0 ? `<span class="notice-likes">❤️ ${post.likes_count}</span>` : ''}
+                            ${post.comments_count > 0 ? `<span class="notice-comments"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${post.comments_count}</span>` : ''}
+                            ${post.likes_count > 0 ? `<span class="notice-likes"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg> ${post.likes_count}</span>` : ''}
                         </div>
                     </div>
                 `;
@@ -114,8 +114,8 @@ async function loadScheduleSummary() {
                     <div class="home-schedule-info">
                         <h3 class="home-schedule-title">${escapeHtml(schedule.title)}</h3>
                         <div class="home-schedule-meta">
-                            ${timeStr ? `<span>⏰ ${timeStr}</span>` : ''}
-                            ${schedule.location ? `<span>📍 ${escapeHtml(schedule.location)}</span>` : ''}
+                            ${timeStr ? `<span>${timeStr}</span>` : ''}
+                            ${schedule.location ? `<span>${escapeHtml(schedule.location)}</span>` : ''}
                         </div>
                     </div>
                     ${(() => { const show = isNewContent(schedule.created_at) && schedNBadgeCount < 2; if (show) schedNBadgeCount++; return show ? '<span class="home-badge-new">N</span>' : ''; })()}

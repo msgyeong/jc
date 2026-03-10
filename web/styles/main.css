@@ -667,6 +667,33 @@ body {
     font-weight: 500;
 }
 
+/* ==================== 인라인 SVG 아이콘 ==================== */
+.icon-sm {
+    width: 14px;
+    height: 14px;
+    vertical-align: -2px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.toggle-password {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-password .icon {
+    display: flex;
+    align-items: center;
+}
+
+.toggle-password .icon svg {
+    color: var(--text-hint);
+}
+
 /* ==================== 유틸리티 클래스 ==================== */
 .text-center {
     text-align: center;
@@ -1939,8 +1966,9 @@ input[type="date"]:focus {
 /* ==================== 게시판 서브탭 ==================== */
 .board-tabs {
     display: flex;
-    background-color: var(--primary-color);
+    background-color: white;
     padding: 0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .board-tab {
@@ -1948,7 +1976,7 @@ input[type="date"]:focus {
     padding: 12px 0;
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-hint);
     font-size: 15px;
     font-weight: 500;
     font-family: var(--font-family);
@@ -1959,13 +1987,13 @@ input[type="date"]:focus {
 }
 
 .board-tab.active {
-    color: white;
+    color: var(--primary-color);
     font-weight: 600;
-    border-bottom-color: white;
+    border-bottom-color: var(--primary-color);
 }
 
 .board-tab:hover:not(.active) {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--text-secondary);
 }
 
 /* ==================== 게시글 카드 (재디자인) ==================== */

@@ -171,11 +171,11 @@ function renderPendingUserCard(user) {
             <div class="user-actions">
                 <button class="btn btn-success"
                     onclick="approveUser('${user.id}', '${user.name}')">
-                    ✅ 승인
+                    승인
                 </button>
                 <button class="btn btn-danger"
                     onclick="rejectUser('${user.id}', '${user.name}')">
-                    ❌ 거부
+                    거부
                 </button>
             </div>
         </div>`;
@@ -385,9 +385,9 @@ function renderPostManageCard(post) {
                 <p class="content-meta">
                     작성자: ${post.author_name || '알 수 없음'} |
                     ${formatAdminDateTime(post.created_at)} |
-                    👁️ ${post.views || 0}
-                    👍 ${post.likes_count || 0}
-                    💬 ${post.comments_count || 0}
+                    조회 ${post.views || 0}
+                    좋아요 ${post.likes_count || 0}
+                    댓글 ${post.comments_count || 0}
                 </p>
             </div>
             <div class="content-actions">

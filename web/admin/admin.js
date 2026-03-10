@@ -290,11 +290,11 @@ async function loadApproval() {
                 <div class="card-actions">
                     <button class="btn btn-primary btn-sm"
                         onclick="approveUser('${m.id}','${esc(m.name)}')">
-                        ✅ 승인
+                        승인
                     </button>
                     <button class="btn btn-danger btn-sm"
                         onclick="rejectUser('${m.id}','${esc(m.name)}')">
-                        ❌ 거부
+                        거부
                     </button>
                 </div>
             </div>
@@ -710,7 +710,7 @@ async function loadNotices() {
             <tr>
                 <td style="font-weight:${n.pinned ? '600' : '400'};">
                     ${n.pinned
-                        ? '<span style="color:var(--c-primary);margin-right:4px;">📌</span>'
+                        ? '<span style="color:var(--c-primary);margin-right:4px;font-weight:600;">[고정]</span>'
                         : ''}
                     ${esc(n.title)}
                 </td>

@@ -15,6 +15,7 @@ async function loadProfile() {
             currentProfile = result.profile;
             container.innerHTML = renderProfile(result.profile);
             profileLoaded = true;
+            if (result.profile.id) loadProfileTitleHistory(result.profile.id);
         } else {
             container.innerHTML = '<div class="error-state">프로필을 불러올 수 없습니다.</div>';
         }
@@ -66,6 +67,8 @@ function renderProfile(p) {
                 <h3 class="info-section-title">가입 정보</h3>
                 ${profileInfoRow('가입일', formatDate(p.created_at, 'YYYY-MM-DD'), 'calendar')}
             </div>
+
+            <div id="profile-title-history-container"></div>
 
             <!-- 액션 버튼 -->
             <div class="profile-actions">
@@ -264,6 +267,36 @@ function getRoleText(role) {
 
 function getGenderText(gender) {
     return { 'male': '남성', 'female': '여성', 'other': '기타' }[gender] || gender;
+}
+
+// ========== 직함 이력 ==========
+
+async function loadProfileTitleHistory(userId) {
+    const container = document.getElementById('profile-title-history-container');
+    if (!container) return;
+    try {
+        const res = await apiClient.request('/titles/' + userId);
+        if (!res.success) { container.innerHTML = ''; return; }
+        const titles = res.data || [];
+        if (titles.length === 0) {
+            container.innerHTML = `
+                <div class="title-history-section">
+                    <h3 class="section-title">직함 이력</h3>
+                    <div class="empty-text">등록된 직함 이력이 없습니다.</div>
+                </div>`;
+            return;
+        }
+        container.innerHTML = `
+            <div class="title-history-section">
+                <h3 class="section-title">직함 이력</h3>
+                ${titles.map(t => `
+                    <div class="title-item">
+                        <span class="title-year">${t.year}년</span>
+                        <span class="title-position">${escapeHtml(t.title || t.position || '')}</span>
+                    </div>
+                `).join('')}
+            </div>`;
+    } catch (_) { container.innerHTML = ''; }
 }
 
 function handleEditProfile() { showEditProfileForm(); }

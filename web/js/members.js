@@ -5,6 +5,7 @@ let membersLoading = false;
 let searchTimeout = null;
 
 async function loadMembersScreen() {
+    await loadFavorites();
     await loadMembers(1);
 }
 
@@ -79,6 +80,66 @@ function renderMemberGrid(members) {
     '</div>';
 }
 
+// ========== 즐겨찾기 ==========
+
+const starSvgFilled = '<svg width="18" height="18" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+const starSvgEmpty = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+
+async function loadFavorites() {
+    const container = document.getElementById('member-list');
+    if (!container) return;
+    // 기존 즐겨찾기 섹션 제거
+    const existing = document.getElementById('favorites-section');
+    if (existing) existing.remove();
+
+    try {
+        const res = await apiClient.request('/favorites');
+        if (!res.success || !res.data || !res.data.items || res.data.items.length === 0) return;
+        const items = res.data.items;
+        const html = `
+            <div id="favorites-section" class="favorites-section">
+                <div class="favorites-header">${starSvgFilled} 즐겨찾기</div>
+                <div class="favorites-list">
+                    ${items.map(m => {
+                        const name = m.name || '이름 없음';
+                        const callBtn = m.phone
+                            ? `<a href="tel:${m.phone.replace(/\D/g, '')}" class="call-btn" aria-label="${escapeHtml(name)}에게 전화걸기" onclick="event.stopPropagation()">${phoneSvg20}</a>`
+                            : '';
+                        return `<div class="member-card-v2" onclick="navigateTo('/members/${m.id}')" style="padding:10px 14px">
+                            <div class="member-avatar-v2" style="background:#DBEAFE;color:#1E40AF;width:36px;height:36px;font-size:14px">
+                                ${m.profile_image ? `<img src="${m.profile_image}" alt="${escapeHtml(name)}">` : `<span>${escapeHtml(name[0])}</span>`}
+                            </div>
+                            <div class="member-info-v2">
+                                <span class="member-name-v2">${escapeHtml(name)}</span>
+                                ${m.position ? `<span class="member-position-v2" style="margin-left:6px">${escapeHtml(m.position)}</span>` : ''}
+                            </div>
+                            ${callBtn}
+                            <button class="favorite-btn" onclick="event.stopPropagation();toggleFavorite(${m.id},true,this)" aria-label="즐겨찾기 해제">${starSvgFilled}</button>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforebegin', html);
+    } catch (_) { /* 무시 */ }
+}
+
+async function toggleFavorite(memberId, currentState, btnEl) {
+    try {
+        if (currentState) {
+            await apiClient.request('/favorites/' + memberId, { method: 'DELETE' });
+            if (btnEl) { btnEl.innerHTML = starSvgEmpty; btnEl.setAttribute('aria-label', '즐겨찾기 추가'); }
+            btnEl.onclick = function(e) { e.stopPropagation(); toggleFavorite(memberId, false, btnEl); };
+        } else {
+            await apiClient.request('/favorites/' + memberId, { method: 'POST' });
+            if (btnEl) { btnEl.innerHTML = starSvgFilled; btnEl.setAttribute('aria-label', '즐겨찾기 해제'); }
+            btnEl.onclick = function(e) { e.stopPropagation(); toggleFavorite(memberId, true, btnEl); };
+        }
+    } catch (e) {
+        alert(e.message || '즐겨찾기 변경에 실패했습니다.');
+    }
+}
+
 // 전화번호 포맷 (표시용)
 function formatPhone(num) {
     if (!num) return '';
@@ -107,6 +168,9 @@ function createMemberCard(member) {
         ? `<a href="tel:${member.phone.replace(/\D/g, '')}" class="call-btn" aria-label="${escapeHtml(name)}에게 전화걸기" onclick="event.stopPropagation()">${phoneSvg20}</a>`
         : `<span class="call-btn call-btn--disabled" aria-hidden="true">${phoneSvg20}</span>`;
 
+    const isFav = member.is_favorited;
+    const favBtn = `<button class="favorite-btn" onclick="event.stopPropagation();toggleFavorite(${member.id},${!!isFav},this)" aria-label="${isFav ? '즐겨찾기 해제' : '즐겨찾기 추가'}">${isFav ? starSvgFilled : starSvgEmpty}</button>`;
+
     return `
         <div class="member-card-v2" onclick="navigateTo('/members/${member.id}')">
             <div class="member-avatar-v2" style="background:${bgColor}; color:${avatarTextColor}">
@@ -124,6 +188,7 @@ function createMemberCard(member) {
                 ${company ? `<div class="member-company-v2">${escapeHtml(company)}</div>` : ''}
             </div>
             ${callBtn}
+            ${favBtn}
         </div>
     `;
 }
@@ -181,10 +246,48 @@ async function showMemberDetailScreen(memberId) {
                     ${infoRow('부서', m.department)}
                     ${m.work_phone ? infoRow('직장 전화', m.work_phone, true) : ''}
                 </div>` : ''}
+
+                <div id="title-history-container"></div>
             </div>
         `;
+        loadTitleHistory(memberId);
     } catch (_) {
         container.innerHTML = '<div class="error-state">회원 정보를 불러오지 못했습니다.</div>';
+    }
+}
+
+// ========== 직함 이력 ==========
+
+async function loadTitleHistory(userId, containerId) {
+    const container = document.getElementById(containerId || 'title-history-container');
+    if (!container) return;
+
+    try {
+        const res = await apiClient.request('/titles/' + userId);
+        if (!res.success) { container.innerHTML = ''; return; }
+        const titles = res.data || [];
+
+        if (titles.length === 0) {
+            container.innerHTML = `
+                <div class="title-history-section">
+                    <h3 class="section-title">직함 이력</h3>
+                    <div class="empty-text">등록된 직함 이력이 없습니다.</div>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="title-history-section">
+                <h3 class="section-title">직함 이력</h3>
+                ${titles.map(t => `
+                    <div class="title-item">
+                        <span class="title-year">${t.year}년</span>
+                        <span class="title-position">${escapeHtml(t.title || t.position || '')}</span>
+                    </div>
+                `).join('')}
+            </div>`;
+    } catch (_) {
+        container.innerHTML = '';
     }
 }
 

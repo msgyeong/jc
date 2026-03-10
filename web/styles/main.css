@@ -3456,3 +3456,222 @@ input[type="date"]:focus {
     100% { transform: rotate(360deg); }
 }
 
+/* ==================== 출석 투표 ==================== */
+
+.attendance-section {
+    margin-top: 20px;
+    padding: 20px;
+    background: #F8FAFC;
+    border-radius: var(--radius-md, 12px);
+    border: 1px solid var(--border-color, #E2E8F0);
+}
+
+.attendance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.attendance-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary, #0F172A);
+    margin: 0;
+}
+
+.attendance-deadline {
+    font-size: 13px;
+    color: var(--text-secondary, #64748B);
+}
+
+.attendance-deadline.closed {
+    color: #EF4444;
+    font-weight: 600;
+}
+
+.attendance-vote-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.vote-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 8px;
+    border: 1.5px solid var(--border-color, #E2E8F0);
+    border-radius: var(--radius-md, 12px);
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.vote-btn:hover:not(.disabled) {
+    border-color: var(--primary-color, #2563EB);
+    background: #F0F5FF;
+}
+
+.vote-btn.selected.vote-attend {
+    border-color: #2563EB;
+    background: #DBEAFE;
+    color: #1D4ED8;
+}
+
+.vote-btn.selected.vote-absent {
+    border-color: #EF4444;
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.vote-btn.selected.vote-undecided {
+    border-color: #F59E0B;
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.vote-btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.vote-icon {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.vote-label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.vote-count {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary, #0F172A);
+}
+
+.progress-bar {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #E2E8F0;
+}
+
+.progress-attend {
+    background: #2563EB;
+    transition: width 0.3s;
+}
+
+.progress-absent {
+    background: #EF4444;
+    transition: width 0.3s;
+}
+
+.progress-undecided {
+    background: #F59E0B;
+    transition: width 0.3s;
+}
+
+.progress-labels {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-secondary, #64748B);
+    text-align: right;
+}
+
+/* ==================== 즐겨찾기 ==================== */
+
+.favorite-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    min-height: 36px;
+    flex-shrink: 0;
+}
+
+.favorite-btn:hover {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.favorites-section {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #FFFBEB;
+    border-radius: var(--radius-md, 12px);
+    border: 1px solid #FDE68A;
+}
+
+.favorites-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #92400E;
+    margin-bottom: 10px;
+}
+
+.favorites-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ==================== 직함 이력 ==================== */
+
+.title-history-section {
+    margin-top: 20px;
+    padding: 16px;
+    background: #F8FAFC;
+    border-radius: var(--radius-md, 12px);
+}
+
+.title-history-section .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary, #0F172A);
+    margin: 0 0 12px 0;
+}
+
+.title-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: white;
+    border-radius: var(--radius-sm, 8px);
+    border: 1px solid var(--border-color, #E2E8F0);
+    margin-bottom: 8px;
+}
+
+.title-year {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary-color, #2563EB);
+    min-width: 50px;
+}
+
+.title-position {
+    font-size: 14px;
+    color: var(--text-primary, #0F172A);
+}
+
+.empty-text {
+    font-size: 13px;
+    color: var(--text-secondary, #64748B);
+    text-align: center;
+    padding: 16px 0;
+}
+

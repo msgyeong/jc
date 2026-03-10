@@ -250,10 +250,102 @@ async function showScheduleDetailScreen(scheduleId) {
                     ${s.author_name ? `<div class="detail-meta-item"><span class="detail-meta-icon">&#128100;</span><span>${escapeHtml(s.author_name)}</span></div>` : ''}
                 </div>
                 ${s.description ? `<div class="detail-body">${escapeHtml(s.description).replace(/\n/g, '<br>')}</div>` : ''}
+                <div id="attendance-section"></div>
             </div>
         `;
+        loadAttendanceVote(scheduleId);
     } catch (_) {
         container.innerHTML = '<div class="error-state">일정을 불러오지 못했습니다.</div>';
+    }
+}
+
+// ========== 출석 투표 ==========
+
+let currentAttendanceConfigId = null;
+
+async function loadAttendanceVote(scheduleId) {
+    const section = document.getElementById('attendance-section');
+    if (!section) return;
+
+    try {
+        const res = await apiClient.request('/attendance/' + scheduleId);
+        if (!res.success || !res.data) { section.innerHTML = ''; return; }
+
+        const { config, summary, my_vote, total_members } = res.data;
+        currentAttendanceConfigId = config.id;
+        const isClosed = config.is_closed;
+        const myVoteVal = my_vote ? my_vote.vote : null;
+        const voted = summary.attend + summary.absent + summary.undecided;
+
+        let deadlineText = '';
+        if (config.deadline) {
+            const dl = new Date(config.deadline);
+            deadlineText = isClosed
+                ? '<span class="attendance-deadline closed">투표 마감</span>'
+                : `<span class="attendance-deadline">${dl.getMonth()+1}/${dl.getDate()} ${String(dl.getHours()).padStart(2,'0')}:${String(dl.getMinutes()).padStart(2,'0')} 마감</span>`;
+        } else if (isClosed) {
+            deadlineText = '<span class="attendance-deadline closed">투표 마감</span>';
+        }
+
+        const disabledAttr = isClosed ? 'disabled' : '';
+        const disabledClass = isClosed ? ' disabled' : '';
+
+        const attendPct = voted > 0 ? (summary.attend / voted * 100) : 0;
+        const absentPct = voted > 0 ? (summary.absent / voted * 100) : 0;
+        const undecidedPct = voted > 0 ? (summary.undecided / voted * 100) : 0;
+
+        section.innerHTML = `
+            <div class="attendance-section">
+                <div class="attendance-header">
+                    <h3 class="attendance-title">출석 투표</h3>
+                    ${deadlineText}
+                </div>
+                <div class="attendance-vote-buttons">
+                    <button class="vote-btn vote-attend${myVoteVal === 'attend' ? ' selected' : ''}${disabledClass}" onclick="submitVote('attend')" ${disabledAttr}>
+                        <span class="vote-icon" style="color:#2563EB">&#10003;</span>
+                        <span class="vote-label">참석</span>
+                        <span class="vote-count">${summary.attend}</span>
+                    </button>
+                    <button class="vote-btn vote-absent${myVoteVal === 'absent' ? ' selected' : ''}${disabledClass}" onclick="submitVote('absent')" ${disabledAttr}>
+                        <span class="vote-icon" style="color:#EF4444">&#10007;</span>
+                        <span class="vote-label">불참</span>
+                        <span class="vote-count">${summary.absent}</span>
+                    </button>
+                    <button class="vote-btn vote-undecided${myVoteVal === 'undecided' ? ' selected' : ''}${disabledClass}" onclick="submitVote('undecided')" ${disabledAttr}>
+                        <span class="vote-icon" style="color:#F59E0B">?</span>
+                        <span class="vote-label">미정</span>
+                        <span class="vote-count">${summary.undecided}</span>
+                    </button>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-attend" style="width:${attendPct}%"></div>
+                    <div class="progress-absent" style="width:${absentPct}%"></div>
+                    <div class="progress-undecided" style="width:${undecidedPct}%"></div>
+                </div>
+                <div class="progress-labels">응답 ${voted}명 / 전체 ${total_members}명</div>
+            </div>
+        `;
+    } catch (e) {
+        // 404 = 투표 설정 없음 → 섹션 숨김
+        section.innerHTML = '';
+    }
+}
+
+async function submitVote(vote) {
+    if (!currentAttendanceConfigId) return;
+    try {
+        const res = await apiClient.request('/attendance/' + currentAttendanceConfigId + '/vote', {
+            method: 'POST',
+            body: JSON.stringify({ vote })
+        });
+        if (res.success) {
+            // scheduleId를 URL에서 추출
+            const path = window.location.hash || '';
+            const match = path.match(/\/schedules\/(\d+)/);
+            if (match) loadAttendanceVote(match[1]);
+        }
+    } catch (e) {
+        alert(e.message || '투표에 실패했습니다.');
     }
 }
 

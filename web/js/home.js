@@ -66,15 +66,15 @@ async function loadNoticeSummary() {
                 `;
                 }).join('');
             } else {
-                container.innerHTML = '<div class="empty-state">최근 공지사항이 없습니다.</div>';
+                container.innerHTML = renderEmptyState('document', '최근 공지사항이 없습니다');
             }
         } else {
-            container.innerHTML = '<div class="empty-state">등록된 공지사항이 없습니다.</div>';
+            container.innerHTML = renderEmptyState('document', '등록된 공지가 없습니다');
         }
 
     } catch (error) {
         console.error('공지사항 요약 로드 실패:', error);
-        container.innerHTML = '<div class="error-state">공지사항을 불러올 수 없습니다.</div>';
+        container.innerHTML = renderErrorState('공지사항을 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'loadNoticeSummary()');
     }
 }
 
@@ -122,102 +122,130 @@ async function loadScheduleSummary() {
                 </div>`;
             }).join('');
         } else {
-            container.innerHTML = '<div class="empty-state">예정된 일정이 없습니다.</div>';
+            container.innerHTML = renderEmptyState('calendar', '예정된 일정이 없습니다');
         }
-        
+
     } catch (error) {
         console.error('일정 요약 로드 실패:', error);
-        container.innerHTML = '<div class="error-state">일정을 불러올 수 없습니다.</div>';
+        container.innerHTML = renderErrorState('일정을 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'loadScheduleSummary()');
     }
 }
 
-// 배너 SVG 생성 함수
-function createBannerSvg(bgGradient, title, subtitle, icon) {
-    return 'data:image/svg+xml,' + encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200">' +
-        '<defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">' + bgGradient + '</linearGradient></defs>' +
-        '<rect width="800" height="200" fill="url(#bg)"/>' +
-        '<text x="400" y="85" text-anchor="middle" fill="white" font-family="sans-serif" font-size="28" font-weight="bold">' + icon + ' ' + title + '</text>' +
-        '<text x="400" y="130" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-family="sans-serif" font-size="16">' + subtitle + '</text>' +
-        '</svg>'
-    );
-}
-
-// 배너 로드
+// 배너 로드 (M-01: 블루 그라디언트 배너 3종 + 스와이프 캐러셀)
 function loadBannerSummary() {
-    const container = document.getElementById('banner-slider');
-    if (!container) return;
+    const section = document.querySelector('.banner-section');
+    if (!section) return;
 
     const banners = [
         {
-            id: 1,
-            image: createBannerSvg(
-                '<stop offset="0%" style="stop-color:#2563EB"/><stop offset="100%" style="stop-color:#60A5FA"/>',
-                '영등포 JC', '회원관리 커뮤니티 앱에 오신 것을 환영합니다', ''
-            ),
-            title: '영등포 JC 환영'
+            gradient: 'linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)',
+            title: '영등포 JC',
+            subtitle: '회원관리 커뮤니티 앱에 오신 것을 환영합니다',
+            cta: '둘러보기'
         },
         {
-            id: 2,
-            image: createBannerSvg(
-                '<stop offset="0%" style="stop-color:#1E40AF"/><stop offset="100%" style="stop-color:#3B82F6"/>',
-                '일정 확인', '다가오는 모임과 행사 일정을 확인하세요', ''
-            ),
-            title: '일정 안내'
+            gradient: 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)',
+            title: '일정 확인',
+            subtitle: '다가오는 모임과 행사 일정을 확인하세요',
+            cta: '일정 보기',
+            action: "switchTab('schedules')"
         },
         {
-            id: 3,
-            image: createBannerSvg(
-                '<stop offset="0%" style="stop-color:#1D4ED8"/><stop offset="100%" style="stop-color:#93C5FD"/>',
-                '회원 소통', '공지사항과 게시판을 통해 소식을 나누세요', ''
-            ),
-            title: '회원 소통'
+            gradient: 'linear-gradient(135deg, #1D4ED8 0%, #93C5FD 100%)',
+            title: '회원 소통',
+            subtitle: '공지사항과 게시판을 통해 소식을 나누세요',
+            cta: '게시판 가기',
+            action: "switchTab('posts')"
         }
     ];
 
-    container.innerHTML = banners.map(banner => `
-        <div class="banner-slide">
-            <img src="${banner.image}" alt="${banner.title}">
+    section.innerHTML = `
+        <div class="banner-carousel" role="region" aria-label="홈 배너" aria-roledescription="carousel">
+            <div class="banner-track" id="banner-track">
+                ${banners.map((b, i) => `
+                    <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="배너 ${i+1}/${banners.length}" style="background:${b.gradient}" ${b.action ? 'onclick="' + b.action + '"' : ''} ${b.action ? 'style="background:' + b.gradient + ';cursor:pointer"' : ''}>
+                        <div class="banner-title">${b.title}</div>
+                        <div class="banner-subtitle">${b.subtitle}</div>
+                        ${b.cta && b.action ? `<span class="banner-cta">${b.cta}</span>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+            ${banners.length > 1 ? `<div class="banner-indicators">
+                ${banners.map((_, i) => `<span class="banner-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="배너 ${i+1}으로 이동"></span>`).join('')}
+            </div>` : ''}
         </div>
-    `).join('');
-
-    const indicators = document.getElementById('banner-indicators');
-    if (indicators && banners.length > 0) {
-        indicators.innerHTML = banners.map((_, index) => `
-            <span class="banner-indicator ${index === 0 ? 'active' : ''}"
-                  data-index="${index}" aria-label="배너 ${index + 1}"></span>
-        `).join('');
-    }
+    `;
 
     if (banners.length > 1) {
-        startBannerAutoRotate();
+        initBannerCarousel(banners.length);
     }
 }
 
-var bannerRotateInterval = null;
+var bannerAutoTimer = null;
+var bannerCurrentIndex = 0;
+const BANNER_INTERVAL = 4000;
 
-function startBannerAutoRotate() {
-    const slider = document.getElementById('banner-slider');
-    const indicators = document.querySelectorAll('.banner-indicator');
-    if (!slider || indicators.length === 0) return;
-    
-    var currentIndex = 0;
-    
+function initBannerCarousel(total) {
+    const track = document.getElementById('banner-track');
+    const dots = document.querySelectorAll('.banner-dot');
+    if (!track || dots.length === 0) return;
+
+    bannerCurrentIndex = 0;
+
     function goToSlide(index) {
-        currentIndex = (index + indicators.length) % indicators.length;
-        slider.scrollTo({ left: slider.clientWidth * currentIndex, behavior: 'smooth' });
-        indicators.forEach((el, i) => el.classList.toggle('active', i === currentIndex));
+        bannerCurrentIndex = ((index % total) + total) % total;
+        track.style.transform = `translateX(-${bannerCurrentIndex * 100}%)`;
+        dots.forEach((d, i) => d.classList.toggle('active', i === bannerCurrentIndex));
     }
-    
-    if (bannerRotateInterval) clearInterval(bannerRotateInterval);
-    bannerRotateInterval = setInterval(function () {
-        goToSlide(currentIndex + 1);
-    }, 5000);
-    
-    indicators.forEach((el, index) => {
-        el.addEventListener('click', function () {
-            goToSlide(index);
-        });
+
+    // 자동 전환
+    function startAuto() {
+        stopAuto();
+        bannerAutoTimer = setInterval(() => goToSlide(bannerCurrentIndex + 1), BANNER_INTERVAL);
+    }
+    function stopAuto() { clearInterval(bannerAutoTimer); }
+
+    startAuto();
+
+    // 인디케이터 클릭
+    dots.forEach((dot, i) => dot.addEventListener('click', () => { goToSlide(i); stopAuto(); setTimeout(startAuto, BANNER_INTERVAL); }));
+
+    // 스와이프
+    let touchStartX = 0, touchStartY = 0, isDragging = false;
+    track.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        isDragging = true;
+        stopAuto();
+        track.style.transition = 'none';
+    }, { passive: true });
+
+    track.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        const dx = e.touches[0].clientX - touchStartX;
+        const dy = e.touches[0].clientY - touchStartY;
+        if (Math.abs(dx) > Math.abs(dy)) {
+            const offset = -(bannerCurrentIndex * 100) + (dx / track.parentElement.clientWidth * 100);
+            track.style.transform = `translateX(${offset}%)`;
+        }
+    }, { passive: true });
+
+    track.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        track.style.transition = 'transform 0.4s ease';
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 30) {
+            goToSlide(dx < 0 ? bannerCurrentIndex + 1 : bannerCurrentIndex - 1);
+        } else {
+            goToSlide(bannerCurrentIndex);
+        }
+        setTimeout(startAuto, BANNER_INTERVAL);
+    });
+
+    // 화면 비활성 시 정지
+    document.addEventListener('visibilitychange', () => {
+        document.hidden ? stopAuto() : startAuto();
     });
 }
 

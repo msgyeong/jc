@@ -1,47 +1,72 @@
 const express = require('express');
 const router = express.Router();
 const { query } = require('../config/database');
-const { authenticate, requireRole } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
 /**
- * GET /api/notices
- * 공지사항 목록 조회 (고정 공지 우선)
+ * [하위호환] GET /api/notices → /api/posts?category=notice 로 프록시
+ * notices.js 기능은 posts.js category=notice 로 통합됨.
+ * 기존 클라이언트 호환을 위해 프록시 유지.
  */
 router.get('/', authenticate, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const offset = (page - 1) * limit;
+        const userId = req.user.userId;
 
-        // 전체 공지사항 수
         const countResult = await query(
-            'SELECT COUNT(*) FROM notices'
+            "SELECT COUNT(*) FROM posts WHERE category = 'notice'"
         );
         const total = parseInt(countResult.rows[0].count);
 
-        // 공지사항 목록 (고정 공지 우선, 작성자 정보 포함)
-        const result = await query(
-            `SELECT 
-                n.id, n.title, n.content, n.is_pinned,
-                n.has_attendance, n.views,
-                n.created_at, n.updated_at,
-                u.id as author_id, u.name as author_name, u.profile_image as author_image
-             FROM notices n
-             LEFT JOIN users u ON n.author_id = u.id
-             ORDER BY n.is_pinned DESC, n.created_at DESC
-             LIMIT $1 OFFSET $2`,
-            [limit, offset]
-        );
+        let result;
+        try {
+            result = await query(
+                `SELECT
+                    p.id, p.title, p.content, p.images, p.category,
+                    p.is_pinned, p.views, p.likes_count, p.comments_count,
+                    p.created_at, p.updated_at,
+                    u.id as author_id, u.name as author_name, u.profile_image as author_image,
+                    pr.read_at as read_at
+                 FROM posts p
+                 LEFT JOIN users u ON p.author_id = u.id
+                 LEFT JOIN read_status pr ON pr.post_id = p.id AND pr.user_id = $3
+                 WHERE p.category = 'notice'
+                 ORDER BY p.is_pinned DESC NULLS LAST, p.created_at DESC
+                 LIMIT $1 OFFSET $2`,
+                [limit, offset, userId]
+            );
+        } catch (e) {
+            result = await query(
+                `SELECT
+                    p.id, p.title, p.content, p.images, p.category,
+                    p.is_pinned, p.views, p.likes_count, p.comments_count,
+                    p.created_at, p.updated_at,
+                    u.id as author_id, u.name as author_name, u.profile_image as author_image
+                 FROM posts p
+                 LEFT JOIN users u ON p.author_id = u.id
+                 WHERE p.category = 'notice'
+                 ORDER BY p.is_pinned DESC NULLS LAST, p.created_at DESC
+                 LIMIT $1 OFFSET $2`,
+                [limit, offset]
+            );
+        }
+
+        const notices = result.rows.map(row => {
+            const { read_at, ...post } = row;
+            return { ...post, read_by_current_user: !!read_at };
+        });
 
         res.json({
             success: true,
-            notices: result.rows,
+            notices,
             total,
             page,
             totalPages: Math.ceil(total / limit)
         });
     } catch (error) {
-        console.error('Get notices error:', error);
+        console.error('Get notices (compat) error:', error);
         res.status(500).json({
             success: false,
             message: '공지사항 목록 조회 중 오류가 발생했습니다.'
@@ -50,29 +75,24 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 /**
- * GET /api/notices/:id
- * 공지사항 상세 조회
+ * [하위호환] GET /api/notices/:id → posts 테이블에서 조회
  */
 router.get('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
+        const userId = req.user.userId;
 
-        // 조회수 증가
-        await query(
-            'UPDATE notices SET views = views + 1 WHERE id = $1',
-            [id]
-        );
+        await query('UPDATE posts SET views = views + 1 WHERE id = $1', [id]);
 
-        // 공지사항 조회
         const result = await query(
-            `SELECT 
-                n.id, n.title, n.content, n.is_pinned,
-                n.has_attendance, n.views,
-                n.created_at, n.updated_at,
+            `SELECT
+                p.id, p.title, p.content, p.images, p.category,
+                p.is_pinned, p.views, p.likes_count, p.comments_count,
+                p.created_at, p.updated_at,
                 u.id as author_id, u.name as author_name, u.profile_image as author_image
-             FROM notices n
-             LEFT JOIN users u ON n.author_id = u.id
-             WHERE n.id = $1`,
+             FROM posts p
+             LEFT JOIN users u ON p.author_id = u.id
+             WHERE p.id = $1 AND p.category = 'notice'`,
             [id]
         );
 
@@ -88,7 +108,7 @@ router.get('/:id', authenticate, async (req, res) => {
             notice: result.rows[0]
         });
     } catch (error) {
-        console.error('Get notice error:', error);
+        console.error('Get notice (compat) error:', error);
         res.status(500).json({
             success: false,
             message: '공지사항 조회 중 오류가 발생했습니다.'
@@ -97,31 +117,21 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * POST /api/notices
- * 공지사항 작성 (권한 필요)
+ * [하위호환] POST /api/notices → posts 테이블에 category=notice로 작성
  */
 router.post('/', authenticate, async (req, res) => {
     try {
-        const { title, content, is_pinned, has_attendance } = req.body;
+        const { title, content, is_pinned } = req.body;
         const authorId = req.user.userId;
+        const role = req.user.role;
 
-        // 공지사항 작성 권한 확인
-        const userResult = await query(
-            'SELECT role FROM users WHERE id = $1',
-            [authorId]
-        );
-
-        const userRole = userResult.rows[0].role;
-        
-        // super_admin, admin만 작성 가능
-        if (!['super_admin', 'admin'].includes(userRole)) {
+        if (!['super_admin', 'admin'].includes(role)) {
             return res.status(403).json({
                 success: false,
                 message: '공지사항 작성 권한이 없습니다.'
             });
         }
 
-        // 유효성 검증
         if (!title || !content) {
             return res.status(400).json({
                 success: false,
@@ -129,12 +139,11 @@ router.post('/', authenticate, async (req, res) => {
             });
         }
 
-        // 공지사항 생성
         const result = await query(
-            `INSERT INTO notices (author_id, title, content, is_pinned, has_attendance, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+            `INSERT INTO posts (author_id, title, content, category, is_pinned, created_at, updated_at)
+             VALUES ($1, $2, $3, 'notice', $4, NOW(), NOW())
              RETURNING id`,
-            [authorId, title, content, is_pinned || false, has_attendance || false]
+            [authorId, title, content, is_pinned || false]
         );
 
         res.status(201).json({
@@ -143,7 +152,7 @@ router.post('/', authenticate, async (req, res) => {
             noticeId: result.rows[0].id
         });
     } catch (error) {
-        console.error('Create notice error:', error);
+        console.error('Create notice (compat) error:', error);
         res.status(500).json({
             success: false,
             message: '공지사항 작성 중 오류가 발생했습니다.'
@@ -152,33 +161,29 @@ router.post('/', authenticate, async (req, res) => {
 });
 
 /**
- * PUT /api/notices/:id
- * 공지사항 수정
+ * [하위호환] PUT /api/notices/:id → posts 테이블에서 수정
  */
 router.put('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, content, is_pinned, has_attendance } = req.body;
+        const { title, content, is_pinned } = req.body;
         const userId = req.user.userId;
         const userRole = req.user.role;
 
-        // 공지사항 소유자 확인
-        const noticeResult = await query(
-            'SELECT author_id FROM notices WHERE id = $1',
+        const postResult = await query(
+            "SELECT author_id FROM posts WHERE id = $1 AND category = 'notice'",
             [id]
         );
 
-        if (noticeResult.rows.length === 0) {
+        if (postResult.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: '공지사항을 찾을 수 없습니다.'
             });
         }
 
-        // 작성자 본인이거나 관리자인 경우만 수정 가능
-        const isAuthor = noticeResult.rows[0].author_id === userId;
+        const isAuthor = postResult.rows[0].author_id === userId;
         const isAdmin = ['super_admin', 'admin'].includes(userRole);
-
         if (!isAuthor && !isAdmin) {
             return res.status(403).json({
                 success: false,
@@ -186,12 +191,11 @@ router.put('/:id', authenticate, async (req, res) => {
             });
         }
 
-        // 공지사항 수정
         await query(
-            `UPDATE notices 
-             SET title = $1, content = $2, is_pinned = $3, has_attendance = $4, updated_at = NOW()
-             WHERE id = $5`,
-            [title, content, is_pinned || false, has_attendance || false, id]
+            `UPDATE posts
+             SET title = $1, content = $2, is_pinned = $3, updated_at = NOW()
+             WHERE id = $4`,
+            [title, content, is_pinned || false, id]
         );
 
         res.json({
@@ -199,7 +203,7 @@ router.put('/:id', authenticate, async (req, res) => {
             message: '공지사항이 수정되었습니다.'
         });
     } catch (error) {
-        console.error('Update notice error:', error);
+        console.error('Update notice (compat) error:', error);
         res.status(500).json({
             success: false,
             message: '공지사항 수정 중 오류가 발생했습니다.'
@@ -208,8 +212,7 @@ router.put('/:id', authenticate, async (req, res) => {
 });
 
 /**
- * DELETE /api/notices/:id
- * 공지사항 삭제
+ * [하위호환] DELETE /api/notices/:id → posts 테이블에서 삭제
  */
 router.delete('/:id', authenticate, async (req, res) => {
     try {
@@ -217,23 +220,20 @@ router.delete('/:id', authenticate, async (req, res) => {
         const userId = req.user.userId;
         const userRole = req.user.role;
 
-        // 공지사항 소유자 확인
-        const noticeResult = await query(
-            'SELECT author_id FROM notices WHERE id = $1',
+        const postResult = await query(
+            "SELECT author_id FROM posts WHERE id = $1 AND category = 'notice'",
             [id]
         );
 
-        if (noticeResult.rows.length === 0) {
+        if (postResult.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: '공지사항을 찾을 수 없습니다.'
             });
         }
 
-        // 작성자 본인이거나 관리자인 경우만 삭제 가능
-        const isAuthor = noticeResult.rows[0].author_id === userId;
+        const isAuthor = postResult.rows[0].author_id === userId;
         const isAdmin = ['super_admin', 'admin'].includes(userRole);
-
         if (!isAuthor && !isAdmin) {
             return res.status(403).json({
                 success: false,
@@ -241,98 +241,17 @@ router.delete('/:id', authenticate, async (req, res) => {
             });
         }
 
-        // 공지사항 삭제
-        await query('DELETE FROM notices WHERE id = $1', [id]);
+        await query('DELETE FROM posts WHERE id = $1', [id]);
 
         res.json({
             success: true,
             message: '공지사항이 삭제되었습니다.'
         });
     } catch (error) {
-        console.error('Delete notice error:', error);
+        console.error('Delete notice (compat) error:', error);
         res.status(500).json({
             success: false,
             message: '공지사항 삭제 중 오류가 발생했습니다.'
-        });
-    }
-});
-
-/**
- * GET /api/notices/:id/attendance
- * 공지 참석자 현황 조회
- */
-router.get('/:id/attendance', authenticate, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const userId = req.user.userId;
-
-        const rows = await query(
-            `SELECT na.user_id, na.status, na.updated_at, u.name as user_name
-             FROM notice_attendance na
-             LEFT JOIN users u ON na.user_id = u.id
-             WHERE na.notice_id = $1
-             ORDER BY na.updated_at DESC`,
-            [id]
-        );
-
-        const summary = { attending: 0, not_attending: 0, undecided: 0 };
-        let myStatus = 'undecided';
-        for (const row of rows.rows || []) {
-            if (row.status in summary) summary[row.status] += 1;
-            if (String(row.user_id) === String(userId)) {
-                myStatus = row.status || 'undecided';
-            }
-        }
-
-        return res.json({
-            success: true,
-            summary,
-            myStatus,
-            attendees: rows.rows || [],
-        });
-    } catch (error) {
-        console.error('Get notice attendance error:', error);
-        return res.status(500).json({
-            success: false,
-            message: '참석자 현황 조회 중 오류가 발생했습니다.',
-        });
-    }
-});
-
-/**
- * POST /api/notices/:id/attendance
- * 내 참석 상태 저장/변경
- */
-router.post('/:id/attendance', authenticate, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status } = req.body || {};
-        const userId = req.user.userId;
-
-        if (!['attending', 'not_attending', 'undecided'].includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: '유효하지 않은 참석 상태입니다.',
-            });
-        }
-
-        await query(
-            `INSERT INTO notice_attendance (notice_id, user_id, status, created_at, updated_at)
-             VALUES ($1, $2, $3, NOW(), NOW())
-             ON CONFLICT (notice_id, user_id)
-             DO UPDATE SET status = EXCLUDED.status, updated_at = NOW()`,
-            [id, userId, status]
-        );
-
-        return res.json({
-            success: true,
-            message: '참석 상태가 저장되었습니다.',
-        });
-    } catch (error) {
-        console.error('Update notice attendance error:', error);
-        return res.status(500).json({
-            success: false,
-            message: '참석 상태 저장 중 오류가 발생했습니다.',
         });
     }
 });

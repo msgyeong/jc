@@ -16,6 +16,7 @@ const seedRoutes = require('./routes/seed');
 const attendanceRoutes = require('./routes/attendance');
 const favoritesRoutes = require('./routes/favorites');
 const titlesRoutes = require('./routes/titles');
+const industriesRoutes = require('./routes/industries');
 
 // Express 앱 초기화
 const app = express();
@@ -78,6 +79,7 @@ app.use('/api/seed', seedRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/favorites', favoritesRoutes);
 app.use('/api/titles', titlesRoutes);
+app.use('/api/industries', industriesRoutes);
 
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

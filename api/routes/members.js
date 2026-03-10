@@ -3,41 +3,90 @@ const router = express.Router();
 const { query } = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 
+// 업종 카테고리 상수
+const INDUSTRY_CATEGORIES = [
+    { code: 'law', name: '법률/법무' },
+    { code: 'finance', name: '금융/보험' },
+    { code: 'medical', name: '의료/건강' },
+    { code: 'construction', name: '건설/부동산' },
+    { code: 'it', name: 'IT/기술' },
+    { code: 'manufacturing', name: '제조/생산' },
+    { code: 'food', name: '요식/식음료' },
+    { code: 'retail', name: '유통/판매' },
+    { code: 'service', name: '서비스' },
+    { code: 'realestate', name: '부동산/임대' },
+    { code: 'culture', name: '문화/예술' },
+    { code: 'public', name: '공공/기관' },
+    { code: 'other', name: '기타' }
+];
+
+const VALID_INDUSTRY_CODES = INDUSTRY_CATEGORIES.map(c => c.code);
+
 /**
  * GET /api/members
- * 회원 목록 조회 (페이지네이션)
+ * 회원 목록 조회 (페이지네이션 + 업종 필터)
  */
 router.get('/', authenticate, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 50;
         const offset = (page - 1) * limit;
+        const industry = req.query.industry;
 
-        // 전체 활성 회원 수
+        const conditions = ["u.status = 'active'"];
+        const params = [limit, offset, req.user.userId];
+
+        if (industry && VALID_INDUSTRY_CODES.includes(industry)) {
+            params.push(industry);
+            conditions.push(`u.industry = $${params.length}`);
+        }
+
+        const whereClause = conditions.join(' AND ');
+
         const countResult = await query(
-            "SELECT COUNT(*) FROM users WHERE status = 'active'"
+            `SELECT COUNT(*) FROM users u WHERE ${whereClause}`,
+            params.slice(2) // count only needs userId-onwards params
         );
-        const total = parseInt(countResult.rows[0].count);
+        // Re-do count with proper params
+        const countParams = [];
+        const countConditions = ["status = 'active'"];
+        if (industry && VALID_INDUSTRY_CODES.includes(industry)) {
+            countParams.push(industry);
+            countConditions.push(`industry = $${countParams.length}`);
+        }
+        const countRes = await query(
+            `SELECT COUNT(*) FROM users WHERE ${countConditions.join(' AND ')}`,
+            countParams
+        );
+        const total = parseInt(countRes.rows[0].count);
 
-        // 회원 목록 (활성 회원만, 즐겨찾기 여부 포함)
+        const industryName = industry ? (INDUSTRY_CATEGORIES.find(c => c.code === industry) || {}).name : null;
+
         const result = await query(
             `SELECT
                 u.id, u.email, u.name, u.phone, u.address,
                 u.profile_image, u.role, u.status,
                 u.company, u.position, u.department,
+                u.industry, u.industry_detail,
                 u.created_at,
                 CASE WHEN f.id IS NOT NULL THEN true ELSE false END as is_favorited
              FROM users u
              LEFT JOIN favorites f ON f.target_member_id = u.id AND f.user_id = $3
-             WHERE u.status = 'active'
+             WHERE ${whereClause}
              ORDER BY u.name ASC
              LIMIT $1 OFFSET $2`,
-            [limit, offset, req.user.userId]
+            params
         );
+
+        // industry_name 추가
+        const members = result.rows.map(m => ({
+            ...m,
+            industry_name: m.industry ? (INDUSTRY_CATEGORIES.find(c => c.code === m.industry) || {}).name || null : null
+        }));
 
         res.json({
             success: true,
-            members: result.rows,
+            members,
             total,
             page,
             totalPages: Math.ceil(total / limit)
@@ -53,13 +102,14 @@ router.get('/', authenticate, async (req, res) => {
 
 /**
  * GET /api/members/search
- * 회원 검색
+ * 회원 검색 (텍스트 + 업종 필터 AND 조합)
  */
 router.get('/search', authenticate, async (req, res) => {
     try {
         const searchQuery = req.query.q || '';
+        const industry = req.query.industry;
 
-        if (!searchQuery) {
+        if (!searchQuery && !industry) {
             return res.json({
                 success: true,
                 members: [],
@@ -67,31 +117,48 @@ router.get('/search', authenticate, async (req, res) => {
             });
         }
 
-        // 검색 (이름, 이메일, 전화번호, 주소로 검색)
+        const conditions = ["status = 'active'"];
+        const params = [];
+
+        if (searchQuery) {
+            params.push(`%${searchQuery}%`);
+            conditions.push(`(
+                name ILIKE $${params.length}
+                OR email ILIKE $${params.length}
+                OR phone ILIKE $${params.length}
+                OR address ILIKE $${params.length}
+                OR company ILIKE $${params.length}
+            )`);
+        }
+
+        if (industry && VALID_INDUSTRY_CODES.includes(industry)) {
+            params.push(industry);
+            conditions.push(`industry = $${params.length}`);
+        }
+
         const result = await query(
             `SELECT
                 id, email, name, phone, address,
                 profile_image, role, status,
                 company, position, department,
+                industry, industry_detail,
                 created_at
              FROM users
-             WHERE status = 'active'
-             AND (
-                name ILIKE $1
-                OR email ILIKE $1
-                OR phone ILIKE $1
-                OR address ILIKE $1
-                OR company ILIKE $1
-             )
+             WHERE ${conditions.join(' AND ')}
              ORDER BY name ASC
              LIMIT 50`,
-            [`%${searchQuery}%`]
+            params
         );
+
+        const members = result.rows.map(m => ({
+            ...m,
+            industry_name: m.industry ? (INDUSTRY_CATEGORIES.find(c => c.code === m.industry) || {}).name || null : null
+        }));
 
         res.json({
             success: true,
-            members: result.rows,
-            total: result.rows.length
+            members,
+            total: members.length
         });
     } catch (error) {
         console.error('Search members error:', error);
@@ -110,13 +177,13 @@ router.get('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // 회원 조회
         const result = await query(
             `SELECT
                 id, email, name, phone, address,
                 profile_image, role, status,
                 birth_date, gender,
                 company, position, department, work_phone,
+                industry, industry_detail,
                 created_at, updated_at
              FROM users
              WHERE id = $1`,
@@ -130,9 +197,14 @@ router.get('/:id', authenticate, async (req, res) => {
             });
         }
 
+        const member = result.rows[0];
+        member.industry_name = member.industry
+            ? (INDUSTRY_CATEGORIES.find(c => c.code === member.industry) || {}).name || null
+            : null;
+
         res.json({
             success: true,
-            member: result.rows[0]
+            member
         });
     } catch (error) {
         console.error('Get member error:', error);

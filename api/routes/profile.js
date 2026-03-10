@@ -18,6 +18,7 @@ router.get('/', authenticate, async (req, res) => {
                 profile_image, role, status,
                 birth_date, gender,
                 company, position, department, work_phone,
+                industry, industry_detail,
                 created_at, updated_at
              FROM users
              WHERE id = $1`,
@@ -51,7 +52,7 @@ router.get('/', authenticate, async (req, res) => {
 router.put('/', authenticate, async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { name, phone, address, birth_date, gender, company, position, department, work_phone } = req.body;
+        const { name, phone, address, birth_date, gender, company, position, department, work_phone, industry, industry_detail } = req.body;
 
         // 유효성 검증
         if (!name) {
@@ -61,15 +62,32 @@ router.put('/', authenticate, async (req, res) => {
             });
         }
 
+        // 업종 코드 유효성 검증
+        const VALID_INDUSTRY_CODES = ['law','finance','medical','construction','it','manufacturing','food','retail','service','realestate','culture','public','other'];
+        if (industry && !VALID_INDUSTRY_CODES.includes(industry)) {
+            return res.status(400).json({
+                success: false,
+                message: '유효하지 않은 업종 코드입니다.'
+            });
+        }
+
+        if (industry_detail && String(industry_detail).length > 100) {
+            return res.status(400).json({
+                success: false,
+                message: '업종 상세는 100자 이내로 입력해주세요.'
+            });
+        }
+
         // 프로필 수정
         await query(
             `UPDATE users
              SET name = $1, phone = $2, address = $3,
                  birth_date = $4, gender = $5,
                  company = $6, position = $7, department = $8, work_phone = $9,
+                 industry = $10, industry_detail = $11,
                  updated_at = NOW()
-             WHERE id = $10`,
-            [name, phone, address, birth_date, gender, company, position, department, work_phone, userId]
+             WHERE id = $12`,
+            [name, phone, address, birth_date, gender, company, position, department, work_phone, industry || null, industry_detail || null, userId]
         );
 
         res.json({

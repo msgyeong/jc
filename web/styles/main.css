@@ -1788,56 +1788,110 @@ input[type="date"]:focus {
 }
 
 /* 주민등록번호 분할 입력 */
-.ssn-split-wrapper {
+.ssn-input-group {
     display: flex;
     align-items: center;
-    width: 100%;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    background-color: white;
-    transition: var(--transition);
-    padding: 0 var(--spacing-md);
+    gap: 8px;
 }
 
-.ssn-split-wrapper:focus-within {
+.ssn-front {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
+    text-align: center;
+    letter-spacing: 2px;
+    outline: none;
+    transition: border-color 0.15s;
+    font-family: var(--font-family);
+    color: var(--text-primary);
+}
+
+.ssn-front:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
 }
 
-.ssn-split-wrapper input {
-    border: none;
-    background: transparent;
-    font-size: 15px;
-    color: var(--text-primary);
-    padding: var(--spacing-sm) 0;
-    font-family: var(--font-family);
-}
-
-.ssn-split-wrapper input:focus {
-    outline: none;
-}
-
-.ssn-front {
-    width: 7ch;
-    letter-spacing: 0.05em;
-}
-
-.ssn-dash {
+.ssn-separator {
+    font-size: 20px;
+    font-weight: 700;
     color: var(--text-secondary);
-    padding: 0 4px;
-    font-size: 15px;
 }
 
 .ssn-back {
-    width: 2ch;
+    width: 44px;
+    padding: 12px 0;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
     text-align: center;
+    outline: none;
+    transition: border-color 0.15s;
+    font-family: var(--font-family);
+    color: var(--text-primary);
 }
 
-.ssn-fixed-mask {
-    color: var(--text-hint);
-    font-size: 15px;
-    letter-spacing: 0.05em;
+.ssn-back:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+.ssn-mask {
+    font-size: 14px;
+    color: var(--text-secondary);
+    letter-spacing: 3px;
     user-select: none;
+}
+
+/* 주소 검색 */
+.address-input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.address-main {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 15px;
+    background: #F8FAFC;
+    color: var(--text-primary);
+    outline: none;
+    cursor: pointer;
+}
+
+.btn-address-search {
+    padding: 12px 16px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+
+.btn-address-search:hover {
+    background: #1D4ED8;
+}
+
+.address-detail {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.address-detail:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
 }
 
 /* ============================================

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영등포 JC - 회원관리 앱</title>
     <!-- Build: 2026-02-06 v2.1 -->
-    <link rel="stylesheet" href="styles/main.css?v=20260310">
+    <link rel="stylesheet" href="styles/main.css?v=20260310b">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
@@ -232,29 +232,12 @@
                         <label for="signup-ssn-front">
                             주민등록번호 <span class="required-badge">필수</span>
                         </label>
-                        <div class="ssn-split-wrapper" id="signup-ssn-wrapper">
-                            <input
-                                type="text"
-                                id="signup-ssn-front"
-                                class="ssn-front"
-                                placeholder="생년월일"
-                                maxlength="6"
-                                inputmode="numeric"
-                                required
-                            >
-                            <span class="ssn-dash">-</span>
-                            <input
-                                type="text"
-                                id="signup-ssn-back"
-                                class="ssn-back"
-                                placeholder="●"
-                                maxlength="1"
-                                inputmode="numeric"
-                                required
-                            >
-                            <span class="ssn-fixed-mask">●●●●●●</span>
+                        <div class="ssn-input-group">
+                            <input type="text" id="signup-ssn-front" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="생년월일 6자리" class="ssn-front" required>
+                            <span class="ssn-separator">-</span>
+                            <input type="password" id="signup-ssn-back" maxlength="1" inputmode="numeric" pattern="[0-9]*" placeholder="●" class="ssn-back" required>
+                            <span class="ssn-mask">● ● ● ● ● ●</span>
                         </div>
-                        <small class="help-text">생년월일 6자리 + 성별 1자리를 입력하세요</small>
                         <span class="error-message" id="signup-ssn-error"></span>
                     </div>
 
@@ -275,27 +258,12 @@
                         <label for="signup-address">
                             주소 <span class="required-badge">필수</span>
                         </label>
-                        <input
-                            type="text"
-                            id="signup-address"
-                            placeholder="클릭하여 주소 검색"
-                            readonly
-                            required
-                            onclick="openAddressSearch()"
-                            style="cursor:pointer; background:var(--background-color);"
-                        >
+                        <div class="address-input-group">
+                            <input type="text" id="signup-address" placeholder="주소 검색을 눌러주세요" readonly class="address-main" required>
+                            <button type="button" class="btn-address-search" onclick="openAddressSearch()">주소 검색</button>
+                        </div>
+                        <input type="text" id="signup-address-detail" placeholder="상세주소 입력" class="address-detail" style="margin-top: 8px;">
                         <span class="error-message" id="signup-address-error"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="signup-address-detail">
-                            상세 주소 <span class="optional-badge">선택</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            id="signup-address-detail" 
-                            placeholder="동, 호수 등"
-                        >
                     </div>
 
                     <!-- Step 3: 직장 정보 (선택) -->

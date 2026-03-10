@@ -119,9 +119,8 @@ async function handleSignup(event) {
         
         // Step 2: 기본 정보
         const name = document.getElementById('signup-name').value.trim();
-        const ssnFrontVal = document.getElementById('signup-ssn-front').value.trim();
-        const ssnBackVal = document.getElementById('signup-ssn-back').value.trim();
-        const ssn = ssnFrontVal + '-' + ssnBackVal;
+        const ssnFront = document.getElementById('signup-ssn-front').value.trim();
+        const ssnBack = document.getElementById('signup-ssn-back').value.trim();
         const phone = document.getElementById('signup-phone').value.trim();
         const address = document.getElementById('signup-address').value.trim();
         const address_detail = document.getElementById('signup-address-detail').value.trim();
@@ -203,7 +202,8 @@ async function handleSignup(event) {
             password,
             // Step 2
             name,
-            ssn,
+            ssnFront,
+            ssnBack,
             phone,
             address,
             address_detail,

@@ -237,9 +237,98 @@ async function handlePostCreateFileSelect(e) {
     }
 }
 
+// ── M-12: 일정 첨부 토글 상태 ──
+let postCreateScheduleAttached = false;
+
+function renderScheduleAttachSection(containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = `
+        <div class="schedule-attach-section">
+            <div class="schedule-attach-header" onclick="toggleScheduleAttach('${containerId}')">
+                <span class="schedule-attach-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 일정 첨부</span>
+                <label class="toggle-switch" onclick="event.stopPropagation()">
+                    <input type="checkbox" id="schedule-attach-toggle" onchange="toggleScheduleAttach('${containerId}')">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="schedule-attach-fields" id="schedule-attach-fields" style="display:none">
+                <div class="form-group">
+                    <label>일정 제목</label>
+                    <input type="text" id="schedule-attach-title" placeholder="공지 제목이 기본값으로 사용됩니다">
+                </div>
+                <div class="form-group">
+                    <label>카테고리</label>
+                    <select id="schedule-attach-category">
+                        <option value="event">행사</option>
+                        <option value="meeting">회의</option>
+                        <option value="training">교육</option>
+                        <option value="other">기타</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>시작 날짜/시간</label>
+                    <div class="date-time-row">
+                        <input type="date" id="schedule-attach-start-date">
+                        <input type="time" id="schedule-attach-start-time" value="09:00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>종료 날짜/시간</label>
+                    <div class="date-time-row">
+                        <input type="date" id="schedule-attach-end-date">
+                        <input type="time" id="schedule-attach-end-time" value="18:00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>장소</label>
+                    <input type="text" id="schedule-attach-location" placeholder="장소를 입력하세요">
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function toggleScheduleAttach(containerId) {
+    const toggle = document.getElementById('schedule-attach-toggle');
+    const fields = document.getElementById('schedule-attach-fields');
+    if (!toggle || !fields) return;
+    postCreateScheduleAttached = toggle.checked;
+    fields.style.display = postCreateScheduleAttached ? '' : 'none';
+    // 일정 제목 기본값: 공지 제목
+    if (postCreateScheduleAttached) {
+        const postTitle = document.getElementById('post-create-title');
+        const schedTitle = document.getElementById('schedule-attach-title');
+        if (postTitle && schedTitle && !schedTitle.value) {
+            schedTitle.value = postTitle.value;
+        }
+    }
+}
+
+function getScheduleAttachData() {
+    if (!postCreateScheduleAttached) return null;
+    const title = (document.getElementById('schedule-attach-title')?.value || '').trim();
+    const category = document.getElementById('schedule-attach-category')?.value || 'event';
+    const startDate = document.getElementById('schedule-attach-start-date')?.value || '';
+    const startTime = document.getElementById('schedule-attach-start-time')?.value || '09:00';
+    const endDate = document.getElementById('schedule-attach-end-date')?.value || '';
+    const endTime = document.getElementById('schedule-attach-end-time')?.value || '18:00';
+    const location = (document.getElementById('schedule-attach-location')?.value || '').trim();
+
+    if (!startDate) return null;
+    return {
+        title: title || document.getElementById('post-create-title')?.value?.trim() || '',
+        category,
+        start_date: `${startDate}T${startTime}:00`,
+        end_date: endDate ? `${endDate}T${endTime}:00` : `${startDate}T${endTime}:00`,
+        location
+    };
+}
+
 // ── 게시글 작성 버튼 → 작성 화면 이동 ──
 function handleCreatePost() {
     postCreateImageUrls = [];
+    postCreateScheduleAttached = false;
     renderPostFormImages('post-create-images-list', [], removePostCreateImage);
 
     // 현재 탭의 카테고리 자동 적용
@@ -249,6 +338,16 @@ function handleCreatePost() {
     // 공지 옵션 표시/숨김
     const noticeOpts = document.getElementById('post-create-notice-options');
     if (noticeOpts) noticeOpts.style.display = currentBoardCategory === 'notice' ? '' : 'none';
+
+    // 일정 첨부 섹션 (공지탭일 때만)
+    const schedAttachContainer = document.getElementById('post-create-schedule-attach');
+    if (schedAttachContainer) {
+        if (currentBoardCategory === 'notice') {
+            renderScheduleAttachSection('post-create-schedule-attach');
+        } else {
+            schedAttachContainer.innerHTML = '';
+        }
+    }
 
     // 폼 초기화
     const titleEl = document.getElementById('post-create-title');
@@ -319,6 +418,11 @@ async function handlePostCreateSubmit(e) {
             category,
             is_pinned: isPinned ? isPinned.checked : false,
         };
+        // M-12: 일정 첨부 데이터
+        const scheduleData = getScheduleAttachData();
+        if (scheduleData) {
+            payload.schedule = scheduleData;
+        }
         const result = await apiClient.createPost(payload);
         if (result.success) {
             if (typeof loadPostsScreen === 'function') {
@@ -379,6 +483,7 @@ async function loadPostDetail(postId) {
         if (result.success && result.post) {
             container.innerHTML = renderPostDetail(result.post);
             loadCommentsForPost(postId);
+            loadLinkedScheduleForPost(result.post);
         } else {
             container.innerHTML = renderErrorState('게시글을 불러올 수 없습니다', null, `loadPostDetail(${postId})`);
         }
@@ -500,6 +605,7 @@ function renderPostDetail(post) {
                     <svg class="icon-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"${liked ? ' fill="#DC2626" stroke="#DC2626"' : ''}/></svg> <span class="post-detail-likes-count">${post.likes_count || 0}</span>
                 </button>
             </div>
+            <div id="post-linked-schedule-container"></div>
             <div class="post-detail-comments">
                 <h4>댓글</h4>
                 <div class="post-detail-comments-list" id="post-detail-comments-list"></div>
@@ -669,6 +775,46 @@ function handlePostDelete(postId) {
         .catch((err) => {
             showToast(err.message || '삭제 중 오류가 발생했습니다.', 'error');
         });
+}
+
+// ── M-12: 공지 상세에서 연결된 일정 표시 ──
+async function loadLinkedScheduleForPost(post) {
+    const container = document.getElementById('post-linked-schedule-container');
+    if (!container) return;
+    const scheduleId = post.linked_schedule_id || post.schedule_id;
+    if (!scheduleId) { container.innerHTML = ''; return; }
+    try {
+        const res = await apiClient.getSchedule(scheduleId);
+        const sched = res.schedule || (res.data && res.data) || null;
+        if (!sched) { container.innerHTML = ''; return; }
+        const catLabel = (typeof CATEGORY_LABELS !== 'undefined' && CATEGORY_LABELS[sched.category]) || sched.category || '';
+        const catClass = (typeof CATEGORY_BADGE_CLASS !== 'undefined' && CATEGORY_BADGE_CLASS[sched.category]) || 'badge-other';
+        const dateStr = sched.start_date ? new Date(sched.start_date).toLocaleDateString('ko-KR') : '';
+        let timeStr = '';
+        if (sched.start_date && sched.start_date.includes('T')) {
+            const st = sched.start_date.split('T')[1]?.substring(0, 5) || '';
+            const et = sched.end_date && sched.end_date.includes('T') ? sched.end_date.split('T')[1]?.substring(0, 5) || '' : '';
+            if (st && st !== '00:00') timeStr = et ? `${st}~${et}` : st;
+        }
+        container.innerHTML = `
+            <div class="linked-schedule-banner" onclick="navigateTo('/schedules/${sched.id}')">
+                <div class="linked-schedule-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                <div class="linked-schedule-info">
+                    <div class="linked-schedule-label">연결된 일정</div>
+                    <div class="linked-schedule-title">
+                        <span class="schedule-category-badge ${catClass}">${catLabel}</span>
+                        ${escapeHtml(sched.title || '')}
+                    </div>
+                    <div class="linked-schedule-meta">
+                        ${dateStr ? `<span>${dateStr}</span>` : ''}
+                        ${timeStr ? `<span>${timeStr}</span>` : ''}
+                        ${sched.location ? `<span>${escapeHtml(sched.location)}</span>` : ''}
+                    </div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+        `;
+    } catch (_) { container.innerHTML = ''; }
 }
 
 // ── DOMContentLoaded ──

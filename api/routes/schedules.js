@@ -278,4 +278,172 @@ router.delete('/:id', authenticate, async (req, res) => {
     }
 });
 
+/**
+ * GET /api/schedules/:id/comments
+ * 일정 댓글 목록 조회 (대댓글 포함)
+ */
+router.get('/:id/comments', authenticate, async (req, res) => {
+    try {
+        const { id: scheduleId } = req.params;
+        const userId = req.user.userId;
+
+        const result = await query(
+            `SELECT c.id, c.author_id, c.content, c.parent_id, c.is_deleted, c.created_at,
+                    u.name as author_name, u.profile_image as author_image, u.position as author_position
+             FROM comments c
+             LEFT JOIN users u ON c.author_id = u.id
+             WHERE c.schedule_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
+             ORDER BY c.created_at ASC`,
+            [scheduleId]
+        );
+
+        // 대댓글 구조화
+        const topLevel = [];
+        const replyMap = {};
+
+        for (const row of result.rows) {
+            row.author = { id: row.author_id, name: row.author_name, position: row.author_position, profile_image: row.author_image };
+            row.replies = [];
+            if (!row.parent_id) {
+                topLevel.push(row);
+                replyMap[row.id] = row;
+            }
+        }
+
+        for (const row of result.rows) {
+            if (row.parent_id && replyMap[row.parent_id]) {
+                replyMap[row.parent_id].replies.push(row);
+            }
+        }
+
+        res.json({
+            success: true,
+            data: {
+                items: topLevel,
+                total: result.rows.length
+            }
+        });
+    } catch (error) {
+        console.error('Get schedule comments error:', error);
+        res.status(500).json({
+            success: false,
+            message: '댓글 목록 조회에 실패했습니다.'
+        });
+    }
+});
+
+/**
+ * POST /api/schedules/:id/comments
+ * 일정 댓글 작성
+ */
+router.post('/:id/comments', authenticate, async (req, res) => {
+    try {
+        const { id: scheduleId } = req.params;
+        const { content, parent_id } = req.body || {};
+        const authorId = req.user.userId;
+
+        if (!content || !String(content).trim()) {
+            return res.status(400).json({
+                success: false,
+                message: '댓글 내용을 입력해주세요.'
+            });
+        }
+
+        // 일정 존재 확인
+        const scheduleResult = await query('SELECT id FROM schedules WHERE id = $1', [scheduleId]);
+        if (scheduleResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '일정을 찾을 수 없습니다.'
+            });
+        }
+
+        // 대댓글인 경우 부모 댓글 확인
+        if (parent_id) {
+            const parentResult = await query(
+                'SELECT id, parent_id FROM comments WHERE id = $1 AND schedule_id = $2',
+                [parent_id, scheduleId]
+            );
+            if (parentResult.rows.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: '부모 댓글을 찾을 수 없습니다.'
+                });
+            }
+            // 대대댓글 방지
+            if (parentResult.rows[0].parent_id) {
+                return res.status(400).json({
+                    success: false,
+                    message: '대댓글에는 답글을 달 수 없습니다.'
+                });
+            }
+        }
+
+        const result = await query(
+            `INSERT INTO comments (author_id, schedule_id, content, parent_id, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, NOW(), NOW())
+             RETURNING id, content, created_at`,
+            [authorId, scheduleId, String(content).trim(), parent_id || null]
+        );
+
+        // 작성자 정보 조회
+        const userResult = await query(
+            'SELECT name, position, profile_image FROM users WHERE id = $1',
+            [authorId]
+        );
+
+        const comment = result.rows[0];
+        comment.author = {
+            id: authorId,
+            name: userResult.rows[0]?.name,
+            position: userResult.rows[0]?.position
+        };
+        comment.parent_id = parent_id || null;
+
+        res.status(201).json({
+            success: true,
+            data: comment
+        });
+    } catch (error) {
+        console.error('Create schedule comment error:', error);
+        res.status(500).json({
+            success: false,
+            message: '댓글 등록에 실패했습니다.'
+        });
+    }
+});
+
+/**
+ * DELETE /api/schedules/:id/comments/:commentId
+ * 일정 댓글 삭제 (soft delete)
+ */
+router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
+    try {
+        const { id: scheduleId, commentId } = req.params;
+        const userId = req.user.userId;
+        const userRole = req.user.role;
+
+        const commentResult = await query(
+            'SELECT author_id FROM comments WHERE id = $1 AND schedule_id = $2',
+            [commentId, scheduleId]
+        );
+        if (commentResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '댓글을 찾을 수 없습니다.' });
+        }
+
+        const isAuthor = commentResult.rows[0].author_id === userId;
+        const isAdmin = userRole && ['super_admin', 'admin'].includes(userRole);
+        if (!isAuthor && !isAdmin) {
+            return res.status(403).json({ success: false, message: '댓글 삭제 권한이 없습니다.' });
+        }
+
+        await query('UPDATE comments SET is_deleted = true, updated_at = NOW() WHERE id = $1', [commentId]);
+
+        res.json({ success: true, message: '댓글이 삭제되었습니다.' });
+    } catch (error) {
+        console.error('Delete schedule comment error:', error);
+        res.status(500).json({ success: false, message: '댓글 삭제에 실패했습니다.' });
+    }
+});
+
 module.exports = router;

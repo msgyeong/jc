@@ -163,10 +163,10 @@ function loadBannerSummary() {
         <div class="banner-carousel" role="region" aria-label="홈 배너" aria-roledescription="carousel">
             <div class="banner-track" id="banner-track">
                 ${banners.map((b, i) => `
-                    <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="배너 ${i+1}/${banners.length}" style="background:${b.gradient}" ${b.action ? 'onclick="' + b.action + '"' : ''} ${b.action ? 'style="background:' + b.gradient + ';cursor:pointer"' : ''}>
+                    <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="배너 ${i+1}/${banners.length}" style="background:${b.gradient}${b.action ? ';cursor:pointer' : ''}" ${b.action ? 'onclick="' + b.action + '"' : ''}>
                         <div class="banner-title">${b.title}</div>
                         <div class="banner-subtitle">${b.subtitle}</div>
-                        ${b.cta && b.action ? `<span class="banner-cta">${b.cta}</span>` : ''}
+                        ${b.cta ? `<span class="banner-cta"${b.action ? ' onclick="' + b.action + '"' : ''}>${b.cta}</span>` : ''}
                     </div>
                 `).join('')}
             </div>

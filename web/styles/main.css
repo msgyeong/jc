@@ -738,8 +738,7 @@ input::-ms-clear {
     display: none;
 }
 
-.banner-item,
-.banner-slide {
+.banner-item {
     flex: 0 0 100%;
     scroll-snap-align: start;
     cursor: pointer;
@@ -4334,6 +4333,7 @@ input[type="date"]:focus {
     will-change: transform;
 }
 .banner-track .banner-slide {
+    min-width: 100%;
     width: 100%;
     height: 100%;
     flex-shrink: 0;
@@ -4343,6 +4343,7 @@ input[type="date"]:focus {
     justify-content: flex-end;
     padding: 16px;
     cursor: default;
+    box-sizing: border-box;
 }
 .banner-carousel .banner-indicators {
     position: absolute;

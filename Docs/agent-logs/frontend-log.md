@@ -499,6 +499,46 @@
 
 ---
 
+## 세션 #8 — 2026-03-11 (화)
+
+### 작업: 관리자 웹 Phase 1 — SPA 프론트엔드
+- **상태**: 완료
+- **커밋**: `de26b48` → `origin main` 푸시 완료
+
+#### 변경 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `web/admin/index.html` | 전면 재작성 — 스플릿 로그인 화면(브랜드 패널+폼) + 사이드바 레이아웃 SPA 셸 (대시보드/회원/게시판 + 공지/일정 준비중) |
+| `web/admin/css/admin.css` | 신규 — 디자인 가이드 기반 전체 스타일시트 (~1000줄). 로그인, 사이드바, 헤더, 카드, 테이블, 배지, 모달, 토스트, 스켈레톤, 반응형 |
+| `web/admin/js/admin-app.js` | 신규 — SPA 코어: API 클라이언트(JWT), hash 라우터, 로그인/로그아웃, 사이드바 토글, 모달/토스트, 유틸(escapeHtml, formatDate, statusBadge 등) |
+| `web/admin/js/dashboard.js` | 신규 — 통계 카드 4종(전체회원/승인대기/게시글/일정) + 최근 가입 회원 & 최근 게시글 활동 리스트 |
+| `web/admin/js/members.js` | 신규 — 회원 테이블 + 검색(이름/이메일/전화) + 상태/역할 필터 + 페이지네이션 + 상세 모달 + 승인/정지/해제 액션 |
+| `web/admin/js/posts.js` | 신규 — 게시글 테이블 + 검색 + 카테고리 필터 + 페이지네이션 + 댓글 관리 모달 + 삭제 확인 |
+| `web/admin/admin.css` | 삭제 (구 파일, css/admin.css로 대체) |
+| `web/admin/admin.js` | 삭제 (구 파일, js/로 분리) |
+| `web/js/profile.js` | 관리자 메뉴 버튼 `navigateToScreen('admin')` → `location.href='/admin/'` |
+
+#### API 연동
+- `POST /api/admin/auth/login` — 로그인 (admin_id=email)
+- `GET /api/admin/dashboard/stats` — 통계 (members/posts/schedules/comments)
+- `GET /api/admin/dashboard/recent-activity` — 최근 가입/게시글/일정
+- `GET /api/admin/members` — 회원 목록 (search/status/role/page/limit)
+- `GET /api/admin/members/:id` — 회원 상세
+- `PUT /api/admin/members/:id` — 상태/역할 변경
+- `GET /api/admin/posts` — 게시글 목록 (search/category/page/limit)
+- `DELETE /api/admin/posts/:id` — 게시글 삭제
+- `GET /api/admin/posts/:id/comments` — 댓글 조회
+- `DELETE /api/admin/comments/:id` — 댓글 삭제
+
+#### 아키텍처
+- **SPA hash 라우팅**: `#dashboard`, `#members`, `#posts` (공지/일정은 disabled)
+- **JWT 인증**: `localStorage`에 `admin_token`/`admin_user` 저장, 401/403시 자동 로그아웃
+- **모바일 대응**: 768px 이하 사이드바 슬라이드+오버레이, 480px 이하 1열 레이아웃
+- **스켈레톤 로딩**: 테이블/통계 카드 데이터 로딩 중 표시
+- **모달**: 회원 상세, 댓글 관리, 삭제 확인 — 오버레이 클릭으로 닫기
+
+---
+
 ## 알려진 이슈 (수정 안 함, 동작 영향 없음)
 
 1. `formatDate` 함수가 `utils.js`와 `home.js`에 중복 정의 — home.js가 덮어씀. 통합 필요.

@@ -107,6 +107,30 @@
 
 ---
 
+## 세션 4 — 2026-03-11
+
+### 작업 1: Web Push 알림 기능 기획서 + UI 가이드 요청서
+
+**지시**: PWA 기반 Web Push 알림 기능 전체 기획서 작성 + 디자이너 전달용 UI 가이드 요청서
+
+**생성 파일**:
+- `Docs/features/web-push-notification.md` (신규) — Web Push 알림 상세 기획서
+  - 알림 유형 5종 정의 (N-01~N-05: 공지, 일정등록, 리마인더, 일정변경, 댓글)
+  - DB 테이블 3개 설계 (push_subscriptions, notification_settings, notification_log)
+  - API 7개 설계 (subscribe, unsubscribe, settings GET/PUT, notifications GET, read, read-all)
+  - Service Worker + manifest.json PWA 설정
+  - iOS 16.4+ 호환성 분기 처리
+  - node-cron 리마인더 (매일 09:00 KST)
+  - 구현 Phase 1 (MVP 10단계) + Phase 2 (완성 8단계) 로드맵
+- `Docs/design-system/18-notification-ui.md` (신규) — 알림 관련 UI 가이드 요청서
+  - 디자이너에게 필요한 6개 UI 컴포넌트 명세
+  - PWA 아이콘 세트 6개 제작 요청
+  - 디자인 토큰 참조 테이블
+
+**커밋**: 아래에서 커밋 예정
+
+---
+
 ## 다른 에이전트에게 전달할 사항
 
 ### → 백엔드
@@ -120,6 +144,7 @@
 8. **[신규]** DB 마이그레이션: schedules.linked_post_id, posts.linked_schedule_id 추가
 9. **[신규]** 업종 검색 API → `Docs/features/industry-search.md` §6 (GET /api/members?industry=, GET /api/industries)
 10. **[신규]** DB 마이그레이션: users.industry + users.industry_detail 컬럼 추가
+11. **[신규]** Web Push 알림 → `Docs/features/web-push-notification.md` §4 (DB 3개 + API 7개 + web-push + node-cron)
 
 ### → 프론트엔드
 1. 기존 admin-web 코드 삭제 후 재개발
@@ -131,9 +156,11 @@
 7. **[신규]** 일정 등록/수정 폼 완성 → `Docs/features/schedule-form.md` (종일 이벤트, 투표 설정, 유효성 검증)
 8. **[신규]** 공지 작성 시 일정 첨부 UI → `Docs/features/notice-schedule-link.md` (토글+일정 입력)
 9. **[신규]** 업종 필터 + 태그 → `Docs/features/industry-search.md` (회원 목록 드롭다운, 카드 태그, 가입/프로필 필드)
+10. **[신규]** Web Push 프론트 → `Docs/features/web-push-notification.md` §5 (SW, 구독 플로우, 알림센터, PWA manifest)
 
 ### → 디자이너
 1. 앱 Primary #1F4FD8 → #2563EB 통일 여부 사장님 확인 필요
+2. **[신규]** 알림 UI 컴포넌트 + PWA 아이콘 세트 → `Docs/design-system/18-notification-ui.md`
 
 ---
 
@@ -163,3 +190,5 @@
 | 일정 등록/수정 기획 | `Docs/features/schedule-form.md` |
 | 공지-일정 연동 기획 | `Docs/features/notice-schedule-link.md` |
 | 업종 검색 기획 | `Docs/features/industry-search.md` |
+| Web Push 알림 기획 | `Docs/features/web-push-notification.md` |
+| 알림 UI 가이드 요청 | `Docs/design-system/18-notification-ui.md` |

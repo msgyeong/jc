@@ -175,8 +175,55 @@ function setupBottomNavigation() {
             switchTab(tab);
         });
     });
-    
-    console.log('✅ 하단 네비게이션 설정 완료');
+
+    // N배지 초기 셋업 (M-06)
+    initNavBadges();
+
+    console.log('Nav setup complete');
+}
+
+// M-06: N배지 하단 탭 적용
+function initNavBadges() {
+    // 게시판(공지)과 일정 탭에 badge dot 추가
+    document.querySelectorAll('.nav-item').forEach(item => {
+        const tab = item.dataset.tab;
+        if (tab === 'posts' || tab === 'schedules') {
+            if (!item.querySelector('.nav-badge')) {
+                const dot = document.createElement('span');
+                dot.className = 'nav-badge';
+                dot.dataset.badgeTab = tab;
+                item.appendChild(dot);
+            }
+        }
+    });
+    updateNavBadges();
+}
+
+async function updateNavBadges() {
+    try {
+        // 안읽은 공지 확인 (3일 이내)
+        const postsRes = await apiClient.getPosts(1, 10, 'notice');
+        const posts = postsRes.posts || (postsRes.data && (postsRes.data.posts || postsRes.data.items)) || [];
+        const hasNewNotice = posts.some(p => {
+            const created = new Date(p.created_at);
+            return (Date.now() - created) <= 3 * 24 * 60 * 60 * 1000;
+        });
+        document.querySelectorAll('.nav-badge[data-badge-tab="posts"]').forEach(d => {
+            d.classList.toggle('visible', hasNewNotice);
+        });
+    } catch (_) {}
+    try {
+        // 다가오는 일정 확인
+        const schedRes = await apiClient.getSchedules(true);
+        const scheds = schedRes.schedules || (schedRes.data && (schedRes.data.schedules || schedRes.data.items)) || [];
+        const hasUpcoming = scheds.some(s => {
+            const start = new Date(s.start_date);
+            return (start - Date.now()) <= 7 * 24 * 60 * 60 * 1000 && start >= Date.now();
+        });
+        document.querySelectorAll('.nav-badge[data-badge-tab="schedules"]').forEach(d => {
+            d.classList.toggle('visible', hasUpcoming);
+        });
+    } catch (_) {}
 }
 
 // 탭 전환 함수

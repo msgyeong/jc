@@ -2750,6 +2750,72 @@ input[type="date"]:focus {
     opacity: 0.8;
 }
 
+/* ==================== 전화걸기 (Click-to-Call) ==================== */
+
+.call-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #2563EB;
+    transition: background 0.15s ease;
+    flex-shrink: 0;
+    margin-left: auto;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.call-btn:hover {
+    background: #EFF6FF;
+}
+
+.call-btn:active {
+    background: #DBEAFE;
+    color: #1D4ED8;
+}
+
+.call-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.call-btn--disabled {
+    color: #D1D5DB;
+    pointer-events: none;
+    cursor: default;
+}
+
+.phone-link {
+    color: #2563EB;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: #93C5FD;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 8px 0;
+    transition: text-decoration-color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.phone-link:hover {
+    text-decoration-color: #2563EB;
+}
+
+.phone-link:active {
+    color: #1D4ED8;
+    text-decoration-color: #1D4ED8;
+}
+
 /* ==================== 프로필 & 상세 뷰 공통 ==================== */
 
 .profile-v2 {

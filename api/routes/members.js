@@ -19,18 +19,20 @@ router.get('/', authenticate, async (req, res) => {
         );
         const total = parseInt(countResult.rows[0].count);
 
-        // 회원 목록 (활성 회원만)
+        // 회원 목록 (활성 회원만, 즐겨찾기 여부 포함)
         const result = await query(
             `SELECT
-                id, email, name, phone, address,
-                profile_image, role, status,
-                company, position, department,
-                created_at
-             FROM users
-             WHERE status = 'active'
-             ORDER BY name ASC
+                u.id, u.email, u.name, u.phone, u.address,
+                u.profile_image, u.role, u.status,
+                u.company, u.position, u.department,
+                u.created_at,
+                CASE WHEN f.id IS NOT NULL THEN true ELSE false END as is_favorited
+             FROM users u
+             LEFT JOIN favorites f ON f.target_member_id = u.id AND f.user_id = $3
+             WHERE u.status = 'active'
+             ORDER BY u.name ASC
              LIMIT $1 OFFSET $2`,
-            [limit, offset]
+            [limit, offset, req.user.userId]
         );
 
         res.json({

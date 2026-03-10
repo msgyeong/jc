@@ -153,6 +153,38 @@
 
 ---
 
+## 세션 5: 2026-03-11
+
+### 작업 6: Web Push 알림 UI 가이드 작성
+- **시간**: 2026-03-11
+- **지시**: 사장님 — Web Push 알림 기능 UI 가이드 작성 (기획자 요청서 기반)
+- **참조 문서**:
+  - `Docs/design-system/18-notification-ui.md` (기획자 요청서 → 확장)
+  - `Docs/features/web-push-notification.md` (상세 기획서)
+  - `Docs/design-system/07-unified-design-guide.md` (통합 디자인 토큰)
+  - `Docs/design-system/16-home-banner-ui.md` (배너 UI 참고)
+- **산출물**:
+  - `Docs/design-system/18-notification-ui.md` — 기획자 요청서를 상세 UI 가이드로 확장
+    - **1. 앱바 알림 배지**: SVG 종 아이콘 24px, 미읽음 배지(pill, #DC2626, 10px bold), 바운스 애니메이션
+    - **2. 알림 센터 화면**: 미읽음(#EFF6FF)/읽음(#FFFFFF) 배경 차이, 좌측 파란 점 8px, 유형별 원형 아이콘(4종), 시간 표시 6단계 규칙, 빈 상태(SVG 64px)
+    - **3. 알림 설정 화면**: iOS 스타일 토글(48×28px), 마스터 스위치(크기 대, 15px bold), 마스터 OFF 시 opacity 0.5 + pointer-events none, 푸시 상태 표시
+    - **4. 푸시 구독 유도 배너**: 하단 고정(72px), 카드형(#FFFFFF, shadow-md), [알림 켜기] Primary CTA + [나중에] Ghost, slide-up/down 애니메이션, 7일 후 재표시, 3회 닫기 시 영구 숨김
+    - **5. PWA 설치 안내 배너**: 상단 고정(64px), #EFF6FF 배경, 닫기(X) 가능, OS별 안내 모달(Android Chrome + iOS Safari), 7일 후 재표시
+    - **6. 푸시 알림 디자인**: PWA 아이콘 6종 제작 가이드(192/512/maskable/badge/apple-touch), 유형별 알림 예시 6종, 제목 40자/본문 80자 제한
+    - 반응형 CSS (430px/360px 브레이크포인트)
+    - 접근성 (ARIA role/label 전체 정의)
+    - CSS 클래스명 규칙 5개 프리픽스
+    - 프론트엔드 Phase 1/2 구현 순서
+- **디자인 결정 사항**:
+  - 스와이프 삭제 미구현 (소규모 앱, "모두 읽음"으로 충분)
+  - 알림 아이콘 원형 배경 채택 (블루 DBEAFE, 리마인더만 옐로 FEF3C7)
+  - 배지 border 2px solid primary (앱바 배경과 분리감)
+  - 구독 배너: 하단 고정 (BottomNav 위) / 설치 배너: 상단 고정 (AppBar 아래) — 위치 차별화
+  - 토글 스위치: 48×28px iOS 스타일 (CSS-only)
+- **상태**: 완료
+
+---
+
 ## 현재 디자인 시스템 파일 목록
 
 | # | 파일 | 상태 | 설명 |
@@ -174,6 +206,7 @@
 | 15 | `15-schedule-form-ui.md` | **최신** | 일정 등록/수정 폼 UI 가이드 |
 | 16 | `16-home-banner-ui.md` | **최신** | 홈 배너 캐러셀 UI 가이드 |
 | 17 | `17-empty-loading-error-ui.md` | **최신** | 빈 상태/로딩/에러 공통 UI 가이드 |
+| 18 | `18-notification-ui.md` | **최신** | Web Push 알림 UI 가이드 (6개 컴포넌트) |
 
 ---
 

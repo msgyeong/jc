@@ -336,9 +336,132 @@ PASS | 32 auth-block           (인증 없는 요청 → 401)
 
 ---
 
+## 세션 5: 2026-03-11 (스프린트 5 배포 검증 — M-10/M-12/M-13 + 회귀)
+
+### 작업 요약
+- **목적**: 스프린트 5 신규 기능(M-10 관리자 필드 수정 제한, M-12 공지-일정 연동, M-13 업종 필터) + 기존 기능 회귀 검증
+- **범위**: 배포 사이트 전수 검증 (API 실 호출 + 소스 코드 분석)
+- **테스트 계정**: admin@jc.com / test1234 (super_admin), kang.ms@yjc-test.kr / test1234 (member)
+
+### 테스트 결과: 8/8 (100%)
+
+| TC# | 항목 | 결과 | 비고 |
+|-----|------|------|------|
+| TC-S5-001 | M-12 공지-일정 연동 — 글쓰기 토글 | ✅ PASS | `schedule` 객체 전달 시 공지+일정 동시 생성, `linked_schedule_id` 양방향 저장 확인 (Post 15→Schedule 18, Schedule 18→Post 15) |
+| TC-S5-002 | M-12 공지-일정 연동 — 일정 상세에서 관련 공지 | ✅ PASS | Schedule 18 상세에 `linked_post_id=15` 확인, 삭제 시 `?delete_linked_schedule=true`로 연동 일정도 동시 삭제 |
+| TC-S5-003 | M-13 업종 필터 — 드롭다운 동작 | ✅ PASS | `GET /api/industries` → 13개 카테고리 반환, `GET /api/members?industry=it` 필터 정상 동작, 프론트 `members.js` 업종 드롭다운 코드 확인 |
+| TC-S5-004 | M-13 업종 필터 — 프로필 업종 표시 | ✅ PASS | 프로필 API에 `industry`, `industry_detail` 필드 존재, 가입폼 Step 3에 업종 선택 드롭다운 있음 |
+| TC-S5-005 | M-10 관리자 필드 수정 제한 | ✅ PASS | 일반 회원(kang.ms, role=member)이 position/department 변경 시도 → 성공 응답이지만 실제 값 미반영(원래 값 유지). 관리자(admin)는 정상 변경 가능 |
+| TC-S5-006 | 댓글 인코딩 확인 | ✅ PASS | 게시글 1에 댓글 2건 존재(ID 5,6), 새 댓글 '테스트 댓글입니다' 등록→한글 정상 저장→조회 시 인코딩 정상 |
+| TC-S5-007 | 기존 기능 회귀 테스트 | ✅ PASS | 10개 항목 전체 통과 (아래 상세) |
+| TC-S5-008 | 테스트 데이터 정리 | ✅ PASS | 테스트 게시글 2건(ID 14,15), 테스트 댓글 1건(ID 8), 연동 일정(ID 18) 모두 삭제, 프로필 원복 완료 |
+
+### TC-S5-001 상세: M-12 공지-일정 연동
+
+**핵심 동작 확인:**
+- `POST /api/posts` → body에 `schedule` 객체 포함 시 트랜잭션으로 공지+일정 동시 생성
+- 응답: `{ post: { id: 15, linked_schedule_id: 18 }, schedule: { id: 18, linked_post_id: 15 } }`
+- `GET /api/posts/15` → `linked_schedule_id = 18` 확인
+- `GET /api/schedules/18` → `linked_post_id = 15` 확인
+- `DELETE /api/posts/15?delete_linked_schedule=true` → 게시글+일정 동시 삭제
+
+**프론트엔드 UI (소스 코드 확인):**
+- `web/index.html:739` — `#post-create-schedule-attach` 컨테이너 존재
+- `web/js/posts.js:240~320` — `renderScheduleAttachSection()`, `toggleScheduleAttach()`, `getScheduleAttachData()` 구현
+- `web/js/posts.js:421~424` — 공지 작성 시 `payload.schedule = scheduleData` 전달
+- `web/js/posts.js:782~810` — 게시글 상세에서 `linked-schedule-banner` 렌더링
+- `web/styles/main.css:4446~4543` — `.schedule-attach-section`, `.linked-schedule-banner` 스타일
+
+**참고:** `linked_schedule_id`를 직접 전달하는 방식은 미지원. 반드시 `schedule` 객체로 전달해야 함 (설계 의도대로).
+
+### TC-S5-003 상세: M-13 업종 필터
+
+**API 검증:**
+```
+GET /api/industries → 13개: law, finance, medical, construction, it, manufacturing, food, retail, service, realestate, culture, public, other
+GET /api/members → 33명 (total=33)
+GET /api/members?industry=it → 0명 (해당 업종 회원 없음, 정상)
+GET /api/members?industry=construction → 0명 (정상)
+```
+
+**프론트엔드 UI (소스 코드 확인):**
+- `web/js/members.js:38~73` — `renderIndustryFilter()`: "업종: 전체" 드롭다운, 13개 카테고리 옵션
+- `web/js/members.js:73,109` — `currentIndustryFilter` 파라미터로 API 호출
+- `web/styles/main.css:4549~4565` — `.industry-filter-wrap`, `.industry-filter-select` 스타일
+
+### TC-S5-005 상세: M-10 관리자 필드 수정 제한
+
+| 계정 | Role | PUT position='HACK' | 실제 결과 |
+|------|------|---------------------|-----------|
+| admin@jc.com | super_admin | success=true | position='테스트직책' → **변경됨** ✅ |
+| kim.yh@yjc-test.kr | super_admin | success=true | position='HACK' → **변경됨** ✅ |
+| kang.ms@yjc-test.kr | member | success=true | position='부장' (원래값 유지) → **무시됨** ✅ |
+
+**결론**: 백엔드가 `role=member`일 때 admin 전용 필드(position, department)를 자동 무시. 응답은 success이지만 실제 값 미변경. 기능 정상.
+
+### TC-S5-006 상세: 댓글 인코딩
+
+- 기존 댓글 2건: ID 5 "final", ID 6 "final test" → 영문 정상
+- 새 댓글 "테스트 댓글입니다" → 등록 성공 → 조회 시 한글 정상 표시 (인코딩 OK)
+- 댓글 삭제 후 `comments_count=2` 복원 확인
+
+### TC-S5-007 상세: 회귀 테스트
+
+| # | 항목 | 결과 |
+|---|------|------|
+| 1 | GET /health | ✅ "healthy" |
+| 2 | GET /api/schedules | ✅ 15건 |
+| 3 | GET /api/schedules/1 | ✅ 상세 정상 |
+| 4 | GET /api/members | ✅ 33명 |
+| 5 | GET /api/members/search?q=admin | ✅ 1건 |
+| 6 | GET /api/profile | ✅ 정상 |
+| 7 | GET /api/posts | ✅ 정상 |
+| 8 | GET /api/notices | ✅ 정상 |
+| 9 | GET /api/posts/1/comments | ✅ 정상 |
+| 10 | GET /api/industries | ✅ 13개 |
+
+**즐겨찾기 API 추가 검증:**
+- `POST /api/favorites/13` → 즐겨찾기 추가 성공
+- `GET /api/favorites` → 1건 확인
+- `DELETE /api/favorites/13` → 삭제 성공
+
+### TC-S5-008 상세: 테스트 데이터 정리
+
+| 작업 | 결과 |
+|------|------|
+| DELETE /api/posts/15?delete_linked_schedule=true | ✅ 게시글+연동일정 삭제 |
+| DELETE /api/posts/14 | ✅ 삭제 |
+| DELETE /api/posts/1/comments/8 | ✅ 삭제, comments_count=2 |
+| kim.yh 프로필 원복 (position/department=null) | ✅ 복원 |
+| admin 프로필 원복 (position/department=null) | ✅ 복원 |
+| 최종 데이터: Posts 2건, Comments 2건, Schedules 14건 | ✅ 원상복구 |
+
+### 발견된 버그: 0건
+
+모든 테스트 항목 정상 통과. 신규 버그 없음.
+
+### 회원 역할 분포 (참고)
+
+| Role | 인원 |
+|------|------|
+| super_admin | 2명 (admin@jc.com, kim.yh) |
+| admin | 2명 (park.sm, lee.jy) |
+| member | 29명 |
+
+### 미테스트 항목 (이월)
+
+- [ ] 브라우저 기반 E2E 테스트 (캘린더, 배너 캐러셀 등 JS 동적 렌더링)
+- [ ] 이미지 업로드 (POST /api/upload) — Cloudinary 연동 여부
+- [ ] 회원가입 전체 플로우 (6단계 폼)
+- [ ] 관리자 콘솔 (web/admin/) 기능
+- [ ] 모바일 반응형 UI
+- [ ] 업종 데이터가 있는 회원으로 업종 필터 실 필터링 테스트
+
+---
+
 ## 다음 작업 (TODO)
 
 1. 브라우저 기반 E2E 테스트 (프론트엔드 렌더링 검증)
 2. 회원가입 → 승인 → 로그인 전체 플로우 테스트
 3. 관리자 콘솔 기능 테스트
-4. 업종 필터 UI 연동 후 프론트-백엔드 통합 테스트
+4. 업종 데이터가 있는 회원으로 필터 실 동작 검증

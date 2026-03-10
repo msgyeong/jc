@@ -7,7 +7,7 @@
 
 ## 2026-03-10 일일 요약
 
-> 세션 1~7 총 7회 작업 수행
+> 세션 1~8 총 8회 작업 수행
 
 ### 오늘 완료된 작업 (커밋 순)
 
@@ -25,6 +25,7 @@
 | 10 | `5fd783b` | M-13: 업종 검색 API (GET /api/industries + members 필터 + profile 업종) | 세션 6 |
 | 11 | `26f3a2d` | 일정 댓글 API (GET/POST/DELETE /api/schedules/:id/comments) | 세션 6 |
 | 12 | `7205857` | BUG-S4-001: GET /api/members 500 에러 수정 (count 쿼리 바인딩) | 세션 7 |
+| 13 | `a9b09d2` | M-10: 관리자 지정 필드 수정 제한 + PUT /api/admin/members/:id 신규 | 세션 8 |
 
 ### 오늘 생성된 DB 테이블
 
@@ -80,8 +81,7 @@
 | `api/server.js` | attendance, favorites, titles, industries 라우터 등록 |
 
 ### Must-have 진행률 (기획자 전달 기준)
-- **완료**: M-02 (공지 통합), M-11 (참석 투표), M-12 (공지-일정 연동), M-13 (업종 검색), M-14 (직함 관리), M-17 (즐겨찾기) — **6/7 완료**
-- **미착수**: M-10 (관리자 지정 필드 수정 제한)
+- **완료**: M-02, M-10, M-11, M-12, M-13, M-14, M-17 — **7/7 전체 완료** ✅
 
 ### 프론트엔드 전달사항
 1. 회원가입 API `ssn` → `ssnFront` + `ssnBack` 분리 전송 필요 (`web/js/auth.js`)
@@ -93,6 +93,31 @@
 7. **[신규]** 회원 목록에 업종 필터 드롭다운 추가 (?industry= 파라미터)
 8. **[신규]** 프로필 수정에 업종 선택 필드 추가 (GET /api/industries로 목록 조회)
 9. **[신규]** 일정 상세에 댓글 섹션 추가 (GET/POST /api/schedules/:id/comments)
+
+---
+
+## 2026-03-10 세션 8: M-10 관리자 지정 필드 수정 제한
+
+### DB 변경
+- `users.join_number` VARCHAR(20) 컬럼 추가
+
+### 관리자 전용 필드 목록
+- `position` (JC 직책), `department` (소속 위원회), `join_number` (기수), `role` (역할), `status` (상태)
+
+### PUT /api/profile 변경
+- 일반 회원이 위 5개 필드를 요청에 포함해도 **무시(strip)** — 에러 없이 나머지 필드만 저장
+- 관리자(admin/super_admin)는 자신의 position/department/join_number도 수정 가능
+- 로그에 무시된 필드명 기록 (`[M-10] 일반 회원(id=N)이 관리자 전용 필드 수정 시도 → 무시됨`)
+
+### PUT /api/admin/members/:id 신규
+- 관리자가 특정 회원의 position/department/join_number/role/status/name/phone/company 수정 가능
+- role 변경: super_admin만 super_admin 부여 가능, 자기 자신 역할 변경 금지
+- status 변경: active/pending/suspended/withdrawn 유효성 검증
+- 동적 SET 절: 전달된 필드만 UPDATE (불필요한 NULL 덮어쓰기 방지)
+
+### 커밋
+- `a9b09d2` — feat(M-10): 관리자 지정 필드 수정 제한
+- Railway 자동 배포 완료
 
 ---
 

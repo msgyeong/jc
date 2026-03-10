@@ -459,9 +459,155 @@ GET /api/members?industry=construction → 0명 (정상)
 
 ---
 
+## 세션 6: 2026-03-11 (Web Push 알림 기능 검증)
+
+### 작업 요약
+- **목적**: Web Push 알림 신규 기능 전수 검증
+- **범위**: 파일 구조, index.html 통합, API 엔드포인트, Service Worker, CSS, 회귀, PWA manifest, nginx 설정
+- **테스트 계정**: admin@jc.com / test1234
+
+### 테스트 결과: 7 PASS / 1 WARN (버그 1건)
+
+| TC# | 항목 | 결과 | 비고 |
+|-----|------|------|------|
+| TC-01 | 파일 존재 및 구조 확인 | ✅ PASS | 5개 파일 전부 존재, 핵심 함수 확인 |
+| TC-02 | index.html 통합 확인 | ✅ PASS | 7개 항목 전부 확인 |
+| TC-03 | API 엔드포인트 동작 테스트 | ⚠️ WARN | 5/6 PASS, VAPID key 필드명 불일치 (BUG-S6-001) |
+| TC-04 | Service Worker 구문 검증 | ✅ PASS | 구문 정상, push/notificationclick 핸들러 확인 |
+| TC-05 | CSS 스타일 확인 | ✅ PASS | 6개 클래스 그룹 전부 존재 |
+| TC-06 | 기존 기능 회귀 테스트 | ✅ PASS | API 3개 200 + JS 전체 문법 통과 |
+| TC-07 | PWA manifest 검증 | ✅ PASS | 필드 5개 + 아이콘 4개(192/512/maskable) 확인 |
+| TC-08 | nginx.conf 확인 | ✅ PASS | sw.js 캐시 방지 + manifest.json 서빙 설정 확인 |
+
+---
+
+### TC-01 상세: 파일 존재 및 구조
+
+| 파일 | 존재 | 핵심 요소 |
+|------|------|-----------|
+| `web/sw.js` | ✅ | `push` 이벤트 → `showNotification()`, `notificationclick` 이벤트 → `clients.openWindow()` + `client.postMessage()` |
+| `web/manifest.json` | ✅ | 유효 JSON, `name`/`icons`/`display` 필드 존재 |
+| `web/js/push.js` | ✅ | `subscribePush()`, `unsubscribePush()`, `initPush()`, `getVapidPublicKey()`, iOS/PWA 체크 |
+| `web/js/notifications.js` | ✅ | `loadNotifications()`, `markNotificationAsRead()`, `markAllNotificationsRead()`, `updateNotificationBadge()` |
+| `web/js/notification-settings.js` | ✅ | `loadNotificationSettings()`, `saveNotificationSetting()`, 마스터 스위치 + 4개 유형별 토글 |
+
+### TC-02 상세: index.html 통합
+
+| 항목 | 위치 | 확인 |
+|------|------|------|
+| `<link rel="manifest">` | line 9 | ✅ `manifest.json` |
+| `<meta name="theme-color">` | line 10 | ✅ `#2563EB` |
+| 알림 벨 아이콘 | line 526 | ✅ `#notification-bell` + `onclick="showNotificationCenter()"` |
+| 배지 카운트 | line 531 | ✅ `#notification-badge-count` |
+| 알림 센터 화면 | line 920 | ✅ `#notifications-screen` + `#notification-list-content` + `모두 읽음` 버튼 |
+| 알림 설정 화면 | line 958 | ✅ `#notification-settings-screen` + `#notification-settings-content` |
+| 스크립트 태그 (캐시 버스팅) | line 1090-1092 | ✅ `push.js?v=20260311a`, `notifications.js?v=20260311a`, `notification-settings.js?v=20260311a` |
+
+### TC-03 상세: API 엔드포인트
+
+| # | 엔드포인트 | HTTP | 결과 | 비고 |
+|---|-----------|------|------|------|
+| 1 | `GET /api/push/vapid-key` | 200 | ⚠️ WARN | 응답: `data.vapidPublicKey` (BUG-S6-001) |
+| 2 | `GET /api/notifications/settings` | 200 | ✅ | fields: `all_push, notice_push, schedule_push, reminder_push, comment_push` |
+| 3 | `GET /api/notifications` | 200 | ✅ | items=0, unread_count=0 |
+| 4 | `PUT /api/notifications/settings` | 200 | ✅ | 5개 설정 저장 성공 |
+| 5 | `POST /api/notifications/read-all` | 200 | ✅ | 전체 읽음 처리 성공 |
+
+### TC-04 상세: Service Worker
+
+- `node -c web/sw.js` → ✅ 구문 정상
+- `push` 이벤트: `event.data.json()` 파싱 → `self.registration.showNotification()` 호출 ✅
+- `notificationclick` 이벤트: `event.notification.close()` → `clients.matchAll()` → `client.focus()` + `client.postMessage()` 또는 `clients.openWindow()` ✅
+- icon: `/image/icon-192.png`, badge: `/image/badge-72.png` — 파일 존재 확인 ✅
+
+### TC-05 상세: CSS 스타일
+
+| 클래스 | 존재 | main.css 라인 |
+|--------|------|--------------|
+| `.notification-badge-wrap` (벨 아이콘) | ✅ | 4595 |
+| `.notification-badge-count` (배지) | ✅ | 4617 |
+| `.notification-item` | ✅ | 4675 |
+| `.notification-item.unread` | ✅ | 4691 |
+| `.alert-settings-*` (설정 관련 12개) | ✅ | 4808~4940 |
+| `.push-subscribe-banner` | ✅ | 4968 |
+
+### TC-06 상세: 회귀 테스트
+
+| 항목 | 결과 |
+|------|------|
+| `GET /api/members` | ✅ 200 |
+| `GET /api/posts` | ✅ 200 |
+| `GET /api/schedules` | ✅ 200 |
+| `node -c web/js/*.js` (전체 JS 문법) | ✅ 전체 통과 |
+
+### TC-07 상세: PWA manifest
+
+```json
+{
+  "name": "영등포 JC",
+  "short_name": "영등포JC",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#2563EB",
+  "icons": [
+    { "src": "/image/icon-192.png", "sizes": "192x192" },
+    { "src": "/image/icon-512.png", "sizes": "512x512" },
+    { "src": "/image/icon-maskable-192.png", "sizes": "192x192", "purpose": "maskable" },
+    { "src": "/image/icon-maskable-512.png", "sizes": "512x512", "purpose": "maskable" }
+  ]
+}
+```
+- 아이콘 파일 4개 모두 실제 존재 ✅ (`web/image/icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`)
+- `badge-72.png`도 존재 ✅
+
+### TC-08 상세: nginx.conf
+
+| 설정 | 확인 |
+|------|------|
+| `location = /sw.js` → `Cache-Control "no-cache, no-store, must-revalidate"` | ✅ (line 64-68) |
+| `location = /sw.js` → `Service-Worker-Allowed "/"` 헤더 | ✅ |
+| `location = /manifest.json` → `Content-Type "application/manifest+json"` | ✅ (line 71-75) |
+| `location = /manifest.json` → `max-age=3600` 캐시 | ✅ |
+| gzip에 `application/manifest+json` 포함 | ✅ (line 88) |
+
+---
+
+### 발견된 버그
+
+#### BUG-S6-001: VAPID key 필드명 불일치 — 프론트-백엔드 미스매치 (HIGH)
+
+- **심각도**: **HIGH** — 푸시 구독이 실패하여 알림을 받을 수 없음
+- **위치**: `web/js/push.js:43` ↔ `api/routes/notifications.js:22`
+- **현상**: 프론트엔드가 VAPID 공개키를 가져오지 못해 `subscribePush()`가 항상 실패
+- **원인**:
+  - 백엔드 응답: `{ success: true, data: { vapidPublicKey: "BNgg..." } }`
+  - 프론트엔드 기대: `result.data.publicKey` (line 43)
+  - `data.publicKey`가 undefined → `getVapidPublicKey()` 함수가 null 반환
+  - `subscribePush()` line 82에서 `if (!vapidKey)` → 실패 토스트 "푸시 설정을 불러올 수 없습니다"
+- **수정 방향** (둘 중 하나):
+  - A) 프론트엔드 수정: `push.js:43` → `result.data.vapidPublicKey` 로 변경
+  - B) 백엔드 수정: `notifications.js:22` → `{ publicKey: VAPID_PUBLIC_KEY }` 로 변경
+  - **A안 권장** (백엔드 응답이 더 명시적이므로)
+
+---
+
+### 테스트 총평
+
+Web Push 알림 기능의 **구조와 설계는 완성도가 높음**:
+- Service Worker, Push 구독, 알림 센터, 알림 설정 등 전체 파이프라인 구현 완료
+- UI/CSS가 잘 정의되어 있고 index.html에 올바르게 통합됨
+- 5개 API 엔드포인트 모두 200 응답
+- nginx에 SW 캐시 방지, manifest 서빙까지 설정 완료
+- PWA manifest + 아이콘 4종 + badge 아이콘까지 준비됨
+
+**다만 BUG-S6-001 (VAPID key 필드명 불일치)로 인해 실제 Push 구독이 동작하지 않음**. 이 1줄 수정이 완료되면 전체 Push 알림 파이프라인이 정상 동작할 것으로 예상.
+
+---
+
 ## 다음 작업 (TODO)
 
-1. 브라우저 기반 E2E 테스트 (프론트엔드 렌더링 검증)
-2. 회원가입 → 승인 → 로그인 전체 플로우 테스트
-3. 관리자 콘솔 기능 테스트
-4. 업종 데이터가 있는 회원으로 필터 실 동작 검증
+1. **BUG-S6-001 수정 후 재검증** — VAPID key 필드명 수정 후 Push 구독 동작 확인
+2. 브라우저 기반 E2E 테스트 (프론트엔드 렌더링 검증)
+3. 회원가입 → 승인 → 로그인 전체 플로우 테스트
+4. 관리자 콘솔 기능 테스트
+5. 업종 데이터가 있는 회원으로 필터 실 동작 검증

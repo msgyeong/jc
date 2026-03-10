@@ -45,14 +45,19 @@ router.get('/', authenticate, async (req, res) => {
     }
 });
 
+// 관리자 전용 필드 — 일반 회원이 PUT /api/profile로 수정 불가
+const ADMIN_ONLY_FIELDS = ['position', 'department', 'join_number', 'role', 'status'];
+
 /**
  * PUT /api/profile
- * 프로필 수정
+ * 프로필 수정 (일반 회원용)
+ * position, department, join_number, role, status 필드는 무시됨 (관리자만 수정 가능)
  */
 router.put('/', authenticate, async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { name, phone, address, birth_date, gender, company, position, department, work_phone, industry, industry_detail } = req.body;
+        const userRole = req.user.role;
+        const { name, phone, address, birth_date, gender, company, work_phone, industry, industry_detail } = req.body;
 
         // 유효성 검증
         if (!name) {
@@ -78,17 +83,40 @@ router.put('/', authenticate, async (req, res) => {
             });
         }
 
-        // 프로필 수정
-        await query(
-            `UPDATE users
-             SET name = $1, phone = $2, address = $3,
-                 birth_date = $4, gender = $5,
-                 company = $6, position = $7, department = $8, work_phone = $9,
-                 industry = $10, industry_detail = $11,
-                 updated_at = NOW()
-             WHERE id = $12`,
-            [name, phone, address, birth_date, gender, company, position, department, work_phone, industry || null, industry_detail || null, userId]
-        );
+        // 관리자 전용 필드가 요청에 포함되었는지 경고 (무시 처리)
+        const attemptedAdminFields = ADMIN_ONLY_FIELDS.filter(f => req.body[f] !== undefined);
+        const isAdmin = userRole && ['super_admin', 'admin'].includes(userRole);
+
+        if (attemptedAdminFields.length > 0 && !isAdmin) {
+            console.log(`[M-10] 일반 회원(id=${userId})이 관리자 전용 필드 수정 시도 → 무시됨: ${attemptedAdminFields.join(', ')}`);
+        }
+
+        // 관리자인 경우 자기 자신의 관리자 필드도 수정 허용
+        if (isAdmin && attemptedAdminFields.length > 0) {
+            const { position, department, join_number } = req.body;
+            await query(
+                `UPDATE users
+                 SET name = $1, phone = $2, address = $3,
+                     birth_date = $4, gender = $5,
+                     company = $6, position = $7, department = $8, work_phone = $9,
+                     industry = $10, industry_detail = $11, join_number = $12,
+                     updated_at = NOW()
+                 WHERE id = $13`,
+                [name, phone, address, birth_date, gender, company, position || null, department || null, work_phone, industry || null, industry_detail || null, join_number || null, userId]
+            );
+        } else {
+            // 일반 회원: position, department, join_number 필드 제외
+            await query(
+                `UPDATE users
+                 SET name = $1, phone = $2, address = $3,
+                     birth_date = $4, gender = $5,
+                     company = $6, work_phone = $7,
+                     industry = $8, industry_detail = $9,
+                     updated_at = NOW()
+                 WHERE id = $10`,
+                [name, phone, address, birth_date, gender, company, work_phone, industry || null, industry_detail || null, userId]
+            );
+        }
 
         res.json({
             success: true,

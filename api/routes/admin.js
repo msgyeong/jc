@@ -368,8 +368,106 @@ router.get('/stats', async (req, res) => {
 });
 
 /* ======================================================
+   PUT /api/admin/members/:id
+   관리자 전용 회원 정보 수정 (M-10)
+   position, department, join_number, role, status 필드 수정 가능
+   ====================================================== */
+router.put('/members/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { position, department, join_number, role, status, name, phone, company } = req.body;
+        const requesterId = req.user.userId;
+        const requesterRole = req.user.role;
+
+        // 대상 회원 존재 확인
+        const memberResult = await query('SELECT id, role FROM users WHERE id = $1', [id]);
+        if (memberResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '회원을 찾을 수 없습니다.',
+            });
+        }
+
+        // role 변경 시 유효성 검증
+        if (role !== undefined) {
+            const validRoles = ['member', 'admin'];
+            if (requesterRole === 'super_admin') validRoles.push('super_admin');
+
+            if (!validRoles.includes(role)) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효하지 않은 역할입니다.',
+                });
+            }
+
+            // 자기 자신 역할 변경 금지
+            if (String(id) === String(requesterId)) {
+                return res.status(403).json({
+                    success: false,
+                    message: '자신의 역할은 변경할 수 없습니다.',
+                });
+            }
+        }
+
+        // status 변경 시 유효성 검증
+        if (status !== undefined) {
+            const validStatuses = ['active', 'pending', 'suspended', 'withdrawn'];
+            if (!validStatuses.includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효하지 않은 상태입니다.',
+                });
+            }
+        }
+
+        // 동적으로 SET 절 구성 (전달된 필드만 업데이트)
+        const setClauses = [];
+        const params = [];
+
+        const addField = (field, value) => {
+            if (value !== undefined) {
+                params.push(value);
+                setClauses.push(`${field} = $${params.length}`);
+            }
+        };
+
+        addField('position', position);
+        addField('department', department);
+        addField('join_number', join_number);
+        addField('role', role);
+        addField('status', status);
+        addField('name', name);
+        addField('phone', phone);
+        addField('company', company);
+
+        if (setClauses.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '수정할 필드가 없습니다.',
+            });
+        }
+
+        setClauses.push('updated_at = NOW()');
+        params.push(id);
+
+        await query(
+            `UPDATE users SET ${setClauses.join(', ')} WHERE id = $${params.length}`,
+            params
+        );
+
+        return res.json({ success: true, message: '회원 정보가 수정되었습니다.' });
+    } catch (err) {
+        console.error('Admin update member error:', err);
+        return res.status(500).json({
+            success: false,
+            message: '회원 정보 수정 중 오류가 발생했습니다.',
+        });
+    }
+});
+
+/* ======================================================
    PATCH /api/admin/members/:id
-   회원 권한(permissions) 업데이트
+   회원 권한(permissions) 업데이트 (레거시 호환)
    ====================================================== */
 router.patch('/members/:id', async (req, res) => {
     try {

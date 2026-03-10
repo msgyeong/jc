@@ -43,11 +43,6 @@ router.get('/', authenticate, async (req, res) => {
 
         const whereClause = conditions.join(' AND ');
 
-        const countResult = await query(
-            `SELECT COUNT(*) FROM users u WHERE ${whereClause}`,
-            params.slice(2) // count only needs userId-onwards params
-        );
-        // Re-do count with proper params
         const countParams = [];
         const countConditions = ["status = 'active'"];
         if (industry && VALID_INDUSTRY_CODES.includes(industry)) {

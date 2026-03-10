@@ -5,6 +5,74 @@
 
 ---
 
+## 2026-03-11 세션 2: Web Push 알림 백엔드 구현 (Phase 1 MVP)
+
+### 신규 패키지
+- `web-push` ^3.6.0 — VAPID 기반 Web Push 발송
+- `node-cron` ^3.0.0 — 리마인더 cron
+
+### DB 테이블 생성 (Railway PostgreSQL)
+- `push_subscriptions` — 푸시 구독 (user_id, endpoint, p256dh, auth, user_agent)
+- `notification_settings` — 알림 설정 (all_push, notice_push, schedule_push, reminder_push, comment_push)
+- `notification_log` — 알림 발송 이력 (type, title, body, data, read_at, clicked_at)
+- 인덱스 3개: idx_push_subs_user, idx_noti_log_user, idx_noti_log_unread
+- 마이그레이션 파일: `database/migrations/006_web_push.sql`
+
+### 신규 파일
+| 파일 | 용도 |
+|------|------|
+| `api/scripts/generate-vapid-keys.js` | VAPID 키 쌍 생성 스크립트 |
+| `api/utils/pushSender.js` | 푸시 발송 유틸 (sendPushToUser, sendPushToAll) |
+| `api/utils/reminderCron.js` | D-1 리마인더 cron (매일 09:00 KST) |
+| `api/routes/notifications.js` | pushRouter + notificationsRouter (API 8개) |
+
+### 신규 API 엔드포인트
+| 라우트 | 메서드 | 엔드포인트 | 용도 |
+|--------|--------|-----------|------|
+| pushRouter | GET | `/api/push/vapid-key` | VAPID 공개키 반환 |
+| pushRouter | POST | `/api/push/subscribe` | 푸시 구독 등록 |
+| pushRouter | DELETE | `/api/push/subscribe` | 푸시 구독 해제 |
+| notificationsRouter | GET | `/api/notifications/settings` | 알림 설정 조회 |
+| notificationsRouter | PUT | `/api/notifications/settings` | 알림 설정 변경 |
+| notificationsRouter | GET | `/api/notifications` | 알림 내역 (페이지네이션) |
+| notificationsRouter | POST | `/api/notifications/:id/read` | 읽음 처리 |
+| notificationsRouter | POST | `/api/notifications/read-all` | 모두 읽음 처리 |
+
+### 기존 라우트 수정 (푸시 트리거 추가)
+| 파일 | 트리거 | 알림 유형 | 대상 |
+|------|--------|-----------|------|
+| `posts.js` POST / (category=notice) | 공지 작성 | N-01 | 전체 (작성자 제외) |
+| `posts.js` POST /:id/comments | 댓글 작성 | N-05 | 게시글 작성자 (본인 제외) |
+| `schedules.js` POST / | 일정 생성 | N-02 | 전체 (작성자 제외) |
+| `schedules.js` PUT /:id | 일정 수정 | N-04 | 전체 (수정자 제외) |
+| `schedules.js` POST /:id/comments | 일정 댓글 | N-05 | 일정 작성자 (본인 제외) |
+
+### 리마인더 cron (N-03)
+- 매일 09:00 KST (Asia/Seoul timezone)
+- 내일(D-1) 일정 조회 → reminder_push=ON인 사용자에게 발송
+- server.js에서 서버 시작 시 cron 등록
+
+### VAPID 키
+- 생성 완료, **Railway 환경변수에 등록 필요**
+- VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT
+- 키 미설정 시 서버 정상 기동, 푸시만 비활성 (console.warn 출력)
+
+### 설계 원칙
+- 푸시 발송 실패해도 원래 API 응답은 정상 반환 (비동기 .catch)
+- 구독 만료(410 Gone) 시 push_subscriptions에서 자동 삭제
+- notification_settings 행이 없으면 기본값(전부 true)으로 동작
+- all_push=false면 모든 알림 발송 스킵
+
+### 프론트엔드 전달사항
+1. Service Worker (`web/sw.js`) 파일 생성 필요 — push 이벤트 + notificationclick 핸들러
+2. `web/manifest.json` 생성 필요 — PWA 설정
+3. 로그인 후 `GET /api/push/vapid-key`로 공개키 조회 → `pushManager.subscribe()` → `POST /api/push/subscribe`
+4. 알림 센터 UI: `GET /api/notifications` (페이지네이션) + 미읽음 배지 (unread_count)
+5. 알림 설정 UI: `GET/PUT /api/notifications/settings` (5개 토글)
+6. 앱바 종 아이콘: unread_count 뱃지 표시
+
+---
+
 ## 2026-03-11 세션 1: 댓글 인코딩 깨짐 조사 및 수정
 
 ### 현상

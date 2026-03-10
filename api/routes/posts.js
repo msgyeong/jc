@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query, transaction } = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
+const { sendPushToAll, sendPushToUser } = require('../utils/pushSender');
 
 /**
  * 공지사항 게시판(category=notice) 작성 가능 여부: super_admin, admin만
@@ -181,6 +182,24 @@ router.post('/:id/comments', authenticate, async (req, res) => {
             'UPDATE posts SET comments_count = $1, updated_at = NOW() WHERE id = $2',
             [comments_count, postId]
         );
+        // N-05 댓글 알림: 게시글 작성자에게 발송 (본인 제외)
+        try {
+            const postResult = await query('SELECT author_id, title FROM posts WHERE id = $1', [postId]);
+            if (postResult.rows.length > 0) {
+                const postAuthorId = postResult.rows[0].author_id;
+                if (postAuthorId !== authorId) {
+                    const commenterResult = await query('SELECT name FROM users WHERE id = $1', [authorId]);
+                    const commenterName = commenterResult.rows[0]?.name || '회원';
+                    sendPushToUser(postAuthorId, {
+                        title: '\uD83D\uDCAC \uC0C8 \uB313\uAE00',
+                        body: `${commenterName}님이 댓글을 남겼습니다: ${String(content).trim().substring(0, 50)}`,
+                        data: { url: `/#posts/${postId}`, post_id: parseInt(postId) },
+                        type: 'N-05'
+                    }).catch(e => console.error('[Push] N-05 발송 에러:', e.message));
+                }
+            }
+        } catch (_) { /* 푸시 실패해도 무시 */ }
+
         return res.json({ success: true, message: '댓글이 등록되었습니다.', comments_count });
     } catch (err) {
         console.error('Create comment error:', err);
@@ -464,6 +483,14 @@ router.post('/', authenticate, async (req, res) => {
                 return { postId, scheduleId };
             });
 
+            // N-01 공지 알림 발송 (비동기, 실패해도 응답 정상)
+            sendPushToAll({
+                title: '\uD83D\uDCE2 \uC0C8 \uACF5\uC9C0\uC0AC\uD56D',
+                body: (title || '').substring(0, 80),
+                data: { url: `/#posts/${result.postId}`, post_id: result.postId },
+                type: 'N-01'
+            }, authorId).catch(e => console.error('[Push] N-01 발송 에러:', e.message));
+
             return res.status(201).json({
                 success: true,
                 message: '공지와 일정이 함께 작성되었습니다.',
@@ -482,10 +509,22 @@ router.post('/', authenticate, async (req, res) => {
             [authorId, title, content, images || [], cat, pinned]
         );
 
+        const newPostId = result.rows[0].id;
+
+        // N-01 공지 알림 발송
+        if (cat === 'notice') {
+            sendPushToAll({
+                title: '\uD83D\uDCE2 \uC0C8 \uACF5\uC9C0\uC0AC\uD56D',
+                body: (title || '').substring(0, 80),
+                data: { url: `/#posts/${newPostId}`, post_id: newPostId },
+                type: 'N-01'
+            }, authorId).catch(e => console.error('[Push] N-01 발송 에러:', e.message));
+        }
+
         res.status(201).json({
             success: true,
             message: '게시글이 작성되었습니다.',
-            postId: result.rows[0].id
+            postId: newPostId
         });
     } catch (error) {
         console.error('Create post error:', error);

@@ -17,6 +17,8 @@ const attendanceRoutes = require('./routes/attendance');
 const favoritesRoutes = require('./routes/favorites');
 const titlesRoutes = require('./routes/titles');
 const industriesRoutes = require('./routes/industries');
+const { notificationsRouter, pushRouter } = require('./routes/notifications');
+const { startReminderCron } = require('./utils/reminderCron');
 
 // Express 앱 초기화
 const app = express();
@@ -80,6 +82,8 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/favorites', favoritesRoutes);
 app.use('/api/titles', titlesRoutes);
 app.use('/api/industries', industriesRoutes);
+app.use('/api/push', pushRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -124,7 +128,13 @@ app.listen(PORT, () => {
     console.log(`  - GET    /api/schedules`);
     console.log(`  - GET    /api/members`);
     console.log(`  - GET    /api/profile`);
+    console.log(`  - GET    /api/push/vapid-key`);
+    console.log(`  - POST   /api/push/subscribe`);
+    console.log(`  - GET    /api/notifications`);
     console.log('='.repeat(50));
+
+    // 리마인더 cron 시작
+    startReminderCron();
 });
 
 // Graceful shutdown

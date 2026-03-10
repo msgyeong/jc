@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../config/database');
 const { authenticate } = require('../middleware/auth');
+const { sendPushToAll, sendPushToUser } = require('../utils/pushSender');
 
 /**
  * GET /api/schedules
@@ -157,10 +158,23 @@ router.post('/', authenticate, async (req, res) => {
             [authorId, title, start_date, end_date, location, description, category]
         );
 
+        const newScheduleId = result.rows[0].id;
+
+        // N-02 일정 등록 알림
+        const startObj = new Date(start_date);
+        const dateStr = startObj.toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric' });
+        const timeStr = startObj.toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false });
+        sendPushToAll({
+            title: '\uD83D\uDCC5 \uC0C8 \uC77C\uC815 \uB4F1\uB85D',
+            body: `${title} \u2014 ${dateStr} ${timeStr}${location ? ' ' + location : ''}`.substring(0, 80),
+            data: { url: `/#schedules/${newScheduleId}`, schedule_id: newScheduleId },
+            type: 'N-02'
+        }, authorId).catch(e => console.error('[Push] N-02 발송 에러:', e.message));
+
         res.status(201).json({
             success: true,
             message: '일정이 등록되었습니다.',
-            scheduleId: result.rows[0].id
+            scheduleId: newScheduleId
         });
     } catch (error) {
         console.error('Create schedule error:', error);
@@ -214,6 +228,14 @@ router.put('/:id', authenticate, async (req, res) => {
              WHERE id = $7`,
             [title, start_date, end_date, location, description, category, id]
         );
+
+        // N-04 일정 변경 알림
+        sendPushToAll({
+            title: '\uD83D\uDCC5 \uC77C\uC815 \uBCC0\uACBD',
+            body: `${title} \uC77C\uC815\uC774 \uBCC0\uACBD\uB418\uC5C8\uC2B5\uB2C8\uB2E4`.substring(0, 80),
+            data: { url: `/#schedules/${id}`, schedule_id: parseInt(id) },
+            type: 'N-04'
+        }, userId).catch(e => console.error('[Push] N-04 발송 에러:', e.message));
 
         res.json({
             success: true,
@@ -399,6 +421,23 @@ router.post('/:id/comments', authenticate, async (req, res) => {
             position: userResult.rows[0]?.position
         };
         comment.parent_id = parent_id || null;
+
+        // N-05 일정 댓글 알림: 일정 작성자에게 발송 (본인 제외)
+        try {
+            const schedAuthor = await query('SELECT created_by, title FROM schedules WHERE id = $1', [scheduleId]);
+            if (schedAuthor.rows.length > 0) {
+                const schedAuthorId = schedAuthor.rows[0].created_by;
+                if (schedAuthorId !== authorId) {
+                    const commenterName = userResult.rows[0]?.name || '회원';
+                    sendPushToUser(schedAuthorId, {
+                        title: '\uD83D\uDCAC \uC0C8 \uB313\uAE00',
+                        body: `${commenterName}님이 댓글을 남겼습니다: ${String(content).trim().substring(0, 50)}`,
+                        data: { url: `/#schedules/${scheduleId}`, schedule_id: parseInt(scheduleId) },
+                        type: 'N-05'
+                    }).catch(e => console.error('[Push] N-05 발송 에러:', e.message));
+                }
+            }
+        } catch (_) { /* 푸시 실패해도 무시 */ }
 
         res.status(201).json({
             success: true,

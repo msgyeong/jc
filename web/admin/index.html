@@ -3,603 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>영등포 JC – 관리자 콘솔</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <link rel="stylesheet" href="admin.css?r=20260304b">
+    <title>영등포 JC 관리자</title>
+    <link rel="stylesheet" href="css/admin.css?v=20260311b">
 </head>
 <body>
-
-<!-- ====================================================
-     AW001 · 로그인
-     ==================================================== -->
-<div id="login-page" class="login-page">
-
-    <!-- 왼쪽 브랜드 패널 -->
-    <div class="login-brand">
-        <div class="login-brand-inner">
-            <div class="lbrand-logo">
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <rect width="48" height="48" rx="14" fill="white"
-                          fill-opacity="0.15"/>
-                    <text x="50%" y="54%" dominant-baseline="middle"
-                          text-anchor="middle" font-family="Inter,sans-serif"
-                          font-size="18" font-weight="800"
-                          letter-spacing="1" fill="white">JC</text>
-                </svg>
-                <span class="lbrand-name">영등포 JC</span>
-            </div>
-            <h1 class="lbrand-headline">관리자<br>콘솔</h1>
-            <p class="lbrand-desc">
-                회원 관리, 게시판, 일정, 공지사항을<br>
-                한 곳에서 효율적으로 관리하세요.
-            </p>
-            <ul class="lbrand-features">
-                <li>
-                    <span class="lbrand-feat-dot"></span>
-                    회원 가입 승인 및 권한 관리
-                </li>
-                <li>
-                    <span class="lbrand-feat-dot"></span>
-                    공지사항 · 일정 등록/수정/삭제
-                </li>
-                <li>
-                    <span class="lbrand-feat-dot"></span>
-                    게시판 콘텐츠 모니터링
-                </li>
-            </ul>
-        </div>
-        <div class="lbrand-decoration">
-            <div class="lbrand-circle lbrand-circle--1"></div>
-            <div class="lbrand-circle lbrand-circle--2"></div>
-        </div>
-    </div>
-
-    <!-- 오른쪽 폼 패널 -->
-    <div class="login-form-panel">
-        <div class="login-form-inner">
-            <div class="lform-header">
-                <h2 class="lform-title">로그인</h2>
-                <p class="lform-sub">관리자 계정으로 로그인해 주세요.</p>
-            </div>
-            <form id="login-form" novalidate>
-                <div class="lform-field">
-                    <label class="lform-label" for="f-admin-id">
-                        이메일
-                    </label>
-                    <div class="lform-input-wrap">
-                        <svg class="lform-icon" width="16" height="16"
-                             viewBox="0 0 16 16" fill="none">
-                            <path d="M2 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4Z"
-                                  stroke="#94a3b8" stroke-width="1.4"/>
-                            <path d="m2 4 6 5 6-5"
-                                  stroke="#94a3b8" stroke-width="1.4"
-                                  stroke-linejoin="round"/>
-                        </svg>
-                        <input class="lform-input" id="f-admin-id"
-                               type="email" placeholder="admin@jc.com"
-                               autocomplete="username" required>
-                    </div>
-                </div>
-                <div class="lform-field">
-                    <label class="lform-label" for="f-password">
-                        비밀번호
-                    </label>
-                    <div class="lform-input-wrap">
-                        <svg class="lform-icon" width="16" height="16"
-                             viewBox="0 0 16 16" fill="none">
-                            <rect x="2.5" y="7" width="11" height="7.5"
-                                  rx="2" stroke="#94a3b8" stroke-width="1.4"/>
-                            <path d="M5 7V5.5a3 3 0 0 1 6 0V7"
-                                  stroke="#94a3b8" stroke-width="1.4"
-                                  stroke-linecap="round" fill="none"/>
-                            <circle cx="8" cy="10.5" r="1.2"
-                                    fill="#94a3b8"/>
-                        </svg>
-                        <input class="lform-input" id="f-password"
-                               type="password" placeholder="••••••••"
-                               autocomplete="current-password" required>
-                    </div>
-                </div>
-                <div id="login-error" class="login-error-msg" hidden></div>
-                <button type="submit" id="login-btn" class="login-btn">
-                    <span>로그인</span>
-                    <svg width="18" height="18" viewBox="0 0 20 20"
-                         fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 10h12M12 6l4 4-4 4"
-                              stroke="#fff" stroke-width="1.8"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"/>
-                    </svg>
-                </button>
-            </form>
-            <p class="lform-footer">
-                영등포 JC &nbsp;·&nbsp; 관리자 전용 시스템
-            </p>
-        </div>
-    </div>
-
-</div>
-
-<!-- ====================================================
-     앱 레이아웃 (로그인 후)
-     ==================================================== -->
-<div id="app" hidden>
-
-    <!-- 사이드바 -->
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <span class="brand-mark">JC</span>
-            <span class="brand-name">Admin Console</span>
-        </div>
-
-        <nav class="sidebar-nav" id="sidebar-nav">
-            <button class="menu-item" data-page="approval" data-require="super_admin">
-                <span class="menu-icon">⏳</span>
-                <span class="menu-label">가입 승인</span>
-                <span class="menu-badge" id="badge-approval" hidden>0</span>
-            </button>
-            <button class="menu-item" data-page="members" data-require="super_admin">
-                <span class="menu-icon">👥</span>
-                <span class="menu-label">회원 목록</span>
-            </button>
-            <button class="menu-item" data-page="roles" data-require="super_admin">
-                <span class="menu-icon">🔑</span>
-                <span class="menu-label">직책/권한 관리</span>
-            </button>
-            <div class="menu-divider"></div>
-            <button class="menu-item" data-page="boards" data-require="board_delete">
-                <span class="menu-icon">📋</span>
-                <span class="menu-label">게시판 관리</span>
-            </button>
-            <button class="menu-item" data-page="notices" data-require="notice_write">
-                <span class="menu-icon">📢</span>
-                <span class="menu-label">공지사항 관리</span>
-            </button>
-            <button class="menu-item" data-page="schedules" data-require="schedule_manage">
-                <span class="menu-icon">📅</span>
-                <span class="menu-label">일정 관리</span>
-            </button>
-            <div class="menu-divider"></div>
-            <button class="menu-item" data-page="security">
-                <span class="menu-icon">🔒</span>
-                <span class="menu-label">계정 보안</span>
-            </button>
-        </nav>
-
-        <div class="sidebar-user">
-            <div class="sidebar-user-avatar" id="sidebar-avatar">A</div>
-            <div class="sidebar-user-info">
-                <div class="sidebar-user-name" id="sidebar-name">-</div>
-                <div class="sidebar-user-role" id="sidebar-role">-</div>
-            </div>
-            <button class="btn-icon-logout" onclick="logout()" title="로그아웃">
-                ⏏
-            </button>
-        </div>
-    </aside>
-
-    <!-- 헤더 -->
-    <header class="header">
-        <h1 class="header-title" id="header-title">–</h1>
-        <div class="header-actions">
-            <button class="btn btn-ghost btn-sm" id="header-refresh-btn"
-                onclick="refreshCurrentPage()">
-                🔄 새로고침
-            </button>
-        </div>
-    </header>
-
-    <!-- 메인 콘텐츠 -->
-    <main class="main-content">
-
-        <!-- AW002 · 가입 승인 목록 -->
-        <section id="page-approval" class="page" hidden>
-            <div class="page-toolbar">
-                <span class="toolbar-count" id="approval-count">대기 0명</span>
-            </div>
-            <div id="approval-list" class="card-stack"></div>
-        </section>
-
-        <!-- AW003 · 회원 목록 -->
-        <section id="page-members" class="page" hidden>
-            <div class="page-toolbar">
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input class="search-input" id="member-q" type="text"
-                        placeholder="이름 / 기수 / 소속 검색"
-                        oninput="onMemberSearch()">
-                </div>
-                <select class="select" id="member-status" onchange="loadMembers()">
-                    <option value="">Status ▼</option>
-                    <option value="active">Active</option>
-                    <option value="pending">Pending</option>
-                    <option value="suspended">Suspended</option>
-                </select>
-            </div>
-            <div class="table-wrap">
-                <table class="data-table" id="members-table">
-                    <thead>
-                        <tr>
-                            <th>이름</th>
-                            <th>기수</th>
-                            <th>소속</th>
-                            <th>상태</th>
-                            <th style="width:40px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="members-tbody">
-                        <tr><td colspan="5" class="table-empty">로딩 중...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- AW005 · 직책/권한 관리 -->
-        <section id="page-roles" class="page" hidden>
-            <div class="page-toolbar">
-                <div class="toolbar-right">
-                    <button class="btn btn-primary" onclick="saveRoles()">
-                        Save Changes
-                    </button>
+    <div id="admin-root">
+        <!-- 로그인 화면 -->
+        <div id="login-page" class="login-page">
+            <div class="login-brand">
+                <div class="login-brand-inner">
+                    <div class="login-brand-logo">JC</div>
+                    <h1>영등포 JC<br>관리자 콘솔</h1>
+                    <p>회원 관리 · 콘텐츠 관리 · 운영 관리</p>
+                    <ul class="login-brand-features">
+                        <li>회원 가입 승인/거절</li>
+                        <li>게시판 · 공지사항 관리</li>
+                        <li>일정 관리</li>
+                        <li>직책/권한 관리</li>
+                    </ul>
                 </div>
             </div>
-            <div class="table-wrap">
-                <table class="data-table" id="roles-table">
-                    <thead>
-                        <tr>
-                            <th>Role Name</th>
-                            <th class="text-center">notice_write</th>
-                            <th class="text-center">schedule_manage</th>
-                            <th class="text-center">board_delete</th>
-                        </tr>
-                    </thead>
-                    <tbody id="roles-tbody">
-                        <tr><td colspan="4" class="table-empty">로딩 중...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <p class="hint-text mt-16">
-                * 최고 관리자 권한은 시스템 기본값으로 수정 불가
-            </p>
-        </section>
-
-        <!-- AW006 · 게시판 관리 -->
-        <section id="page-boards" class="page" hidden>
-            <div class="page-toolbar">
-                <span class="toolbar-count" id="boards-total">Total: 0</span>
-            </div>
-            <div class="table-wrap">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>제목</th>
-                            <th style="width:100px;">작성자</th>
-                            <th style="width:110px;">작성일</th>
-                            <th style="width:60px;" class="text-center">댓글</th>
-                            <th style="width:40px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="boards-tbody">
-                        <tr><td colspan="5" class="table-empty">로딩 중...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- AW007 · 공지사항 관리 -->
-        <section id="page-notices" class="page" hidden>
-            <div class="page-toolbar">
-                <div class="toolbar-right">
-                    <button class="btn btn-primary" onclick="openNoticeModal()">
-                        + Add Notice
-                    </button>
-                </div>
-            </div>
-            <div class="table-wrap">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th style="width:130px;">Created At</th>
-                            <th style="width:80px;" class="text-center">Pinned</th>
-                            <th style="width:80px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="notices-tbody">
-                        <tr><td colspan="4" class="table-empty">로딩 중...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- AW008 · 일정 관리 -->
-        <section id="page-schedules" class="page" hidden>
-            <div class="page-toolbar">
-                <div class="toolbar-right">
-                    <button class="btn btn-primary" onclick="openScheduleModal()">
-                        + Add Schedule
-                    </button>
-                </div>
-            </div>
-            <div class="table-wrap">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th style="width:120px;">Date</th>
-                            <th style="width:160px;">Location</th>
-                            <th style="width:80px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="schedules-tbody">
-                        <tr><td colspan="4" class="table-empty">로딩 중...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- AW009 · 계정 보안 -->
-        <section id="page-security" class="page" hidden>
-            <div class="form-card" style="max-width:480px;">
-                <h2 class="form-card-title">비밀번호 변경</h2>
-                <form id="pw-form" novalidate>
-                    <div class="field">
-                        <label class="field-label" for="f-cur-pw">현재 비밀번호</label>
-                        <input class="input" id="f-cur-pw" type="password"
-                            placeholder="현재 비밀번호 입력" required>
-                    </div>
-                    <div class="field">
-                        <label class="field-label" for="f-new-pw">새 비밀번호</label>
-                        <input class="input" id="f-new-pw" type="password"
-                            placeholder="새 비밀번호 입력" required>
-                    </div>
-                    <div class="field">
-                        <label class="field-label" for="f-confirm-pw">새 비밀번호 확인</label>
-                        <input class="input" id="f-confirm-pw" type="password"
-                            placeholder="새 비밀번호 확인" required>
-                    </div>
-                    <div id="pw-error" class="alert alert-danger" hidden></div>
-                    <div id="pw-success" class="alert alert-success" hidden></div>
-                    <div class="policy-box">
-                        <div class="policy-title">Password Policy</div>
-                        <ul class="policy-list">
-                            <li>최소 10자 이상 입력</li>
-                            <li>영문, 숫자, 특수문자 조합 포함</li>
-                            <li>최근 3회 사용한 비밀번호 재사용 금지</li>
-                        </ul>
-                    </div>
-                    <div class="btn-row-right">
-                        <button type="submit" class="btn btn-primary">
-                            Change Password
+            <div class="login-form-panel">
+                <div class="login-form-wrap">
+                    <h2>관리자 로그인</h2>
+                    <p class="login-subtitle">관리자 계정으로 로그인하세요</p>
+                    <form id="admin-login-form" autocomplete="off">
+                        <div class="form-field">
+                            <label for="admin-id">관리자 이메일</label>
+                            <input type="email" id="admin-id" placeholder="admin@jc.com" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="admin-pw">비밀번호</label>
+                            <input type="password" id="admin-pw" placeholder="비밀번호 입력" required>
+                        </div>
+                        <div class="login-error" id="login-error"></div>
+                        <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+                            <span class="btn-text">로그인</span>
                         </button>
+                    </form>
+                    <a href="/" class="login-back-link">앱으로 돌아가기</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 레이아웃 (로그인 후) -->
+        <div id="main-layout" class="main-layout" style="display:none">
+            <!-- 사이드바 -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-brand">
+                    <div class="sidebar-logo">JC</div>
+                    <span>영등포 JC 관리자</span>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="#dashboard" class="nav-link active" data-page="dashboard">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        대시보드
+                    </a>
+                    <a href="#members" class="nav-link" data-page="members">
+                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        회원 관리
+                    </a>
+                    <a href="#posts" class="nav-link" data-page="posts">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        게시판 관리
+                    </a>
+                    <a href="#notices" class="nav-link disabled" data-page="notices">
+                        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        공지사항
+                        <span class="nav-tag">준비중</span>
+                    </a>
+                    <a href="#schedules" class="nav-link disabled" data-page="schedules">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        일정 관리
+                        <span class="nav-tag">준비중</span>
+                    </a>
+                </nav>
+                <div class="sidebar-footer">
+                    <div class="sidebar-user">
+                        <div class="sidebar-avatar" id="sidebar-avatar">A</div>
+                        <div class="sidebar-user-info">
+                            <div class="sidebar-user-name" id="sidebar-user-name">관리자</div>
+                            <div class="sidebar-user-role">Super Admin</div>
+                        </div>
                     </div>
-                </form>
-            </div>
-        </section>
-
-    </main>
-</div>
-
-<!-- ====================================================
-     AW004 · 회원 상세 Drawer
-     ==================================================== -->
-<div id="member-drawer" class="drawer" hidden>
-    <div class="drawer-panel">
-        <div class="drawer-header">
-            <h2 class="drawer-title" id="drawer-member-title">회원 상세</h2>
-            <button class="btn-icon" onclick="closeDrawer('member-drawer')">✕</button>
-        </div>
-        <div class="drawer-body">
-            <!-- 프로필 -->
-            <div class="member-profile-row">
-                <div class="profile-avatar" id="drawer-avatar">A</div>
-                <div class="profile-info">
-                    <div class="profile-name" id="drawer-name">-</div>
-                    <div class="profile-sub" id="drawer-sub">-</div>
-                    <span class="status-badge" id="drawer-status-badge">-</span>
+                    <div class="sidebar-actions">
+                        <a href="/" class="sidebar-action-link">앱으로 이동</a>
+                        <button class="sidebar-action-link" onclick="adminLogout()">로그아웃</button>
+                    </div>
                 </div>
-            </div>
+            </aside>
 
-            <!-- 기본 정보 -->
-            <div class="info-section">
-                <div class="info-section-title">기본 정보</div>
-                <div class="info-row">
-                    <span class="info-key">Phone</span>
-                    <span class="info-val" id="drawer-phone">-</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-key">Joined</span>
-                    <span class="info-val" id="drawer-joined">-</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-key">Role</span>
-                    <span class="info-val" id="drawer-role-label">-</span>
-                </div>
-            </div>
-
-            <!-- 변경 이력 -->
-            <div class="info-section">
-                <div class="info-section-title">변경 이력 (Audit Log)</div>
-                <div id="drawer-audit-log" class="audit-log"></div>
-            </div>
-
-            <!-- 권한 설정 -->
-            <div class="info-section">
-                <div class="info-section-title">권한 설정 (Permissions)</div>
-                <div id="drawer-permissions" class="perm-list"></div>
-                <p class="hint-text mt-8">
-                    * 직책에 따른 기본 권한 외 추가 권한을 부여할 수 있습니다.
-                </p>
-            </div>
-
-            <!-- 액션 -->
-            <div class="drawer-footer">
-                <button class="btn btn-danger" id="drawer-suspend-btn"
-                    onclick="toggleMemberStatus()">Suspend</button>
-                <button class="btn btn-primary"
-                    onclick="saveMemberChanges()">Save Changes</button>
-            </div>
-        </div>
-    </div>
-    <div class="drawer-backdrop" onclick="closeDrawer('member-drawer')"></div>
-</div>
-
-<!-- ====================================================
-     AW006 · 게시글 상세 Drawer
-     ==================================================== -->
-<div id="post-drawer" class="drawer" hidden>
-    <div class="drawer-panel">
-        <div class="drawer-header">
-            <h2 class="drawer-title" id="post-drawer-title">-</h2>
-            <button class="btn-icon" onclick="closeDrawer('post-drawer')">✕</button>
-        </div>
-        <div class="drawer-body">
-            <div class="post-meta-row">
-                <span id="post-author">-</span>
-                <span class="dot">·</span>
-                <span id="post-date">-</span>
-            </div>
-            <div class="post-content" id="post-content">-</div>
-
-            <div class="comments-header">
-                댓글 (<span id="post-comment-count">0</span>)
-            </div>
-            <div id="post-comments" class="comments-list"></div>
-
-            <div class="drawer-footer">
-                <button class="btn btn-danger" onclick="deleteCurrentPost()">
-                    게시글 삭제
+            <!-- 헤더 -->
+            <header class="header" id="header">
+                <button class="header-menu-btn" id="menu-toggle" aria-label="메뉴">
+                    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                 </button>
-            </div>
+                <h1 class="header-title" id="header-title">대시보드</h1>
+                <div class="header-right">
+                    <span class="header-user" id="header-user">관리자</span>
+                </div>
+            </header>
+
+            <!-- 메인 콘텐츠 -->
+            <main class="main-content" id="main-content">
+            </main>
         </div>
     </div>
-    <div class="drawer-backdrop" onclick="closeDrawer('post-drawer')"></div>
-</div>
 
-<!-- ====================================================
-     AW007 · 공지사항 모달
-     ==================================================== -->
-<div id="notice-modal" class="modal-overlay" hidden>
-    <div class="modal">
-        <div class="modal-header">
-            <h3 id="notice-modal-title">공지 추가</h3>
-            <button class="btn-icon" onclick="closeModal('notice-modal')">✕</button>
-        </div>
-        <div class="modal-body">
-            <form id="notice-form" novalidate>
-                <div class="field">
-                    <label class="field-label">
-                        Title <span class="req">*</span>
-                        <span class="field-hint">최대 100자</span>
-                    </label>
-                    <input class="input" id="n-title" type="text"
-                        maxlength="100" required placeholder="공지 제목">
-                </div>
-                <div class="field">
-                    <label class="field-label">
-                        Content <span class="req">*</span>
-                        <span class="field-hint">Markdown 지원</span>
-                    </label>
-                    <textarea class="textarea" id="n-content" rows="6"
-                        required placeholder="내용 입력"></textarea>
-                </div>
-                <div class="field field-check">
-                    <input type="checkbox" id="n-pinned" class="checkbox">
-                    <label for="n-pinned">상단 고정 (Pinned)</label>
-                </div>
-                <div id="notice-error" class="alert alert-danger" hidden></div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-danger" id="notice-delete-btn"
-                onclick="deleteCurrentNotice()" hidden>Delete</button>
-            <div style="flex:1;"></div>
-            <button class="btn btn-ghost" onclick="closeModal('notice-modal')">취소</button>
-            <button class="btn btn-primary" onclick="saveNotice()">Save</button>
-        </div>
-    </div>
-</div>
+    <!-- 모달 컨테이너 -->
+    <div id="modal-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()"></div>
 
-<!-- ====================================================
-     AW008 · 일정 모달
-     ==================================================== -->
-<div id="schedule-modal" class="modal-overlay" hidden>
-    <div class="modal">
-        <div class="modal-header">
-            <h3 id="schedule-modal-title">일정 추가</h3>
-            <button class="btn-icon" onclick="closeModal('schedule-modal')">✕</button>
-        </div>
-        <div class="modal-body">
-            <form id="schedule-form" novalidate>
-                <div class="field">
-                    <label class="field-label">Title <span class="req">*</span></label>
-                    <input class="input" id="s-title" type="text"
-                        required placeholder="일정 제목">
-                </div>
-                <div class="field-row">
-                    <div class="field">
-                        <label class="field-label">
-                            Date <span class="req">*</span>
-                        </label>
-                        <input class="input" id="s-date" type="date" required>
-                    </div>
-                    <div class="field">
-                        <label class="field-label">
-                            Time
-                            <span class="field-hint">(Optional)</span>
-                        </label>
-                        <input class="input" id="s-time" type="time">
-                    </div>
-                </div>
-                <div class="field">
-                    <label class="field-label">Location</label>
-                    <input class="input" id="s-location" type="text"
-                        placeholder="장소 정보">
-                </div>
-                <div class="field">
-                    <label class="field-label">Description</label>
-                    <textarea class="textarea" id="s-desc" rows="4"
-                        placeholder="상세 설명"></textarea>
-                </div>
-                <div id="schedule-error" class="alert alert-danger" hidden></div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-danger" id="schedule-delete-btn"
-                onclick="deleteCurrentSchedule()" hidden>Delete</button>
-            <div style="flex:1;"></div>
-            <button class="btn btn-ghost" onclick="closeModal('schedule-modal')">취소</button>
-            <button class="btn btn-primary" onclick="saveSchedule()">Save</button>
-        </div>
-    </div>
-</div>
-
-<!-- ====================================================
-     공통 · 확인 다이얼로그
-     ==================================================== -->
-<div id="confirm-dialog" class="modal-overlay" hidden>
-    <div class="modal modal-sm">
-        <div class="modal-header">
-            <h3 id="confirm-title">확인</h3>
-        </div>
-        <div class="modal-body">
-            <p id="confirm-message" style="margin-bottom:6px;"></p>
-            <p id="confirm-sub" class="hint-text"></p>
-        </div>
-        <div class="modal-footer">
-            <div style="flex:1;"></div>
-            <button class="btn btn-ghost"
-                onclick="closeModal('confirm-dialog')">취소</button>
-            <button class="btn btn-danger" id="confirm-ok-btn">확인</button>
-        </div>
-    </div>
-</div>
-
-<script src="admin.js?r=20260304b"></script>
+    <script src="js/admin-app.js?v=20260311b"></script>
+    <script src="js/dashboard.js?v=20260311b"></script>
+    <script src="js/members.js?v=20260311b"></script>
+    <script src="js/posts.js?v=20260311b"></script>
 </body>
 </html>

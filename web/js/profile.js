@@ -86,7 +86,7 @@ function renderProfile(p) {
                     비밀번호 변경
                 </button>
                 ${['super_admin', 'admin'].includes(p.role) ? `
-                <button class="profile-action-btn admin" onclick="navigateToScreen('admin')">
+                <button class="profile-action-btn admin" onclick="location.href='/admin/'">
                     <span class="profile-action-icon">&#9881;</span>
                     관리자 메뉴
                 </button>` : ''}

@@ -391,6 +391,59 @@
 
 ---
 
+## 세션 #6 — 2026-03-10 (월) 밤
+
+> 2건 작업: M-12 공지-일정 연동 UI, M-13 업종 필터 UI
+
+### 작업 6-1: M-12 공지-일정 연동 UI
+- **상태**: 완료
+- **기준 문서**: `Docs/features/notice-schedule-link.md`
+
+#### 변경 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `web/js/posts.js` | 일정 첨부 토글 (`renderScheduleAttachSection`, `toggleScheduleAttach`, `getScheduleAttachData`), 작성 시 `payload.schedule` 포함, 상세에 연결 일정 배너 (`loadLinkedScheduleForPost`) |
+| `web/index.html` | 공지 작성 폼에 `post-create-schedule-attach` 컨테이너 추가 |
+| `web/styles/main.css` | `.schedule-attach-*` (토글 헤더+필드 섹션), `.linked-schedule-banner` (연결 일정 카드) |
+
+#### 상세
+1. **공지 작성 시**: 공지탭일 때 '일정 첨부' 토글 표시 → ON이면 제목/카테고리/날짜시간/장소 입력 필드 노출
+2. **POST /api/posts에 schedule 객체 포함**: `{ title, category, start_date, end_date, location }`
+3. **공지 상세**: `linked_schedule_id` 또는 `schedule_id` 있으면 일정 API 호출 후 블루 배너 표시 (카테고리 뱃지, 날짜, 장소, 클릭→일정 상세)
+4. **일정 상세→원본 공지**: 세션 #5에서 이미 `loadLinkedNotice()` 구현 완료
+
+---
+
+### 작업 6-2: M-13 업종 필터 UI
+- **상태**: 완료
+- **기준 문서**: `Docs/features/industry-search.md`
+
+#### 변경 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `web/js/members.js` | `INDUSTRY_CATEGORIES` 13개 상수, `getIndustryName()`, `renderIndustryFilter()` 드롭다운, `currentIndustryFilter` 필터 상태, 검색/목록 API에 `industry=` 파라미터 추가, 카드에 `.industry-tag`, 상세에 업종 infoRow |
+| `web/js/profile.js` | 프로필 표시에 업종 행 추가, 수정 폼에 업종/업종상세 select+input 추가, submit에 `industry`, `industry_detail` 포함 |
+| `web/js/signup.js` | 가입 데이터에 `industry`, `industry_detail` 필드 추가 |
+| `web/index.html` | 회원가입 폼에 업종 select + 업종상세 input 추가, 캐시 버스팅 `v=20260310g` |
+| `web/styles/main.css` | `.industry-filter-wrap`, `.industry-filter-select`, `.industry-tag` |
+
+#### 상세
+1. **회원 목록**: 검색창 아래 업종 필터 select (전체 + 13개 카테고리)
+2. **필터 동작**: `GET /api/members?industry=code` 호출, 검색과 AND 조합 가능
+3. **회원 카드**: 업종 있으면 블루 태그(`#EFF6FF/#1E40AF`) 표시
+4. **회원 상세**: 직장 정보 섹션에 '업종: 대분류 · 상세' 표시
+5. **프로필 수정**: 업종 드롭다운 + 업종 상세 텍스트 입력
+6. **회원가입**: Step 3 직장 정보에 업종/업종상세 필드 추가
+
+---
+
+### 작업 6-3: 캐시 버스팅 + 구문 검증
+- **상태**: 완료
+- `web/index.html`: `main.css?v=20260310g`
+- `node -c web/js/*.js` 전체 8파일 통과
+
+---
+
 ## 알려진 이슈 (수정 안 함, 동작 영향 없음)
 
 1. `formatDate` 함수가 `utils.js`와 `home.js`에 중복 정의 — home.js가 덮어씀. 통합 필요.

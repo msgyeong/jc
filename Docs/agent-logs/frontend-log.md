@@ -637,6 +637,17 @@
 
 ---
 
+### 세션 #12 — BUG-AW-001 사이드바 프로필 클릭 이동 (2026-03-11)
+
+#### 수정 내용
+- **BUG-AW-001**: `.sidebar-user` div에 `onclick="navigateAdmin('admin-profile')"` + `cursor:pointer` 추가
+- `.sidebar-actions`(앱으로 이동, 로그아웃) 영향 없음 — 별도 div이므로 이벤트 분리
+
+#### 커밋
+- `5349d75` fix(admin): BUG-AW-001 사이드바 프로필 클릭 시 #admin-profile 이동 → push 완료
+
+---
+
 ## 알려진 이슈 (수정 안 함, 동작 영향 없음)
 
 1. `formatDate` 함수가 `utils.js`와 `home.js`에 중복 정의 — home.js가 덮어씀. 통합 필요.

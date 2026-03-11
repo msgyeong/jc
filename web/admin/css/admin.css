@@ -1067,6 +1067,279 @@ tbody tr.clickable {
     flex-shrink: 0;
 }
 
+/* ---- 사이드바 구분선 ---- */
+.nav-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 8px 12px;
+}
+
+/* ---- 헤더 유저 링크 ---- */
+.header-user-link {
+    font-size: 13px;
+    color: var(--c-text-sub);
+    text-decoration: none;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.header-user-link:hover {
+    background: var(--c-primary-bg);
+    color: var(--c-primary);
+}
+
+/* ---- 감사 로그 ---- */
+.audit-log-table { width: 100%; }
+
+.audit-filter-bar {
+    align-items: center;
+}
+
+.date-range-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-date {
+    padding: 8px 12px;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--c-text);
+    background: white;
+    outline: none;
+    cursor: pointer;
+}
+
+.filter-date:focus {
+    border-color: var(--c-primary);
+}
+
+.date-separator {
+    color: var(--c-text-hint);
+    font-size: 14px;
+}
+
+/* Action Badges */
+.action-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.action-badge.action-danger {
+    background: var(--c-danger-bg);
+    color: var(--c-danger);
+}
+
+.action-badge.action-warning {
+    background: var(--c-warning-bg);
+    color: #92400E;
+}
+
+.action-badge.action-info {
+    background: var(--c-primary-bg);
+    color: var(--c-primary);
+}
+
+.action-badge.action-view {
+    background: var(--c-bg);
+    color: var(--c-text-sub);
+}
+
+/* ---- 설정 ---- */
+.settings-section {
+    background: var(--c-bg-card);
+    border-radius: var(--card-radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.settings-section-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--c-border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-section-header svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--c-text-sub);
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+.settings-section-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.settings-section-body {
+    padding: 20px;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0;
+}
+
+.settings-row-text { flex: 1; }
+
+.settings-row-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--c-text);
+}
+
+.settings-row-desc {
+    font-size: 13px;
+    color: var(--c-text-sub);
+    margin-top: 2px;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #D1D5DB;
+    border-radius: 26px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: #2563EB;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(22px);
+}
+
+/* Save bar */
+.save-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--c-bg-card);
+    padding: 16px 20px;
+    border-top: 1px solid var(--c-border);
+    border-radius: 0 0 var(--card-radius) var(--card-radius);
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+    text-align: right;
+    z-index: 10;
+}
+
+/* ---- 관리자 프로필 카드 ---- */
+.profile-card {
+    background: var(--c-bg-card);
+    border-radius: var(--card-radius);
+    box-shadow: var(--shadow-sm);
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+.profile-card-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.profile-card-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--c-primary-bg);
+    color: var(--c-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.profile-card-info { flex: 1; }
+
+.profile-card-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--c-text);
+}
+
+.profile-card-email {
+    font-size: 14px;
+    color: var(--c-text-sub);
+    margin-top: 4px;
+}
+
+.profile-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.profile-card-joined {
+    font-size: 13px;
+    color: var(--c-text-hint);
+}
+
+/* Password form */
+.password-form .form-field {
+    max-width: 400px;
+}
+
+.pw-mismatch-warning {
+    color: var(--c-danger);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
 /* ---- 반응형: 태블릿 ---- */
 @media (max-width: 1024px) {
     :root {

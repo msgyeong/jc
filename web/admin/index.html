@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영등포 JC 관리자</title>
-    <link rel="stylesheet" href="css/admin.css?v=20260311c">
+    <link rel="stylesheet" href="css/admin.css?v=20260311d">
 </head>
 <body>
     <div id="admin-root">
@@ -79,6 +79,15 @@
                         <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                         통계 / 분석
                     </a>
+                    <div class="nav-divider"></div>
+                    <a href="#audit-log" class="nav-link" data-page="audit-log">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+                        감사 로그
+                    </a>
+                    <a href="#settings" class="nav-link" data-page="settings">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        설정
+                    </a>
                 </nav>
                 <div class="sidebar-footer">
                     <div class="sidebar-user">
@@ -102,7 +111,7 @@
                 </button>
                 <h1 class="header-title" id="header-title">대시보드</h1>
                 <div class="header-right">
-                    <span class="header-user" id="header-user">관리자</span>
+                    <a href="#admin-profile" class="header-user-link" id="header-user" onclick="navigateAdmin('admin-profile')">관리자</a>
                 </div>
             </header>
 
@@ -115,12 +124,15 @@
     <!-- 모달 컨테이너 -->
     <div id="modal-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()"></div>
 
-    <script src="js/admin-app.js?v=20260311c"></script>
-    <script src="js/dashboard.js?v=20260311c"></script>
-    <script src="js/members.js?v=20260311c"></script>
-    <script src="js/posts.js?v=20260311c"></script>
-    <script src="js/schedules.js?v=20260311c"></script>
-    <script src="js/notices.js?v=20260311c"></script>
-    <script src="js/stats.js?v=20260311c"></script>
+    <script src="js/admin-app.js?v=20260311d"></script>
+    <script src="js/dashboard.js?v=20260311d"></script>
+    <script src="js/members.js?v=20260311d"></script>
+    <script src="js/posts.js?v=20260311d"></script>
+    <script src="js/schedules.js?v=20260311d"></script>
+    <script src="js/notices.js?v=20260311d"></script>
+    <script src="js/stats.js?v=20260311d"></script>
+    <script src="js/audit-log.js?v=20260311d"></script>
+    <script src="js/settings.js?v=20260311d"></script>
+    <script src="js/admin-profile.js?v=20260311d"></script>
 </body>
 </html>

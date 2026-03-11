@@ -123,6 +123,9 @@ const PAGE_TITLES = {
     schedules: '일정 관리',
     notices: '공지사항',
     stats: '통계 / 분석',
+    'audit-log': '감사 로그',
+    settings: '설정',
+    'admin-profile': '내 프로필',
 };
 
 function routeFromHash() {
@@ -139,6 +142,9 @@ function getPageRenderer(page) {
         schedules: typeof renderSchedules === 'function' ? renderSchedules : null,
         notices: typeof renderNotices === 'function' ? renderNotices : null,
         stats: typeof renderStats === 'function' ? renderStats : null,
+        'audit-log': typeof renderAuditLog === 'function' ? renderAuditLog : null,
+        settings: typeof renderSettings === 'function' ? renderSettings : null,
+        'admin-profile': typeof renderAdminProfile === 'function' ? renderAdminProfile : null,
     };
     return map[page] || null;
 }

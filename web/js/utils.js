@@ -162,27 +162,50 @@ function isNew(dateString) {
     return diffDays <= 3;
 }
 
-// 날짜 포맷팅 (상대 시간)
-function formatDate(dateString) {
+// 날짜 포맷팅 (format 파라미터 지원)
+// format 미지정 시 상대 시간, 'YYYY-MM-DD' / 'DD' / 'MM월' 지원
+function formatDate(dateString, format) {
     if (!dateString) return '';
-    
+
     const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    if (format) {
+        switch (format) {
+            case 'DD': return day;
+            case 'MM월': return `${parseInt(month)}월`;
+            case 'YYYY-MM-DD': return `${year}-${month}-${day}`;
+            default: return `${year}-${month}-${day}`;
+        }
+    }
+
+    // 상대 시간 (format 미지정)
     const now = new Date();
     const diffTime = now - date;
     const diffMinutes = Math.floor(diffTime / (1000 * 60));
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffMinutes < 1) return '방금 전';
     if (diffMinutes < 60) return `${diffMinutes}분 전`;
     if (diffHours < 24) return `${diffHours}시간 전`;
     if (diffDays < 7) return `${diffDays}일 전`;
-    
+
     return date.toLocaleDateString('ko-KR', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     });
+}
+
+// HTML 이스케이프
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // ========== 토스트 알림 ==========

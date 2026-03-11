@@ -11,8 +11,8 @@ async function loadHomeData() {
         // 일정 요약 로드
         await loadScheduleSummary();
         
-        // 배너 로드 (현재는 샘플 데이터)
-        loadBannerSummary();
+        // 배너 로드 (API 동적 데이터)
+        await loadBannerSummary();
         
         console.log('✅ 홈 화면 데이터 로드 완료');
         
@@ -131,8 +131,8 @@ async function loadScheduleSummary() {
     }
 }
 
-// 배너 로드 (M-01: 블루 그라디언트 배너 3종 + 스와이프 캐러셀)
-function loadBannerSummary() {
+// 배너 로드 (M-01: API 기반 동적 배너 + 스와이프 캐러셀)
+async function loadBannerSummary() {
     const section = document.querySelector('.banner-section');
     if (!section) return;
 
@@ -142,22 +142,71 @@ function loadBannerSummary() {
             title: '영등포 JC',
             subtitle: '회원관리 커뮤니티 앱에 오신 것을 환영합니다',
             cta: '둘러보기'
-        },
-        {
-            gradient: 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)',
-            title: '일정 확인',
-            subtitle: '다가오는 모임과 행사 일정을 확인하세요',
-            cta: '일정 보기',
-            action: "switchTab('schedules')"
-        },
-        {
-            gradient: 'linear-gradient(135deg, #1D4ED8 0%, #93C5FD 100%)',
-            title: '회원 소통',
-            subtitle: '공지사항과 게시판을 통해 소식을 나누세요',
-            cta: '게시판 가기',
-            action: "switchTab('posts')"
         }
     ];
+
+    try {
+        // 다가오는 일정 배너
+        const schedRes = await apiClient.getSchedules(true);
+        const scheds = schedRes.schedules || (schedRes.data && (schedRes.data.schedules || schedRes.data.items)) || [];
+        if (scheds.length > 0) {
+            const next = scheds[0];
+            const dateField = next.start_date || next.event_date || '';
+            let dateLabel = '';
+            if (dateField) {
+                const d = new Date(dateField);
+                const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+                dateLabel = `${d.getMonth()+1}/${d.getDate()}(${weekdays[d.getDay()]})`;
+                if (dateField.includes('T')) {
+                    const t = dateField.split('T')[1]?.substring(0, 5);
+                    if (t && t !== '00:00') dateLabel += ' ' + t;
+                }
+            }
+            banners.push({
+                gradient: 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)',
+                title: escapeHtml(next.title),
+                subtitle: dateLabel + (next.location ? ' · ' + escapeHtml(next.location) : ''),
+                cta: '일정 보기',
+                action: "navigateTo('/schedules/" + next.id + "')"
+            });
+        } else {
+            banners.push({
+                gradient: 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)',
+                title: '일정 확인',
+                subtitle: '다가오는 모임과 행사 일정을 확인하세요',
+                cta: '일정 보기',
+                action: "switchTab('schedules')"
+            });
+        }
+
+        // 최신 공지 배너
+        const noticeRes = await apiClient.getPosts(1, 5, 'notice');
+        const notices = noticeRes.posts || (noticeRes.data && (noticeRes.data.posts || noticeRes.data.items)) || [];
+        if (notices.length > 0) {
+            const latest = notices[0];
+            banners.push({
+                gradient: 'linear-gradient(135deg, #1D4ED8 0%, #93C5FD 100%)',
+                title: escapeHtml(latest.title),
+                subtitle: formatDate(latest.created_at),
+                cta: '공지 보기',
+                action: "navigateTo('/posts/" + latest.id + "')"
+            });
+        } else {
+            banners.push({
+                gradient: 'linear-gradient(135deg, #1D4ED8 0%, #93C5FD 100%)',
+                title: '회원 소통',
+                subtitle: '공지사항과 게시판을 통해 소식을 나누세요',
+                cta: '게시판 가기',
+                action: "switchTab('posts')"
+            });
+        }
+    } catch (_) {
+        // API 실패 시 기본 배너 추가
+        banners.push(
+            { gradient: 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)', title: '일정 확인', subtitle: '다가오는 모임과 행사 일정을 확인하세요', cta: '일정 보기', action: "switchTab('schedules')" },
+            { gradient: 'linear-gradient(135deg, #1D4ED8 0%, #93C5FD 100%)', title: '회원 소통', subtitle: '공지사항과 게시판을 통해 소식을 나누세요', cta: '게시판 가기', action: "switchTab('posts')" }
+        );
+    }
 
     section.innerHTML = `
         <div class="banner-carousel" role="region" aria-label="홈 배너" aria-roledescription="carousel">
@@ -285,34 +334,7 @@ function formatRelativeTime(dateString) {
     }
 }
 
-// 날짜 포맷 (DD, MM월, YYYY-MM-DD 등)
-function formatDate(dateString, format) {
-    if (!dateString) return '';
-    
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    
-    switch (format) {
-        case 'DD':
-            return day;
-        case 'MM월':
-            return `${parseInt(month)}월`;
-        case 'YYYY-MM-DD':
-            return `${year}-${month}-${day}`;
-        default:
-            return `${year}-${month}-${day}`;
-    }
-}
-
-// HTML 이스케이프
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// formatDate, escapeHtml → utils.js로 통합됨
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {

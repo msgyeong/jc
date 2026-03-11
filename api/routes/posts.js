@@ -265,18 +265,18 @@ router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
 
 /**
  * POST /api/posts/:id/like
- * 공감 토글 (테이블 likes: member_id, post_id. 여기서 member_id = req.user.userId 사용)
+ * 공감 토글 (테이블 likes: user_id, post_id)
  */
 router.post('/:id/like', authenticate, async (req, res) => {
     try {
         const { id: postId } = req.params;
-        const memberId = req.user.userId;
+        const userId = req.user.userId;
         const existing = await query(
-            'SELECT id FROM likes WHERE member_id = $1 AND post_id = $2',
-            [memberId, postId]
+            'SELECT id FROM likes WHERE user_id = $1 AND post_id = $2',
+            [userId, postId]
         );
         if (existing.rows.length > 0) {
-            await query('DELETE FROM likes WHERE member_id = $1 AND post_id = $2', [memberId, postId]);
+            await query('DELETE FROM likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
             const countResult = await query(
                 'SELECT COUNT(*) FROM likes WHERE post_id = $1',
                 [postId]
@@ -289,8 +289,8 @@ router.post('/:id/like', authenticate, async (req, res) => {
             return res.json({ success: true, liked: false, likes_count });
         }
         await query(
-            'INSERT INTO likes (member_id, post_id, created_at) VALUES ($1, $2, NOW())',
-            [memberId, postId]
+            'INSERT INTO likes (user_id, post_id, created_at) VALUES ($1, $2, NOW())',
+            [userId, postId]
         );
         const countResult = await query(
             'SELECT COUNT(*) FROM likes WHERE post_id = $1',
@@ -363,7 +363,7 @@ router.get('/:id', authenticate, async (req, res) => {
         let user_has_liked = false;
         try {
             const likeRow = await query(
-                'SELECT 1 FROM likes WHERE member_id = $1 AND post_id = $2',
+                'SELECT 1 FROM likes WHERE user_id = $1 AND post_id = $2',
                 [userId, id]
             );
             user_has_liked = (likeRow.rows && likeRow.rows.length > 0);

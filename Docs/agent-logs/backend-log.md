@@ -5,6 +5,52 @@
 
 ---
 
+## 2026-03-11 세션 6: Batch 1 — M-10 + M-13 + DB 클린업
+
+### 사전 확인 결과
+- **M-10 (관리자 필드 수정 제한)**: 세션 8 (2026-03-10)에서 이미 구현 완료
+  - `api/routes/profile.js`: ADMIN_ONLY_FIELDS 배열로 strip 처리
+  - `PUT /api/admin/members/:id`: 관리자 전용 필드 수정 엔드포인트 존재
+- **M-13 (업종 검색 API)**: 세션 6 (2026-03-10)에서 이미 구현 완료
+  - `api/routes/members.js`: `?industry=` 필터, `/search?q=&industry=` AND 조합
+  - `api/routes/industries.js`: 13개 업종 카테고리 목록 API
+
+### DB 클린업 실행
+
+#### 3-1: likes 테이블 member_id → user_id 통일
+- **변경**: `ALTER TABLE likes RENAME COLUMN member_id TO user_id`
+- **코드 수정**: `api/routes/posts.js` — likes 관련 쿼리 4곳 member_id → user_id
+  - SELECT (공감 확인), DELETE (공감 해제), INSERT (공감 추가), SELECT (user_has_liked)
+- **영향 범위 확인**: admin.js에는 likes 직접 참조 없음
+- **인덱스**: `likes_member_id_post_id_key` 이름은 유지 (기능은 user_id 참조로 정상 동작)
+- **데이터**: 0건 (무결성 이슈 없음)
+
+#### 3-2: comments 테이블 parent_comment_id 레거시 컬럼 삭제
+- **변경**: `ALTER TABLE comments DROP COLUMN IF EXISTS parent_comment_id`
+- **코드 확인**: api/ 전체에서 parent_comment_id 참조 없음 (마이그레이션 주석만 존재)
+- **정상 컬럼**: parent_id만 사용 중
+
+### 마이그레이션 파일
+- `database/migrations/009_db_cleanup.sql`
+
+### 변경 후 DB 스키마
+```
+likes: id, user_id, post_id, created_at  ← member_id → user_id 통일 완료
+comments: id, post_id, author_id, content, parent_id, created_at, updated_at, is_deleted, schedule_id  ← parent_comment_id 삭제
+```
+
+### 커밋
+- `af65da3` — fix: DB 클린업 — likes.member_id→user_id 통일 + comments.parent_comment_id 삭제
+- Railway 자동 배포 트리거됨
+
+### 미완료/건의 사항 업데이트
+| 항목 | 상태 |
+|------|------|
+| ~~likes 테이블 member_id → user_id 통일~~ | ✅ 완료 |
+| ~~comments.parent_comment_id 삭제~~ | ✅ 완료 |
+
+---
+
 ## 2026-03-11 세션 5: 관리자 웹 Phase 3 — 설정/프로필 API
 
 ### DB 변경

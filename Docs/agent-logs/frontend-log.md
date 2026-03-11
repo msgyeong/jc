@@ -563,6 +563,43 @@
 
 ---
 
+## 세션 #10 — 2026-03-11 (화)
+
+### 작업: 관리자 웹 Phase 2 — 일정/공지/통계 3화면
+- **상태**: 완료
+- **커밋**: `0ed0e64` → `origin main` 푸시 완료
+
+#### 신규 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `web/admin/js/schedules.js` | 일정 관리 — 목록 테이블 + 월/카테고리 필터 + 검색 + 생성/수정 모달 + 삭제 확인 |
+| `web/admin/js/notices.js` | 공지사항 관리 — 목록 테이블 + 고정 필터 + 검색 + 작성/수정 모달 + 고정 토글 + 삭제 확인 |
+| `web/admin/js/stats.js` | 통계/분석 — 요약 카드 4종 + 역할별 수평 바 차트 + 상태별 도넛 차트 + 월별 가입 추이 세로 바 차트 (CSS-only, 외부 라이브러리 없음) |
+
+#### 수정 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `web/admin/js/admin-app.js` | PAGE_TITLES에 schedules/notices/stats 추가, getPageRenderer()에 3개 페이지 등록 |
+| `web/admin/index.html` | 사이드바: 공지/일정 '준비중' 뱃지 제거+활성화, 통계 메뉴 추가. 스크립트 태그 3개 추가. 캐시 버스팅 v=20260311c |
+| `web/admin/css/admin.css` | +130줄: .bar-chart/.bar-col/.bar-fill(세로 바), .h-bar-chart(수평 바), .donut-chart/.donut-center(도넛), .legend-item, .pin-badge, .badge-cat-* |
+
+#### API 연동
+- `GET /api/admin/schedules?month=&category=&limit=` — 일정 목록
+- `POST /api/admin/schedules` — 일정 생성 (title, date, time, location, category, desc)
+- `PUT /api/admin/schedules/:id` — 일정 수정
+- `DELETE /api/admin/schedules/:id` — 일정 삭제
+- `GET /api/admin/notices?limit=` — 공지 목록
+- `POST /api/admin/notices` — 공지 작성 (title, content, pinned)
+- `PUT /api/admin/notices/:id` — 공지 수정 (고정 토글 포함)
+- `DELETE /api/admin/notices/:id` — 공지 삭제
+- `GET /api/admin/dashboard/stats` — 통계 데이터 (기존 API 재활용)
+- `GET /api/admin/dashboard/recent-activity` — 월별 추이용 데이터
+
+#### 사이드바 전체 메뉴 (6개)
+대시보드 → 회원 관리 → 게시판 관리 → 공지사항 → 일정 관리 → 통계/분석
+
+---
+
 ## 알려진 이슈 (수정 안 함, 동작 영향 없음)
 
 1. `formatDate` 함수가 `utils.js`와 `home.js`에 중복 정의 — home.js가 덮어씀. 통합 필요.

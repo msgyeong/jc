@@ -132,6 +132,12 @@ function showEditProfileForm() {
     if (!container) return;
     const birthVal = p.birth_date ? formatDate(p.birth_date, 'YYYY-MM-DD') : '';
 
+    // M-10: 관리자 지정 필드 readonly 여부
+    const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+    const isAdmin = ['admin', 'super_admin'].includes(userInfo.role);
+    const roAttr = isAdmin ? '' : ' readonly class="readonly-field"';
+    const roHint = isAdmin ? '' : '<span class="readonly-hint">관리자만 수정 가능</span>';
+
     container.innerHTML = `
         <div class="profile-v2">
             <button class="btn-back" onclick="loadProfile()">← 돌아가기</button>
@@ -154,8 +160,8 @@ function showEditProfileForm() {
                 <div class="info-section">
                     <h3 class="info-section-title">직장 정보</h3>
                     <div class="form-group"><label>회사</label><input type="text" id="edit-company" value="${escapeHtml(p.company || '')}"></div>
-                    <div class="form-group"><label>직책</label><input type="text" id="edit-position" value="${escapeHtml(p.position || '')}"></div>
-                    <div class="form-group"><label>부서</label><input type="text" id="edit-department" value="${escapeHtml(p.department || '')}"></div>
+                    <div class="form-group"><label>직책 ${roHint}</label><input type="text" id="edit-position" value="${escapeHtml(p.position || '')}"${roAttr}></div>
+                    <div class="form-group"><label>부서 ${roHint}</label><input type="text" id="edit-department" value="${escapeHtml(p.department || '')}"${roAttr}></div>
                     <div class="form-group"><label>업종</label>
                         <select id="edit-industry">
                             <option value="">선택 안 함</option>

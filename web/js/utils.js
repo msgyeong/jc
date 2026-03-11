@@ -233,6 +233,13 @@ function renderErrorState(title, desc, retryFn) {
     return html;
 }
 
+// ========== 로딩 상태 HTML 생성 ==========
+function renderLoadingState(message) {
+    return '<div class="loading-state"><div class="loading-spinner"></div>' +
+        (message ? '<div class="loading-state-text">' + message + '</div>' : '') +
+        '</div>';
+}
+
 // ========== 스켈레톤 로딩 HTML ==========
 function renderSkeleton(type) {
     if (type === 'schedule-detail') {

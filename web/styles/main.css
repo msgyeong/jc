@@ -3834,6 +3834,39 @@ input[type="date"]:focus {
 }
 .error-state-retry:active { background: #1D4ED8; }
 
+/* ==================== M-10: 관리자 지정 필드 readonly ==================== */
+.readonly-field {
+    background: #F3F4F6 !important;
+    color: #6B7280 !important;
+    cursor: not-allowed;
+    border-color: #E5E7EB !important;
+}
+.readonly-hint {
+    font-size: 11px;
+    color: #9CA3AF;
+    font-weight: 400;
+    margin-left: 4px;
+}
+
+/* ==================== M-07: 로딩 상태 ==================== */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 16px;
+    min-height: 200px;
+}
+.loading-state .loading-spinner {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 12px;
+}
+.loading-state-text {
+    font-size: 14px;
+    color: #6B7280;
+}
+
 /* ==================== 일정 상세 (개선) ==================== */
 .schedule-detail {
     padding: 0;

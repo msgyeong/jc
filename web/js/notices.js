@@ -36,12 +36,13 @@ async function loadNotices(page = 1) {
     if (!container) return;
     noticesLoading = true;
     try {
-        container.innerHTML = '<div class="content-loading">공지사항 로딩 중...</div>';
+        container.innerHTML = typeof renderSkeleton === 'function' ? renderSkeleton('list') : '<div class="content-loading">공지사항 로딩 중...</div>';
         const result = await apiClient.getNotices(page, 20);
         if (result.success && Array.isArray(result.notices)) {
             if (result.notices.length === 0) {
-                container.innerHTML =
-                    '<div class="empty-state">등록된 공지사항이 없습니다.</div>';
+                container.innerHTML = typeof renderEmptyState === 'function'
+                    ? renderEmptyState('document', '등록된 공지사항이 없습니다')
+                    : '<div class="empty-state">등록된 공지사항이 없습니다.</div>';
             } else {
                 container.innerHTML = result.notices
                     .map((notice) => createNoticeCard(notice))
@@ -49,13 +50,15 @@ async function loadNotices(page = 1) {
                 currentNoticesPage = page;
             }
         } else {
-            container.innerHTML =
-                '<div class="error-state">공지사항을 불러올 수 없습니다.</div>';
+            container.innerHTML = typeof renderErrorState === 'function'
+                ? renderErrorState('공지사항을 불러올 수 없습니다', '잠시 후 다시 시도해주세요', 'loadNotices(1)')
+                : '<div class="error-state">공지사항을 불러올 수 없습니다.</div>';
         }
     } catch (error) {
         console.error('공지사항 목록 로드 실패:', error);
-        container.innerHTML =
-            '<div class="error-state">공지사항을 불러올 수 없습니다.</div>';
+        container.innerHTML = typeof renderErrorState === 'function'
+            ? renderErrorState('공지사항을 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'loadNotices(1)')
+            : '<div class="error-state">공지사항을 불러올 수 없습니다.</div>';
     } finally {
         noticesLoading = false;
     }

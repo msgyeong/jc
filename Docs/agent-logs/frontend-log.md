@@ -539,6 +539,30 @@
 
 ---
 
+## 세션 #9 — 2026-03-11 (화)
+
+### 작업: 관리자 웹 긴급 버그 수정 2건
+- **상태**: 완료
+- **커밋**: `ba9bd28` → `origin main` 푸시 완료
+
+#### BUG-1: 관리자 로그인 필드명 불일치 (검증 결과)
+- 코드 확인: `admin-app.js` line 67-74에서 `admin_id` 변수로 올바르게 전송 중
+- 원래 코드가 정상이었으므로 수정 불필요
+
+#### BUG-2: 대시보드 렌더링 안 됨 — 스크립트 로딩 순서 (FIXED)
+- **원인**: `PAGE_RENDERERS` 객체가 `admin-app.js` 로드 시점에 정적 바인딩 → `dashboard.js`/`members.js`/`posts.js`가 아직 로드 안 됐으므로 `renderDashboard` 등이 모두 `undefined` → `null`
+- **증상**: `navigateAdmin()`에서 renderer가 null → "준비 중인 페이지입니다" 표시
+- **수정**:
+  1. `PAGE_RENDERERS` 정적 객체 제거 → `getPageRenderer(page)` 함수로 호출 시점 late-bind 조회
+  2. IIFE `init()` → `window.addEventListener('load', ...)` 변경하여 모든 스크립트 로드 후 초기화
+
+#### 변경 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `web/admin/js/admin-app.js` | PAGE_RENDERERS 정적 바인딩 → getPageRenderer() late-bind, IIFE → window.load 이벤트 |
+
+---
+
 ## 알려진 이슈 (수정 안 함, 동작 영향 없음)
 
 1. `formatDate` 함수가 `utils.js`와 `home.js`에 중복 정의 — home.js가 덮어씀. 통합 필요.

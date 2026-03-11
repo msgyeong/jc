@@ -23,18 +23,34 @@ router.get('/', authenticate, async (req, res) => {
         const userId = req.user.userId;
         const category = req.query.category; // 'notice' or 'general'
 
-        // Category filter
-        const categoryFilter = category ? `WHERE p.category = '${category === 'notice' ? 'notice' : 'general'}'` : '';
+        // Category filter (parameterized)
+        const cat = category === 'notice' ? 'notice' : category === 'general' ? 'general' : null;
+        const categoryFilter = cat ? 'WHERE p.category = $1' : '';
+        const countParams = cat ? [cat] : [];
 
         const countResult = await query(
-            `SELECT COUNT(*) FROM posts p ${categoryFilter}`
+            `SELECT COUNT(*) FROM posts p ${categoryFilter}`,
+            countParams
         );
         const total = parseInt(countResult.rows[0].count);
 
         // Notice category: pinned first, then by date
-        const orderClause = category === 'notice'
+        const orderClause = cat === 'notice'
             ? 'ORDER BY p.is_pinned DESC NULLS LAST, p.created_at DESC'
             : 'ORDER BY p.created_at DESC';
+
+        // Build parameterized query
+        const listParams = [];
+        let paramIdx = 0;
+        if (cat) {
+            listParams.push(cat);
+            paramIdx = 1;
+        }
+        listParams.push(limit, offset, userId);
+        const limitIdx = paramIdx + 1;
+        const offsetIdx = paramIdx + 2;
+        const userIdx = paramIdx + 3;
+        const listCategoryFilter = cat ? `WHERE p.category = $1` : '';
 
         let posts;
         try {
@@ -48,11 +64,11 @@ router.get('/', authenticate, async (req, res) => {
                     pr.read_at as read_at
                  FROM posts p
                  LEFT JOIN users u ON p.author_id = u.id
-                 LEFT JOIN read_status pr ON pr.post_id = p.id AND pr.user_id = $3
-                 ${categoryFilter}
+                 LEFT JOIN read_status pr ON pr.post_id = p.id AND pr.user_id = $${userIdx}
+                 ${listCategoryFilter}
                  ${orderClause}
-                 LIMIT $1 OFFSET $2`,
-                [limit, offset, userId]
+                 LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+                listParams
             );
             posts = result.rows.map(row => {
                 const { read_at, ...post } = row;
@@ -61,6 +77,10 @@ router.get('/', authenticate, async (req, res) => {
         } catch (e) {
             const msg = (e && e.message) || '';
             if (msg.includes('read_status') || msg.includes('schedule_id') || msg.includes('is_pinned')) {
+                const fallbackParams = cat ? [cat, limit, offset] : [limit, offset];
+                const fallbackFilter = cat ? 'WHERE p.category = $1' : '';
+                const fbLimitIdx = cat ? 2 : 1;
+                const fbOffsetIdx = cat ? 3 : 2;
                 const result = await query(
                     `SELECT
                         p.id, p.title, p.content, p.images, p.category,
@@ -69,10 +89,10 @@ router.get('/', authenticate, async (req, res) => {
                         u.id as author_id, u.name as author_name, u.profile_image as author_image
                      FROM posts p
                      LEFT JOIN users u ON p.author_id = u.id
-                     ${categoryFilter}
+                     ${fallbackFilter}
                      ORDER BY p.created_at DESC
-                     LIMIT $1 OFFSET $2`,
-                    [limit, offset]
+                     LIMIT $${fbLimitIdx} OFFSET $${fbOffsetIdx}`,
+                    fallbackParams
                 );
                 posts = result.rows.map(p => ({ ...p, read_by_current_user: false }));
             } else {

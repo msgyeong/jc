@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { query } = require('../config/database');
+const { query, transaction } = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { comparePassword, hashPassword } = require('../utils/password');
 const { generateToken } = require('../utils/jwt');
@@ -1138,21 +1138,31 @@ router.get('/notices', async (req, res) => {
         params.push(limit, offset);
         const result = await query(
             `SELECT p.id, p.title, p.content, p.is_pinned as pinned, p.views,
-                    p.comments_count, p.created_at, p.updated_at,
-                    u.name as author_name
+                    p.comments_count, p.linked_schedule_id, p.created_at, p.updated_at,
+                    u.name as author_name,
+                    s.title as schedule_title, s.start_date as schedule_start_date
              FROM posts p
              LEFT JOIN users u ON p.author_id = u.id
+             LEFT JOIN schedules s ON p.linked_schedule_id = s.id
              ${whereClause}
              ORDER BY p.is_pinned DESC NULLS LAST, p.created_at DESC
              LIMIT $${params.length - 1} OFFSET $${params.length}`,
             params,
         );
 
+        const notices = result.rows.map(row => {
+            const { schedule_title, schedule_start_date, ...notice } = row;
+            if (notice.linked_schedule_id) {
+                notice.linked_schedule = { id: notice.linked_schedule_id, title: schedule_title, start_date: schedule_start_date };
+            }
+            return notice;
+        });
+
         return res.json({
             success: true,
-            notices: result.rows,
+            notices,
             data: {
-                items: result.rows,
+                items: notices,
                 total,
                 page,
                 totalPages: Math.ceil(total / limit),
@@ -1166,23 +1176,68 @@ router.get('/notices', async (req, res) => {
 
 router.post('/notices', async (req, res) => {
     try {
-        const { title, content, pinned, images } = req.body;
+        const { title, content, pinned, images, schedule_id, schedule } = req.body;
         if (!title || !content) {
             return res.status(400).json({ success: false, message: '제목과 내용을 입력해주세요.' });
         }
+
+        // schedule 객체가 있으면 트랜잭션으로 일정 동시 생성 (M-12)
+        if (schedule) {
+            const result = await transaction(async (client) => {
+                const postResult = await client.query(
+                    `INSERT INTO posts (author_id, title, content, images, category, is_pinned, created_at, updated_at)
+                     VALUES ($1, $2, $3, $4, 'notice', $5, NOW(), NOW())
+                     RETURNING id`,
+                    [req.user.userId, title, content, images || [], !!pinned]
+                );
+                const postId = postResult.rows[0].id;
+
+                const schedResult = await client.query(
+                    `INSERT INTO schedules (created_by, title, start_date, end_date, location, description, category, linked_post_id, created_at, updated_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+                     RETURNING id`,
+                    [req.user.userId, schedule.title || title, schedule.start_date, schedule.end_date || null, schedule.location || null, schedule.description || null, schedule.category || 'event', postId]
+                );
+                const scheduleId = schedResult.rows[0].id;
+
+                await client.query('UPDATE posts SET linked_schedule_id = $1 WHERE id = $2', [scheduleId, postId]);
+
+                return { postId, scheduleId };
+            });
+            writeAuditLog({
+                adminId: req.user.userId, action: 'notice.create',
+                targetType: 'post', targetId: result.postId,
+                description: `공지 작성 (일정 연동 id=${result.scheduleId}): ${title}`,
+                ipAddress: req.ip,
+            });
+            return res.status(201).json({
+                success: true, message: '공지사항과 일정이 함께 추가되었습니다.',
+                id: result.postId, schedule_id: result.scheduleId
+            });
+        }
+
+        // schedule_id로 기존 일정에 연결
+        const linkedScheduleId = schedule_id ? parseInt(schedule_id) : null;
         const result = await query(
-            `INSERT INTO posts (author_id, title, content, images, category, is_pinned, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, 'notice', $5, NOW(), NOW())
+            `INSERT INTO posts (author_id, title, content, images, category, is_pinned, linked_schedule_id, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, 'notice', $5, $6, NOW(), NOW())
              RETURNING id`,
-            [req.user.userId, title, content, images || [], !!pinned],
+            [req.user.userId, title, content, images || [], !!pinned, linkedScheduleId],
         );
+        const postId = result.rows[0].id;
+
+        // 양방향 연결
+        if (linkedScheduleId) {
+            await query('UPDATE schedules SET linked_post_id = $1 WHERE id = $2', [postId, linkedScheduleId]);
+        }
+
         writeAuditLog({
             adminId: req.user.userId, action: 'notice.create',
-            targetType: 'post', targetId: result.rows[0].id,
-            description: `공지 작성: ${title}`,
+            targetType: 'post', targetId: postId,
+            description: `공지 작성${linkedScheduleId ? ' (일정 연동 id=' + linkedScheduleId + ')' : ''}: ${title}`,
             ipAddress: req.ip,
         });
-        return res.status(201).json({ success: true, message: '공지사항이 추가되었습니다.', id: result.rows[0].id });
+        return res.status(201).json({ success: true, message: '공지사항이 추가되었습니다.', id: postId });
     } catch (err) {
         console.error('Admin create notice error:', err);
         return res.status(500).json({ success: false, message: '공지사항 추가 중 오류가 발생했습니다.' });
@@ -1192,12 +1247,75 @@ router.post('/notices', async (req, res) => {
 router.put('/notices/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, content, pinned, images } = req.body;
-        await query(
-            `UPDATE posts SET title = $1, content = $2, is_pinned = $3, images = $4, updated_at = NOW()
-             WHERE id = $5 AND category = 'notice'`,
-            [title, content, !!pinned, images || [], id],
+        const { title, content, pinned, images, schedule_id, schedule } = req.body;
+
+        // 기존 연결 확인
+        const existing = await query(
+            "SELECT linked_schedule_id FROM posts WHERE id = $1 AND category = 'notice'",
+            [id]
         );
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '공지사항을 찾을 수 없습니다.' });
+        }
+        const existingScheduleId = existing.rows[0].linked_schedule_id;
+
+        // schedule 객체로 연결 일정 동기화 (M-12)
+        if (schedule !== undefined) {
+            await transaction(async (client) => {
+                if (schedule === null) {
+                    // 연결 해제
+                    await client.query(
+                        `UPDATE posts SET title=$1, content=$2, is_pinned=$3, images=$4, linked_schedule_id=NULL, updated_at=NOW()
+                         WHERE id=$5 AND category='notice'`,
+                        [title, content, !!pinned, images || [], id]
+                    );
+                    if (existingScheduleId) {
+                        await client.query('UPDATE schedules SET linked_post_id = NULL WHERE id = $1', [existingScheduleId]);
+                    }
+                } else if (existingScheduleId) {
+                    // 기존 연결 일정 업데이트
+                    await client.query(
+                        `UPDATE posts SET title=$1, content=$2, is_pinned=$3, images=$4, updated_at=NOW()
+                         WHERE id=$5 AND category='notice'`,
+                        [title, content, !!pinned, images || [], id]
+                    );
+                    await client.query(
+                        `UPDATE schedules SET title=$1, start_date=$2, end_date=$3, location=$4, description=$5, category=$6, updated_at=NOW() WHERE id=$7`,
+                        [schedule.title || title, schedule.start_date, schedule.end_date || null, schedule.location || null, schedule.description || null, schedule.category || 'event', existingScheduleId]
+                    );
+                } else {
+                    // 신규 일정 생성 + 연결
+                    const schedResult = await client.query(
+                        `INSERT INTO schedules (created_by, title, start_date, end_date, location, description, category, linked_post_id, created_at, updated_at)
+                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING id`,
+                        [req.user.userId, schedule.title || title, schedule.start_date, schedule.end_date || null, schedule.location || null, schedule.description || null, schedule.category || 'event', id]
+                    );
+                    await client.query(
+                        `UPDATE posts SET title=$1, content=$2, is_pinned=$3, images=$4, linked_schedule_id=$5, updated_at=NOW()
+                         WHERE id=$6 AND category='notice'`,
+                        [title, content, !!pinned, images || [], schedResult.rows[0].id, id]
+                    );
+                }
+            });
+        } else {
+            // schedule_id 직접 지정 (기존 일정 연결/해제)
+            const newScheduleId = schedule_id !== undefined ? (schedule_id ? parseInt(schedule_id) : null) : existingScheduleId;
+            await query(
+                `UPDATE posts SET title = $1, content = $2, is_pinned = $3, images = $4, linked_schedule_id = $5, updated_at = NOW()
+                 WHERE id = $6 AND category = 'notice'`,
+                [title, content, !!pinned, images || [], newScheduleId, id],
+            );
+            // 양방향 연결 동기화
+            if (newScheduleId && newScheduleId !== existingScheduleId) {
+                await query('UPDATE schedules SET linked_post_id = $1 WHERE id = $2', [parseInt(id), newScheduleId]);
+                if (existingScheduleId) {
+                    await query('UPDATE schedules SET linked_post_id = NULL WHERE id = $1', [existingScheduleId]);
+                }
+            } else if (!newScheduleId && existingScheduleId) {
+                await query('UPDATE schedules SET linked_post_id = NULL WHERE id = $1', [existingScheduleId]);
+            }
+        }
+
         writeAuditLog({
             adminId: req.user.userId, action: 'notice.update',
             targetType: 'post', targetId: parseInt(id),
@@ -1226,16 +1344,34 @@ router.patch('/notices/:id', async (req, res) => {
 router.delete('/notices/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const before = await query("SELECT title FROM posts WHERE id = $1 AND category = 'notice'", [id]);
-        await query("DELETE FROM posts WHERE id = $1 AND category = 'notice'", [id]);
-        if (before.rows.length > 0) {
-            writeAuditLog({
-                adminId: req.user.userId, action: 'notice.delete',
-                targetType: 'post', targetId: parseInt(id),
-                description: `공지 삭제: ${before.rows[0].title}`,
-                ipAddress: req.ip,
-            });
+        const deleteLinkedSchedule = req.query.delete_linked_schedule === 'true';
+
+        const before = await query("SELECT title, linked_schedule_id FROM posts WHERE id = $1 AND category = 'notice'", [id]);
+        if (before.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '공지사항을 찾을 수 없습니다.' });
         }
+
+        const linkedScheduleId = before.rows[0].linked_schedule_id;
+
+        await transaction(async (client) => {
+            if (linkedScheduleId) {
+                if (deleteLinkedSchedule) {
+                    await client.query('UPDATE posts SET linked_schedule_id = NULL WHERE id = $1', [id]);
+                    await client.query('DELETE FROM schedules WHERE id = $1', [linkedScheduleId]);
+                } else {
+                    await client.query('UPDATE posts SET linked_schedule_id = NULL WHERE id = $1', [id]);
+                    await client.query('UPDATE schedules SET linked_post_id = NULL WHERE id = $1', [linkedScheduleId]);
+                }
+            }
+            await client.query("DELETE FROM posts WHERE id = $1 AND category = 'notice'", [id]);
+        });
+
+        writeAuditLog({
+            adminId: req.user.userId, action: 'notice.delete',
+            targetType: 'post', targetId: parseInt(id),
+            description: `공지 삭제${linkedScheduleId ? (deleteLinkedSchedule ? ' (연결 일정도 삭제)' : ' (연결 일정 해제)') : ''}: ${before.rows[0].title}`,
+            ipAddress: req.ip,
+        });
         return res.json({ success: true, message: '공지사항이 삭제되었습니다.' });
     } catch (err) {
         console.error('Admin delete notice error:', err);

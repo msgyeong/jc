@@ -126,6 +126,7 @@ async function showNoticeDetailScreen(noticeId) {
                     <span><svg class="icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${notice.views || 0}</span>
                 </div>
                 <div class="post-detail-body">${escapeHtml(notice.content || '').replace(/\n/g, '<br>')}</div>
+                <div id="notice-linked-schedule-container"></div>
                 ${notice.attendance_survey_enabled ? `
                     <div class="post-detail-comments">
                         <h4>참석자 조사</h4>
@@ -142,6 +143,8 @@ async function showNoticeDetailScreen(noticeId) {
         if (notice.attendance_survey_enabled) {
             await loadNoticeAttendance(notice.id);
         }
+        // M-12: 연결된 일정 표시
+        loadNoticeLinkedSchedule(notice.schedule_id || notice.linked_schedule_id);
     } catch (e) {
         container.innerHTML = '<div class="error-state">공지사항을 불러올 수 없습니다.</div>';
     }
@@ -169,6 +172,12 @@ function renderNoticeCreateForm(data = {}) {
             <div class="form-group">
                 <label><input type="checkbox" id="notice-attendance-enabled" ${data.attendance_survey_enabled ? 'checked' : ''}> 참석자 조사 활성화</label>
             </div>
+            <div class="form-group">
+                <label for="notice-schedule-id">연결 일정 <span class="optional-badge" style="font-size:11px;color:#9CA3AF;font-weight:400">선택</span></label>
+                <select id="notice-schedule-id">
+                    <option value="">연결 일정 없음</option>
+                </select>
+            </div>
             <div class="inline-error-message" id="notice-form-error"></div>
             <button type="submit" class="btn btn-primary" id="notice-submit-btn">
                 <span class="btn-text">${data.id ? '수정 저장' : '등록'}</span>
@@ -176,6 +185,25 @@ function renderNoticeCreateForm(data = {}) {
             </button>
         </form>
     `;
+    // M-12: 일정 드롭다운 로드
+    loadNoticeScheduleOptions(data.schedule_id || data.linked_schedule_id || null);
+}
+
+async function loadNoticeScheduleOptions(selectedId) {
+    const sel = document.getElementById('notice-schedule-id');
+    if (!sel) return;
+    try {
+        const res = await apiClient.getSchedules(true);
+        const schedules = res.schedules || (res.data && (res.data.schedules || res.data.items)) || [];
+        let html = '<option value="">연결 일정 없음</option>';
+        schedules.forEach(function(s) {
+            const dateStr = s.start_date ? s.start_date.split('T')[0] : '';
+            const label = (dateStr ? '[' + dateStr + '] ' : '') + (s.title || '제목 없음');
+            const selected = selectedId && String(s.id) === String(selectedId) ? ' selected' : '';
+            html += '<option value="' + s.id + '"' + selected + '>' + escapeHtml(label) + '</option>';
+        });
+        sel.innerHTML = html;
+    } catch (_) {}
 }
 
 function handleCreateNotice() {
@@ -204,12 +232,15 @@ async function handleNoticeFormSubmit(e) {
     const errEl = document.getElementById('notice-form-error');
     if (!titleEl || !contentEl || !btn) return;
 
+    const schedIdEl = document.getElementById('notice-schedule-id');
+    const scheduleId = schedIdEl && schedIdEl.value ? parseInt(schedIdEl.value, 10) : null;
     const payload = {
         title: (titleEl.value || '').trim(),
         content: (contentEl.value || '').trim(),
         is_pinned: !!(pinnedEl && pinnedEl.checked),
         attendance_survey_enabled: !!(attendEl && attendEl.checked),
     };
+    if (scheduleId && !isNaN(scheduleId)) payload.schedule_id = scheduleId;
     if (!payload.title || !payload.content) {
         if (errEl) showInlineError('notice-form-error', '제목과 내용을 입력해주세요.');
         return;
@@ -282,6 +313,46 @@ async function handleNoticeAttend(noticeId, status) {
     } catch (e) {
         alert(e.message || '저장 중 오류가 발생했습니다.');
     }
+}
+
+// M-12: 공지 상세에서 연결된 일정 표시
+async function loadNoticeLinkedSchedule(scheduleId) {
+    const container = document.getElementById('notice-linked-schedule-container');
+    if (!container || !scheduleId) { if (container) container.innerHTML = ''; return; }
+    try {
+        const res = await apiClient.getSchedule(scheduleId);
+        const sched = res.schedule || (res.data && res.data) || null;
+        if (!sched) { container.innerHTML = ''; return; }
+        const catLabels = typeof CATEGORY_LABELS !== 'undefined' ? CATEGORY_LABELS : {};
+        const catClasses = typeof CATEGORY_BADGE_CLASS !== 'undefined' ? CATEGORY_BADGE_CLASS : {};
+        const catLabel = catLabels[sched.category] || sched.category || '';
+        const catClass = catClasses[sched.category] || 'badge-other';
+        const dateStr = sched.start_date ? new Date(sched.start_date).toLocaleDateString('ko-KR') : '';
+        let timeStr = '';
+        if (sched.start_date && sched.start_date.includes('T')) {
+            const st = sched.start_date.split('T')[1]?.substring(0, 5) || '';
+            const et = sched.end_date && sched.end_date.includes('T') ? sched.end_date.split('T')[1]?.substring(0, 5) || '' : '';
+            if (st && st !== '00:00') timeStr = et ? st + '~' + et : st;
+        }
+        container.innerHTML = `
+            <div class="linked-schedule-banner" onclick="navigateTo('/schedules/${sched.id}')" style="margin-top:12px">
+                <div class="linked-schedule-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                <div class="linked-schedule-info">
+                    <div class="linked-schedule-label">연결된 일정</div>
+                    <div class="linked-schedule-title">
+                        <span class="schedule-category-badge ${catClass}">${catLabel}</span>
+                        ${escapeHtml(sched.title || '')}
+                    </div>
+                    <div class="linked-schedule-meta">
+                        ${dateStr ? '<span>' + dateStr + '</span>' : ''}
+                        ${timeStr ? '<span>' + timeStr + '</span>' : ''}
+                        ${sched.location ? '<span>' + escapeHtml(sched.location) + '</span>' : ''}
+                    </div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+        `;
+    } catch (_) { container.innerHTML = ''; }
 }
 
 // 공지사항 작성 권한 확인 및 버튼 표시

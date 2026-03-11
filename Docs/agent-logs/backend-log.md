@@ -5,6 +5,58 @@
 
 ---
 
+## 2026-03-11 세션 7: Batch 2 — M-02 + M-12 강화
+
+### 사전 확인 결과
+- **M-02 (공지 라우트 통합)**: 세션 6 (2026-03-10)에서 이미 구현 완료
+  - `notices.js`는 posts 테이블(category='notice') 기반 하위호환 프록시로 전환됨
+  - `posts.js`는 `?category=notice` 필터 지원
+- **M-12 (공지-일정 연동)**: 세션 6 (2026-03-10)에서 이미 구현 완료
+  - `posts.js`: schedule 객체로 트랜잭션 생성/동기화/삭제
+  - `schedules.js`: linked_post 조회
+
+### 프로덕션 검증
+- GET /api/posts?category=notice → 200 (2건 반환)
+- GET /api/notices → 200 (하위호환 정상)
+
+### 개선 작업
+
+#### 1. posts.js — SQL 인젝션 방지 (category 필터)
+- **변경 전**: 문자열 보간 `WHERE p.category = '${...}'` (ternary 사용이라 실질적 위험은 낮았으나 규칙 위반)
+- **변경 후**: 파라미터화 쿼리 `WHERE p.category = $1` + countParams/listParams 배열
+- count 쿼리, 메인 쿼리, fallback 쿼리 모두 파라미터화 적용
+
+#### 2. admin.js — 공지 목록에 linked_schedule 포함
+- GET /api/admin/notices: LEFT JOIN schedules 추가
+- 응답에 `linked_schedule: { id, title, start_date }` 객체 포함
+
+#### 3. admin.js — 공지 생성(POST) 일정 연동 지원
+- `schedule` 객체: 트랜잭션으로 공지+일정 동시 생성 (양방향 연결)
+- `schedule_id`: 기존 일정에 연결 (양방향 linked_post_id 동기화)
+
+#### 4. admin.js — 공지 수정(PUT) 일정 연동 지원
+- `schedule` 객체: 연결 일정 업데이트/신규 생성/해제 (트랜잭션)
+- `schedule_id`: 직접 연결/해제 (양방향 동기화)
+
+#### 5. admin.js — 공지 삭제(DELETE) 연결 일정 처리
+- `?delete_linked_schedule=true`: 연결 일정도 함께 삭제
+- 기본값: 연결만 해제, 일정은 독립 유지
+
+#### 6. admin.js — transaction import 추가
+- `const { query, transaction } = require('../config/database');`
+
+### 커밋
+- `ccc92d1` — feat: M-02 공지 라우트 통합 강화 + M-12 공지-일정 연동 API 개선
+- Railway 자동 배포 트리거됨
+
+### 수정 파일
+| 파일 | 변경 |
+|------|------|
+| `api/routes/posts.js` | category 필터 파라미터화 (SQL 인젝션 방지) |
+| `api/routes/admin.js` | 공지 CRUD에 schedule 연동 + transaction import |
+
+---
+
 ## 2026-03-11 세션 6: Batch 1 — M-10 + M-13 + DB 클린업
 
 ### 사전 확인 결과

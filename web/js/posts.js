@@ -649,7 +649,11 @@ async function loadPostForEdit(postId) {
     contentEl.disabled = true;
 
     try {
-        const result = await apiClient.getPost(postId);
+        // 게시글 로드 + 일정 목록 로드 병렬
+        const [result, schedResult] = await Promise.all([
+            apiClient.getPost(postId),
+            loadScheduleOptions('post-edit-schedule-id')
+        ]);
         if (result.success && result.post) {
             const p = result.post;
             titleEl.value = p.title || '';
@@ -657,7 +661,7 @@ async function loadPostForEdit(postId) {
             const catEl = document.getElementById('post-edit-category');
             if (catEl) catEl.value = (p.category === 'notice' ? 'notice' : 'general');
             const sidEl = document.getElementById('post-edit-schedule-id');
-            if (sidEl) sidEl.value = (p.schedule_id != null && p.schedule_id !== '') ? p.schedule_id : '';
+            if (sidEl) sidEl.value = (p.schedule_id != null && p.schedule_id !== '') ? String(p.schedule_id) : '';
             postEditImageUrls = Array.isArray(p.images)
                 ? p.images.filter(u => u && typeof u === 'string')
                 : [];
@@ -670,6 +674,25 @@ async function loadPostForEdit(postId) {
     } finally {
         titleEl.disabled = false;
         contentEl.disabled = false;
+    }
+}
+
+// M-12: 일정 드롭다운 로드 공통 함수
+async function loadScheduleOptions(selectId) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    try {
+        const res = await apiClient.getSchedules(true);
+        const schedules = res.schedules || (res.data && (res.data.schedules || res.data.items)) || [];
+        let html = '<option value="">연결 일정 없음</option>';
+        schedules.forEach(function(s) {
+            const dateStr = s.start_date ? s.start_date.split('T')[0] : '';
+            const label = (dateStr ? '[' + dateStr + '] ' : '') + (s.title || '제목 없음');
+            html += '<option value="' + s.id + '">' + escapeHtml(label) + '</option>';
+        });
+        sel.innerHTML = html;
+    } catch (_) {
+        // 실패해도 기본 옵션 유지
     }
 }
 

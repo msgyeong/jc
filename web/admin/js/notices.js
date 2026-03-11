@@ -120,6 +120,10 @@ function openNoticeModal(editId) {
                     '<input type="checkbox" id="notice-pinned" style="width:auto">' +
                     '<label for="notice-pinned" style="margin:0;cursor:pointer">상단 고정</label>' +
                 '</div>' +
+                '<div class="form-field">' +
+                    '<label>연결 일정 <span style="font-size:11px;color:#9CA3AF;font-weight:400">(선택)</span></label>' +
+                    '<select id="notice-schedule-id"><option value="">연결 일정 없음</option></select>' +
+                '</div>' +
             '</div>' +
             '<div class="modal-footer">' +
                 '<button class="btn btn-ghost btn-sm" onclick="closeModal()">취소</button>' +
@@ -128,6 +132,9 @@ function openNoticeModal(editId) {
         '</div>';
 
     openModal(html);
+
+    // M-12: 일정 드롭다운 로드
+    loadAdminScheduleOptions();
 
     if (isEdit) {
         loadNoticeForEdit(editId);
@@ -148,8 +155,32 @@ async function loadNoticeForEdit(id) {
         document.getElementById('notice-title').value = n.title || '';
         document.getElementById('notice-content').value = n.content || '';
         document.getElementById('notice-pinned').checked = !!n.pinned;
+        var schedSel = document.getElementById('notice-schedule-id');
+        if (schedSel && (n.schedule_id || n.linked_schedule_id)) {
+            schedSel.value = String(n.schedule_id || n.linked_schedule_id);
+        }
     } catch (err) {
         console.error('Load notice for edit error:', err);
+    }
+}
+
+// M-12: 관리자 일정 드롭다운 로드
+async function loadAdminScheduleOptions() {
+    var sel = document.getElementById('notice-schedule-id');
+    if (!sel) return;
+    try {
+        var res = await AdminAPI.get('/api/admin/schedules?limit=100');
+        if (!res.success) return;
+        var schedules = res.schedules || [];
+        var html = '<option value="">연결 일정 없음</option>';
+        schedules.forEach(function(s) {
+            var dateStr = s.start_date ? s.start_date.split('T')[0] : '';
+            var label = (dateStr ? '[' + dateStr + '] ' : '') + (s.title || '제목 없음');
+            html += '<option value="' + s.id + '">' + escapeHtml(label) + '</option>';
+        });
+        sel.innerHTML = html;
+    } catch (err) {
+        console.error('Load schedules error:', err);
     }
 }
 
@@ -163,7 +194,10 @@ async function saveNotice(editId) {
         return;
     }
 
+    var schedSel = document.getElementById('notice-schedule-id');
+    var scheduleId = schedSel && schedSel.value ? parseInt(schedSel.value, 10) : null;
     var body = { title: title, content: content, pinned: pinned };
+    if (scheduleId && !isNaN(scheduleId)) body.schedule_id = scheduleId;
 
     try {
         if (editId) {

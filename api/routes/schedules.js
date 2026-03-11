@@ -18,6 +18,7 @@ router.get('/', authenticate, async (req, res) => {
             SELECT
                 s.id, s.title, s.start_date, s.end_date,
                 s.location, s.description, s.category,
+                s.views,
                 s.created_at, s.updated_at,
                 s.created_by as author_id, u.name as author_name, u.profile_image as author_image
             FROM schedules s
@@ -66,12 +67,15 @@ router.get('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // 일정 조회 (linked_post_id 포함)
+        // 조회수 증가
+        await query('UPDATE schedules SET views = COALESCE(views, 0) + 1 WHERE id = $1', [id]);
+
+        // 일정 조회 (linked_post_id + views 포함)
         const result = await query(
             `SELECT
                 s.id, s.title, s.start_date, s.end_date,
                 s.location, s.description, s.category,
-                s.linked_post_id,
+                s.linked_post_id, s.views,
                 s.created_at, s.updated_at,
                 s.created_by as author_id, u.name as author_name, u.profile_image as author_image
              FROM schedules s

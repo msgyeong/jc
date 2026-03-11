@@ -2134,4 +2134,259 @@ router.patch('/account/password', async (req, res) => {
     }
 });
 
+/* ======================================================
+   GET /api/admin/positions
+   직책 목록 조회
+   ====================================================== */
+router.get('/positions', authenticate, async (req, res) => {
+    try {
+        const userResult = await query('SELECT role FROM users WHERE id = $1', [req.user.userId]);
+        if (!userResult.rows.length || !['admin', 'super_admin'].includes(userResult.rows[0].role)) {
+            return res.status(403).json({ success: false, message: '관리자 권한이 없습니다.' });
+        }
+
+        const result = await query(
+            `SELECT p.id, p.name, p.level, p.description, p.created_at, p.updated_at,
+                    (SELECT COUNT(*) FROM position_permissions pp WHERE pp.position_id = p.id AND pp.granted = true)::int AS permission_count
+             FROM positions p
+             ORDER BY p.level DESC, p.name ASC`
+        );
+
+        return res.json({ success: true, data: { items: result.rows, total: result.rows.length } });
+    } catch (err) {
+        console.error('Get positions error:', err);
+        return res.status(500).json({ success: false, message: '직책 목록 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   POST /api/admin/positions
+   직책 생성
+   ====================================================== */
+router.post('/positions', authenticate, async (req, res) => {
+    try {
+        const userResult = await query('SELECT role FROM users WHERE id = $1', [req.user.userId]);
+        if (!userResult.rows.length || !['admin', 'super_admin'].includes(userResult.rows[0].role)) {
+            return res.status(403).json({ success: false, message: '관리자 권한이 없습니다.' });
+        }
+
+        const { name, level, description } = req.body;
+        if (!name || !String(name).trim()) {
+            return res.status(400).json({ success: false, message: '직책 이름을 입력해주세요.' });
+        }
+
+        const result = await query(
+            `INSERT INTO positions (name, level, description, created_at, updated_at)
+             VALUES ($1, $2, $3, NOW(), NOW())
+             RETURNING id, name, level, description, created_at`,
+            [String(name).trim(), level || 0, description || null]
+        );
+
+        await writeAuditLog(req.user.userId, 'position.create', 'position', result.rows[0].id, null, result.rows[0], `직책 "${name}" 생성`);
+
+        return res.status(201).json({ success: true, data: result.rows[0] });
+    } catch (err) {
+        if (err.code === '23505') {
+            return res.status(409).json({ success: false, message: '이미 존재하는 직책 이름입니다.' });
+        }
+        console.error('Create position error:', err);
+        return res.status(500).json({ success: false, message: '직책 생성 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   PUT /api/admin/positions/:id
+   직책 수정
+   ====================================================== */
+router.put('/positions/:id', authenticate, async (req, res) => {
+    try {
+        const userResult = await query('SELECT role FROM users WHERE id = $1', [req.user.userId]);
+        if (!userResult.rows.length || !['admin', 'super_admin'].includes(userResult.rows[0].role)) {
+            return res.status(403).json({ success: false, message: '관리자 권한이 없습니다.' });
+        }
+
+        const { id } = req.params;
+        const { name, level, description } = req.body;
+
+        const existing = await query('SELECT * FROM positions WHERE id = $1', [id]);
+        if (!existing.rows.length) {
+            return res.status(404).json({ success: false, message: '직책을 찾을 수 없습니다.' });
+        }
+
+        const beforeValue = existing.rows[0];
+
+        const sets = [];
+        const params = [];
+        let paramIdx = 1;
+
+        if (name !== undefined) {
+            sets.push(`name = $${paramIdx++}`);
+            params.push(String(name).trim());
+        }
+        if (level !== undefined) {
+            sets.push(`level = $${paramIdx++}`);
+            params.push(level);
+        }
+        if (description !== undefined) {
+            sets.push(`description = $${paramIdx++}`);
+            params.push(description);
+        }
+
+        if (sets.length === 0) {
+            return res.status(400).json({ success: false, message: '수정할 필드가 없습니다.' });
+        }
+
+        sets.push(`updated_at = NOW()`);
+        params.push(id);
+
+        const result = await query(
+            `UPDATE positions SET ${sets.join(', ')} WHERE id = $${paramIdx} RETURNING id, name, level, description, updated_at`,
+            params
+        );
+
+        await writeAuditLog(req.user.userId, 'position.update', 'position', id, beforeValue, result.rows[0], `직책 "${result.rows[0].name}" 수정`);
+
+        return res.json({ success: true, data: result.rows[0] });
+    } catch (err) {
+        if (err.code === '23505') {
+            return res.status(409).json({ success: false, message: '이미 존재하는 직책 이름입니다.' });
+        }
+        console.error('Update position error:', err);
+        return res.status(500).json({ success: false, message: '직책 수정 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   DELETE /api/admin/positions/:id
+   직책 삭제
+   ====================================================== */
+router.delete('/positions/:id', authenticate, async (req, res) => {
+    try {
+        const userResult = await query('SELECT role FROM users WHERE id = $1', [req.user.userId]);
+        if (!userResult.rows.length || !['admin', 'super_admin'].includes(userResult.rows[0].role)) {
+            return res.status(403).json({ success: false, message: '관리자 권한이 없습니다.' });
+        }
+
+        const { id } = req.params;
+
+        const existing = await query('SELECT * FROM positions WHERE id = $1', [id]);
+        if (!existing.rows.length) {
+            return res.status(404).json({ success: false, message: '직책을 찾을 수 없습니다.' });
+        }
+
+        await query('DELETE FROM positions WHERE id = $1', [id]);
+
+        await writeAuditLog(req.user.userId, 'position.delete', 'position', id, existing.rows[0], null, `직책 "${existing.rows[0].name}" 삭제`);
+
+        return res.json({ success: true, message: '직책이 삭제되었습니다.' });
+    } catch (err) {
+        console.error('Delete position error:', err);
+        return res.status(500).json({ success: false, message: '직책 삭제 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   GET /api/admin/positions/:id/permissions
+   직책별 권한 목록 조회
+   ====================================================== */
+router.get('/positions/:id/permissions', authenticate, async (req, res) => {
+    try {
+        const userResult = await query('SELECT role FROM users WHERE id = $1', [req.user.userId]);
+        if (!userResult.rows.length || !['admin', 'super_admin'].includes(userResult.rows[0].role)) {
+            return res.status(403).json({ success: false, message: '관리자 권한이 없습니다.' });
+        }
+
+        const { id } = req.params;
+
+        const posResult = await query('SELECT id, name, level FROM positions WHERE id = $1', [id]);
+        if (!posResult.rows.length) {
+            return res.status(404).json({ success: false, message: '직책을 찾을 수 없습니다.' });
+        }
+
+        const permResult = await query(
+            `SELECT id, permission, granted FROM position_permissions WHERE position_id = $1 ORDER BY permission ASC`,
+            [id]
+        );
+
+        return res.json({
+            success: true,
+            data: {
+                position: posResult.rows[0],
+                permissions: permResult.rows
+            }
+        });
+    } catch (err) {
+        console.error('Get position permissions error:', err);
+        return res.status(500).json({ success: false, message: '권한 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   PUT /api/admin/positions/:id/permissions
+   직책별 권한 일괄 업데이트
+   Body: { permissions: [ { permission: 'member.edit', granted: true }, ... ] }
+   ====================================================== */
+router.put('/positions/:id/permissions', authenticate, async (req, res) => {
+    try {
+        const userResult = await query('SELECT role FROM users WHERE id = $1', [req.user.userId]);
+        if (!userResult.rows.length || !['admin', 'super_admin'].includes(userResult.rows[0].role)) {
+            return res.status(403).json({ success: false, message: '관리자 권한이 없습니다.' });
+        }
+
+        const { id } = req.params;
+        const { permissions } = req.body;
+
+        if (!Array.isArray(permissions)) {
+            return res.status(400).json({ success: false, message: 'permissions 배열이 필요합니다.' });
+        }
+
+        const posResult = await query('SELECT id, name FROM positions WHERE id = $1', [id]);
+        if (!posResult.rows.length) {
+            return res.status(404).json({ success: false, message: '직책을 찾을 수 없습니다.' });
+        }
+
+        // 기존 권한 snapshot (audit용)
+        const beforePerms = await query(
+            'SELECT permission, granted FROM position_permissions WHERE position_id = $1 ORDER BY permission',
+            [id]
+        );
+
+        await transaction(async (client) => {
+            // 기존 권한 전부 삭제 후 재삽입
+            await client.query('DELETE FROM position_permissions WHERE position_id = $1', [id]);
+
+            for (const p of permissions) {
+                if (!p.permission || typeof p.permission !== 'string') continue;
+                await client.query(
+                    `INSERT INTO position_permissions (position_id, permission, granted) VALUES ($1, $2, $3)`,
+                    [id, p.permission.trim(), p.granted !== false]
+                );
+            }
+        });
+
+        // 업데이트된 권한 조회
+        const afterPerms = await query(
+            'SELECT permission, granted FROM position_permissions WHERE position_id = $1 ORDER BY permission',
+            [id]
+        );
+
+        await writeAuditLog(req.user.userId, 'position.permissions_update', 'position', id,
+            { permissions: beforePerms.rows },
+            { permissions: afterPerms.rows },
+            `직책 "${posResult.rows[0].name}" 권한 업데이트 (${afterPerms.rows.length}개)`
+        );
+
+        return res.json({
+            success: true,
+            data: {
+                position: posResult.rows[0],
+                permissions: afterPerms.rows
+            }
+        });
+    } catch (err) {
+        console.error('Update position permissions error:', err);
+        return res.status(500).json({ success: false, message: '권한 업데이트 중 오류가 발생했습니다.' });
+    }
+});
+
 module.exports = router;

@@ -911,6 +911,162 @@ tbody tr.clickable {
     gap: 20px;
 }
 
+/* ---- 고정 배지 ---- */
+.pin-badge { font-size: 16px; }
+.pin-badge.pinned { opacity: 1; }
+
+/* ---- 카테고리 배지 (일정) ---- */
+.badge-cat-blue { background: var(--c-primary-bg); color: var(--c-primary); }
+.badge-cat-green { background: var(--c-success-bg); color: var(--c-success); }
+.badge-cat-yellow { background: var(--c-warning-bg); color: var(--c-warning); }
+.badge-cat-red { background: var(--c-danger-bg); color: var(--c-danger); }
+
+/* ---- 세로 바 차트 ---- */
+.bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    height: 200px;
+    padding: 8px 0;
+}
+
+.bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}
+
+.bar-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-text);
+    margin-bottom: 4px;
+}
+
+.bar-track {
+    flex: 1;
+    width: 100%;
+    max-width: 48px;
+    background: var(--c-bg);
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+}
+
+.bar-fill {
+    width: 100%;
+    background: var(--c-primary);
+    border-radius: 6px 6px 0 0;
+    transition: height 0.4s ease;
+    min-height: 4px;
+}
+
+.bar-label {
+    font-size: 12px;
+    color: var(--c-text-sub);
+    margin-top: 8px;
+    white-space: nowrap;
+}
+
+/* ---- 수평 바 차트 ---- */
+.h-bar-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.h-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.h-bar-label {
+    width: 80px;
+    font-size: 13px;
+    color: var(--c-text-sub);
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.h-bar-track {
+    flex: 1;
+    height: 24px;
+    background: var(--c-bg);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.h-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.4s ease;
+}
+
+.h-bar-value {
+    width: 40px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* ---- 도넛 차트 (CSS conic-gradient) ---- */
+.donut-chart {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.donut-center {
+    position: absolute;
+    inset: 20%;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.donut-total {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.donut-label {
+    font-size: 11px;
+    color: var(--c-text-hint);
+    margin-top: 2px;
+}
+
+.donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    min-width: 120px;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
 /* ---- 반응형: 태블릿 ---- */
 @media (max-width: 1024px) {
     :root {

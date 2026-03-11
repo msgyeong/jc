@@ -120,6 +120,9 @@ const PAGE_TITLES = {
     dashboard: '대시보드',
     members: '회원 관리',
     posts: '게시판 관리',
+    schedules: '일정 관리',
+    notices: '공지사항',
+    stats: '통계 / 분석',
 };
 
 function routeFromHash() {
@@ -133,6 +136,9 @@ function getPageRenderer(page) {
         dashboard: typeof renderDashboard === 'function' ? renderDashboard : null,
         members: typeof renderMembers === 'function' ? renderMembers : null,
         posts: typeof renderPosts === 'function' ? renderPosts : null,
+        schedules: typeof renderSchedules === 'function' ? renderSchedules : null,
+        notices: typeof renderNotices === 'function' ? renderNotices : null,
+        stats: typeof renderStats === 'function' ? renderStats : null,
     };
     return map[page] || null;
 }

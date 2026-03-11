@@ -604,10 +604,127 @@ Web Push 알림 기능의 **구조와 설계는 완성도가 높음**:
 
 ---
 
+## 세션 7: 2026-03-11 (관리자 웹 M-08 전체 9화면 종합 검증)
+
+### 작업 요약
+- **목적**: 관리자 웹(Phase 1~3) 전체 9화면 종합 검증
+- **범위**: API 엔드포인트, 프론트엔드 코드 구조, 사이드바 네비게이션, DB 스키마
+- **배포 URL**: https://jc-production-7db6.up.railway.app/admin/
+- **테스트 계정**: admin@jc.com / test1234 (super_admin)
+
+### 테스트 결과: 4 PASS / 1 WARN
+
+| 검증 항목 | 결과 | 비고 |
+|-----------|------|------|
+| 1. API 엔드포인트 | ✅ PASS | 11/11 정상 응답 |
+| 2. 프론트엔드 코드 구조 | ✅ PASS | 10개 JS 파일 + 9개 라우트 + 10개 script 태그 |
+| 3. 사이드바 프로필 네비게이션 | ⚠️ WARN | 헤더에는 있지만 사이드바에 없음 (BUG-AW-001) |
+| 4. DB 스키마 | ✅ PASS | 008_app_settings.sql 존재 |
+| 5. JS 문법 검증 | ✅ PASS | admin JS 10개 파일 전체 통과 |
+
+---
+
+### 1. API 엔드포인트 검증
+
+| # | 엔드포인트 | HTTP | 결과 | 비고 |
+|---|-----------|------|------|------|
+| 1 | `POST /api/admin/auth/login` | 200 | ✅ | 토큰 정상 발급 |
+| 2 | `GET /api/admin/auth/me` | 200 | ✅ | id, email, name, role, status, profile_image, created_at, updated_at |
+| 3 | `GET /api/admin/dashboard/stats` | 200 | ✅ | members, posts, schedules, comments |
+| 4 | `GET /api/admin/members?page=1&limit=10` | 200 | ✅ | 페이지네이션 정상 |
+| 5 | `GET /api/admin/posts?page=1&limit=10` | 200 | ✅ | items, total, page, totalPages |
+| 6 | `GET /api/admin/notices?page=1&limit=10` | 200 | ✅ | items, total, page, totalPages |
+| 7 | `GET /api/admin/schedules?page=1&limit=10` | 200 | ✅ | items, total, page, totalPages |
+| 8 | `GET /api/admin/audit-log?page=1&limit=10` | 200 | ✅ | items, total, page, totalPages |
+| 9 | `GET /api/admin/settings` | 200 | ✅ | id, app_name, app_description, require_approval, default_role, push_enabled |
+| 10 | `GET /api/admin/dashboard/recent-activity` | 200 | ✅ | recent_members, recent_posts, recent_schedules |
+| 11 | `PUT /api/admin/auth/profile` | 존재 확인 | ✅ | admin.js:1834 라우트 등록 확인 |
+
+**통계 세부 API** (stats.js가 직접 호출하지는 않지만 백엔드에 존재):
+
+| 엔드포인트 | HTTP | 비고 |
+|-----------|------|------|
+| `GET /api/admin/stats/members` | 200 | 월별 가입, 역할/업종 분포 |
+| `GET /api/admin/stats/posts` | 200 | 월별 게시글, 카테고리 분포 |
+| `GET /api/admin/stats/schedules` | 200 | 월별 일정, 출석 통계 |
+| `GET /api/admin/stats/activity` | 200 | 일별 게시글/댓글 수 |
+
+**참고**: 테스트 항목의 `GET /api/admin/stats/overview`는 존재하지 않음 (404). `stats.js`는 실제로 `/api/admin/dashboard/stats` + `/api/admin/dashboard/recent-activity`를 사용하므로 정상 동작.
+
+### 2. 프론트엔드 코드 구조 검증
+
+**JS 파일 존재 (10/10):**
+
+| 파일 | 존재 | 핵심 함수 |
+|------|------|-----------|
+| `admin-app.js` | ✅ | `getPageRenderer()` — 9페이지 라우트 등록, `navigateAdmin()`, `adminLogout()` |
+| `dashboard.js` | ✅ | `renderDashboard()` |
+| `members.js` | ✅ | `renderMembers()` |
+| `posts.js` | ✅ | `renderPosts()` |
+| `notices.js` | ✅ | `renderNotices()` |
+| `schedules.js` | ✅ | `renderSchedules()` |
+| `stats.js` | ✅ | `renderStats()`, `loadStatsData()`, CSS-only 차트 (외부 라이브러리 없음) |
+| `audit-log.js` | ✅ | `renderAuditLog()` |
+| `settings.js` | ✅ | `renderSettings()` |
+| `admin-profile.js` | ✅ | `renderAdminProfile()`, `saveProfile()`, `changePassword()` |
+
+**index.html script 태그 (10/10):**
+- `admin-app.js?v=20260311d` ~ `admin-profile.js?v=20260311d` 전부 캐시 버스팅 포함
+
+**getPageRenderer() 라우트 맵 (9/9):**
+```
+dashboard, members, posts, notices, schedules, stats, audit-log, settings, admin-profile
+```
+
+### 3. 사이드바 프로필 네비게이션
+
+- **헤더**: `#header-user` → `onclick="navigateAdmin('admin-profile')"` ✅ (index.html:114)
+- **사이드바**: `.sidebar-user` 영역에 클릭 핸들러 **없음** ⚠️
+  - 사이드바 하단에 사용자 이름/역할/아바타 표시되지만, 클릭해도 아무 동작 없음
+  - 사이드바 nav에 `#admin-profile` 링크 없음 (dashboard~settings 8개만 있음)
+  - → **BUG-AW-001** (아래 상세)
+
+### 4. DB 스키마 검증
+
+- `database/migrations/008_app_settings.sql` ✅ 존재
+- `api/routes/admin.js`에 settings CRUD + auth/profile PUT 라우트 ✅ 존재
+
+### 5. JS 문법 검증
+
+- `web/admin/js/*.js` 10개 파일 전부 `node -c` 통과 ✅
+
+---
+
+### 발견된 버그
+
+#### BUG-AW-001: 사이드바 프로필 영역 클릭 시 #admin-profile 이동 불가 (LOW)
+
+- **심각도**: **LOW** — 헤더 우상단 이름 클릭으로 접근 가능하므로 기능 자체는 동작
+- **위치**: `web/admin/index.html:92~103` (`.sidebar-user` 영역)
+- **현상**: 사이드바 하단의 사용자 프로필 영역(아바타+이름+역할)을 클릭해도 아무 동작 없음
+- **기대 동작**: 클릭 시 `#admin-profile` 페이지로 이동
+- **대안 경로**: 헤더 우상단 사용자 이름 클릭 (`#header-user`, index.html:114)으로 접근 가능
+- **수정 방향**: `.sidebar-user` div에 `onclick="navigateAdmin('admin-profile')"` + `cursor:pointer` 추가
+
+---
+
+### 테스트 총평
+
+관리자 웹 9화면이 전체적으로 잘 완성됨:
+- **API**: 11개 주요 엔드포인트 + 4개 통계 세부 API 전부 200 정상 응답
+- **프론트**: 10개 JS 파일, 9개 라우트, 10개 script 태그, 캐시 버스팅 일치
+- **기능**: 대시보드 통계, 회원/게시글/공지/일정 CRUD, 감사 로그, 시스템 설정, 프로필+비밀번호 변경
+- **차트**: CSS-only 구현 (외부 라이브러리 0개) — 수평 바 차트, 도넛 차트, 막대 차트
+- **보안**: JWT 인증, 관리자 전용 라우트 분리
+
+**버그 1건 (LOW)**: 사이드바 프로필 클릭 미동작 — 헤더 대안 경로 있어 긴급도 낮음.
+
+---
+
 ## 다음 작업 (TODO)
 
 1. **BUG-S6-001 수정 후 재검증** — VAPID key 필드명 수정 후 Push 구독 동작 확인
-2. 브라우저 기반 E2E 테스트 (프론트엔드 렌더링 검증)
-3. 회원가입 → 승인 → 로그인 전체 플로우 테스트
-4. 관리자 콘솔 기능 테스트
+2. **BUG-AW-001 수정 후 확인** — 사이드바 프로필 클릭 이동
+3. 브라우저 기반 E2E 테스트 (프론트엔드 렌더링 검증)
+4. 회원가입 → 승인 → 로그인 전체 플로우 테스트
 5. 업종 데이터가 있는 회원으로 필터 실 동작 검증

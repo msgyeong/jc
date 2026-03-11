@@ -122,16 +122,19 @@ const PAGE_TITLES = {
     posts: '게시판 관리',
 };
 
-const PAGE_RENDERERS = {
-    dashboard: typeof renderDashboard === 'function' ? renderDashboard : null,
-    members: typeof renderMembers === 'function' ? renderMembers : null,
-    posts: typeof renderPosts === 'function' ? renderPosts : null,
-};
-
 function routeFromHash() {
     const hash = location.hash.replace('#', '') || 'dashboard';
     const page = PAGE_TITLES[hash] ? hash : 'dashboard';
     navigateAdmin(page, false);
+}
+
+function getPageRenderer(page) {
+    var map = {
+        dashboard: typeof renderDashboard === 'function' ? renderDashboard : null,
+        members: typeof renderMembers === 'function' ? renderMembers : null,
+        posts: typeof renderPosts === 'function' ? renderPosts : null,
+    };
+    return map[page] || null;
 }
 
 function navigateAdmin(page, pushHash) {
@@ -150,7 +153,8 @@ function navigateAdmin(page, pushHash) {
     const main = document.getElementById('main-content');
     main.innerHTML = '';
 
-    const renderer = PAGE_RENDERERS[page];
+    // Late-bind: look up renderer at call time (scripts may load after admin-app.js)
+    const renderer = getPageRenderer(page);
     if (renderer) {
         renderer(main);
     } else {
@@ -307,17 +311,13 @@ function showTableSkeleton(container, cols) {
 }
 
 /* ---------- Init ---------- */
-(function init() {
-    // Bind renderers after scripts load
-    PAGE_RENDERERS.dashboard = typeof renderDashboard === 'function' ? renderDashboard : null;
-    PAGE_RENDERERS.members = typeof renderMembers === 'function' ? renderMembers : null;
-    PAGE_RENDERERS.posts = typeof renderPosts === 'function' ? renderPosts : null;
+document.getElementById('admin-login-form').addEventListener('submit', handleLogin);
 
-    document.getElementById('admin-login-form').addEventListener('submit', handleLogin);
-
+// Wait for all scripts to load before initializing the app
+window.addEventListener('load', function() {
     if (AdminAPI.getToken()) {
         enterApp();
     } else {
         showLogin();
     }
-})();
+});

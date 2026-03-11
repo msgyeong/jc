@@ -5,6 +5,36 @@
 
 ---
 
+## 2026-03-11 세션 5: 관리자 웹 Phase 3 — 설정/프로필 API
+
+### DB 변경
+- `app_settings` 테이블 신규 생성 (단일 row, id=1 고정)
+- 컬럼: app_name, app_description, require_approval, default_role, push_enabled, updated_at, updated_by
+- 마이그레이션 파일: `database/migrations/008_app_settings.sql`
+
+### 신규 API 엔드포인트
+| 메서드 | 경로 | 용도 |
+|--------|------|------|
+| PUT | `/api/admin/auth/profile` | 관리자 이름/전화번호 수정 + 감사로그 |
+| GET | `/api/admin/settings` | 시스템 설정 조회 (DB 없으면 기본값 반환) |
+| PUT | `/api/admin/settings` | 시스템 설정 변경 (default_role 유효성 검증) + 감사로그 |
+
+### 기존 API 확인 (이미 구현됨, 수정 불필요)
+| 메서드 | 경로 | 상태 |
+|--------|------|------|
+| GET | `/api/admin/auth/me` | ✅ 세션 3에서 구현 |
+| PUT | `/api/admin/auth/password` | ✅ 세션 3에서 구현 (정책 검증 + 토큰 재발급) |
+| GET | `/api/admin/audit-log` | ✅ 세션 4에서 구현 (action/target_type 필터 + 페이지네이션) |
+
+### 테스트 결과
+- 프로덕션 API 테스트: **6/6 PASS**
+- auth/me, settings GET, settings PUT, auth/profile PUT, audit-log, auth/password (wrong pw rejection)
+
+### 커밋
+- `b1e5db3` — feat: 관리자 설정/프로필 API
+
+---
+
 ## 2026-03-11 세션 4: 관리자 웹 Phase 2 — 일정/공지 강화 + 통계/분석 API
 
 ### 수정 파일

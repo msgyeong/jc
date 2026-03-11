@@ -648,6 +648,33 @@
 
 ---
 
+### 세션 #13 — Batch 1: M-10/M-13/M-07 UI 개선 (2026-03-11)
+
+#### 작업 1: M-10 — 관리자 지정 필드 readonly UI
+- `web/js/profile.js` — `showEditProfileForm()`에서 `position`/`department` 필드를 일반 회원(`role != admin/super_admin`)에게 `readonly` 처리
+- `readonly-field` 클래스: 회색 배경 + 비활성 커서
+- `readonly-hint` 스팬: "관리자만 수정 가능" 레이블 아래 안내
+- 관리자 로그인 시 정상 수정 가능
+
+#### 작업 2: M-13 — 업종 검색 UI
+- 회원 검색 placeholder 업데이트: "이름, 직책, 회사, 업종으로 검색..."
+- 기존 업종 필터 드롭다운(`INDUSTRY_CATEGORIES` 13종) + `industry` 파라미터 그대로 유지
+
+#### 작업 3: M-07 — 빈 상태/로딩/에러 UI 보강
+- `web/js/utils.js`에 `renderLoadingState(message)` 함수 추가 (`.loading-state` + 스피너)
+- `web/js/notices.js` — 기존 raw HTML → `renderSkeleton('list')` / `renderEmptyState()` / `renderErrorState()` 유틸 사용으로 개선
+- 홈/게시판/회원/프로필/일정은 이미 유틸 함수 사용 중 — 변경 불필요
+- `web/styles/main.css`에 `.readonly-field`, `.readonly-hint`, `.loading-state` CSS 추가
+
+#### 작업 4: 기타 UI
+- 무한 스크롤 — `posts.js` IntersectionObserver + sentinel 구현 확인 (정상 동작)
+- 캐시 버스팅 — `web/index.html` 전체 CSS/JS 링크에 `v=20260311b` 태그 추가 (17개 파일)
+
+#### 커밋
+- `28391f7` feat: M-10 관리자 필드 readonly + M-13 업종 검색 UI + M-07 빈 상태/로딩 UI → push 완료
+
+---
+
 ## 알려진 이슈 (수정 안 함, 동작 영향 없음)
 
 1. `formatDate` 함수가 `utils.js`와 `home.js`에 중복 정의 — home.js가 덮어씀. 통합 필요.

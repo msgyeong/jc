@@ -1105,23 +1105,59 @@ router.delete('/comments/:id', async (req, res) => {
 });
 
 /* ======================================================
-   공지사항 관리 (기존 유지)
+   공지사항 관리 (Phase 2 강화: 페이지네이션, 검색)
    ====================================================== */
 router.get('/notices', async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit) || 50;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+        const search = req.query.search || '';
+        const pinned = req.query.pinned;
+
+        let whereClause = "WHERE p.category = 'notice'";
+        const params = [];
+
+        if (search) {
+            params.push(`%${search}%`);
+            whereClause += ` AND (p.title ILIKE $${params.length} OR p.content ILIKE $${params.length})`;
+        }
+
+        if (pinned === 'true') {
+            whereClause += ' AND p.is_pinned = true';
+        } else if (pinned === 'false') {
+            whereClause += ' AND (p.is_pinned = false OR p.is_pinned IS NULL)';
+        }
+
+        const countResult = await query(
+            `SELECT COUNT(*) FROM posts p ${whereClause}`,
+            params
+        );
+        const total = parseInt(countResult.rows[0].count);
+
+        params.push(limit, offset);
         const result = await query(
             `SELECT p.id, p.title, p.content, p.is_pinned as pinned, p.views,
                     p.comments_count, p.created_at, p.updated_at,
                     u.name as author_name
              FROM posts p
              LEFT JOIN users u ON p.author_id = u.id
-             WHERE p.category = 'notice'
+             ${whereClause}
              ORDER BY p.is_pinned DESC NULLS LAST, p.created_at DESC
-             LIMIT $1`,
-            [limit],
+             LIMIT $${params.length - 1} OFFSET $${params.length}`,
+            params,
         );
-        return res.json({ success: true, notices: result.rows });
+
+        return res.json({
+            success: true,
+            notices: result.rows,
+            data: {
+                items: result.rows,
+                total,
+                page,
+                totalPages: Math.ceil(total / limit),
+            },
+        });
     } catch (err) {
         console.error('Admin notices error:', err);
         return res.status(500).json({ success: false, message: '공지사항 조회 중 오류가 발생했습니다.' });
@@ -1207,17 +1243,70 @@ router.delete('/notices/:id', async (req, res) => {
     }
 });
 
+/**
+ * PUT /api/admin/notices/:id/pin
+ * 공지 고정/해제 토글
+ */
+router.put('/notices/:id/pin', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const adminId = req.user.userId;
+
+        const before = await query(
+            "SELECT title, is_pinned FROM posts WHERE id = $1 AND category = 'notice'",
+            [id]
+        );
+        if (before.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '공지사항을 찾을 수 없습니다.' });
+        }
+
+        const newPinned = !before.rows[0].is_pinned;
+        await query(
+            "UPDATE posts SET is_pinned = $1, updated_at = NOW() WHERE id = $2 AND category = 'notice'",
+            [newPinned, id]
+        );
+
+        writeAuditLog({
+            adminId, action: 'notice.pin_toggle',
+            targetType: 'post', targetId: parseInt(id),
+            before: { is_pinned: before.rows[0].is_pinned },
+            after: { is_pinned: newPinned },
+            description: `공지 ${newPinned ? '고정' : '고정 해제'}: ${before.rows[0].title}`,
+            ipAddress: req.ip,
+        });
+
+        res.json({
+            success: true,
+            message: newPinned ? '공지가 고정되었습니다.' : '공지 고정이 해제되었습니다.',
+            data: { is_pinned: newPinned },
+        });
+    } catch (error) {
+        console.error('Admin pin notice error:', error);
+        res.status(500).json({ success: false, message: '고정 처리 중 오류가 발생했습니다.' });
+    }
+});
+
 /* ======================================================
-   일정 관리 (기존 유지 + 강화)
+   일정 관리 (Phase 2 강화: 페이지네이션, 검색, 날짜 범위)
    ====================================================== */
 router.get('/schedules', async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit) || 50;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+        const search = req.query.search || '';
         const month = req.query.month; // 'YYYY-MM'
         const category = req.query.category;
+        const startFrom = req.query.start_from; // 'YYYY-MM-DD'
+        const startTo = req.query.start_to;     // 'YYYY-MM-DD'
 
         let whereClause = 'WHERE 1=1';
         const params = [];
+
+        if (search) {
+            params.push(`%${search}%`);
+            whereClause += ` AND (s.title ILIKE $${params.length} OR s.location ILIKE $${params.length} OR s.description ILIKE $${params.length})`;
+        }
 
         if (month) {
             const [y, m] = month.split('-');
@@ -1225,12 +1314,28 @@ router.get('/schedules', async (req, res) => {
             whereClause += ` AND EXTRACT(YEAR FROM s.start_date) = $${params.length - 1} AND EXTRACT(MONTH FROM s.start_date) = $${params.length}`;
         }
 
+        if (startFrom) {
+            params.push(startFrom);
+            whereClause += ` AND s.start_date >= $${params.length}::date`;
+        }
+
+        if (startTo) {
+            params.push(startTo);
+            whereClause += ` AND s.start_date <= ($${params.length}::date + interval '1 day')`;
+        }
+
         if (category) {
             params.push(category);
             whereClause += ` AND s.category = $${params.length}`;
         }
 
-        params.push(limit);
+        const countResult = await query(
+            `SELECT COUNT(*) FROM schedules s ${whereClause}`,
+            params
+        );
+        const total = parseInt(countResult.rows[0].count);
+
+        params.push(limit, offset);
         const result = await query(
             `SELECT s.id, s.title,
                     s.start_date as date, s.end_date,
@@ -1238,14 +1343,27 @@ router.get('/schedules', async (req, res) => {
                     s.location, s.category,
                     s.description as desc,
                     s.linked_post_id,
-                    s.created_at, s.updated_at
+                    s.created_at, s.updated_at,
+                    u.name as created_by_name,
+                    (SELECT COUNT(*) FROM attendance_config ac WHERE ac.schedule_id = s.id) as has_attendance
              FROM schedules s
+             LEFT JOIN users u ON s.created_by = u.id
              ${whereClause}
              ORDER BY s.start_date DESC
-             LIMIT $${params.length}`,
+             LIMIT $${params.length - 1} OFFSET $${params.length}`,
             params,
         );
-        return res.json({ success: true, schedules: result.rows });
+
+        return res.json({
+            success: true,
+            schedules: result.rows,
+            data: {
+                items: result.rows,
+                total,
+                page,
+                totalPages: Math.ceil(total / limit),
+            },
+        });
     } catch (err) {
         console.error('Admin schedules error:', err);
         return res.status(500).json({ success: false, message: '일정 조회 중 오류가 발생했습니다.' });
@@ -1275,6 +1393,117 @@ router.post('/schedules', async (req, res) => {
     } catch (err) {
         console.error('Admin create schedule error:', err);
         return res.status(500).json({ success: false, message: '일정 추가 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * GET /api/admin/schedules/:id
+ * 일정 상세 (출석 정보 포함)
+ */
+router.get('/schedules/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const scheduleResult = await query(
+            `SELECT s.id, s.title, s.description, s.start_date, s.end_date,
+                    s.location, s.category, s.linked_post_id,
+                    s.created_by, s.created_at, s.updated_at,
+                    u.name as created_by_name
+             FROM schedules s
+             LEFT JOIN users u ON s.created_by = u.id
+             WHERE s.id = $1`,
+            [id]
+        );
+
+        if (scheduleResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '일정을 찾을 수 없습니다.' });
+        }
+
+        const schedule = scheduleResult.rows[0];
+
+        // 출석 설정 조회
+        const configResult = await query(
+            `SELECT id, vote_type, quorum_count, quorum_basis, cost_per_person,
+                    deadline, is_active, closed_at, created_at
+             FROM attendance_config WHERE schedule_id = $1`,
+            [id]
+        );
+
+        if (configResult.rows.length > 0) {
+            const config = configResult.rows[0];
+            // 출석 투표 집계
+            const voteSummary = await query(
+                `SELECT vote, COUNT(*) as count
+                 FROM attendance_votes WHERE config_id = $1
+                 GROUP BY vote`,
+                [config.id]
+            );
+            config.vote_summary = {};
+            voteSummary.rows.forEach(r => { config.vote_summary[r.vote] = parseInt(r.count); });
+            config.total_votes = voteSummary.rows.reduce((s, r) => s + parseInt(r.count), 0);
+            schedule.attendance = config;
+        } else {
+            schedule.attendance = null;
+        }
+
+        res.json({ success: true, data: schedule });
+    } catch (error) {
+        console.error('Admin schedule detail error:', error);
+        res.status(500).json({ success: false, message: '일정 상세 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * GET /api/admin/schedules/:id/attendance
+ * 일정 출석 목록 (투표 상세)
+ */
+router.get('/schedules/:id/attendance', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 출석 설정 조회
+        const configResult = await query(
+            'SELECT id, vote_type, quorum_count, deadline, is_active FROM attendance_config WHERE schedule_id = $1',
+            [id]
+        );
+
+        if (configResult.rows.length === 0) {
+            return res.json({
+                success: true,
+                data: { config: null, votes: [], summary: {} },
+            });
+        }
+
+        const config = configResult.rows[0];
+
+        // 투표 목록 (회원 정보 포함)
+        const votesResult = await query(
+            `SELECT av.id, av.vote, av.voted_at, av.updated_at,
+                    u.id as user_id, u.name, u.email, u.profile_image
+             FROM attendance_votes av
+             LEFT JOIN users u ON av.user_id = u.id
+             WHERE av.config_id = $1
+             ORDER BY av.voted_at DESC`,
+            [config.id]
+        );
+
+        // 집계
+        const summary = {};
+        votesResult.rows.forEach(r => {
+            summary[r.vote] = (summary[r.vote] || 0) + 1;
+        });
+
+        res.json({
+            success: true,
+            data: {
+                config,
+                votes: votesResult.rows,
+                summary,
+                total_votes: votesResult.rows.length,
+            },
+        });
+    } catch (error) {
+        console.error('Admin schedule attendance error:', error);
+        res.status(500).json({ success: false, message: '출석 정보 조회 중 오류가 발생했습니다.' });
     }
 });
 
@@ -1330,6 +1559,255 @@ router.delete('/schedules/:id', async (req, res) => {
     } catch (err) {
         console.error('Admin delete schedule error:', err);
         return res.status(500).json({ success: false, message: '일정 삭제 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   통계/분석 API (Phase 2)
+   ====================================================== */
+
+/**
+ * GET /api/admin/stats/members
+ * 회원 통계 (월별 가입, 역할 분포, 업종 분포)
+ */
+router.get('/stats/members', async (req, res) => {
+    try {
+        const months = parseInt(req.query.months) || 6;
+
+        const [monthlySignups, roleDistribution, industryDistribution, statusDistribution] = await Promise.all([
+            // 월별 가입자 수
+            query(
+                `SELECT TO_CHAR(created_at, 'YYYY-MM') as month, COUNT(*) as count
+                 FROM users
+                 WHERE created_at >= NOW() - ($1 || ' months')::interval
+                 GROUP BY TO_CHAR(created_at, 'YYYY-MM')
+                 ORDER BY month`,
+                [months]
+            ),
+            // 역할 분포
+            query(
+                `SELECT role, COUNT(*) as count FROM users GROUP BY role ORDER BY count DESC`
+            ),
+            // 업종 분포
+            query(
+                `SELECT COALESCE(industry, '미설정') as industry, COUNT(*) as count
+                 FROM users GROUP BY industry ORDER BY count DESC LIMIT 20`
+            ),
+            // 상태 분포
+            query(
+                `SELECT status, COUNT(*) as count FROM users GROUP BY status ORDER BY count DESC`
+            ),
+        ]);
+
+        res.json({
+            success: true,
+            data: {
+                monthly_signups: monthlySignups.rows.map(r => ({ month: r.month, count: parseInt(r.count) })),
+                role_distribution: roleDistribution.rows.map(r => ({ role: r.role, count: parseInt(r.count) })),
+                industry_distribution: industryDistribution.rows.map(r => ({ industry: r.industry, count: parseInt(r.count) })),
+                status_distribution: statusDistribution.rows.map(r => ({ status: r.status, count: parseInt(r.count) })),
+            },
+        });
+    } catch (error) {
+        console.error('Stats members error:', error);
+        res.status(500).json({ success: false, message: '회원 통계 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * GET /api/admin/stats/posts
+ * 게시글 통계 (월별 게시글, 카테고리 분포)
+ */
+router.get('/stats/posts', async (req, res) => {
+    try {
+        const months = parseInt(req.query.months) || 6;
+
+        const [monthlyPosts, categoryDistribution, topAuthors] = await Promise.all([
+            query(
+                `SELECT TO_CHAR(created_at, 'YYYY-MM') as month, COUNT(*) as count
+                 FROM posts
+                 WHERE created_at >= NOW() - ($1 || ' months')::interval
+                 GROUP BY TO_CHAR(created_at, 'YYYY-MM')
+                 ORDER BY month`,
+                [months]
+            ),
+            query(
+                `SELECT COALESCE(category, 'general') as category, COUNT(*) as count
+                 FROM posts GROUP BY category ORDER BY count DESC`
+            ),
+            query(
+                `SELECT u.name, u.id as user_id, COUNT(p.id) as post_count
+                 FROM posts p JOIN users u ON p.author_id = u.id
+                 GROUP BY u.id, u.name
+                 ORDER BY post_count DESC LIMIT 10`
+            ),
+        ]);
+
+        res.json({
+            success: true,
+            data: {
+                monthly_posts: monthlyPosts.rows.map(r => ({ month: r.month, count: parseInt(r.count) })),
+                category_distribution: categoryDistribution.rows.map(r => ({ category: r.category, count: parseInt(r.count) })),
+                top_authors: topAuthors.rows.map(r => ({ name: r.name, user_id: r.user_id, post_count: parseInt(r.post_count) })),
+            },
+        });
+    } catch (error) {
+        console.error('Stats posts error:', error);
+        res.status(500).json({ success: false, message: '게시글 통계 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * GET /api/admin/stats/schedules
+ * 일정 통계 (월별 일정, 카테고리 분포)
+ */
+router.get('/stats/schedules', async (req, res) => {
+    try {
+        const months = parseInt(req.query.months) || 6;
+
+        const [monthlySchedules, categoryDistribution, attendanceStats] = await Promise.all([
+            query(
+                `SELECT TO_CHAR(start_date, 'YYYY-MM') as month, COUNT(*) as count
+                 FROM schedules
+                 WHERE start_date >= NOW() - ($1 || ' months')::interval
+                 GROUP BY TO_CHAR(start_date, 'YYYY-MM')
+                 ORDER BY month`,
+                [months]
+            ),
+            query(
+                `SELECT COALESCE(category, '미분류') as category, COUNT(*) as count
+                 FROM schedules GROUP BY category ORDER BY count DESC`
+            ),
+            // 출석 투표 통계 (최근 일정들)
+            query(
+                `SELECT av.vote, COUNT(*) as count
+                 FROM attendance_votes av
+                 JOIN attendance_config ac ON av.config_id = ac.id
+                 GROUP BY av.vote ORDER BY count DESC`
+            ),
+        ]);
+
+        res.json({
+            success: true,
+            data: {
+                monthly_schedules: monthlySchedules.rows.map(r => ({ month: r.month, count: parseInt(r.count) })),
+                category_distribution: categoryDistribution.rows.map(r => ({ category: r.category, count: parseInt(r.count) })),
+                attendance_stats: attendanceStats.rows.map(r => ({ vote: r.vote, count: parseInt(r.count) })),
+            },
+        });
+    } catch (error) {
+        console.error('Stats schedules error:', error);
+        res.status(500).json({ success: false, message: '일정 통계 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * GET /api/admin/stats/activity
+ * 활동 통계 (일별 게시글/댓글 수)
+ */
+router.get('/stats/activity', async (req, res) => {
+    try {
+        const days = parseInt(req.query.days) || 30;
+
+        const [dailyPosts, dailyComments, dailySignups] = await Promise.all([
+            query(
+                `SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as date, COUNT(*) as count
+                 FROM posts
+                 WHERE created_at >= NOW() - ($1 || ' days')::interval
+                 GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
+                 ORDER BY date`,
+                [days]
+            ),
+            query(
+                `SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as date, COUNT(*) as count
+                 FROM comments
+                 WHERE (is_deleted = false OR is_deleted IS NULL)
+                       AND created_at >= NOW() - ($1 || ' days')::interval
+                 GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
+                 ORDER BY date`,
+                [days]
+            ),
+            query(
+                `SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as date, COUNT(*) as count
+                 FROM users
+                 WHERE created_at >= NOW() - ($1 || ' days')::interval
+                 GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
+                 ORDER BY date`,
+                [days]
+            ),
+        ]);
+
+        res.json({
+            success: true,
+            data: {
+                daily_posts: dailyPosts.rows.map(r => ({ date: r.date, count: parseInt(r.count) })),
+                daily_comments: dailyComments.rows.map(r => ({ date: r.date, count: parseInt(r.count) })),
+                daily_signups: dailySignups.rows.map(r => ({ date: r.date, count: parseInt(r.count) })),
+            },
+        });
+    } catch (error) {
+        console.error('Stats activity error:', error);
+        res.status(500).json({ success: false, message: '활동 통계 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * GET /api/admin/audit-log
+ * 전체 감사 로그 조회 (검색, 필터, 페이지네이션)
+ */
+router.get('/audit-log', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+        const action = req.query.action || '';
+        const targetType = req.query.target_type || '';
+
+        let whereClause = 'WHERE 1=1';
+        const params = [];
+
+        if (action) {
+            params.push(action);
+            whereClause += ` AND al.action = $${params.length}`;
+        }
+
+        if (targetType) {
+            params.push(targetType);
+            whereClause += ` AND al.target_type = $${params.length}`;
+        }
+
+        const countResult = await query(
+            `SELECT COUNT(*) FROM audit_log al ${whereClause}`,
+            params
+        );
+        const total = parseInt(countResult.rows[0].count);
+
+        params.push(limit, offset);
+        const result = await query(
+            `SELECT al.id, al.action, al.target_type, al.target_id,
+                    al.before_value, al.after_value, al.description,
+                    al.ip_address, al.created_at,
+                    u.name as admin_name, u.email as admin_email
+             FROM audit_log al
+             LEFT JOIN users u ON al.admin_id = u.id
+             ${whereClause}
+             ORDER BY al.created_at DESC
+             LIMIT $${params.length - 1} OFFSET $${params.length}`,
+            params
+        );
+
+        res.json({
+            success: true,
+            data: {
+                items: result.rows,
+                total,
+                page,
+                totalPages: Math.ceil(total / limit),
+            },
+        });
+    } catch (error) {
+        console.error('Audit log error:', error);
+        res.status(500).json({ success: false, message: '감사 로그 조회 중 오류가 발생했습니다.' });
     }
 });
 

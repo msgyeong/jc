@@ -712,7 +712,40 @@
 
 ---
 
+### 세션 #15 — Batch 3: M-01 + M-04 + M-05 + M-06 + 코드정리 (2026-03-11)
+
+#### 작업 1: M-01 — 홈 배너 동적 전환
+- `loadBannerSummary()` → `async` 변경, API 데이터 기반 배너 생성
+- 배너 1: 영등포 JC 환영 (고정)
+- 배너 2: 다가오는 일정 — `apiClient.getSchedules(true)` → 첫 번째 일정 제목/날짜/장소 표시, 클릭 시 상세 이동
+- 배너 3: 최신 공지 — `apiClient.getPosts(1, 5, 'notice')` → 최신 공지 제목/날짜 표시, 클릭 시 상세 이동
+- API 실패 시 기존 정적 배너 폴백
+
+#### 작업 2: M-04 — 일정 상세 화면 검증
+- **이미 완성 확인**: 카테고리 배지, 제목, 날짜/시간(요일), 장소(네이버 지도 링크), 작성자, 설명, 출석 투표, 참석자 목록, 연결 공지, 댓글 — 모두 구현됨
+- 추가 작업 불필요
+
+#### 작업 3: M-05 — 일정 등록/수정 폼 검증
+- **이미 완성 확인**: 제목, 카테고리 드롭다운, 종일 토글, 시작/종료 날짜+시간, 장소, 설명, 투표 설정 — 모두 구현됨
+- `handleScheduleFormSubmit()` → `apiClient.createSchedule()`/`updateSchedule()` API 연동 완료
+- 유효성 검사 + 인라인 에러 표시 완료
+
+#### 작업 4: M-06 — N배지 숫자 배지 개선
+- `initNavBadges()`: 도트 배지 → 숫자 배지 전환
+- `updateNavBadges()`: 공지(3일 이내 개수), 일정(7일 이내 개수) 숫자 표시
+- CSS: `.nav-badge` 스타일을 8px 도트 → 16px 높이 숫자 배지로 변경 (빨간 배경, 흰 글씨)
+
+#### 작업 5: 코드 정리
+- `formatDate()` 통합: `utils.js`에 format 파라미터 지원 추가 (DD, MM월, YYYY-MM-DD + 상대시간)
+- `home.js`의 중복 `formatDate()`/`escapeHtml()` 제거
+- `escapeHtml()` → `utils.js`로 이동 (전역 사용 가능)
+- 캐시 버스팅: `v=20260311f` (index.html + admin/index.html)
+
+#### 커밋
+- `34db4af` feat: M-01 홈배너 + M-04 일정상세 + M-05 일정등록 + M-06 N배지 + 코드정리 → push 완료
+
+---
+
 ## 알려진 이슈 (수정 안 함, 동작 영향 없음)
 
-1. `formatDate` 함수가 `utils.js`와 `home.js`에 중복 정의 — home.js가 덮어씀. 통합 필요.
-2. `app.js`의 `checkAuthStatus()` 반환값(boolean)과 `AuthStatus.AUTHENTICATED`(string) 비교 → 항상 false. 실 로그인은 `handleLogin()`에서 처리되므로 영향 제한적.
+1. `app.js`의 `checkAuthStatus()` 반환값(boolean)과 `AuthStatus.AUTHENTICATED`(string) 비교 → 항상 false. 실 로그인은 `handleLogin()`에서 처리되므로 영향 제한적.

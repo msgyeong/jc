@@ -1828,6 +1828,157 @@ router.put('/roles', async (req, res) => {
 });
 
 /* ======================================================
+   PUT /api/admin/auth/profile
+   관리자 프로필 수정 (이름, 전화번호)
+   ====================================================== */
+router.put('/auth/profile', async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { name, phone } = req.body;
+
+        const setClauses = [];
+        const params = [];
+
+        if (name !== undefined && name.trim()) {
+            params.push(name.trim());
+            setClauses.push(`name = $${params.length}`);
+        }
+        if (phone !== undefined) {
+            params.push(phone.trim() || null);
+            setClauses.push(`phone = $${params.length}`);
+        }
+
+        if (setClauses.length === 0) {
+            return res.status(400).json({ success: false, message: '수정할 필드가 없습니다.' });
+        }
+
+        setClauses.push('updated_at = NOW()');
+        params.push(userId);
+
+        await query(
+            `UPDATE users SET ${setClauses.join(', ')} WHERE id = $${params.length}`,
+            params
+        );
+
+        const updated = await query(
+            'SELECT id, email, name, phone, role, status, profile_image FROM users WHERE id = $1',
+            [userId]
+        );
+
+        writeAuditLog({
+            adminId: userId, action: 'admin.profile_update',
+            targetType: 'member', targetId: userId,
+            description: `관리자 프로필 수정: ${setClauses.filter(c => c !== 'updated_at = NOW()').join(', ')}`,
+            ipAddress: req.ip,
+        });
+
+        return res.json({ success: true, data: updated.rows[0] });
+    } catch (err) {
+        console.error('Admin profile update error:', err);
+        return res.status(500).json({ success: false, message: '프로필 수정 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   GET /api/admin/settings
+   시스템 설정 조회
+   ====================================================== */
+router.get('/settings', async (req, res) => {
+    try {
+        const result = await query('SELECT * FROM app_settings WHERE id = 1');
+        if (result.rows.length === 0) {
+            // 기본값 반환
+            return res.json({
+                success: true,
+                data: {
+                    app_name: '영등포 JC',
+                    app_description: '회원관리 커뮤니티 앱',
+                    require_approval: false,
+                    default_role: 'member',
+                    push_enabled: true,
+                    updated_at: null,
+                    updated_by: null,
+                },
+            });
+        }
+        return res.json({ success: true, data: result.rows[0] });
+    } catch (err) {
+        console.error('Admin settings get error:', err);
+        return res.status(500).json({ success: false, message: '설정 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   PUT /api/admin/settings
+   시스템 설정 변경
+   ====================================================== */
+router.put('/settings', async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { app_name, app_description, require_approval, default_role, push_enabled } = req.body;
+
+        // default_role 유효성 검증
+        if (default_role !== undefined) {
+            const validRoles = ['member', 'admin'];
+            if (!validRoles.includes(default_role)) {
+                return res.status(400).json({ success: false, message: '유효하지 않은 기본 역할입니다.' });
+            }
+        }
+
+        const setClauses = [];
+        const params = [];
+
+        if (app_name !== undefined) {
+            params.push(app_name.trim());
+            setClauses.push(`app_name = $${params.length}`);
+        }
+        if (app_description !== undefined) {
+            params.push(app_description.trim());
+            setClauses.push(`app_description = $${params.length}`);
+        }
+        if (require_approval !== undefined) {
+            params.push(!!require_approval);
+            setClauses.push(`require_approval = $${params.length}`);
+        }
+        if (default_role !== undefined) {
+            params.push(default_role);
+            setClauses.push(`default_role = $${params.length}`);
+        }
+        if (push_enabled !== undefined) {
+            params.push(!!push_enabled);
+            setClauses.push(`push_enabled = $${params.length}`);
+        }
+
+        if (setClauses.length === 0) {
+            return res.status(400).json({ success: false, message: '수정할 항목이 없습니다.' });
+        }
+
+        params.push(userId);
+        setClauses.push(`updated_by = $${params.length}`);
+        setClauses.push('updated_at = NOW()');
+
+        await query(
+            `UPDATE app_settings SET ${setClauses.join(', ')} WHERE id = 1`,
+            params
+        );
+
+        const updated = await query('SELECT * FROM app_settings WHERE id = 1');
+
+        writeAuditLog({
+            adminId: userId, action: 'settings.update',
+            targetType: 'settings', targetId: 1,
+            description: `시스템 설정 변경`,
+            ipAddress: req.ip,
+        });
+
+        return res.json({ success: true, data: updated.rows[0], message: '설정이 저장되었습니다.' });
+    } catch (err) {
+        console.error('Admin settings update error:', err);
+        return res.status(500).json({ success: false, message: '설정 변경 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
    관리자 비밀번호 변경 (하위호환 PATCH 경로)
    ====================================================== */
 router.patch('/account/password', async (req, res) => {

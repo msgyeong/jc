@@ -843,9 +843,119 @@ const ADMIN_ONLY_FIELDS = ['position', 'department', 'join_number', 'role', 'sta
 
 ---
 
+## 세션 9: 2026-03-11 (최종 종합 검증 — Batch 3 포함)
+
+### 작업 요약
+- **목적**: 전체 프로젝트 최종 종합 검증 (Batch 3 직책/권한 포함)
+- **범위**: 앱 API 13개, 관리자 API 11개, DB 스키마 10테이블, 프론트 28파일, M-10 필드 제한
+- **테스트 계정**: minsu@jc.com / test1234 (member), admin@jc.com / test1234 (super_admin)
+
+### 최종 판정: ✅ PASS (신규 버그 0건)
+
+---
+
+### 검증 1: 앱 API — 13/13 PASS
+
+일반 회원(minsu@jc.com, role=member)으로 테스트:
+
+| # | 엔드포인트 | HTTP | 결과 | 비고 |
+|---|-----------|------|------|------|
+| 1 | `POST /api/auth/login` (minsu) | 200 | ✅ | role=member, name=경민수 |
+| 2 | `GET /api/posts` | 200 | ✅ | 2건 |
+| 3 | `GET /api/posts?category=notice` | 200 | ✅ | 2건 (M-02 통합) |
+| 4 | `GET /api/members` | 200 | ✅ | 33명, `is_favorited` ✅, `industry` ✅ |
+| 5 | `GET /api/members/search?q=admin` | 200 | ✅ | 1건 |
+| 6 | `GET /api/schedules` | 200 | ✅ | 14건 |
+| 7 | `GET /api/schedules/1` | 200 | ✅ | `views` ✅, `linked_post_id` ✅ |
+| 8 | `GET /api/favorites` | 200 | ✅ | items + total |
+| 9 | `GET /api/titles/1` | 200 | ✅ | 0건 (정상) |
+| 10 | `GET /api/industries` | 200 | ✅ | 13개 업종 |
+| 11 | `GET /api/profile` | 200 | ✅ | industry, industry_detail 포함 |
+| 12 | `GET /api/notifications` | 200 | ✅ | items, unread_count |
+| 13 | `GET /api/push/vapid-key` | 200 | ✅ | vapidPublicKey 반환 |
+
+**Schedule[1] 필드 확인**: `id, title, start_date, end_date, location, description, category, linked_post_id, views, created_at, updated_at, author_id, author_name, author_image` — views ✅, linked_post_id ✅
+
+### 검증 2: 관리자 웹 API — 11/11 PASS
+
+| # | 엔드포인트 | HTTP | 결과 | 비고 |
+|---|-----------|------|------|------|
+| 1 | `POST /api/admin/auth/login` | 200 | ✅ | 토큰 발급 |
+| 2 | `GET /api/admin/dashboard/stats` | 200 | ✅ | members, posts, schedules, comments |
+| 3 | `GET /api/admin/members` | 200 | ✅ | 페이지네이션 정상 |
+| 4 | `GET /api/admin/posts` | 200 | ✅ | items, total, page, totalPages |
+| 5 | `GET /api/admin/notices` | 200 | ✅ | `linked_schedule_id` 포함 (M-12) |
+| 6 | `GET /api/admin/schedules` | 200 | ✅ | items, total, page, totalPages |
+| 7 | `GET /api/admin/audit-log` | 200 | ✅ | items, total, page, totalPages |
+| 8 | `GET /api/admin/settings` | 200 | ✅ | app_name, require_approval, push_enabled |
+| 9 | `GET /api/admin/auth/me` | 200 | ✅ | id, email, name, role, status |
+| 10 | `GET /api/admin/positions` | 200 | ✅ | items + total (Batch 3) |
+| 11 | `GET /api/admin/positions/1/permissions` | 200 | ✅ | position + permissions (Batch 3) |
+
+**Notice[0] 키**: `id, title, content, pinned, views, comments_count, linked_schedule_id, created_at, updated_at, author_name`
+
+### 검증 3: DB 스키마 — 10/10 PASS
+
+| 테이블 | 컬럼 | 결과 |
+|--------|------|------|
+| `likes` | `id, user_id, post_id, created_at` — member_id 없음 ✅ | ✅ |
+| `comments` | `id, post_id, author_id, content, parent_id, ..., schedule_id` — parent_comment_id 없음 ✅ | ✅ |
+| `posts` | `..., linked_schedule_id` ✅ | ✅ |
+| `schedules` | `..., linked_post_id, views` ✅ | ✅ |
+| `positions` | `id, name, level, description, created_at, updated_at` — **7개 시드 데이터** ✅ | ✅ |
+| `position_permissions` | `id, position_id, permission, granted` — **77개 권한 매핑** ✅ | ✅ |
+| `app_settings` | `id, app_name, app_description, require_approval, default_role, push_enabled, updated_at, updated_by` | ✅ |
+| `notification_settings` | `user_id, all_push, notice_push, schedule_push, reminder_push, comment_push, updated_at` | ✅ |
+| `push_subscriptions` | `id, user_id, endpoint, p256dh, auth, user_agent, created_at` | ✅ |
+| `audit_log` | `id, admin_id, action, target_type, target_id, before_value, after_value, description, ip_address, created_at` | ✅ |
+
+**데이터 현황**: 활성 회원 33명, 게시글 2건, 일정 14건, 직책 7개, 권한 매핑 77개
+
+### 검증 4: 프론트엔드 코드 구조 — PASS
+
+| 영역 | 파일 수 | script 태그 | 문법 검사 |
+|------|---------|------------|----------|
+| `web/js/` | 18개 | 18개 (v=20260311c) | ✅ 전체 통과 |
+| `web/admin/js/` | 10개 | 10개 (v=20260311e) | ✅ 전체 통과 |
+| **합계** | **28개** | **28개** | **28/28 PASS** |
+
+### 검증 5: M-10 필드 수정 제한 — PASS
+
+```javascript
+// api/routes/profile.js
+const ADMIN_ONLY_FIELDS = ['position', 'department', 'join_number', 'role', 'status'];
+```
+- 일반 회원 → `ADMIN_ONLY_FIELDS` 포함 요청 시 해당 필드 무시, 로그 기록
+- 관리자 → position, department, join_number 수정 허용
+- `isAdmin = ['super_admin', 'admin'].includes(userRole)` 분기
+
+---
+
+### 기존 미해결 버그 상태
+
+| 버그 | 심각도 | 상태 | 비고 |
+|------|--------|------|------|
+| BUG-S6-001 | HIGH | **미수정** | push.js:43 `data.publicKey` → `data.vapidPublicKey` 필요 |
+| BUG-AW-001 | LOW | **미수정** | 사이드바 프로필 클릭 미동작 (헤더 대안 있음) |
+
+### 종합 판정
+
+| 영역 | 항목 수 | 결과 |
+|------|---------|------|
+| 앱 API | 13개 | ✅ 전체 PASS |
+| 관리자 API | 11개 | ✅ 전체 PASS |
+| DB 스키마 | 10테이블 | ✅ 전체 PASS |
+| 프론트 코드 | 28파일 | ✅ 전체 PASS |
+| M-10 필드 제한 | 코드 확인 | ✅ PASS |
+| **신규 버그** | — | **0건** |
+
+**프로젝트 상태**: Batch 3(직책/권한) 포함 전체 정상. API 24개 엔드포인트 동작, DB 10테이블 정합, JS 28파일 문법 통과. 미해결 버그 2건은 기존 알려진 건.
+
+---
+
 ## 다음 작업 (TODO)
 
-1. **BUG-S6-001 수정** — push.js:43 `data.publicKey` → `data.vapidPublicKey` (1줄)
+1. **BUG-S6-001 수정** — push.js:43 필드명 1줄 수정
 2. **BUG-AW-001 수정** — 사이드바 프로필 클릭 이동
 3. 브라우저 E2E 테스트 (동적 렌더링 검증)
 4. 회원가입 → 승인 → 로그인 전체 플로우 테스트

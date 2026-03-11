@@ -600,6 +600,43 @@
 
 ---
 
+## 세션 #11 — 2026-03-11 (화)
+
+### 작업: 관리자 웹 Phase 3 — 감사 로그 / 설정 / 관리자 프로필
+- **상태**: 완료
+- **커밋**: `9c386a6` → `origin main` 푸시 완료
+
+#### 신규 파일
+| 파일 | 설명 |
+|------|------|
+| `web/admin/js/audit-log.js` | 감사 로그 — 테이블(시간/관리자/액션/대상/상세/IP) + 액션 타입 필터 + 날짜 범위 필터 + 페이지네이션 + 액션 배지(danger/warning/info/view) |
+| `web/admin/js/settings.js` | 시스템 설정 — 앱 설정(이름/설명), 회원 설정(승인 필요 토글/기본 역할), 알림 설정(푸시 토글), sticky 저장 바, 토스트 알림 |
+| `web/admin/js/admin-profile.js` | 관리자 프로필 — 프로필 카드(이름/이메일/역할/가입일), 이름/연락처 수정, 비밀번호 변경(실시간 불일치 경고), localStorage+헤더 동기화 |
+
+#### 수정 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `web/admin/js/admin-app.js` | PAGE_TITLES에 audit-log/settings/admin-profile 추가, getPageRenderer()에 3개 등록 |
+| `web/admin/index.html` | 사이드바: 감사 로그/설정 메뉴 추가 + nav-divider. 헤더: header-user→header-user-link (클릭→프로필). 스크립트 3개 추가. 캐시 버스팅 v=20260311d |
+| `web/admin/css/admin.css` | +200줄: .nav-divider, .header-user-link, .audit-log-table, .action-badge(danger/warning/info/view), .date-range-filter, .filter-date, .settings-section, .toggle-switch(.toggle-slider), .save-bar, .profile-card, .password-form, .pw-mismatch-warning |
+
+#### API 연동
+- `GET /api/admin/audit-log?page=&action=&start_date=&end_date=` — 감사 로그
+- `GET /api/admin/settings` — 설정 조회
+- `PUT /api/admin/settings` — 설정 저장
+- `GET /api/admin/auth/me` — 관리자 프로필 조회
+- `PUT /api/admin/auth/profile` — 프로필 수정
+- `PUT /api/admin/auth/password` — 비밀번호 변경
+
+#### 사이드바 전체 메뉴 (8개 + 프로필)
+대시보드 → 회원 관리 → 게시판 관리 → 공지사항 → 일정 관리 → 통계/분석 → (구분선) → 감사 로그 → 설정 | 헤더 이름 클릭 → 내 프로필
+
+#### 검증
+- `node -c web/admin/js/*.js` — 전체 10파일 통과
+- Phase 1/2 기존 코드 변경 없음 (비파괴)
+
+---
+
 ## 알려진 이슈 (수정 안 함, 동작 영향 없음)
 
 1. `formatDate` 함수가 `utils.js`와 `home.js`에 중복 정의 — home.js가 덮어씀. 통합 필요.

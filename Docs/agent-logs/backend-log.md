@@ -5,6 +5,39 @@
 
 ---
 
+## 2026-03-11 세션 4: 관리자 웹 Phase 2 — 일정/공지 강화 + 통계/분석 API
+
+### 수정 파일
+| 파일 | 변경 |
+|------|------|
+| `api/routes/admin.js` | +490줄 (Phase 2 엔드포인트 추가) |
+
+### 신규/강화 API 엔드포인트
+| 메서드 | 경로 | 용도 |
+|--------|------|------|
+| GET | `/api/admin/schedules` | **강화**: 페이지네이션, 검색, 날짜범위(start_from/start_to), 출석여부 |
+| GET | `/api/admin/schedules/:id` | 일정 상세 (출석 설정 + 투표 집계 포함) |
+| GET | `/api/admin/schedules/:id/attendance` | 출석 투표 상세 (회원 정보 포함) |
+| GET | `/api/admin/notices` | **강화**: 페이지네이션, 검색, 고정 필터 |
+| PUT | `/api/admin/notices/:id/pin` | 공지 고정/해제 토글 + 감사로그 |
+| GET | `/api/admin/stats/members` | 회원 통계 (월별 가입, 역할/업종/상태 분포) |
+| GET | `/api/admin/stats/posts` | 게시글 통계 (월별 게시글, 카테고리 분포, 다작 작성자) |
+| GET | `/api/admin/stats/schedules` | 일정 통계 (월별 일정, 카테고리 분포, 출석 통계) |
+| GET | `/api/admin/stats/activity` | 활동 통계 (일별 게시글/댓글/가입 추이) |
+| GET | `/api/admin/audit-log` | 전체 감사 로그 (action/target_type 필터 + 페이지네이션) |
+
+### 참고 사항
+- 기존 GET /schedules, GET /notices 하위호환 유지 (schedules 필드 + data 필드 병렬 반환)
+- attendance_config / attendance_votes 테이블 연동 (이미 프로덕션 DB에 존재)
+- 통계 쿼리는 interval 파라미터로 조회 기간 조절 가능 (months, days)
+- 감사 로그 API에 action, target_type 필터 지원
+
+### 테스트 결과
+- 프로덕션 API 테스트: **12/12 PASS**
+- 테스트 항목: 일정 목록/검색/상세/출석, 공지 목록/검색/고정토글, 4개 통계 API, 감사로그
+
+---
+
 ## 2026-03-11 세션 3: 관리자 웹 Phase 1 — 백엔드 API 구축
 
 ### DB 테이블 생성

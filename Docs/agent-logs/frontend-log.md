@@ -675,6 +675,43 @@
 
 ---
 
+### 세션 #14 — Batch 2: M-02 공지 UI 통합 + M-12 공지-일정 연동 UI (2026-03-11)
+
+#### 작업 1: M-02 — 공지 UI 통합
+- **이미 구현 확인**: `posts-screen`에 "공지 게시판 | 일반 게시판" 서브탭 존재
+- `currentBoardCategory` 변수로 `notice`/`general` 전환, `switchBoardTab()` 함수 동작 중
+- 하단 네비에 별도 공지 탭 없음 (홈/게시판/일정/회원/프로필 5탭 구성)
+- 별도 `notices-screen`은 레거시로 유지 (삭제하지 않음)
+
+#### 작업 2: M-12 — 공지-일정 연동 UI
+1. **게시글 수정 폼** (`posts.js`)
+   - `post-edit-schedule-id`: `<input type="number">` → `<select>` 드롭다운으로 변경
+   - `loadScheduleOptions(selectId)`: 향후 일정 목록 로드하여 드롭다운 옵션 생성
+   - `loadPostForEdit()`: 병렬로 게시글 + 일정 옵션 로드
+2. **공지 작성/수정 폼** (`notices.js`)
+   - 연결 일정 `<select id="notice-schedule-id">` 드롭다운 추가
+   - `loadNoticeScheduleOptions(selectedId)`: 일정 목록 로드
+   - `handleNoticeFormSubmit()`: `schedule_id` payload에 포함
+3. **공지 상세** (`notices.js`)
+   - `<div id="notice-linked-schedule-container">` 추가
+   - `loadNoticeLinkedSchedule(scheduleId)`: 연결된 일정 배너 표시 (클릭→일정 상세)
+4. **일정 상세** (`schedules.js`)
+   - 이미 `loadLinkedNotice()` + `linked-notice-section` 구현됨 — 변경 불필요
+5. **관리자 공지 모달** (`web/admin/js/notices.js`)
+   - `<select id="notice-schedule-id">` 드롭다운 추가
+   - `loadAdminScheduleOptions()`: `/api/admin/schedules` 로드
+   - `saveNotice()`: `schedule_id` payload에 포함
+   - `loadNoticeForEdit()`: 기존 `schedule_id` 선택 복원
+
+#### 캐시 버스팅
+- `web/index.html`: `v=20260311c`
+- `web/admin/index.html`: `v=20260311e`
+
+#### 커밋
+- `ccc92d1` feat: M-02 공지 라우트 통합 강화 + M-12 공지-일정 연동 API 개선 (백엔드 에이전트와 동시 커밋)
+
+---
+
 ## 알려진 이슈 (수정 안 함, 동작 영향 없음)
 
 1. `formatDate` 함수가 `utils.js`와 `home.js`에 중복 정의 — home.js가 덮어씀. 통합 필요.

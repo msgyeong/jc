@@ -5,6 +5,74 @@
 
 ---
 
+## 2026-03-11 세션 8: Batch 3 — 권한 매트릭스 + 일정 조회수
+
+### Task 1: Permission Matrix (positions + position_permissions)
+
+#### DB 테이블 생성
+- `positions` 테이블: id, name(UNIQUE), level, description, created_at, updated_at
+- `position_permissions` 테이블: id, position_id(FK→positions), permission, granted, UNIQUE(position_id, permission)
+- 인덱스: idx_position_permissions_position
+
+#### Seed 데이터
+| 직책 | level | 권한 수 |
+|------|-------|---------|
+| 회장 | 6 | 18 (전체) |
+| 수석부회장 | 5 | 18 (전체) |
+| 부회장 | 4 | 16 |
+| 총무 | 3 | 12 |
+| 이사 | 2 | 7 |
+| 감사 | 2 | 4 |
+| 일반회원 | 1 | 2 |
+
+#### 권한 항목 (18개)
+- member: view, edit, approve, delete
+- post: create, edit, delete, pin
+- notice: create, edit, delete, pin
+- schedule: create, edit, delete
+- comment: delete
+- admin: access, settings
+
+#### 신규 API 엔드포인트 (admin.js 추가)
+| 메서드 | 경로 | 용도 |
+|--------|------|------|
+| GET | `/api/admin/positions` | 직책 목록 (permission_count 포함) |
+| POST | `/api/admin/positions` | 직책 생성 (중복 이름 409) |
+| PUT | `/api/admin/positions/:id` | 직책 수정 (동적 SET) |
+| DELETE | `/api/admin/positions/:id` | 직책 삭제 (CASCADE) |
+| GET | `/api/admin/positions/:id/permissions` | 직책별 권한 목록 |
+| PUT | `/api/admin/positions/:id/permissions` | 직책별 권한 일괄 업데이트 (DELETE+INSERT 트랜잭션) |
+
+- 모든 액션에 audit log 기록 (position.create, position.update, position.delete, position.permissions_update)
+
+### Task 2: Schedule Views
+
+#### DB 변경
+- `ALTER TABLE schedules ADD COLUMN IF NOT EXISTS views INTEGER DEFAULT 0`
+
+#### API 변경 (schedules.js)
+- GET /api/schedules: 목록에 `views` 필드 포함
+- GET /api/schedules/:id: 상세 조회 시 `views + 1` 증가 후 반환
+
+### 마이그레이션 파일
+- `database/migrations/010_positions_permissions.sql`
+
+### 프로덕션 테스트 결과
+- **9/9 PASS**: Login, Position CRUD(4), Permission GET/PUT(2), Schedule views list/increment(2)
+
+### 커밋
+- `4fff73d` — feat: 권한 매트릭스 (positions/permissions) + 일정 조회수
+- Railway 자동 배포 완료
+
+### 수정 파일
+| 파일 | 변경 |
+|------|------|
+| `api/routes/admin.js` | Position CRUD + Permission API 6개 엔드포인트 추가 |
+| `api/routes/schedules.js` | views 컬럼 조회/증가 로직 추가 |
+| `database/migrations/010_positions_permissions.sql` | DDL + seed data |
+
+---
+
 ## 2026-03-11 세션 7: Batch 2 — M-02 + M-12 강화
 
 ### 사전 확인 결과

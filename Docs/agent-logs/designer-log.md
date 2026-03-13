@@ -224,9 +224,85 @@
 - [ ] 프로필 액션 버튼 추가 (05번 문서)
 - [ ] 게시글 카드 shadow 강화 (05번 문서)
 
+## 세션 6: 2026-03-13
+
+### 작업 7: 전체 디자인 리뉴얼 — 미니멀 방향 전환 (이슈 #3, #2, #7, #9)
+- **시간**: 2026-03-13
+- **지시**: CEO — "파란색 일색 촌스러움, 입력필드 구림, 심플하고 세련되게"
+- **핵심 결정**:
+  - **Primary 색상 전환**: `#2563EB` (블루) → `#1E3A5F` (딥 네이비) — 세련된 무채색 기반
+  - **AppBar 전환**: 파란 그라데이션 → 흰색 배경 + 하단 border
+  - **입력필드**: 48px → 44px, focus시 border-color만 변경 (미세 ring)
+  - **그림자 최소화**: 카드는 border 구분, shadow는 모달/드로어만
+  - **아바타 단일 톤**: 8색 랜덤 → `#F0F4F8` 배경 + `#1E3A5F` 이니셜
+  - **배지**: 원색 배경 → 연한 배경 + 진한 텍스트 (N배지만 원색 허용)
+- **산출물**:
+  - `Docs/design-system/tokens.css` — **신규 작성** (디자인 토큰 v2.0)
+    - 라이트/다크 모드 색상 토큰
+    - Spacing, Radius, Shadow, Typography 토큰
+    - 컴포넌트별 토큰 (AppBar, Input, Button, Card, Toggle, Nav)
+  - `Docs/design-system/components.md` — **전면 재작성** (컴포넌트 가이드 v2.0)
+    - AppBar 리디자인 (흰색 배경 + border)
+    - 입력 필드 리디자인 (44px, 가벼운 focus)
+    - 버튼 3종 (Primary/Ghost/Danger) + Text Button
+    - 토글 스위치 (이슈 #2 — 44×24px iOS 스타일)
+    - 프로필 하단 메뉴 (이슈 #7 — iOS 설정 스타일 리스트)
+    - 환경설정 화면 (이슈 #9 — 섹션 그룹 + 토글/chevron)
+    - 배지 6종, 아바타 단일 톤, 하단 네비 SVG, 다이얼로그
+    - 프론트엔드 전달용 8단계 Phase 계획
+- **상태**: 완료
+
+---
+
+## 현재 디자인 시스템 파일 목록
+
+| # | 파일 | 상태 | 설명 |
+|---|------|------|------|
+| — | `tokens.css` | **v2.0 최신** | CSS 디자인 토큰 (라이트+다크) |
+| — | `components.md` | **v2.0 최신** | 컴포넌트 가이드 (미니멀 리뉴얼) |
+| 01 | `01-color-palette.md` | 구버전 | 초기 색상 (→ tokens.css로 대체) |
+| 02 | `02-typography.md` | 구버전 | 타이포 (→ tokens.css로 대체) |
+| 03 | `03-component-styles.md` | 구버전 | 컴포넌트 (→ components.md로 대체) |
+| 04 | `04-design-audit.md` | 참고용 | 디자인 점검 보고서 |
+| 05 | `05-component-improvement.md` | 참고용 | 컴포넌트 개선안 |
+| 06 | `06-badge-tag-guide.md` | 참고용 | 배지/태그 가이드 |
+| 07 | `07-unified-design-guide.md` | 참고용 | 통합 디자인 가이드 (→ tokens.css 우선) |
+| 08 | `08-admin-web-design-guide.md` | **최신** | 관리자 웹 전용 |
+| 09 | `09-mobile-color-alignment.md` | 참고용 | (→ tokens.css로 대체) |
+| 10 | `10-css-variable-migration.md` | 참고용 | CSS 변수 전환 계획 |
+| 11 | `11-mobile-color-renewal.md` | 참고용 | 색상 리뉴얼 (→ tokens.css 반영) |
+| 12 | `12-attendance-vote-ui.md` | **최신** | 출석 투표 UI 가이드 |
+| 13 | `13-click-to-call-ui.md` | **최신** | 전화걸기 UI 가이드 |
+| 14 | `14-schedule-detail-ui.md` | **최신** | 일정 상세 화면 UI 가이드 |
+| 15 | `15-schedule-form-ui.md` | **최신** | 일정 등록/수정 폼 UI 가이드 |
+| 16 | `16-home-banner-ui.md` | **최신** | 홈 배너 캐러셀 UI 가이드 |
+| 17 | `17-empty-loading-error-ui.md` | **최신** | 빈 상태/로딩/에러 공통 UI 가이드 |
+| 18 | `18-notification-ui.md` | **최신** | Web Push 알림 UI 가이드 |
+
+---
+
+## 다음 작업 (TODO) — 프론트엔드에 전달 대기
+
+아래 항목은 **사장님 승인 후 프론트엔드 에이전트가 실행**해야 함:
+
+### 미니멀 리뉴얼 적용 (8 Phase)
+- [ ] Phase 1: `tokens.css` 기반 CSS 변수 교체 (main.css `:root` 재정의)
+- [ ] Phase 2: AppBar → 흰색 배경 + border 전환
+- [ ] Phase 3: 입력필드 높이 44px + 포커스 스타일 변경
+- [ ] Phase 4: 프로필 하단 → 설정 리스트 메뉴 전환 (이슈 #7)
+- [ ] Phase 5: 토글 스위치 컴포넌트 추가 (이슈 #2)
+- [ ] Phase 6: 아바타 단일 톤 통일
+- [ ] Phase 7: 배지 연한 배경 스타일 전환
+- [ ] Phase 8: 환경설정 화면 신규 구현 (이슈 #9)
+
+### 기타 (이전 TODO 이관)
+- [ ] 홈 배너 기본 UI 구현 (16번 문서)
+- [ ] 하단 네비 이모지 → SVG 전환
+- [ ] 게시글 카드 shadow → border 전환
+
 ## 디자이너 에이전트 추가 TODO
 
-- [ ] 01~03번 구버전 문서를 07번 기준으로 갱신 (사장님 요청 시)
 - [ ] 와이어프레임 업데이트 (`Docs/wireframes/`)
 - [ ] 반응형 디자인 가이드 작성 (모바일 480px 이하)
-- [ ] 색상 리뉴얼 적용 후 전체 스크린 시각 검증
+- [ ] 리뉴얼 적용 후 전체 스크린 시각 검증
+- [ ] 12~18번 UI 가이드 색상을 딥 네이비 `#1E3A5F` 기준으로 갱신

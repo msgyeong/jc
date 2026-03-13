@@ -1,0 +1,231 @@
+/*
+ * JC 디자인 토큰 v2.0 — 미니멀 리뉴얼
+ * 작성일: 2026-03-13
+ * 작성자: 디자이너 에이전트
+ *
+ * CEO 피드백: "파란색 일색 촌스러움, 심플하고 세련되게"
+ * 방향: 무채색 베이스 + 네이비 포인트 1색 / 입력필드 경량화 / 그림자 최소화
+ */
+
+/* ===================================================================
+   1. COLOR TOKENS — 라이트 모드 (기본)
+   =================================================================== */
+:root {
+  /* ── Brand ── */
+  --color-primary:       #1E3A5F;   /* 딥 네이비 — 세련된 포인트 */
+  --color-primary-hover: #162D4A;   /* Primary hover/pressed */
+  --color-primary-light: #E8EDF3;   /* 선택 하이라이트, 태그 배경 */
+  --color-primary-bg:    #F0F4F8;   /* 섹션 배경, 아바타 배경 */
+
+  /* ── Neutral (가장 많이 사용) ── */
+  --color-bg:            #FFFFFF;   /* 페이지 배경 — 순백 */
+  --color-bg-secondary:  #F9FAFB;   /* 섹션/그룹 배경 */
+  --color-surface:       #FFFFFF;   /* 카드/패널 배경 */
+  --color-border:        #E5E7EB;   /* 테두리, 구분선 */
+  --color-border-light:  #F3F4F6;   /* 가벼운 구분선 */
+  --color-divider:       #F3F4F6;   /* 리스트 구분선 */
+
+  /* ── Text ── */
+  --color-text:          #111827;   /* 기본 텍스트 */
+  --color-text-sub:      #6B7280;   /* 보조 텍스트 */
+  --color-text-hint:     #9CA3AF;   /* 플레이스홀더, 힌트 */
+  --color-text-disabled: #D1D5DB;   /* 비활성 텍스트 */
+
+  /* ── Semantic (기능 한정) ── */
+  --color-error:         #DC2626;
+  --color-error-hover:   #B91C1C;
+  --color-error-bg:      #FEF2F2;
+  --color-error-text:    #991B1B;
+
+  --color-success:       #16A34A;
+  --color-success-bg:    #F0FDF4;
+  --color-success-text:  #166534;
+
+  --color-warning:       #D97706;
+  --color-warning-bg:    #FFFBEB;
+  --color-warning-text:  #92400E;
+
+  /* ── Special ── */
+  --color-saturday:      #1E3A5F;
+  --color-sunday:        #DC2626;
+  --color-badge-new:     #DC2626;   /* N배지 (유일한 원색 배경 허용) */
+
+  /* ── Shadow ── */
+  --color-shadow:        rgba(0, 0, 0, 0.06);
+}
+
+/* ===================================================================
+   2. COLOR TOKENS — 다크 모드
+   =================================================================== */
+[data-theme="dark"] {
+  --color-primary:       #93B4D4;
+  --color-primary-hover: #A8C5E0;
+  --color-primary-light: #1E2D3D;
+  --color-primary-bg:    #162231;
+
+  --color-bg:            #0F1419;
+  --color-bg-secondary:  #1A2332;
+  --color-surface:       #1E2937;
+  --color-border:        #2D3B4E;
+  --color-border-light:  #243040;
+  --color-divider:       #243040;
+
+  --color-text:          #E8ECF0;
+  --color-text-sub:      #8899A8;
+  --color-text-hint:     #5C6F7E;
+  --color-text-disabled: #3D4E5C;
+
+  --color-error:         #F87171;
+  --color-error-hover:   #EF4444;
+  --color-error-bg:      #2D1B1B;
+  --color-error-text:    #FCA5A5;
+
+  --color-success:       #4ADE80;
+  --color-success-bg:    #1A2E1A;
+  --color-success-text:  #86EFAC;
+
+  --color-warning:       #FBBF24;
+  --color-warning-bg:    #2D2714;
+  --color-warning-text:  #FDE68A;
+
+  --color-saturday:      #93B4D4;
+  --color-sunday:        #F87171;
+  --color-badge-new:     #EF4444;
+
+  --color-shadow:        rgba(0, 0, 0, 0.3);
+}
+
+/* ===================================================================
+   3. SPACING TOKENS
+   =================================================================== */
+:root {
+  --space-2:   2px;
+  --space-4:   4px;
+  --space-6:   6px;
+  --space-8:   8px;
+  --space-12:  12px;
+  --space-16:  16px;
+  --space-20:  20px;
+  --space-24:  24px;
+  --space-32:  32px;
+  --space-48:  48px;
+}
+
+/* ===================================================================
+   4. RADIUS TOKENS
+   =================================================================== */
+:root {
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+}
+
+/* ===================================================================
+   5. SHADOW TOKENS — 최소화 원칙
+   =================================================================== */
+:root {
+  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md:  0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg:  0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* ===================================================================
+   6. TYPOGRAPHY TOKENS
+   =================================================================== */
+:root {
+  --font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --text-xs:     12px;
+  --text-sm:     13px;
+  --text-base:   15px;
+  --text-lg:     17px;
+  --text-xl:     20px;
+  --text-2xl:    24px;
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  --leading-tight:   1.3;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.6;
+}
+
+/* ===================================================================
+   7. TRANSITION TOKENS
+   =================================================================== */
+:root {
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+}
+
+/* ===================================================================
+   8. COMPONENT-SPECIFIC TOKENS
+   =================================================================== */
+:root {
+  /* AppBar */
+  --appbar-height:     56px;
+  --appbar-bg:         #FFFFFF;
+  --appbar-text:       var(--color-text);
+  --appbar-border:     var(--color-border);
+
+  /* Input */
+  --input-height:      44px;
+  --input-bg:          #FFFFFF;
+  --input-border:      var(--color-border);
+  --input-border-focus: var(--color-primary);
+  --input-radius:      var(--radius-md);
+  --input-font-size:   var(--text-base);
+  --input-placeholder: var(--color-text-hint);
+
+  /* Button */
+  --btn-height:        44px;
+  --btn-radius:        var(--radius-md);
+  --btn-font-size:     var(--text-base);
+  --btn-font-weight:   var(--weight-semibold);
+
+  /* Card */
+  --card-radius:       var(--radius-lg);
+  --card-padding:      var(--space-16);
+  --card-bg:           var(--color-surface);
+  --card-border:       var(--color-border);
+
+  /* Toggle Switch */
+  --toggle-width:      44px;
+  --toggle-height:     24px;
+  --toggle-radius:     var(--radius-full);
+  --toggle-bg-off:     #D1D5DB;
+  --toggle-bg-on:      var(--color-primary);
+  --toggle-knob-size:  20px;
+
+  /* Bottom Nav */
+  --nav-height:        56px;
+  --nav-icon-size:     24px;
+  --nav-text-size:     var(--text-xs);
+  --nav-active:        var(--color-primary);
+  --nav-inactive:      var(--color-text-hint);
+}
+
+/* ===================================================================
+   8-1. DARK MODE COMPONENT OVERRIDES
+   =================================================================== */
+[data-theme="dark"] {
+  --appbar-bg:         #1A2332;
+  --appbar-text:       var(--color-text);
+  --appbar-border:     var(--color-border);
+
+  --input-bg:          #1E2937;
+  --input-border:      var(--color-border);
+
+  --card-bg:           var(--color-surface);
+  --card-border:       var(--color-border);
+
+  --toggle-bg-off:     #3D4E5C;
+}

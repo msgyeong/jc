@@ -746,6 +746,46 @@
 
 ---
 
+### 세션 #16 — UI 디자인 버그 8건 수정 (2026-03-13)
+
+#### UI-001 (HIGH): 주민번호 입력란 비율 수정
+- `.ssn-front`: `flex:1` → `flex: 0 0 140px; width: 140px` 고정
+- `.ssn-back`: `flex: 0 0 44px` 추가로 shrink/grow 방지
+
+#### UI-002 (HIGH): body/전체 레이아웃 max-width
+- `body` 배경색 `#E5E7EB`로 변경 (데스크톱에서 앱 영역 구분)
+- `#app`에 이미 `max-width: 480px; margin: 0 auto; box-shadow` 설정 확인 — 변경 불필요
+
+#### UI-003 (HIGH): 리사이즈 후 레이아웃 깨짐 방지
+- `body`에 `overflow-x: hidden` 추가
+- `.screen`, `.screen.active`에 `width: 100%` 추가
+
+#### UI-004 (MEDIUM): SSN back 필드 flex 충돌
+- UI-001과 함께 처리 완료
+
+#### UI-005 (MEDIUM): 로그인 버튼 색상 통일
+- `.btn-primary`에 `#2563EB` 직접 지정 (변수 오버라이드 방지)
+- hover: `#1D4ED8` 직접 지정
+
+#### UI-006 (LOW): input height 통일
+- `.form-group input`에 `min-height: 48px; box-sizing: border-box` 추가
+- `.screen-content input/select`에 전역 `min-height: 48px` 규칙 추가
+
+#### UI-007 (LOW): 하단 탭 터치 영역 보장
+- `.bottom-nav`: `min-height: 56px` 추가
+- `.nav-item`: `min-height: 48px; justify-content: center` 추가
+
+#### UI-008 (LOW): 주소 입력 영역 정렬
+- 이미 정상 확인 (`.address-input-group`: flex + gap:8px, `.address-detail`: width:100%)
+
+#### 캐시 버스팅
+- `web/index.html`: `v=20260311g`
+
+#### 커밋
+- `48d4321` fix(ui): 디자인 버그 8건 수정 → push 완료
+
+---
+
 ## 알려진 이슈 (수정 안 함, 동작 영향 없음)
 
 1. `app.js`의 `checkAuthStatus()` 반환값(boolean)과 `AuthStatus.AUTHENTICATED`(string) 비교 → 항상 false. 실 로그인은 `handleLogin()`에서 처리되므로 영향 제한적.

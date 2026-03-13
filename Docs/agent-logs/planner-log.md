@@ -131,6 +131,33 @@
 
 ---
 
+## 세션 5 — 2026-03-13
+
+### 작업 1: GitHub 이슈 기반 3개 기능 기획서 작성
+
+**지시**: Push 알림(#4), 참석 여부(#5), 환경설정(#9) 기획서 작성
+
+**생성 파일**:
+- `Docs/features/push-notification-plan.md` (신규) — Push 알림 통합 기획서
+  - 기존 `web-push-notification.md` (N-01~N-05) 확장
+  - **생일 알림(N-06) 신규**: 매일 09:00 KST cron, `users.birth_date` 기반
+  - DB: `notification_settings`에 `birthday_push` 컬럼 추가 (011 마이그레이션)
+  - Phase 1 (MVP 10단계) + Phase 2 (완성 9단계)
+- `Docs/features/attendance-plan.md` (신규) — 참석 여부 확인 기획서
+  - 기존 `attendance-vote.md` 단순화 버전 (먼저 구현)
+  - DB: `schedule_attendance` 테이블 신규 (012 마이그레이션)
+  - 상태: attending / not_attending (undecided 제외)
+  - API 5개 + 관리자 CSV 내보내기
+- `Docs/features/settings-plan.md` (신규) — 환경설정 기획서
+  - DB: `user_settings` 테이블 신규 (013 마이그레이션)
+  - 다크모드 (CSS variables + data-theme), 글꼴 크기 4단계
+  - 메뉴 10개 항목, 벤치마킹 기반 추가 기능 제안
+- `Docs/agent-logs/planner-session.md` (신규) — 세션 로그
+
+**커밋**: 아래에서 커밋 예정
+
+---
+
 ## 다른 에이전트에게 전달할 사항
 
 ### → 백엔드
@@ -145,6 +172,10 @@
 9. **[신규]** 업종 검색 API → `Docs/features/industry-search.md` §6 (GET /api/members?industry=, GET /api/industries)
 10. **[신규]** DB 마이그레이션: users.industry + users.industry_detail 컬럼 추가
 11. **[신규]** Web Push 알림 → `Docs/features/web-push-notification.md` §4 (DB 3개 + API 7개 + web-push + node-cron)
+12. **[신규]** 생일 알림 cron → `Docs/features/push-notification-plan.md` §7-3 (N-06, birthday_push 컬럼 추가)
+13. **[신규]** 참석 여부 API → `Docs/features/attendance-plan.md` §5 (schedule_attendance 테이블, API 5개)
+14. **[신규]** 환경설정 API → `Docs/features/settings-plan.md` §4 (user_settings 테이블, GET/PUT /api/settings)
+15. **[신규]** 회원 탈퇴 API → `Docs/features/settings-plan.md` §4-3 (POST /api/auth/withdraw)
 
 ### → 프론트엔드
 1. 기존 admin-web 코드 삭제 후 재개발
@@ -157,6 +188,9 @@
 8. **[신규]** 공지 작성 시 일정 첨부 UI → `Docs/features/notice-schedule-link.md` (토글+일정 입력)
 9. **[신규]** 업종 필터 + 태그 → `Docs/features/industry-search.md` (회원 목록 드롭다운, 카드 태그, 가입/프로필 필드)
 10. **[신규]** Web Push 프론트 → `Docs/features/web-push-notification.md` §5 (SW, 구독 플로우, 알림센터, PWA manifest)
+11. **[신규]** 참석 여부 UI → `Docs/features/attendance-plan.md` §6 (참석/불참 버튼, 명단 표시)
+12. **[신규]** 환경설정 화면 → `Docs/features/settings-plan.md` §5 (다크모드, 글꼴, 탈퇴 등)
+13. **[신규]** 다크모드 CSS → `Docs/features/settings-plan.md` §6 (CSS 변수 + data-theme)
 
 ### → 디자이너
 1. 앱 Primary #1F4FD8 → #2563EB 통일 여부 사장님 확인 필요
@@ -192,3 +226,6 @@
 | 업종 검색 기획 | `Docs/features/industry-search.md` |
 | Web Push 알림 기획 | `Docs/features/web-push-notification.md` |
 | 알림 UI 가이드 요청 | `Docs/design-system/18-notification-ui.md` |
+| Push 알림 통합 기획 (생일 포함) | `Docs/features/push-notification-plan.md` |
+| 참석 여부 확인 기획 | `Docs/features/attendance-plan.md` |
+| 환경설정 기획 | `Docs/features/settings-plan.md` |

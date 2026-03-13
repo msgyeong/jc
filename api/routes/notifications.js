@@ -116,7 +116,7 @@ router.get('/settings', authenticate, async (req, res) => {
     try {
         const userId = req.user.userId;
         const result = await query(
-            'SELECT all_push, notice_push, schedule_push, reminder_push, comment_push FROM notification_settings WHERE user_id = $1',
+            'SELECT all_push, notice_push, schedule_push, reminder_push, comment_push, birthday_push FROM notification_settings WHERE user_id = $1',
             [userId]
         );
 
@@ -129,7 +129,8 @@ router.get('/settings', authenticate, async (req, res) => {
                     notice_push: true,
                     schedule_push: true,
                     reminder_push: true,
-                    comment_push: true
+                    comment_push: true,
+                    birthday_push: true
                 }
             });
         }
@@ -148,25 +149,44 @@ router.get('/settings', authenticate, async (req, res) => {
 router.put('/settings', authenticate, async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { all_push, notice_push, schedule_push, reminder_push, comment_push } = req.body;
+        const { all_push, notice_push, schedule_push, reminder_push, comment_push, birthday_push } = req.body;
 
         await query(
-            `INSERT INTO notification_settings (user_id, all_push, notice_push, schedule_push, reminder_push, comment_push, updated_at)
-             VALUES ($1, $2, $3, $4, $5, $6, NOW())
+            `INSERT INTO notification_settings (user_id, all_push, notice_push, schedule_push, reminder_push, comment_push, birthday_push, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
              ON CONFLICT (user_id) DO UPDATE SET
                 all_push = COALESCE($2, notification_settings.all_push),
                 notice_push = COALESCE($3, notification_settings.notice_push),
                 schedule_push = COALESCE($4, notification_settings.schedule_push),
                 reminder_push = COALESCE($5, notification_settings.reminder_push),
                 comment_push = COALESCE($6, notification_settings.comment_push),
+                birthday_push = COALESCE($7, notification_settings.birthday_push),
                 updated_at = NOW()`,
-            [userId, all_push, notice_push, schedule_push, reminder_push, comment_push]
+            [userId, all_push, notice_push, schedule_push, reminder_push, comment_push, birthday_push]
         );
 
         res.json({ success: true, message: '알림 설정이 변경되었습니다.' });
     } catch (err) {
         console.error('Update notification settings error:', err);
         res.status(500).json({ success: false, message: '알림 설정 변경에 실패했습니다.' });
+    }
+});
+
+/**
+ * GET /api/notifications/unread-count
+ * 안읽은 알림 수 (앱바 배지용)
+ */
+router.get('/unread-count', authenticate, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const result = await query(
+            'SELECT COUNT(*)::int as count FROM notification_log WHERE user_id = $1 AND read_at IS NULL',
+            [userId]
+        );
+        res.json({ success: true, data: { count: result.rows[0].count } });
+    } catch (err) {
+        console.error('Get unread count error:', err);
+        res.status(500).json({ success: false, message: '미읽음 수 조회에 실패했습니다.' });
     }
 });
 

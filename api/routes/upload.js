@@ -61,6 +61,31 @@ router.post('/', authenticate, upload.single('image'), (req, res) => {
     }
 });
 
+/**
+ * POST /api/upload/multiple
+ * 게시글용 이미지 최대 5장 업로드. 인증 필요. 반환: { success, urls[] }
+ */
+router.post('/multiple', authenticate, upload.array('images', 5), (req, res) => {
+    try {
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '이미지 파일을 선택해주세요.'
+            });
+        }
+        const baseUrl = process.env.UPLOAD_BASE_URL ||
+            `${req.protocol}://${req.get('host')}`;
+        const urls = req.files.map(file => `${baseUrl}/uploads/${file.filename}`);
+        return res.json({ success: true, urls });
+    } catch (err) {
+        console.error('Upload multiple error:', err);
+        return res.status(500).json({
+            success: false,
+            message: err.message || '업로드 중 오류가 발생했습니다.'
+        });
+    }
+});
+
 router.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {

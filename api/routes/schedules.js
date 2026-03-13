@@ -489,4 +489,232 @@ router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
     }
 });
 
+// ==================== 참석 여부 (schedule_attendance) ====================
+
+/**
+ * POST /api/schedules/:id/attendance
+ * 참석 여부 등록/변경 (UPSERT)
+ */
+router.post('/:id/attendance', authenticate, async (req, res) => {
+    try {
+        const { id: scheduleId } = req.params;
+        const userId = req.user.userId;
+        const { status } = req.body;
+
+        if (!status || !['attending', 'not_attending'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'status는 attending 또는 not_attending이어야 합니다.'
+            });
+        }
+
+        // 일정 존재 확인
+        const schedCheck = await query('SELECT id FROM schedules WHERE id = $1', [scheduleId]);
+        if (schedCheck.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '일정을 찾을 수 없습니다.' });
+        }
+
+        const result = await query(
+            `INSERT INTO schedule_attendance (schedule_id, user_id, status, responded_at, updated_at)
+             VALUES ($1, $2, $3, NOW(), NOW())
+             ON CONFLICT (schedule_id, user_id)
+             DO UPDATE SET status = $3, responded_at = NOW(), updated_at = NOW()
+             RETURNING schedule_id, status, responded_at`,
+            [scheduleId, userId, status]
+        );
+
+        res.json({ success: true, data: result.rows[0] });
+    } catch (error) {
+        console.error('Set attendance error:', error);
+        res.status(500).json({ success: false, message: '참석 여부 등록 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * DELETE /api/schedules/:id/attendance
+ * 참석 여부 취소 (미응답으로 되돌리기)
+ */
+router.delete('/:id/attendance', authenticate, async (req, res) => {
+    try {
+        const { id: scheduleId } = req.params;
+        const userId = req.user.userId;
+
+        await query(
+            'DELETE FROM schedule_attendance WHERE schedule_id = $1 AND user_id = $2',
+            [scheduleId, userId]
+        );
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete attendance error:', error);
+        res.status(500).json({ success: false, message: '참석 여부 취소 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * GET /api/schedules/:id/attendance/summary
+ * 참석 현황 요약 (참석/불참/미응답 수 + 본인 상태)
+ */
+router.get('/:id/attendance/summary', authenticate, async (req, res) => {
+    try {
+        const { id: scheduleId } = req.params;
+        const userId = req.user.userId;
+
+        // 참석/불참 집계
+        const summaryResult = await query(
+            `SELECT status, COUNT(*)::int as count
+             FROM schedule_attendance WHERE schedule_id = $1
+             GROUP BY status`,
+            [scheduleId]
+        );
+
+        let attending = 0, not_attending = 0;
+        summaryResult.rows.forEach(r => {
+            if (r.status === 'attending') attending = r.count;
+            else if (r.status === 'not_attending') not_attending = r.count;
+        });
+
+        // 전체 승인 회원 수
+        const totalResult = await query(
+            "SELECT COUNT(*)::int as count FROM users WHERE status = 'active'"
+        );
+        const total_members = totalResult.rows[0].count;
+        const no_response = total_members - attending - not_attending;
+
+        // 본인 상태
+        const myResult = await query(
+            'SELECT status FROM schedule_attendance WHERE schedule_id = $1 AND user_id = $2',
+            [scheduleId, userId]
+        );
+
+        res.json({
+            success: true,
+            data: {
+                attending,
+                not_attending,
+                no_response,
+                total_members,
+                my_status: myResult.rows[0]?.status || null
+            }
+        });
+    } catch (error) {
+        console.error('Get attendance summary error:', error);
+        res.status(500).json({ success: false, message: '참석 현황 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * GET /api/schedules/:id/attendance/details
+ * 참석자 명단 조회 (관리자는 미응답자도 포함)
+ */
+router.get('/:id/attendance/details', authenticate, async (req, res) => {
+    try {
+        const { id: scheduleId } = req.params;
+        const userRole = req.user.role;
+        const isAdmin = userRole && ['super_admin', 'admin'].includes(userRole);
+
+        // 참석/불참 명단
+        const votesResult = await query(
+            `SELECT sa.status, sa.responded_at,
+                    u.id as user_id, u.name, u.position as jc_position
+             FROM schedule_attendance sa
+             JOIN users u ON u.id = sa.user_id
+             WHERE sa.schedule_id = $1
+             ORDER BY u.position NULLS LAST, u.name`,
+            [scheduleId]
+        );
+
+        const attending = [];
+        const not_attending = [];
+        const respondedUserIds = new Set();
+
+        votesResult.rows.forEach(r => {
+            respondedUserIds.add(r.user_id);
+            const item = {
+                user_id: r.user_id,
+                name: r.name,
+                jc_position: r.jc_position || null,
+                responded_at: r.responded_at
+            };
+            if (r.status === 'attending') attending.push(item);
+            else not_attending.push(item);
+        });
+
+        const data = { attending, not_attending };
+
+        // 관리자만 미응답자 목록 포함
+        if (isAdmin) {
+            const allMembers = await query(
+                "SELECT id, name, position FROM users WHERE status = 'active' ORDER BY position NULLS LAST, name"
+            );
+            data.no_response = allMembers.rows
+                .filter(m => !respondedUserIds.has(m.id))
+                .map(m => ({ user_id: m.id, name: m.name, jc_position: m.position || null }));
+        }
+
+        res.json({ success: true, data });
+    } catch (error) {
+        console.error('Get attendance details error:', error);
+        res.status(500).json({ success: false, message: '참석 명단 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * GET /api/schedules/:id/attendance/export
+ * 참석 현황 CSV 내보내기 (관리자 전용)
+ */
+router.get('/:id/attendance/export', authenticate, async (req, res) => {
+    try {
+        const userRole = req.user.role;
+        if (!userRole || !['super_admin', 'admin'].includes(userRole)) {
+            return res.status(403).json({ success: false, message: '관리자 권한이 필요합니다.' });
+        }
+
+        const { id: scheduleId } = req.params;
+
+        // 일정 정보
+        const schedResult = await query('SELECT title FROM schedules WHERE id = $1', [scheduleId]);
+        if (schedResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '일정을 찾을 수 없습니다.' });
+        }
+
+        // 참석/불참 명단
+        const votesResult = await query(
+            `SELECT sa.status, sa.responded_at,
+                    u.id as user_id, u.name, u.position
+             FROM schedule_attendance sa
+             JOIN users u ON u.id = sa.user_id
+             WHERE sa.schedule_id = $1
+             ORDER BY u.position NULLS LAST, u.name`,
+            [scheduleId]
+        );
+
+        const respondedUserIds = new Set(votesResult.rows.map(r => r.user_id));
+
+        // 미응답자
+        const allMembers = await query(
+            "SELECT id, name, position FROM users WHERE status = 'active' ORDER BY position NULLS LAST, name"
+        );
+        const noResponse = allMembers.rows.filter(m => !respondedUserIds.has(m.id));
+
+        // CSV 생성
+        const statusMap = { attending: '참석', not_attending: '불참' };
+        let csv = '\uFEFF이름,직책,상태,응답일시\n'; // BOM for Excel
+        votesResult.rows.forEach(r => {
+            const responded = r.responded_at ? new Date(r.responded_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '';
+            csv += `${r.name},${r.position || ''},${statusMap[r.status]},${responded}\n`;
+        });
+        noResponse.forEach(m => {
+            csv += `${m.name},${m.position || ''},미응답,\n`;
+        });
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="attendance_${scheduleId}.csv"`);
+        res.send(csv);
+    } catch (error) {
+        console.error('Export attendance error:', error);
+        res.status(500).json({ success: false, message: 'CSV 내보내기 중 오류가 발생했습니다.' });
+    }
+});
+
 module.exports = router;

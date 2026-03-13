@@ -343,4 +343,65 @@ router.post('/logout', authenticate, (req, res) => {
     });
 });
 
+/**
+ * POST /api/auth/withdraw
+ * 회원 탈퇴 (soft delete)
+ */
+router.post('/withdraw', authenticate, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { password, reason } = req.body;
+
+        if (!password) {
+            return res.status(400).json({
+                success: false,
+                message: '비밀번호를 입력해주세요.'
+            });
+        }
+
+        // 비밀번호 확인
+        const userResult = await query(
+            'SELECT password_hash FROM users WHERE id = $1',
+            [userId]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: '사용자를 찾을 수 없습니다.'
+            });
+        }
+
+        const valid = await comparePassword(password, userResult.rows[0].password_hash);
+        if (!valid) {
+            return res.status(401).json({
+                success: false,
+                message: '비밀번호가 일치하지 않습니다.'
+            });
+        }
+
+        // soft delete: status 변경, withdrawn_at 설정
+        await query(
+            `UPDATE users SET status = 'withdrawn', withdrawn_at = NOW(), withdrawal_reason = $2 WHERE id = $1`,
+            [userId, reason || null]
+        );
+
+        // Push 구독 삭제
+        try {
+            await query('DELETE FROM push_subscriptions WHERE user_id = $1', [userId]);
+        } catch (_) { /* 테이블 없어도 무시 */ }
+
+        res.json({
+            success: true,
+            message: '회원 탈퇴가 완료되었습니다.'
+        });
+    } catch (error) {
+        console.error('Withdraw error:', error);
+        res.status(500).json({
+            success: false,
+            message: '회원 탈퇴 처리 중 오류가 발생했습니다.'
+        });
+    }
+});
+
 module.exports = router;

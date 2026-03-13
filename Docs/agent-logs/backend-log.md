@@ -5,6 +5,49 @@
 
 ---
 
+## 2026-03-13 세션 9: 이슈 #1 #5 #8 #9 — 사진업로드, 참석여부, 알림, 환경설정
+
+### Task 1: 게시글 사진 업로드 (이슈 #1)
+- `api/routes/upload.js`: `POST /api/upload/multiple` 추가 — multer `.array('images', 5)`로 최대 5장 동시 업로드
+- 기존 단일 업로드 (`POST /api/upload`)는 그대로 유지
+- posts 테이블 images 컬럼은 이미 존재 (JSON 배열)
+- 프론트에서 업로드 → URL 배열 받기 → 게시글 작성 시 images에 포함하는 플로우
+
+### Task 2: 일정 참석 여부 API (이슈 #5)
+- **마이그레이션**: `012_schedule_attendance.sql` — schedule_attendance 테이블 + 인덱스
+- **API (schedules.js에 추가)**:
+  - `POST /api/schedules/:id/attendance` — 참석/불참 등록 (UPSERT)
+  - `DELETE /api/schedules/:id/attendance` — 미응답으로 되돌리기
+  - `GET /api/schedules/:id/attendance/summary` — 참석 현황 요약 + 본인 상태
+  - `GET /api/schedules/:id/attendance/details` — 참석자 명단 (관리자는 미응답자 포함)
+  - `GET /api/schedules/:id/attendance/export` — CSV 내보내기 (관리자 전용)
+- 기존 attendance.js (투표 설정 기반)와 별도 — 단순 참석 확인용
+
+### Task 3: 알림 기능 확장 (이슈 #8)
+- **마이그레이션**: `011_birthday_push.sql` — notification_settings에 birthday_push 컬럼 추가
+- **API (notifications.js 수정)**:
+  - `GET /api/notifications/unread-count` 신규 추가
+  - GET/PUT settings에 birthday_push 필드 추가
+- **생일 알림 cron**: `utils/reminderCron.js`에 N-06 생일 알림 추가 (매일 09:00 KST)
+  - 오늘 생일인 회원 조회 → birthday_push=ON인 전체 회원에게 발송 (당사자 제외)
+
+### Task 4: 환경설정 API (이슈 #9)
+- **마이그레이션**: `013_user_settings.sql` — user_settings 테이블 (theme, font_size)
+- **신규 라우트**: `api/routes/settings.js`
+  - `GET /api/settings` — 환경설정 조회 (기본값: light, medium)
+  - `PUT /api/settings` — 환경설정 변경 (부분 업데이트 지원)
+- **회원 탈퇴**: `POST /api/auth/withdraw` (auth.js에 추가)
+  - 비밀번호 확인 → soft delete (status='withdrawn', withdrawn_at 설정)
+  - Push 구독 삭제
+- **server.js**: settingsRoutes 등록 (`/api/settings`)
+- **users 테이블**: withdrawn_at, withdrawal_reason 컬럼 추가
+
+### DB 마이그레이션 실행 완료
+- 011, 012, 013 + users 컬럼 추가 모두 프로덕션 DB 반영 완료
+- 서버 정상 기동 확인
+
+---
+
 ## 2026-03-11 세션 8: Batch 3 — 권한 매트릭스 + 일정 조회수
 
 ### Task 1: Permission Matrix (positions + position_permissions)

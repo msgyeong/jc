@@ -1,53 +1,138 @@
 /* 영등포 JC - 웹 앱 스타일 (완전 최적화 버전) */
 
-/* ==================== 디자인 시스템 변수 ==================== */
+/* ==================== 디자인 시스템 변수 v2.0 — 미니멀 리뉴얼 ==================== */
 :root {
-    --primary-color: #2563EB;
-    --primary-dark: #1D4ED8;
-    --primary-light: #DBEAFE;
-    --secondary-color: #F1F5F9;
+    /* ── Brand ── */
+    --primary-color: #1E3A5F;
+    --primary-dark: #162D4A;
+    --primary-light: #E8EDF3;
+    --primary-bg: #F0F4F8;
+    --primary-hover: #162D4A;
+    --secondary-color: #F9FAFB;
     --accent-color: #F59E0B;
-    --error-color: #DC2626;
-    --success-color: #059669;
-    --background-color: #F8FAFC;
-    --text-primary: #0F172A;
-    --text-secondary: #64748B;
-    --border-color: #E2E8F0;
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
 
+    /* ── Semantic ── */
+    --error-color: #DC2626;
+    --error-hover: #B91C1C;
+    --error-bg: #FEF2F2;
+    --error-text: #991B1B;
+    --success-color: #16A34A;
+    --success-bg: #F0FDF4;
+    --success-text: #166534;
+    --warning-bg: #FFFBEB;
+    --warning-text: #92400E;
+
+    /* ── Neutral ── */
+    --background-color: #FFFFFF;
+    --bg-secondary: #F9FAFB;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --text-hint: #9CA3AF;
+    --text-disabled: #D1D5DB;
+    --border-color: #E5E7EB;
+    --border-light: #F3F4F6;
+    --neutral-bg: #F3F4F6;
+    --purple-bg: #F3E8FF;
+    --purple-text: #6B21A8;
+
+    /* ── Calendar ── */
+    --saturday-color: #1E3A5F;
+    --sunday-color: #DC2626;
+
+    /* ── Radius ── */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --border-radius: 8px;
+    --border-radius-lg: 12px;
+
+    /* ── Shadow — 최소화 ── */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+
+    /* ── Spacing ── */
     --spacing-xs: 8px;
     --spacing-sm: 12px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
 
-    --border-radius: 8px;
-    --border-radius-lg: 12px;
+    /* ── Typography ── */
+    --font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-    --font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* ── Transition ── */
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --transition: all 0.2s ease;
+    /* ── AppBar ── */
+    --appbar-height: 56px;
+    --appbar-bg: #FFFFFF;
+    --appbar-text: #111827;
+    --appbar-border: #E5E7EB;
 
-    --primary-hover: #1D4ED8;
-    --primary-bg: #EFF6FF;
-    --error-hover: #B91C1C;
-    --error-bg: #FEE2E2;
-    --error-text: #991B1B;
-    --success-bg: #ECFDF5;
-    --success-text: #065F46;
-    --warning-bg: #FEF3C7;
-    --warning-text: #92400E;
-    --text-hint: #9CA3AF;
-    --neutral-bg: #F3F4F6;
-    --purple-bg: #F3E8FF;
-    --purple-text: #6B21A8;
-    --saturday-color: #2563EB;
-    --sunday-color: #DC2626;
-    --shadow-lg: 0 12px 40px rgba(0,0,0,0.15);
+    /* ── Input ── */
+    --input-height: 44px;
+    --input-bg: #FFFFFF;
+    --input-border: #E5E7EB;
+    --input-border-focus: #1E3A5F;
+    --input-radius: 8px;
+
+    /* ── Toggle Switch ── */
+    --toggle-width: 44px;
+    --toggle-height: 24px;
+    --toggle-bg-off: #D1D5DB;
+    --toggle-bg-on: #1E3A5F;
+    --toggle-knob-size: 20px;
+
+    /* ── Nav ── */
+    --nav-height: 56px;
+    --nav-active: #1E3A5F;
+    --nav-inactive: #9CA3AF;
+}
+
+/* ==================== 다크 모드 ==================== */
+[data-theme="dark"] {
+    --primary-color: #93B4D4;
+    --primary-dark: #A8C5E0;
+    --primary-light: #1E2D3D;
+    --primary-bg: #162231;
+    --primary-hover: #A8C5E0;
+
+    --background-color: #0F1419;
+    --bg-secondary: #1A2332;
+    --text-primary: #E8ECF0;
+    --text-secondary: #8899A8;
+    --text-hint: #5C6F7E;
+    --text-disabled: #3D4E5C;
+    --border-color: #2D3B4E;
+    --border-light: #243040;
+    --neutral-bg: #243040;
+    --secondary-color: #1A2332;
+
+    --error-color: #F87171;
+    --error-hover: #EF4444;
+    --error-bg: #2D1B1B;
+    --error-text: #FCA5A5;
+    --success-color: #4ADE80;
+    --success-bg: #1A2E1A;
+    --success-text: #86EFAC;
+    --warning-bg: #2D2714;
+    --warning-text: #FDE68A;
+
+    --saturday-color: #93B4D4;
+    --sunday-color: #F87171;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+
+    --appbar-bg: #1A2332;
+    --appbar-text: #E8ECF0;
+    --appbar-border: #2D3B4E;
+    --input-bg: #1E2937;
+    --input-border: #2D3B4E;
+    --toggle-bg-off: #3D4E5C;
 }
 
 /* ==================== 리셋 및 기본 스타일 ==================== */
@@ -59,7 +144,7 @@
 
 body {
     font-family: var(--font-family);
-    background-color: #E5E7EB;
+    background-color: var(--border-color);
     color: var(--text-primary);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -71,9 +156,9 @@ body {
     max-width: 480px;
     margin: 0 auto;
     min-height: 100vh;
-    background-color: white;
+    background-color: var(--background-color);
     position: relative;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.06);
 }
 
 /* ==================== 화면 전환 ==================== */
@@ -95,44 +180,49 @@ body {
     to { opacity: 1; }
 }
 
-/* ==================== 앱바 ==================== */
+/* ==================== 앱바 — v2.0 흰색 배경 + border ==================== */
 .app-bar {
-    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-    color: white;
-    padding: 14px 20px;
+    height: var(--appbar-height);
+    background: var(--appbar-bg);
+    color: var(--appbar-text);
+    padding: 0 16px;
     display: flex;
     align-items: center;
-    gap: 16px;
-    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15);
+    gap: 12px;
+    border-bottom: 1px solid var(--appbar-border);
+    box-shadow: none;
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
 .app-bar-title {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 600;
     flex: 1;
+    color: var(--text-primary);
 }
 
 .back-button,
 .logout-button {
     background: none;
     border: none;
-    color: white;
+    color: var(--text-primary);
     font-size: 20px;
     cursor: pointer;
-    padding: var(--spacing-xs);
+    width: 32px;
+    height: 32px;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: var(--transition);
-    border-radius: 4px;
+    border-radius: 6px;
 }
 
 .back-button:hover,
 .logout-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--bg-secondary);
 }
 
 /* ==================== 스크린 컨텐츠 ==================== */
@@ -239,25 +329,27 @@ body {
 .form-group input[type="text"],
 .form-group input[type="tel"] {
     width: 100%;
-    min-height: 48px;
-    padding: 14px var(--spacing-md);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
+    min-height: var(--input-height);
+    padding: 10px 12px;
+    border: 1px solid var(--input-border);
+    border-radius: var(--input-radius);
     font-size: 15px;
     font-family: var(--font-family);
-    transition: var(--transition);
+    color: var(--text-primary);
+    background: var(--input-bg);
+    transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
+    outline: none;
 }
 
 .form-group input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    border-width: 2px;
-    padding: 13px 15px;
+    border-color: var(--input-border-focus);
+    box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.08);
 }
 
 .form-group input.error {
     border-color: var(--error-color);
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.06);
 }
 
 /* 전역 input/select 최소 높이 통일 */
@@ -269,7 +361,7 @@ body {
 .screen-content input[type="date"],
 .screen-content input[type="time"],
 .screen-content select {
-    min-height: 48px;
+    min-height: var(--input-height);
     box-sizing: border-box;
 }
 
@@ -426,7 +518,7 @@ input::-ms-clear {
 /* ==================== 버튼 스타일 ==================== */
 .btn {
     width: 100%;
-    height: 48px;
+    height: 44px;
     border: none;
     border-radius: var(--border-radius);
     font-size: 15px;
@@ -437,23 +529,21 @@ input::-ms-clear {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-xs);
+    gap: 6px;
 }
 
 .btn:disabled {
-    opacity: 0.6;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
 .btn-primary {
-    background-color: #2563EB;
+    background-color: var(--primary-color);
     color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-    background-color: #1D4ED8;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+    background-color: var(--primary-hover);
 }
 
 .btn-secondary {
@@ -1032,6 +1122,7 @@ input::-ms-clear {
 }
 
 /* ==================== FAB (Floating Action Button) ==================== */
+/* FAB — flex 정렬로 아이콘 중앙 고정 (이슈 #6) */
 .fab {
     position: fixed;
     bottom: 90px;
@@ -1045,20 +1136,25 @@ input::-ms-clear {
     font-size: 28px;
     font-weight: 300;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
     transition: var(--transition);
     z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
 }
 
 .fab:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(30, 58, 95, 0.4);
 }
 
 .edit-button {
     background: none;
     border: none;
-    color: white;
+    color: var(--text-primary);
     font-size: 20px;
     cursor: pointer;
     padding: var(--spacing-xs);
@@ -1066,11 +1162,11 @@ input::-ms-clear {
     align-items: center;
     justify-content: center;
     transition: var(--transition);
-    border-radius: 4px;
+    border-radius: 6px;
 }
 
 .edit-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--bg-secondary);
 }
 
 /* ==================== 빈 상태 ==================== */
@@ -2241,22 +2337,22 @@ input[type="date"]:focus {
 .app-bar-action {
     background: none;
     border: none;
-    color: white;
-    font-size: 16px;
+    color: var(--primary-color);
+    font-size: 15px;
     font-weight: 600;
     font-family: var(--font-family);
     cursor: pointer;
-    padding: 8px 12px;
+    padding: 6px 12px;
     transition: var(--transition);
     border-radius: 6px;
 }
 
 .app-bar-action:hover {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: var(--bg-secondary);
 }
 
 .app-bar-action:disabled {
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-disabled);
     cursor: not-allowed;
 }
 
@@ -2407,9 +2503,9 @@ input[type="date"]:focus {
 /* ==================== 캘린더 (일정 화면) ==================== */
 
 .app-bar-action-pill {
-    background: rgba(255,255,255,0.2);
-    border: 1px solid rgba(255,255,255,0.4);
-    color: white;
+    background: var(--primary-light);
+    border: 1px solid var(--border-color);
+    color: var(--primary-color);
     padding: 4px 12px;
     border-radius: 16px;
     font-size: 12px;
@@ -5319,3 +5415,309 @@ input[type="date"]:focus {
     }
 }
 
+
+
+/* ==================== 토글 스위치 v2.0 — iOS 스타일 (이슈 #2) ==================== */
+.toggle-switch {
+    position: relative;
+    width: var(--toggle-width);
+    height: var(--toggle-height);
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.toggle-switch .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--toggle-bg-off);
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: background 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggle-switch .toggle-slider::before {
+    content: "";
+    position: absolute;
+    width: var(--toggle-knob-size);
+    height: var(--toggle-knob-size);
+    left: 2px;
+    bottom: 2px;
+    background: #FFFFFF;
+    border-radius: 50%;
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: var(--toggle-bg-on);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+}
+
+/* ==================== 설정 메뉴 리스트 v2.0 (이슈 #7 #9) ==================== */
+.settings-group {
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.settings-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-hint);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 16px 6px;
+}
+
+.settings-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.settings-item:last-child { border-bottom: none; }
+.settings-item:hover { background: var(--bg-secondary); }
+.settings-item:active { background: var(--border-light); }
+
+.settings-item-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.settings-item-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.5;
+}
+
+.settings-item-label {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--text-primary);
+}
+
+.settings-item-value {
+    font-size: 13px;
+    color: var(--text-hint);
+}
+
+.settings-item-chevron {
+    width: 16px;
+    height: 16px;
+    color: var(--text-disabled);
+    flex-shrink: 0;
+}
+
+.settings-item--danger .settings-item-label { color: var(--error-color); }
+.settings-item--danger .settings-item-icon { color: var(--error-color); }
+.settings-item--toggle { cursor: default; }
+.settings-item--toggle:hover { background: transparent; }
+.settings-item--static { cursor: default; }
+.settings-item--static:hover { background: transparent; }
+
+/* ==================== 프로필 히어로 v2.0 (이슈 #7) ==================== */
+.profile-hero {
+    background: var(--bg-secondary);
+    padding: 32px 16px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profile-hero-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.profile-hero-role {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--primary-color);
+    background: var(--primary-light);
+    border-radius: 9999px;
+}
+
+/* ==================== 환경설정 화면 (이슈 #9) ==================== */
+.settings-screen-content {
+    background: var(--bg-secondary);
+    min-height: calc(100vh - 56px);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ==================== 참석 여부 UI (이슈 #5) ==================== */
+.attendance-section {
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.attendance-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.attendance-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.attendance-btn {
+    flex: 1;
+    height: 40px;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: 1.5px solid var(--border-color);
+    background: var(--background-color);
+    color: var(--text-secondary);
+}
+
+.attendance-btn.active-attending {
+    border-color: var(--success-color);
+    background: var(--success-bg);
+    color: #166534;
+}
+
+.attendance-btn.active-not-attending {
+    border-color: var(--error-color);
+    background: var(--error-bg);
+    color: var(--error-text);
+}
+
+.attendance-summary {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.attendance-summary span { margin-right: 8px; }
+
+.attendance-details-toggle {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.attendance-details { margin-top: 8px; font-size: 13px; color: var(--text-secondary); }
+.attendance-details-group { margin-bottom: 8px; }
+.attendance-details-label { font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+
+/* ==================== 다이얼로그 v2.0 ==================== */
+.dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 24px;
+}
+
+.dialog {
+    background: var(--background-color);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 320px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+}
+
+.dialog-title { font-size: 17px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+.dialog-body { font-size: 15px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px; }
+.dialog-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.dialog-actions .btn { width: auto; min-width: 72px; height: 36px; font-size: 14px; }
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+.btn-ghost:hover:not(:disabled) { background: var(--bg-secondary); }
+
+.btn-danger { background: var(--error-color); color: #FFFFFF; }
+.btn-danger:hover:not(:disabled) { background: var(--error-hover); }
+
+/* ==================== 글꼴 크기 설정 ==================== */
+[data-font-size="small"] { font-size: 14px; }
+[data-font-size="medium"] { font-size: 16px; }
+[data-font-size="large"] { font-size: 18px; }
+[data-font-size="xlarge"] { font-size: 20px; }
+
+/* ==================== 일정 첨부 토글 섹션 v2.0 ==================== */
+.schedule-attach-section {
+    margin-top: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.schedule-attach-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+}
+
+.schedule-attach-header:hover { background: var(--bg-secondary); }
+
+.schedule-attach-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.schedule-attach-fields { padding: 0 16px 16px; }
+
+.date-time-row { display: flex; gap: 8px; }
+.date-time-row input { flex: 1; }

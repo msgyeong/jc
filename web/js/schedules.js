@@ -8,7 +8,7 @@ const CATEGORY_LABELS = {
     event: '행사', meeting: '회의', training: '교육', holiday: '휴일', other: '기타'
 };
 const CATEGORY_COLORS = {
-    event: '#2563EB', meeting: '#F59E0B', training: '#059669', holiday: '#DC2626', other: '#6B7280'
+    event: '#1E3A5F', meeting: '#F59E0B', training: '#059669', holiday: '#DC2626', other: '#6B7280'
 };
 const CATEGORY_BADGE_CLASS = {
     event: 'badge-event', meeting: 'badge-meeting', training: 'badge-training', holiday: 'badge-holiday', other: 'badge-other'
@@ -34,6 +34,12 @@ async function loadSchedulesScreen() {
     if (calYear == null) calYear = now.getFullYear();
     if (calMonth == null) calMonth = now.getMonth();
     if (!calSelectedDate) calSelectedDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+    // 캘린더/헤더 복원 (상세에서 돌아왔을 때)
+    var calContainer = document.getElementById('calendar-container');
+    var dayHeader = document.getElementById('schedule-day-header');
+    if (calContainer) calContainer.style.display = '';
+    if (dayHeader) dayHeader.style.display = '';
 
     checkScheduleCreatePermission();
     await loadMonthSchedules();
@@ -385,9 +391,9 @@ async function loadLinkedNotice(linkedPostId) {
                 <div class="schedule-detail-section-title">연결된 공지</div>
                 <div class="schedule-detail-divider"></div>
                 <div class="linked-notice-banner" onclick="navigateTo('/posts/${linkedPostId}')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     <span class="linked-notice-text">${escapeHtml(res.post.title)}</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#93C5FD" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-hint)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
             </div>
         `;
@@ -520,7 +526,7 @@ async function loadAttendanceVote(scheduleId) {
                 </div>
                 <div class="attendance-vote-buttons">
                     <button class="vote-btn vote-attend${myVoteVal === 'attend' ? ' selected' : ''}${disabledClass}" onclick="submitVote('attend')" ${disabledAttr}>
-                        <span class="vote-icon" style="color:#2563EB">&#10003;</span>
+                        <span class="vote-icon" style="color:var(--color-primary)">&#10003;</span>
                         <span class="vote-label">참석</span>
                         <span class="vote-count">${summary.attend}</span>
                     </button>

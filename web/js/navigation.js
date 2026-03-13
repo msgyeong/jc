@@ -131,8 +131,19 @@ function navigateToScreen(screenName) {
             if (typeof loadPostsScreen === 'function') {
                 loadPostsScreen();
             }
+        } else if (screenName === 'settings') {
+            updateNavigation('profile');
+            if (typeof renderSettingsScreen === 'function') {
+                renderSettingsScreen();
+            }
         }
-        
+
+        // history.pushState for back navigation
+        if (!window._navPopstate) {
+            var stateObj = { screen: screenName };
+            history.pushState(stateObj, '', '#' + screenName);
+        }
+
         console.log('✅ 화면 전환 완료:', screenName);
     } else {
         console.error('❌ 화면을 찾을 수 없음:', screenName);
@@ -315,6 +326,11 @@ async function switchTab(tab) {
             console.error('알 수 없는 탭:', tab);
     }
     
+    // history.pushState for back navigation
+    if (!window._navPopstate) {
+        history.pushState({ screen: tab, tab: tab }, '', '#' + tab);
+    }
+
     console.log('✅ 탭 전환 완료:', tab);
 }
 
@@ -398,4 +414,44 @@ async function handleForgotPassword(event) {
     } finally {
         setButtonLoading(submitBtn, false);
     }
+}
+
+// ========== 뒤로가기 (popstate) ==========
+
+window.addEventListener('popstate', function(e) {
+    var state = e.state;
+    if (state && state.screen) {
+        window._navPopstate = true;
+        if (state.tab) {
+            switchTab(state.tab);
+        } else {
+            navigateToScreen(state.screen);
+        }
+        window._navPopstate = false;
+    } else {
+        // 홈 화면이면 종료 확인 다이얼로그 표시
+        var homeScreen = document.getElementById('home-screen');
+        if (homeScreen && homeScreen.classList.contains('active')) {
+            history.pushState({ screen: 'home' }, '', '#home');
+            showExitDialog();
+        }
+    }
+});
+
+function showExitDialog() {
+    var dialog = document.getElementById('exit-confirm-dialog');
+    if (dialog) dialog.classList.add('show');
+}
+
+function closeExitDialog() {
+    var dialog = document.getElementById('exit-confirm-dialog');
+    if (dialog) dialog.classList.remove('show');
+}
+
+function confirmExit() {
+    closeExitDialog();
+    // 실제로는 웹앱이므로 홈으로 이동
+    window.close();
+    // window.close()가 작동하지 않으면 히스토리 뒤로
+    history.back();
 }

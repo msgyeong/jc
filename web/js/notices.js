@@ -336,7 +336,7 @@ async function loadNoticeLinkedSchedule(scheduleId) {
         }
         container.innerHTML = `
             <div class="linked-schedule-banner" onclick="navigateTo('/schedules/${sched.id}')" style="margin-top:12px">
-                <div class="linked-schedule-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                <div class="linked-schedule-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
                 <div class="linked-schedule-info">
                     <div class="linked-schedule-label">연결된 일정</div>
                     <div class="linked-schedule-title">

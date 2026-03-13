@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영등포 JC - 회원관리 앱</title>
     <!-- Build: 2026-02-06 v2.1 -->
-    <link rel="stylesheet" href="styles/main.css?v=20260311g">
+    <link rel="stylesheet" href="styles/main.css?v=20260314">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563EB">
+    <meta name="theme-color" content="#FFFFFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="apple-touch-icon" href="/image/apple-touch-icon.png">
@@ -15,6 +15,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <!-- FOUC 방지: 다크모드/글꼴 크기 즉시 적용 -->
+    <script>
+    (function() {
+        var theme = localStorage.getItem('theme') || 'light';
+        if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        var fontSize = localStorage.getItem('font_size') || 'medium';
+        var sizes = { small: '14px', medium: '16px', large: '18px', xlarge: '20px' };
+        document.documentElement.style.fontSize = sizes[fontSize] || '16px';
+    })();
+    </script>
 </head>
 <body>
     <div id="app">
@@ -732,7 +742,7 @@
                         </div>
                         <div class="post-create-images-scroll">
                             <div id="post-create-images-list" class="post-form-images-list"></div>
-                            <input type="file" id="post-create-image-file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
+                            <input type="file" id="post-create-image-file" accept="image/jpeg,image/png,image/gif,image/webp" multiple style="display:none">
                             <button type="button" class="post-create-add-image-btn" id="post-create-upload-btn">
                                 <span class="post-create-add-image-icon">📷</span>
                                 <span class="post-create-add-image-text">추가</span>
@@ -993,6 +1003,31 @@
             </nav>
         </div>
 
+        <!-- 환경설정 화면 (이슈 #9) -->
+        <div id="settings-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="navigateToScreen('profile'); loadProfile();">
+                    <span class="icon">&larr;</span>
+                </button>
+                <h1 class="app-bar-title">환경설정</h1>
+            </div>
+            <div class="settings-screen-content" id="settings-screen-content">
+                <!-- settings.js가 렌더링 -->
+            </div>
+        </div>
+
+        <!-- 뒤로가기 확인 모달 (이슈 #10) -->
+        <div id="exit-confirm-dialog" class="dialog-overlay">
+            <div class="dialog">
+                <div class="dialog-title">앱을 나가시겠습니까?</div>
+                <div class="dialog-body">뒤로 버튼을 한 번 더 누르면 앱을 종료합니다.</div>
+                <div class="dialog-actions">
+                    <button class="btn btn-ghost" onclick="closeExitDialog()">취소</button>
+                    <button class="btn btn-danger" onclick="confirmExit()">나가기</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 관리자 페이지 (admin/super_admin 전용) -->
         <div id="admin-screen" class="screen">
             <div class="app-bar">
@@ -1077,22 +1112,23 @@
     </div>
 
     <!-- 앱 스크립트 -->
-    <script src="js/config.js?v=20260311g"></script>
-    <script src="js/api-client.js?v=20260311g"></script>
-    <script src="js/utils.js?v=20260311g"></script>
-    <script src="js/auth.js?v=20260311g"></script>
-    <script src="js/signup.js?v=20260311g"></script>
-    <script src="js/home.js?v=20260311g"></script>
-    <script src="js/posts.js?v=20260311g"></script>
-    <script src="js/notices.js?v=20260311g"></script>
-    <script src="js/schedules.js?v=20260311g"></script>
-    <script src="js/members.js?v=20260311g"></script>
-    <script src="js/profile.js?v=20260311g"></script>
-    <script src="js/admin.js?v=20260311g"></script>
-    <script src="js/push.js?v=20260311g"></script>
-    <script src="js/notifications.js?v=20260311g"></script>
-    <script src="js/notification-settings.js?v=20260311g"></script>
-    <script src="js/navigation.js?v=20260311g"></script>
-    <script src="js/app.js?v=20260311g"></script>
+    <script src="js/config.js?v=20260314"></script>
+    <script src="js/api-client.js?v=20260314"></script>
+    <script src="js/utils.js?v=20260314"></script>
+    <script src="js/auth.js?v=20260314"></script>
+    <script src="js/signup.js?v=20260314"></script>
+    <script src="js/home.js?v=20260314"></script>
+    <script src="js/posts.js?v=20260314"></script>
+    <script src="js/notices.js?v=20260314"></script>
+    <script src="js/schedules.js?v=20260314"></script>
+    <script src="js/members.js?v=20260314"></script>
+    <script src="js/profile.js?v=20260314"></script>
+    <script src="js/admin.js?v=20260314"></script>
+    <script src="js/push.js?v=20260314"></script>
+    <script src="js/notifications.js?v=20260314"></script>
+    <script src="js/notification-settings.js?v=20260314"></script>
+    <script src="js/settings.js?v=20260314"></script>
+    <script src="js/navigation.js?v=20260314"></script>
+    <script src="js/app.js?v=20260314"></script>
 </body>
 </html>

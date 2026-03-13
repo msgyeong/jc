@@ -159,7 +159,7 @@ async function loadFavorites() {
                             ? `<a href="tel:${m.phone.replace(/\D/g, '')}" class="call-btn" aria-label="${escapeHtml(name)}에게 전화걸기" onclick="event.stopPropagation()">${phoneSvg20}</a>`
                             : '';
                         return `<div class="member-card-v2" onclick="navigateTo('/members/${m.id}')" style="padding:10px 14px">
-                            <div class="member-avatar-v2" style="background:#DBEAFE;color:#1E40AF;width:36px;height:36px;font-size:14px">
+                            <div class="member-avatar-v2" style="background:var(--color-primary-bg);color:var(--color-primary);width:36px;height:36px;font-size:14px">
                                 ${m.profile_image ? `<img src="${m.profile_image}" alt="${escapeHtml(name)}">` : `<span>${escapeHtml(name[0])}</span>`}
                             </div>
                             <div class="member-info-v2">
@@ -214,8 +214,8 @@ function createMemberCard(member) {
     const position = member.position || '';
     const roleBadge = member.role === 'super_admin' ? '<span class="member-role-badge role-super">총관리자</span>'
         : member.role === 'admin' ? '<span class="member-role-badge role-admin">관리자</span>' : '';
-    const bgColor = '#DBEAFE';
-    const avatarTextColor = '#1E40AF';
+    const bgColor = 'var(--color-primary-bg)';
+    const avatarTextColor = 'var(--color-primary)';
 
     const callBtn = member.phone
         ? `<a href="tel:${member.phone.replace(/\D/g, '')}" class="call-btn" aria-label="${escapeHtml(name)}에게 전화걸기" onclick="event.stopPropagation()">${phoneSvg20}</a>`
@@ -272,7 +272,7 @@ async function showMemberDetailScreen(memberId) {
             <div class="detail-view">
                 <button class="btn-back" onclick="backToMemberList()">← 회원 목록</button>
                 <div class="profile-hero">
-                    <div class="profile-avatar-xl" style="background:#DBEAFE; color:#1E40AF">
+                    <div class="profile-avatar-xl" style="background:var(--color-primary-bg); color:var(--color-primary)">
                         ${m.profile_image
                             ? `<img src="${m.profile_image}" alt="${escapeHtml(m.name)}">`
                             : `<span>${escapeHtml((m.name || '?')[0])}</span>`

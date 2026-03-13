@@ -34,7 +34,7 @@ function renderProfile(p) {
         <div class="profile-v2">
             <!-- 프로필 히어로 -->
             <div class="profile-hero">
-                <div class="profile-avatar-xl" style="background:#DBEAFE; color:#1E40AF">
+                <div class="profile-avatar-xl" style="background:var(--color-primary-bg); color:var(--color-primary)">
                     ${p.profile_image
                         ? `<img src="${p.profile_image}" alt="${escapeHtml(p.name)}">`
                         : `<span>${escapeHtml((p.name || '?')[0])}</span>`
@@ -71,29 +71,30 @@ function renderProfile(p) {
 
             <div id="profile-title-history-container"></div>
 
-            <!-- 액션 버튼 -->
-            <div class="profile-actions">
-                <button class="profile-action-btn primary" onclick="showEditProfileForm()">
-                    <span class="profile-action-icon">&#9998;</span>
-                    프로필 수정
-                </button>
-                <button class="profile-action-btn secondary" onclick="showNotificationSettingsScreen()">
-                    <span class="profile-action-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
-                    알림 설정
-                </button>
-                <button class="profile-action-btn secondary" onclick="showChangePasswordDialog()">
-                    <span class="profile-action-icon">&#128274;</span>
-                    비밀번호 변경
-                </button>
+            <!-- 메뉴 -->
+            <div class="settings-group">
+                <div class="settings-item" onclick="showEditProfileForm()">
+                    <span class="settings-item-icon">&#9998;</span>
+                    <span class="settings-item-label">내 정보 수정</span>
+                    <span class="settings-item-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+                </div>
+                <div class="settings-item" onclick="showSettingsScreen()">
+                    <span class="settings-item-icon">&#9881;</span>
+                    <span class="settings-item-label">환경설정</span>
+                    <span class="settings-item-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+                </div>
                 ${['super_admin', 'admin'].includes(p.role) ? `
-                <button class="profile-action-btn admin" onclick="location.href='/admin/'">
-                    <span class="profile-action-icon">&#9881;</span>
-                    관리자 메뉴
-                </button>` : ''}
-                <button class="profile-action-btn danger" onclick="handleLogout()">
-                    <span class="profile-action-icon">&#10132;</span>
-                    로그아웃
-                </button>
+                <div class="settings-item" onclick="location.href='/admin/'">
+                    <span class="settings-item-icon">&#128736;</span>
+                    <span class="settings-item-label">관리자 메뉴</span>
+                    <span class="settings-item-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+                </div>` : ''}
+            </div>
+            <div class="settings-group">
+                <div class="settings-item settings-item--danger" onclick="handleLogout()">
+                    <span class="settings-item-icon">&#10132;</span>
+                    <span class="settings-item-label">로그아웃</span>
+                </div>
             </div>
         </div>
     `;

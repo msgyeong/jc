@@ -216,23 +216,31 @@ function removePostCreateImage(idx) {
     renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage);
 }
 
-// ── 작성 화면: 파일 선택 ──
+// ── 작성 화면: 파일 선택 (다중 파일 지원) ──
 async function handlePostCreateFileSelect(e) {
-    const file = e.target && e.target.files && e.target.files[0];
-    if (!file || getPostCreateImages().length >= MAX_POST_IMAGES) return;
+    var files = e.target && e.target.files;
+    if (!files || files.length === 0) return;
+    var currentCount = getPostCreateImages().length;
+    var remaining = MAX_POST_IMAGES - currentCount;
+    if (remaining <= 0) { e.target.value = ''; return; }
+
+    var filesToUpload = Array.from(files).slice(0, remaining);
     e.target.value = '';
-    const errEl = document.getElementById('post-create-error');
-    try {
-        const result = await apiClient.uploadPostImage(file);
-        if (result && result.url) {
-            postCreateImageUrls = getPostCreateImages().concat([result.url]).slice(0, MAX_POST_IMAGES);
-            renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage);
-        }
-        if (errEl) errEl.textContent = '';
-    } catch (err) {
-        if (errEl) {
-            errEl.textContent = err.message || '이미지 업로드에 실패했습니다.';
-            errEl.classList.add('show');
+    var errEl = document.getElementById('post-create-error');
+
+    for (var i = 0; i < filesToUpload.length; i++) {
+        try {
+            var result = await apiClient.uploadPostImage(filesToUpload[i]);
+            if (result && result.url) {
+                postCreateImageUrls = getPostCreateImages().concat([result.url]).slice(0, MAX_POST_IMAGES);
+                renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage);
+            }
+            if (errEl) { errEl.textContent = ''; errEl.classList.remove('show'); }
+        } catch (err) {
+            if (errEl) {
+                errEl.textContent = err.message || '이미지 업로드에 실패했습니다.';
+                errEl.classList.add('show');
+            }
         }
     }
 }

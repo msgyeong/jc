@@ -1,197 +1,231 @@
-# 테스터 에이전트 검증 결과 (2026-03-14)
+# 테스터 에이전트 검증 결과
 
-## 검증 대상: Push 알림, 참석/불참 기능, 참석자 명단, 환경설정
+## 세션 1 (2026-03-14 오전): Push 알림, 참석/불참, 환경설정 기본 검증
+## 세션 2 (2026-03-14 오후): 4대 신규 기능 검증
 
 ---
 
-## 1. Push 알림 기능
+# 세션 2: 4대 신규 기능 검증 결과
+
+## 1. 게시글 참석/불참
 
 ### 백엔드 API: ✅ 구현됨
-- **api/routes/notifications.js** — 알림 + 푸시 구독 라우터 통합
-  - `GET /api/notifications` — 알림 목록 (페이지네이션) ✅
-  - `POST /api/notifications/:id/read` — 읽음 처리 ✅ (⚠️ 기획서는 PUT이나 POST로 구현됨)
-  - `POST /api/notifications/read-all` — 전체 읽음 처리 ✅
-  - `GET /api/notifications/unread-count` — 안읽은 수 ✅
-  - `GET /api/notifications/settings` — 알림 설정 조회 ✅
-  - `PUT /api/notifications/settings` — 알림 설정 수정 ✅
-- **푸시 구독 엔드포인트 (pushRouter)**:
-  - `GET /api/push/vapid-key` — VAPID 공개키 반환 ✅
-  - `POST /api/push/subscribe` — 구독 등록 ✅
-  - `DELETE /api/push/subscribe` — 구독 해제 ✅
-- **api/utils/pushSender.js** — web-push 기반 발송 로직 ✅
-  - `sendPushToUser()` — 개별 사용자 발송 ✅
-  - `sendPushToAll()` — 전체 발송 (excludeUserId 지원) ✅
-  - 알림 유형별 설정 확인 후 발송 (TYPE_TO_SETTING 매핑) ✅
-  - notification_log 자동 기록 ✅
-  - 만료된 구독(410/404) 자동 삭제 ✅
-
-### 알림 생성 트리거: ✅ 구현됨
-| 유형 | 트리거 | 발송 방식 | 구현 위치 |
-|------|--------|-----------|-----------|
-| N-01 | 공지 등록 | sendPushToAll | api/routes/posts.js:507,536 |
-| N-02 | 일정 등록 | sendPushToAll | api/routes/schedules.js:171 |
-| N-03 | 일정 D-1 리마인더 | sendPushToUser (cron) | api/utils/reminderCron.js:44 |
-| N-04 | 일정 변경 | sendPushToAll | api/routes/schedules.js:237 |
-| N-05 | 댓글 등록 (일정) | sendPushToUser | api/routes/schedules.js:436 |
-| N-06 | 생일 알림 | sendPushToUser (cron) | api/utils/reminderCron.js:90 |
-
-### 생일 알림 cron: ✅ 구현됨
-- **api/utils/reminderCron.js** — node-cron 기반
-- 매일 09:00 KST 실행 (`0 0 * * *` UTC)
-- D-1 일정 리마인더 + 생일 알림 통합 실행
-- birthday_push 설정 ON인 사용자만 대상
-- 본인 제외 발송
-
-### Service Worker: ✅ 구현됨
-- **web/sw.js** — Push 이벤트 핸들링
-  - `push` 이벤트 → `showNotification()` ✅
-  - `notificationclick` → 클라이언트 포커스 or 새 창 ✅
-  - `install` → skipWaiting ✅
-  - `activate` → clients.claim ✅
-
-### Web Push 구독 (프론트): ✅ 구현됨
-- **web/js/push.js** — 완전한 구독/해제 모듈
-  - SW 등록 + 기존 구독 확인 ✅
-  - VAPID key 기반 PushManager.subscribe ✅
-  - 구독 유도 배너 (3회 dismiss 후 미표시) ✅
-  - iOS standalone 체크 + PWA 설치 안내 ✅
-  - 알림 클릭 → 화면 이동 (handleNotificationNavigation) ✅
+- **api/routes/posts.js** L766-951
+  - `POST /api/posts/:id/attendance` — 참석/불참 등록 ✅
+    - linked_schedule_id가 있으면 schedule_attendance 재활용 ✅
+    - 없으면 post_attendance 테이블 사용 ✅
+    - status 유효성 검증 (attending/not_attending) ✅
+  - `DELETE /api/posts/:id/attendance` — 참석 취소 ✅
+    - linked_schedule_id 분기 처리 동일 ✅
+  - `GET /api/posts/:id/attendance/summary` — 현황 요약 ✅
+    - 참석/불참 수 + my_status 반환 ✅
+    - linked_schedule_id에 따라 테이블 분기 ✅
+  - `GET /api/posts/:id/attendance/details` — 참석자/불참자 명단 ✅
+    - attending/not_attending 그룹으로 분리 반환 ✅
+- posts 테이블에 `attendance_enabled` 컬럼 추가 ✅
+- 게시글 작성 시 `attendance_enabled` 값 저장 ✅ (L456, L527)
 
 ### DB 마이그레이션: ✅
-- **006_web_push.sql** — push_subscriptions, notification_settings, notification_log 테이블
-- **011_birthday_push.sql** — notification_settings에 birthday_push 컬럼 추가
+- **014_post_attendance.sql**
+  - post_attendance 테이블 (post_id, user_id, status, UNIQUE) ✅
+  - posts 테이블에 attendance_enabled BOOLEAN 컬럼 ✅
 
 ### 프론트엔드 UI: ✅ 구현됨
-- **web/js/notifications.js** — 알림 센터 화면
-  - 알림 목록 렌더링 (유형별 아이콘) ✅
-  - 개별 읽음 처리 + 전체 읽음 ✅
-  - 🔔 앱바 배지 (99+ 표시) ✅
-  - 시간 표시 (방금/N분 전/N시간 전/어제/N일 전) ✅
-  - 빈 상태/에러 상태 UI ✅
-  - 알림 클릭 → 해당 화면 이동 ✅
-- **web/index.html** — notifications-screen 정의 (L932) ✅
-- **web/index.html** — 🔔 아이콘 + 배지 (L536-541) ✅
+- **web/js/posts.js** L883-954
+  - `loadPostAttendance(post)` — 참석 UI 렌더링 ✅
+    - attendance_enabled || linked_schedule_id 조건 체크 ✅
+    - 참석 N / 불참 N 카운트 표시 ✅
+    - 참석/불참 버튼 (내 상태 활성화 표시) ✅
+  - `submitPostAttendance(status, postId)` — API 호출 ✅
+  - `loadPostAttendeeList(postId)` — 참석자/불참자 그룹별 명단 ✅
+    - 참석 (N명) / 불참 (N명) 그룹 분리 ✅
+    - 이름 쉼표 구분 나열 ✅
+  - 글쓰기 폼에 참석 확인 토글 (`renderAttendanceToggleSection`) ✅
+    - toggle-switch로 attendance_enabled on/off ✅
 
-### 프로덕션 DB 반영: ✅
-- push_subscriptions ✅
-- notification_settings ✅
-- notification_log ✅
+### 프로덕션 DB: ✅ (post_attendance 테이블 확인됨)
 
 ### ⚠️ 발견 이슈
-1. **읽음 처리 HTTP 메소드 불일치**: 기획서는 `PUT /api/notifications/:id/read`이나, 실제 구현은 `POST`
-   - 프론트엔드(notifications.js:50)도 POST로 호출하므로 **동작에는 문제 없음**
-2. **notification-settings.js에 birthday_push 토글 미표시**: 알림 설정 화면에 4개 토글(공지/일정/리마인더/댓글)만 렌더링되고, **생일 알림 토글이 UI에 없음**
-   - 백엔드는 birthday_push 지원하지만 프론트에서 토글을 안 보여줌
+1. **미응답자 명단 미표시**: details API가 참석/불참만 반환하고 미응답자 목록은 미포함 (전체 회원 대비 미응답 계산 없음)
 
 ---
 
-## 2. 참석/불참 기능
+## 2. Push 알림 설정 (글쓰기 폼)
 
-### 구현 방식 확인
-⚠️ **두 가지 참석 시스템이 병존**:
+### 백엔드 API: ✅ 구현됨
+- **api/routes/posts.js** L537-570
+  - push_setting 파라미터 처리 ✅
+    - `immediate` → 즉시 sendPushToAll (N-01) ✅
+    - `scheduled` → createScheduledNotifications 등록 ✅
+    - `d_day` → createScheduledNotifications 등록 ✅
+    - `none` → 공지인 경우에도 기본 즉시 알림 발송 (하위 호환) ✅
+  - push_scheduled_at, push_event_date 전달 ✅
 
-#### (A) schedule_attendance 방식 (schedules.js 라우터 내장)
-- **api/routes/schedules.js** L492-718에 엔드포인트 존재
-  - `POST /api/schedules/:id/attendance` ✅
-  - `DELETE /api/schedules/:id/attendance` ✅
-  - `GET /api/schedules/:id/attendance/summary` ✅
-  - `GET /api/schedules/:id/attendance/details` ✅
-  - `GET /api/schedules/:id/attendance/export` ✅ (CSV)
-- status: `attending` / `not_attending`
-- 마이그레이션: **012_schedule_attendance.sql** ✅
+- **api/cron/notification-scheduler.js** ✅
+  - `startNotificationScheduler()` — 5분 간격 cron ✅
+  - scheduled_notifications에서 pending + scheduled_at <= NOW() 조회 ✅
+  - notification_type별 분기:
+    - `immediate` / `scheduled` → 📢 새 알림 ✅
+    - `d_day_7`, `d_day_3`, `d_day_1`, `d_day_0` → ⏰ D-N 일정 알림 ✅
+  - 발송 후 status='sent', sent_at=NOW() 업데이트 ✅
+  - `createScheduledNotifications()` — 예약 알림 등록 함수 ✅
+    - immediate → 즉시 pending 등록 ✅
+    - scheduled → 지정 시간에 등록 ✅
+    - d_day → D-7/D-3/D-1/D-0 각각 등록 (과거 날짜 스킵) ✅
 
-#### (B) attendance_config + attendance_votes 방식 (attendance.js 별도 라우터)
-- **api/routes/attendance.js** — 투표 설정 기반 시스템
-  - `POST /api/attendance` — 투표 설정 생성
-  - `PUT /api/attendance/:configId` — 설정 수정
-  - `GET /api/attendance/:scheduleId` — 현황 조회
-  - `POST /api/attendance/:configId/vote` — 투표 (attend/absent/undecided)
-  - `GET /api/attendance/:configId/results` — 상세 결과
-  - `POST /api/attendance/:configId/close` — 조기 마감
+- **api/server.js** L23, L142 — startNotificationScheduler() 등록 ✅
 
-### 백엔드 API: ✅ 구현됨 (두 시스템 모두)
 ### DB 마이그레이션: ✅
-- schedule_attendance 테이블 ✅ (프로덕션 확인)
-- attendance_config 테이블 ✅ (프로덕션 확인)
-- attendance_votes 테이블 ✅ (프로덕션 확인)
+- **017_scheduled_notifications.sql**
+  - scheduled_notifications 테이블 (post_id, schedule_id, notification_type, scheduled_at, status) ✅
+  - 인덱스 3개 ✅
 
 ### 프론트엔드 UI: ✅ 구현됨
-- **web/js/schedules.js** — 일정 상세 화면에서:
-  - 출석 투표 섹션 (attendance_config 방식) ✅
-    - 참석/불참/미정 3버튼 ✅
-    - 투표 결과 프로그레스바 ✅
-    - 마감 표시 ✅
-    - 응답 N명 / 전체 N명 표시 ✅
-  - 참석자 명단 섹션 (loadAttendeeList) ✅
-    - 참석 투표한 회원 이름 나열 (5명 + 외 N명) ✅
-  - 투표 제출 → 즉시 UI 갱신 ✅
-  - 일정 등록 시 참석 투표 설정 옵션 (접이식) ✅
-    - 투표 유형 선택 (이사회/월례회/일반) ✅
-    - 마감일 설정 ✅
+- **web/js/posts.js** L974-1054
+  - `renderPushSettingSection()` — 4종 라디오 ✅
+    - 즉시 발송 (기본 선택) ✅
+    - 예약 발송 (날짜/시간 입력) ✅
+    - 일정 연동 알림 (일정 미첨부 시 disabled) ✅
+    - 알림 없음 ✅
+  - D-day 체크박스 (D-7/D-3/D-1/당일) ✅ — checked 기본값 ✅
+  - 예약 발송 선택 시 날짜/시간 필드 표시/숨김 ✅
+  - `handlePushSettingChange(value)` — UI 토글 ✅
+  - `getPushSettingPayload()` — API 전달 객체 생성 ✅
+    - push_setting, push_scheduled_at, push_d_day_options 포함 ✅
+
+### 프로덕션 DB: ✅ (scheduled_notifications 테이블 확인됨)
 
 ### ⚠️ 발견 이슈
-1. **두 참석 시스템 병존**: schedule_attendance API와 attendance_config/votes API가 모두 존재. 프론트엔드는 **attendance_config 방식만 사용** (`/attendance/:scheduleId`). schedule_attendance 엔드포인트는 프론트에서 호출하지 않아 사실상 미사용.
-2. **접기/펼치기 명단 UI 미구현**: 참석자 명단이 5명까지만 표시되고 "외 N명"으로 축약되지만, 클릭하여 전체 명단을 보는 접기/펼치기 기능은 없음.
+1. **D-day 옵션 개별 선택 미반영**: 프론트에서 push_d_day_options 배열을 보내지만, 백엔드 createScheduledNotifications()는 **항상 4개(D-7/D-3/D-1/D-0) 모두 등록**하고 프론트 선택값을 무시함. eventDate만 사용하고 push_d_day_options는 미처리.
 
 ---
 
-## 3. 참석자 명단 표시
+## 3. 직책 관리
 
-### 프론트엔드: ⚠️ 부분 구현
-- 참석자 이름 5명 + "외 N명" 표시 ✅
-- **접기/펼치기 미구현** ❌ — 전체 명단을 보려면 별도 동작이 없음
-- 참석/불참 그룹별 분리 표시 ❌ — 참석자만 표시하고 불참자/미정/미응답 명단은 프론트에서 미표시
-- 관리자 웹(web/admin/)에서 참석 현황 확인 ❌ — admin/js/schedules.js에 attendance 관련 코드 없음
+### 백엔드 API: ✅ 구현됨
+- **api/routes/admin.js** L2400-2481
+  - `PUT /api/admin/members/:id/position` ✅
+    - position_id 유효성 + positions 테이블 확인 ✅
+    - 트랜잭션: users.position_id 업데이트 + position_history 기록 ✅
+    - 감사 로그(audit_log) 기록 ✅
+  - `GET /api/admin/members/:id/position-history` ✅
+    - position_history JOIN positions + users(assigned_by) ✅
+    - assigned_at DESC 정렬 ✅
+
+### DB 마이그레이션: ✅
+- **015_position_history.sql**
+  - users.position_id FK 추가 ✅
+  - position_history 테이블 (user_id, position_id, assigned_at, assigned_by, notes) ✅
+
+### 프론트엔드 (관리자 웹): ⚠️ 부분 구현
+- **web/admin/js/members.js** L177-219
+  - 회원 상세 모달에 직책 드롭다운 (`<select>`) ✅
+  - 저장 버튼 ✅
+  - `saveMemberPosition()` 함수 ✅
+  - ⚠️ **API 호출 불일치**: `PUT /api/admin/members/:id` (일반 수정)로 position 문자열을 보냄, `PUT /api/admin/members/:id/position` (position_id 전용)을 사용하지 않음
+    - position_history 자동 기록이 **작동하지 않을 수 있음**
+  - 직책 변동 이력 GET 호출 ❌ — 모달에서 이력 표시 없음
+
+### 프론트엔드 (앱): ✅ 구현됨
+- **web/js/profile.js** L43, L61
+  - 프로필 히어로에 직책 뱃지 (getPositionBadgeHtml) ✅
+  - 직장 정보 섹션에 직책 표시 ✅
+- **web/js/members.js** L27-36, L251, L295
+  - `getPositionBadgeHtml()` — 7종 색상 매핑 ✅
+    - 회장(pos-president), 수석부회장(pos-senior-vp), 부회장(pos-vp), 총무(pos-secretary), 이사(pos-director), 감사(pos-auditor), 일반회원(pos-member) ✅
+  - 회원 목록 카드에 직책 뱃지 표시 ✅
+  - 회원 상세에 직책 뱃지 표시 ✅
+- **web/styles/main.css** L5729-5741 — 직책 뱃지 CSS ✅
+
+### 프로덕션 DB: ✅
+- position_history 테이블 ✅
+- users.position_id 컬럼 ✅
+
+### ⚠️ 발견 이슈
+1. **관리자 직책 변경 API 불일치**: saveMemberPosition()이 `/api/admin/members/:id` (일반 수정)를 호출하여 position 문자열만 업데이트. `/api/admin/members/:id/position` (position_id + position_history 기록)을 사용하지 않아 **직책 변동 이력이 기록되지 않음**
+2. **직책 변동 이력 UI 없음**: 관리자 회원 상세에서 이력 조회/표시 없음 (인물카드 JC 이력 탭에서만 확인 가능)
 
 ---
 
-## 4. DB 마이그레이션 실행 여부 (프로덕션)
+## 4. 인물카드 (관리자)
 
-### ✅ 프로덕션 DB에 확인된 테이블 (7개)
+### 백엔드 API: ✅ 구현됨
+- **api/routes/admin.js** L2491-2611
+  - `GET /api/admin/members/:id/dossier` ✅
+    - users 전체 필드 + position_history + member_activities 통합 조회 ✅
+    - Promise.all 병렬 쿼리 ✅
+  - `PUT /api/admin/members/:id/dossier` ✅
+    - hobbies, specialties, special_notes, admin_memo 등 업데이트 ✅
+    - educations, careers, families (JSONB) 업데이트 ✅
+    - 감사 로그 기록 ✅
+  - `POST /api/admin/members/:id/activities` — 활동 이력 추가 (L253 프론트에서 호출)
+  - `DELETE /api/admin/members/:id/activities/:activityId` — 활동 이력 삭제 (L264 프론트에서 호출)
+
+### DB 마이그레이션: ✅
+- **016_member_dossier.sql**
+  - users: admin_memo, specialties 컬럼 추가 ✅
+  - users: educations, careers, families JSONB 컬럼 (조건부 추가) ✅
+  - member_activities 테이블 (activity_type CHECK, title, date, description) ✅
+
+### 프론트엔드 UI: ✅ 구현됨
+- **web/admin/js/member-dossier.js** — 453줄, 완전 구현
+  - `openMemberDossier(memberId)` — dossier API 호출 ✅
+  - **8탭 네비게이션** ✅:
+    1. 기본정보 (이름/이메일/연락처/생년월일/성별/주소/회사/직책/부서/업종/긴급연락처 등) ✅
+    2. JC 이력 (position_history 테이블 표시 + 특이사항) ✅
+    3. 학력 (educations JSONB 추가/삭제 모달) ✅
+    4. 활동 (member_activities CRUD) ✅
+    5. 경력 (careers JSONB 추가/삭제 모달) ✅
+    6. 가족 (families JSONB 추가/삭제 모달) ✅
+    7. 취미/특기 (hobbies 텍스트 저장) ✅
+    8. 관리자 메모 (admin_memo 텍스트 저장 — "관리자만 볼 수 있습니다" 안내) ✅
+  - 프로필 카드 (사진/이름/직책뱃지/이메일/연락처/회사) ✅
+  - 프로필 사진 표시 (`profile_image` → img 태그, 없으면 이니셜) ✅
+  - JSONB CRUD:
+    - 학력: addDossierEducation → 모달(학교/전공/학위/입학/졸업) → saveDossierField ✅
+    - 경력: addDossierCareer → 모달(회사/직책/시작/종료/설명) → saveDossierField ✅
+    - 가족: addDossierFamily → 모달(이름/관계/생년월일/연락처) → saveDossierField ✅
+    - 삭제: removeDossierJsonbItem(field, index) → splice + save ✅
+  - 활동 이력:
+    - addDossierActivity → 모달(유형 select/제목/날짜/설명) → POST API ✅
+    - deleteDossierActivity(id) → DELETE API ✅
+  - refreshDossier() — 저장 후 데이터 갱신 ✅
+  - 관리자 회원 목록에서 "인물카드" 버튼 진입 ✅ (members.js L160)
+
+### 프로덕션 DB: ✅
+- member_activities 테이블 ✅
+- users.admin_memo ✅
+- users.specialties ✅
+- users.educations ✅
+- users.careers ✅
+- users.families ✅
+- users.hobbies ✅
+- users.position_id ✅
+
+### ⚠️ 발견 이슈: 없음 — 완전 구현
+
+---
+
+## 5. 프로덕션 DB 테이블/컬럼 확인
+
+### 신규 테이블 (4개): ✅ 전부 존재
 | 테이블명 | 존재 |
 |----------|------|
-| attendance_config | ✅ |
-| attendance_votes | ✅ |
-| notification_log | ✅ |
-| notification_settings | ✅ |
-| push_subscriptions | ✅ |
-| schedule_attendance | ✅ |
-| user_settings | ✅ |
+| post_attendance | ✅ |
+| position_history | ✅ |
+| scheduled_notifications | ✅ |
+| member_activities | ✅ |
 
----
-
-## 5. 환경설정 기능
-
-### 백엔드 API: ✅ 구현됨
-- **api/routes/settings.js**
-  - `GET /api/settings` — 환경설정 조회 (theme, font_size) ✅
-  - `PUT /api/settings` — 환경설정 변경 (유효성 검증 포함) ✅
-- 마이그레이션: **013_user_settings.sql** ✅
-
-### 프론트엔드 UI: ✅ 구현됨
-- **web/js/settings.js** — 환경설정 화면
-  - 다크모드 토글 ✅ (localStorage + 서버 동기화)
-  - 글꼴 크기 선택 (작게/보통/크게/아주 크게) ✅ (미리보기 포함)
-  - 알림 설정 진입 (`showNotificationSettingsScreen()`) ✅
-  - 캐시 삭제 ✅
-  - 비밀번호 변경 ✅
-  - 로그아웃 ✅
-  - 회원 탈퇴 (비밀번호 확인 + 사유 입력) ✅
-  - 이용약관 / 개인정보 처리방침 (placeholder) ⚠️
-  - 앱 버전 표시 ✅
-- **web/js/notification-settings.js** — 알림 설정 화면
-  - 전체 알림 마스터 토글 ✅
-  - 공지 알림 토글 ✅
-  - 일정 알림 토글 ✅
-  - 일정 리마인더 토글 ✅
-  - 댓글 알림 토글 ✅
-  - 생일 알림 토글 ❌ (UI에 미표시)
-  - 푸시 상태 표시 (활성/비활성) ✅
-  - 푸시 재등록 버튼 ✅
-
-### ⚠️ 발견 이슈
-1. **알림 설정 토글 5개/6개 불일치**: 기획서 요구 6개(공지/일정/리마인더/댓글/생일/전체) 중 **생일 알림 토글이 UI에 미표시** (4개 유형 + 전체 = 5개만 보임)
-2. **이용약관/개인정보 처리방침**: `alert()` placeholder → 실제 내용 미구현
+### users 테이블 신규 컬럼 (7개): ✅ 전부 존재
+| 컬럼명 | 존재 |
+|--------|------|
+| hobbies | ✅ |
+| specialties | ✅ |
+| admin_memo | ✅ |
+| educations | ✅ |
+| careers | ✅ |
+| families | ✅ |
+| position_id | ✅ |
 
 ---
 
@@ -199,15 +233,26 @@
 
 | 기능 | 백엔드 API | DB 마이그레이션 | 프론트엔드 UI | 프로덕션 DB |
 |------|-----------|----------------|-------------|------------|
-| Push 알림 | ✅ 구현됨 | ✅ | ✅ 구현됨 | ✅ |
-| 참석/불참 | ✅ 구현됨 (2개 시스템) | ✅ | ✅ 구현됨 | ✅ |
-| 참석자 명단 | ✅ 구현됨 | ✅ | ⚠️ 부분 구현 | ✅ |
-| 환경설정 | ✅ 구현됨 | ✅ | ✅ 구현됨 | ✅ |
+| 게시글 참석/불참 | ✅ 구현됨 | ✅ | ✅ 구현됨 | ✅ |
+| Push 알림 설정 | ✅ 구현됨 | ✅ | ✅ 구현됨 | ✅ |
+| 직책 관리 | ✅ 구현됨 | ✅ | ⚠️ 부분 구현 | ✅ |
+| 인물카드 | ✅ 구현됨 | ✅ | ✅ 구현됨 | ✅ |
 
-### 미구현/부분 구현 항목 목록
-1. **[알림설정] 생일 알림 토글 UI 미표시** — notification-settings.js에 birthday_push 토글 추가 필요
-2. **[참석명단] 접기/펼치기 기능 없음** — 5명 초과 시 전체 명단 보기 불가
-3. **[참석명단] 불참/미정/미응답 그룹별 명단 미표시** — 참석자만 표시
-4. **[관리자웹] 참석 현황 미구현** — admin/js/schedules.js에 attendance 관련 코드 없음
-5. **[참석시스템] 두 시스템 병존** — schedule_attendance vs attendance_config/votes, 프론트는 후자만 사용
-6. **[환경설정] 이용약관/개인정보 처리방침 내용 미구현** — alert() placeholder
+### 미구현/버그 항목 (3건)
+
+| # | 기능 | 이슈 | 심각도 |
+|---|------|------|--------|
+| 1 | Push 알림 설정 | D-day 옵션 개별 선택값이 백엔드에서 무시됨 (항상 4개 모두 등록) | ⚠️ 중간 |
+| 2 | 직책 관리 | saveMemberPosition()이 `/position` API 대신 일반 수정 API 호출 → position_history 미기록 | ⚠️ 중간 |
+| 3 | 직책 관리 | 관리자 모달에서 직책 변동 이력 표시 없음 (인물카드에서만 확인 가능) | ⚠️ 낮음 |
+
+### 기존 이슈 (세션 1에서 발견, 여전히 유효)
+| # | 기능 | 이슈 |
+|---|------|------|
+| 4 | 알림 설정 | 생일 알림 토글 UI 미표시 |
+| 5 | 이용약관 | alert() placeholder |
+
+---
+
+*검증 완료: 2026-03-14*
+*테스터 에이전트: 코드 읽기 전용 분석*

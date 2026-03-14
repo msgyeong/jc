@@ -126,6 +126,7 @@ async function loadSchedules() {
                 '<td class="text-sub">' + escapeHtml(s.location || '-') + '</td>' +
                 '<td>' + scheduleCatBadge(s.category) + '</td>' +
                 '<td><div class="action-btns">' +
+                    '<button class="btn btn-ghost btn-sm" onclick="showAttendanceModal(' + s.id + ')">참석</button>' +
                     '<button class="btn btn-ghost btn-sm" onclick="openScheduleModal(' + s.id + ')">수정</button>' +
                     '<button class="btn btn-danger btn-sm" onclick="confirmDeleteSchedule(' + s.id + ')">삭제</button>' +
                 '</div></td>' +
@@ -255,5 +256,92 @@ async function deleteSchedule(id) {
         loadSchedules();
     } catch (err) {
         showAdminToast('삭제 실패: ' + err.message, 'error');
+    }
+}
+
+// ========== 참석 현황 모달 ==========
+
+async function showAttendanceModal(scheduleId) {
+    var html =
+        '<div class="modal">' +
+            '<div class="modal-header"><h3>참석 현황</h3>' +
+                '<button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
+            '</div>' +
+            '<div class="modal-body" id="attendance-modal-body">' +
+                '<div style="text-align:center;padding:24px;color:#9CA3AF">로딩 중...</div>' +
+            '</div>' +
+            '<div class="modal-footer">' +
+                '<button class="btn btn-ghost btn-sm" onclick="exportAttendanceCsv(' + scheduleId + ')">CSV 내보내기</button>' +
+                '<button class="btn btn-primary btn-sm" onclick="closeModal()">닫기</button>' +
+            '</div>' +
+        '</div>';
+
+    openModal(html);
+
+    try {
+        var summaryRes = await AdminAPI.get('/api/schedules/' + scheduleId + '/attendance/summary');
+        var detailRes = await AdminAPI.get('/api/schedules/' + scheduleId + '/attendance/details');
+
+        if (!summaryRes.success || !detailRes.success) throw new Error('데이터 조회 실패');
+
+        var s = summaryRes.data;
+        var d = detailRes.data;
+
+        var bodyHtml = '';
+
+        // 통계 요약
+        bodyHtml += '<div style="display:flex;gap:12px;margin-bottom:16px">'
+            + '<div style="flex:1;text-align:center;padding:12px;background:#F0FDF4;border-radius:8px">'
+            + '<div style="font-size:20px;font-weight:700;color:#16A34A">' + s.attending + '</div>'
+            + '<div style="font-size:12px;color:#6B7280">참석</div></div>'
+            + '<div style="flex:1;text-align:center;padding:12px;background:#FEF2F2;border-radius:8px">'
+            + '<div style="font-size:20px;font-weight:700;color:#DC2626">' + s.not_attending + '</div>'
+            + '<div style="font-size:12px;color:#6B7280">불참</div></div>'
+            + '<div style="flex:1;text-align:center;padding:12px;background:#F9FAFB;border-radius:8px">'
+            + '<div style="font-size:20px;font-weight:700;color:#9CA3AF">' + s.no_response + '</div>'
+            + '<div style="font-size:12px;color:#6B7280">미응답</div></div>'
+            + '</div>';
+
+        bodyHtml += '<div style="font-size:13px;color:#6B7280;margin-bottom:12px">전체 회원: ' + s.total_members + '명</div>';
+
+        // 그룹별 명단
+        function renderAdminGroup(title, color, members) {
+            if (!members || members.length === 0) return '<div style="margin-bottom:12px"><div style="font-weight:600;font-size:13px;color:' + color + ';margin-bottom:4px">' + title + ' (0명)</div><div style="font-size:13px;color:#9CA3AF">없음</div></div>';
+            var names = members.map(function(m) {
+                var pos = m.jc_position ? ' <span style="color:#9CA3AF;font-size:12px">(' + escapeHtml(m.jc_position) + ')</span>' : '';
+                return escapeHtml(m.name) + pos;
+            }).join(', ');
+            return '<div style="margin-bottom:12px"><div style="font-weight:600;font-size:13px;color:' + color + ';margin-bottom:4px">' + title + ' (' + members.length + '명)</div><div style="font-size:13px;line-height:1.6">' + names + '</div></div>';
+        }
+
+        bodyHtml += renderAdminGroup('참석', '#16A34A', d.attending);
+        bodyHtml += renderAdminGroup('불참', '#DC2626', d.not_attending);
+        if (d.no_response) {
+            bodyHtml += renderAdminGroup('미응답', '#9CA3AF', d.no_response);
+        }
+
+        document.getElementById('attendance-modal-body').innerHTML = bodyHtml;
+    } catch (err) {
+        document.getElementById('attendance-modal-body').innerHTML = '<div style="text-align:center;padding:24px;color:#DC2626">참석 현황을 불러올 수 없습니다.<br><span style="font-size:13px;color:#9CA3AF">' + escapeHtml(err.message) + '</span></div>';
+    }
+}
+
+async function exportAttendanceCsv(scheduleId) {
+    try {
+        var token = localStorage.getItem('auth_token');
+        var res = await fetch('/api/schedules/' + scheduleId + '/attendance/export', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error('내보내기 실패');
+        var blob = await res.blob();
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'attendance_' + scheduleId + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        showAdminToast('CSV 파일이 다운로드되었습니다.');
+    } catch (err) {
+        showAdminToast('CSV 내보내기 실패: ' + err.message, 'error');
     }
 }

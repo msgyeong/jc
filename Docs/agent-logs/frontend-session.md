@@ -1,4 +1,35 @@
-# 프론트엔드 세션 로그 — 2026-03-14
+# 프론트엔드 세션 로그 — 2026-03-14 (업데이트)
+
+## 테스터 검증 후 수정 (세션 2)
+
+### 수정 1: 생일 알림 토글 UI 추가
+- notification-settings.js에 birthday_push 토글 추가 (하트 아이콘)
+- 기존 4개(공지/일정/리마인더/댓글) + 생일 = 5개 유형 토글
+
+### 수정 2+3: 참석자 명단 접기/펼치기 + 그룹별 표시
+- loadAttendeeList()를 schedule_attendance API(/schedules/:id/attendance/details)로 전환
+- 참석/불참/미응답 3그룹 분리 표시
+- 5명 초과 시 접기/펼치기 버튼, 5명 이하면 바로 표시
+- CSS: .attendee-group, .attendee-toggle-btn 등 추가
+
+### 수정 4: 관리자 웹 참석 현황
+- admin/js/schedules.js에 '참석' 버튼 + showAttendanceModal() 추가
+- 참석/불참/미응답 통계 카드 + 그룹별 명단(직책 포함)
+- CSV 내보내기 버튼 (GET /api/schedules/:id/attendance/export)
+
+### 수정 5: 참석 시스템 통합 (schedule_attendance)
+- loadAttendanceVote() → schedule_attendance API(/schedules/:id/attendance/summary) 사용
+- submitVote() → submitAttendance()로 교체 (POST /schedules/:id/attendance)
+- 기존 attendance_config/votes 관련 코드 제거 (currentAttendanceConfigId, /attendance/ 경로)
+- 참석/불참 2버튼으로 단순화 (미정 제거)
+
+### 수정 6: 이용약관/개인정보 처리방침
+- alert() placeholder → 실제 서브화면으로 교체
+- showTermsPage(): 6개 조항 포함 이용약관
+- showPrivacyPage(): 수집항목/이용목적/보유기간/제3자제공/파기/책임자
+- CSS: .legal-content 스타일 추가
+
+---
 
 ## 작업 요약
 CEO 피드백 "파란색 일색 촌스러움, 심플하고 세련되게" 반영하여 전체 디자인 리뉴얼 + 기능 구현 9건 처리.

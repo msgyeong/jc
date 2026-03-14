@@ -5648,6 +5648,26 @@ input[type="date"]:focus {
 .attendance-details-group { margin-bottom: 8px; }
 .attendance-details-label { font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
 
+/* 참석자 명단 그룹별 표시 */
+.attendee-summary { font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
+.attendee-group { margin-bottom: 10px; }
+.attendee-group-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.attendee-group-label.attendee-attend { color: var(--color-primary, #1E3A5F); }
+.attendee-group-label.attendee-absent { color: var(--color-error, #DC2626); }
+.attendee-group-label.attendee-noresponse { color: var(--color-text-hint, #9CA3AF); }
+.attendee-group-names { font-size: 14px; color: var(--text-primary); line-height: 1.6; }
+.attendee-toggle-btn {
+    background: none; border: 1px solid var(--border-color); border-radius: 8px;
+    color: var(--color-primary, #1E3A5F); font-size: 13px; font-weight: 500;
+    padding: 6px 14px; cursor: pointer; margin-top: 4px;
+}
+
+/* 이용약관/개인정보 처리방침 */
+.legal-content { font-size: 14px; color: var(--text-primary); line-height: 1.7; }
+.legal-content h4 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+.legal-content p { margin-bottom: 12px; }
+.legal-content strong { font-weight: 600; }
+
 /* ==================== 다이얼로그 v2.0 ==================== */
 .dialog-overlay {
     position: fixed;

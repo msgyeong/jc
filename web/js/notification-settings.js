@@ -67,6 +67,10 @@ function renderNotificationSettingsUI(s) {
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
         '댓글 알림', '내 글에 댓글이 달리면 알림', 'comment_push', s.comment_push !== false)
 
+    + renderSettingsItem(
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+        '생일 알림', '회원 생일에 축하 알림', 'birthday_push', s.birthday_push !== false)
+
     + '</div>'
 
     // 푸시 상태

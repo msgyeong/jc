@@ -253,13 +253,48 @@ async function handleWithdraw() {
     }
 }
 
-// 이용약관 / 개인정보 처리방침 (placeholder)
+// 이용약관
 function showTermsPage() {
-    alert('이용약관 페이지는 준비 중입니다.');
+    var container = document.getElementById('settings-screen-content');
+    if (!container) return;
+
+    container.innerHTML = ''
+        + '<div style="padding:16px 0">'
+        + '<button class="btn-back" onclick="renderSettingsScreen()" style="margin-bottom:12px;background:none;border:none;color:var(--text-primary);font-size:15px;cursor:pointer">&larr; 돌아가기</button>'
+        + '<h3 style="font-size:17px;font-weight:600;margin-bottom:16px">이용약관</h3>'
+        + '<div class="legal-content">'
+        + '<h4>영등포 JC 회원관리 앱 이용약관</h4>'
+        + '<p><strong>제1조 (목적)</strong><br>이 약관은 영등포청년회의소(이하 "회의소")가 제공하는 회원관리 앱(이하 "서비스")의 이용 조건 및 절차에 관한 사항을 규정함을 목적으로 합니다.</p>'
+        + '<p><strong>제2조 (이용자격)</strong><br>서비스는 회의소 회원으로 가입 승인된 자에 한하여 이용할 수 있습니다.</p>'
+        + '<p><strong>제3조 (서비스의 내용)</strong><br>회의소는 다음과 같은 서비스를 제공합니다:<br>① 공지사항 및 게시판 기능<br>② 일정 관리 및 참석 여부 확인<br>③ 회원 정보 조회<br>④ 푸시 알림 서비스</p>'
+        + '<p><strong>제4조 (이용자의 의무)</strong><br>① 이용자는 타인의 개인정보를 부정 사용하거나 유출해서는 안 됩니다.<br>② 서비스를 통해 취득한 정보를 회의소의 사전 승인 없이 외부에 공개하거나 상업적으로 이용할 수 없습니다.</p>'
+        + '<p><strong>제5조 (서비스 변경 및 중단)</strong><br>회의소는 운영상 필요에 따라 서비스의 전부 또는 일부를 변경하거나 중단할 수 있으며, 사전에 공지합니다.</p>'
+        + '<p><strong>제6조 (탈퇴 및 자격상실)</strong><br>① 회원은 언제든지 탈퇴를 요청할 수 있습니다.<br>② 탈퇴 시 작성한 게시글 및 개인정보는 삭제됩니다.</p>'
+        + '<p style="color:var(--text-secondary);font-size:13px;margin-top:16px">시행일: 2026년 1월 1일</p>'
+        + '</div>'
+        + '</div>';
 }
 
+// 개인정보 처리방침
 function showPrivacyPage() {
-    alert('개인정보 처리방침 페이지는 준비 중입니다.');
+    var container = document.getElementById('settings-screen-content');
+    if (!container) return;
+
+    container.innerHTML = ''
+        + '<div style="padding:16px 0">'
+        + '<button class="btn-back" onclick="renderSettingsScreen()" style="margin-bottom:12px;background:none;border:none;color:var(--text-primary);font-size:15px;cursor:pointer">&larr; 돌아가기</button>'
+        + '<h3 style="font-size:17px;font-weight:600;margin-bottom:16px">개인정보 처리방침</h3>'
+        + '<div class="legal-content">'
+        + '<h4>영등포 JC 개인정보 처리방침</h4>'
+        + '<p><strong>1. 수집하는 개인정보 항목</strong><br>① 필수: 이름, 이메일, 비밀번호, 연락처<br>② 선택: 주소, 생년월일, 성별, 회사/직책/부서, 업종, 프로필 사진</p>'
+        + '<p><strong>2. 개인정보의 이용 목적</strong><br>① 회원 식별 및 가입 승인<br>② 공지사항, 일정 등 서비스 제공<br>③ 푸시 알림 발송<br>④ 회원 간 연락처 공유 (앱 내 한정)</p>'
+        + '<p><strong>3. 개인정보의 보유 및 이용 기간</strong><br>① 회원 탈퇴 시까지 보유하며, 탈퇴 즉시 파기합니다.<br>② 관련 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관합니다.</p>'
+        + '<p><strong>4. 개인정보의 제3자 제공</strong><br>회의소는 이용자의 동의 없이 개인정보를 제3자에게 제공하지 않습니다.</p>'
+        + '<p><strong>5. 개인정보의 파기</strong><br>보유 기간이 경과하거나 처리 목적이 달성된 경우 지체 없이 파기합니다.</p>'
+        + '<p><strong>6. 개인정보 보호 책임자</strong><br>영등포청년회의소 사무국<br>문의: 앱 내 관리자 연락</p>'
+        + '<p style="color:var(--text-secondary);font-size:13px;margin-top:16px">시행일: 2026년 1월 1일</p>'
+        + '</div>'
+        + '</div>';
 }
 
 console.log('Settings module loaded');

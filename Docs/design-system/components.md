@@ -833,8 +833,980 @@ textarea {
 
 ---
 
+---
+
+## 16. 인물카드 (Member Dossier) — ★핵심★
+
+> CEO 비전: "국정원에서 프로필 띄워놓는 것처럼" 한 눈에 인물 정보를 파악
+> 참조: `Docs/features/member-dossier-plan.md`
+
+### 16-1. 전체 레이아웃
+
+```
+┌─────────────────────────────────────────┐
+│  ← 회원 상세                   [편집]   │  AppBar
+├─────────────────────────────────────────┤
+│  ┌──────────┐                          │
+│  │  프로필  │  김영등 (24px bold)       │  상단 프로필 카드
+│  │  사진    │  회장 (뱃지)              │
+│  │ (120×120)│  영등포JC · 제1분과       │
+│  │          │  📞 010-1234-5678        │
+│  └──────────┘  ✉️ kim@example.com      │
+│                🏢 (주)영등포상사 대표    │
+├─────────────────────────────────────────┤
+│ [기본정보][JC이력][교육][활동]           │  수평 스크롤 탭 바
+│ [경력][가족][취미][메모]                 │
+├─────────────────────────────────────────┤
+│  ※ 선택 탭 콘텐츠 영역                 │
+└─────────────────────────────────────────┘
+```
+
+### 16-2. 상단 프로필 카드
+
+```css
+/* 상단 프로필 헤더 */
+.dossier-header {
+    background: var(--dossier-header-bg);           /* #F4F6F9 */
+    border-bottom: 1px solid var(--dossier-header-border);
+    padding: 24px 16px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+/* 프로필 사진 (120×120) */
+.dossier-avatar {
+    width: var(--dossier-avatar-size);              /* 120px */
+    height: var(--dossier-avatar-size);
+    border-radius: 50%;
+    border: var(--dossier-avatar-border);           /* 3px solid border */
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+    font-size: 40px;
+    font-weight: var(--weight-bold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.dossier-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 이름 + 정보 영역 */
+.dossier-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.dossier-name {
+    font-size: var(--dossier-name-size);            /* 24px */
+    font-weight: var(--dossier-name-weight);        /* 700 */
+    color: var(--color-text);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dossier-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dossier-meta-row {
+    font-size: var(--text-sm);
+    color: var(--color-text-sub);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 연락처 링크 (탭하면 전화/메일) */
+.dossier-contact-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: var(--text-sm);
+}
+
+.dossier-contact-link:hover {
+    text-decoration: underline;
+}
+```
+
+### 16-3. 수평 스크롤 탭 바 (8개 탭)
+
+```css
+/* 탭 바 컨테이너 — 가로 스크롤 */
+.dossier-tabs {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;          /* Firefox */
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+    position: sticky;
+    top: 56px;                      /* AppBar 높이 아래 */
+    z-index: 50;
+}
+
+.dossier-tabs::-webkit-scrollbar {
+    display: none;                  /* Chrome/Safari */
+}
+
+/* 개별 탭 */
+.dossier-tab {
+    flex-shrink: 0;
+    padding: 0 16px;
+    height: var(--dossier-tab-height);              /* 44px */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--dossier-tab-font);             /* 13px */
+    font-weight: var(--dossier-tab-weight);         /* 500 */
+    color: var(--dossier-tab-color);                /* hint gray */
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color var(--duration-fast) var(--ease-default),
+                border-color var(--duration-fast) var(--ease-default);
+}
+
+.dossier-tab:hover {
+    color: var(--color-text-sub);
+}
+
+.dossier-tab.active {
+    color: var(--dossier-tab-active);               /* primary */
+    border-bottom: var(--dossier-tab-indicator);    /* 2px solid primary */
+    font-weight: var(--weight-semibold);
+}
+
+/* 탭 콘텐츠 영역 */
+.dossier-content {
+    padding: var(--space-16);
+}
+```
+
+### 16-4. 정보 라벨+값 레이아웃 (2단 그리드)
+
+```css
+/* 기본정보 등 라벨-값 쌍 */
+.info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--info-row-gap);                       /* 12px */
+}
+
+.info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-8);
+}
+
+.info-label {
+    width: var(--info-label-width);                 /* 100px */
+    flex-shrink: 0;
+    font-size: var(--info-label-size);              /* 13px */
+    color: var(--info-label-color);                 /* hint gray */
+    font-weight: var(--weight-medium);
+    padding-top: 2px;
+}
+
+.info-value {
+    flex: 1;
+    font-size: var(--info-value-size);              /* 15px */
+    color: var(--info-value-color);                 /* 기본 텍스트 */
+    line-height: var(--leading-normal);
+    word-break: break-word;
+}
+```
+
+### 16-5. 타임라인 컴포넌트 (JC 이력 — 세로 점선 + 이벤트)
+
+```css
+/* 타임라인 래퍼 */
+.timeline {
+    position: relative;
+    padding-left: 24px;
+}
+
+/* 세로 선 */
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    bottom: 4px;
+    width: var(--timeline-line-width);              /* 2px */
+    background: var(--timeline-line-color);         /* border color */
+}
+
+/* 이벤트 항목 */
+.timeline-item {
+    position: relative;
+    padding-bottom: var(--timeline-gap);            /* 24px */
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+/* 점 (dot) */
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 4px;
+    width: var(--timeline-dot-size);                /* 10px */
+    height: var(--timeline-dot-size);
+    border-radius: 50%;
+    background: var(--timeline-dot-bg);             /* 흰색 */
+    border: var(--timeline-dot-border);             /* 2px solid primary */
+}
+
+/* 현재 직책 — 채워진 점 */
+.timeline-item.current::before {
+    background: var(--timeline-dot-color);          /* primary */
+}
+
+/* 기간 텍스트 */
+.timeline-period {
+    font-size: var(--text-xs);
+    color: var(--color-text-hint);
+    margin-bottom: 2px;
+}
+
+/* 직책/이벤트명 */
+.timeline-title {
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--color-text);
+}
+```
+
+### 16-6. 교육/경력/가족 카드
+
+```css
+/* 리스트 카드 (교육, 경력) */
+.dossier-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-12) var(--space-16);
+    margin-bottom: var(--space-8);
+}
+
+.dossier-card-title {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    margin-bottom: 2px;
+}
+
+.dossier-card-sub {
+    font-size: var(--text-sm);
+    color: var(--color-text-sub);
+}
+
+/* 수료/미수료 아이콘 */
+.dossier-card-status--completed {
+    color: var(--color-success);
+}
+
+.dossier-card-status--incomplete {
+    color: var(--color-error);
+}
+
+/* 관리자 메모 (잠금) */
+.dossier-memo {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-16);
+    white-space: pre-wrap;
+    font-size: var(--text-sm);
+    color: var(--color-text-sub);
+    line-height: var(--leading-relaxed);
+}
+
+/* 섹션 헤더 (탭 내 제목 + 추가 버튼) */
+.dossier-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-12);
+}
+
+.dossier-section-title {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+}
+
+/* 가족 현황 테이블 */
+.dossier-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dossier-table th,
+.dossier-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-divider);
+    font-size: var(--text-sm);
+}
+
+.dossier-table th {
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-sub);
+    background: var(--color-bg-secondary);
+}
+```
+
+### 16-7. 반응형 (480px 이하)
+
+```css
+@media (max-width: 480px) {
+    .dossier-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .dossier-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 28px;
+    }
+
+    .dossier-info {
+        align-items: center;
+    }
+
+    .dossier-name {
+        font-size: var(--text-xl);  /* 20px */
+        justify-content: center;
+    }
+
+    .dossier-meta {
+        align-items: center;
+    }
+
+    .info-label {
+        width: 80px;
+    }
+}
+```
+
+### HTML 사용 예시
+
+```html
+<!-- 인물카드 상단 -->
+<div class="dossier-header">
+    <div class="dossier-avatar">김</div>
+    <div class="dossier-info">
+        <div class="dossier-name">
+            김영등
+            <span class="badge-position badge-position--president">회장</span>
+        </div>
+        <div class="dossier-meta">
+            <span class="dossier-meta-row">영등포JC · 제1분과</span>
+            <a href="tel:010-1234-5678" class="dossier-contact-link">📞 010-1234-5678</a>
+            <a href="mailto:kim@example.com" class="dossier-contact-link">✉️ kim@example.com</a>
+            <span class="dossier-meta-row">🏢 (주)영등포상사 대표이사</span>
+        </div>
+    </div>
+</div>
+
+<!-- 탭 바 -->
+<div class="dossier-tabs">
+    <button class="dossier-tab active">기본정보</button>
+    <button class="dossier-tab">JC이력</button>
+    <button class="dossier-tab">교육</button>
+    <button class="dossier-tab">활동</button>
+    <button class="dossier-tab">경력</button>
+    <button class="dossier-tab">가족</button>
+    <button class="dossier-tab">취미</button>
+    <button class="dossier-tab">메모</button>
+</div>
+
+<!-- 기본정보 탭 -->
+<div class="dossier-content">
+    <div class="info-grid">
+        <div class="info-row">
+            <span class="info-label">생년월일</span>
+            <span class="info-value">1985.03.15 (만 41세)</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">주소</span>
+            <span class="info-value">서울시 영등포구 여의도동<br>여의도아파트 101동 1201호</span>
+        </div>
+    </div>
+</div>
+
+<!-- JC이력 탭 — 타임라인 -->
+<div class="dossier-content">
+    <div class="timeline">
+        <div class="timeline-item current">
+            <div class="timeline-period">2025.01 ~ 현재</div>
+            <div class="timeline-title">회장</div>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-period">2024.01 ~ 2024.12</div>
+            <div class="timeline-title">부회장</div>
+        </div>
+    </div>
+</div>
+```
+
+---
+
+## 17. 직책 뱃지 (Position Badge)
+
+> 참조: `Docs/features/member-position-plan.md`
+
+직책별로 색상이 구분된 소형 뱃지. 프로필, 회원목록, 참석자 명단 등에서 이름 옆에 표시.
+
+### 17-1. 스펙
+
+```css
+/* 직책 뱃지 공통 */
+.badge-position {
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--badge-position-size);          /* 11px */
+    padding: var(--badge-position-padding);         /* 2px 8px */
+    border-radius: var(--badge-position-radius);    /* 10px */
+    font-weight: var(--weight-medium);
+    line-height: 1.4;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+/* 회장 — 금색 */
+.badge-position--president {
+    background: var(--position-president-bg);       /* #FEF3C7 */
+    color: var(--position-president-text);          /* #92400E */
+    border-color: var(--position-president-border); /* #F59E0B */
+}
+
+/* 수석부회장 — 은색 */
+.badge-position--svp {
+    background: var(--position-svp-bg);             /* #F3F4F6 */
+    color: var(--position-svp-text);               /* #374151 */
+    border-color: var(--position-svp-border);       /* #9CA3AF */
+}
+
+/* 부회장 — 청색 (Primary Light) */
+.badge-position--vp {
+    background: var(--position-vp-bg);              /* primary-light */
+    color: var(--position-vp-text);                /* primary */
+    border-color: var(--position-vp-border);        /* primary */
+}
+
+/* 총무 — 부회장과 동일 스타일 */
+.badge-position--secretary {
+    background: var(--position-vp-bg);
+    color: var(--position-vp-text);
+    border-color: var(--position-vp-border);
+}
+
+/* 이사 — 연청색 */
+.badge-position--director {
+    background: var(--position-director-bg);        /* #DBEAFE */
+    color: var(--position-director-text);           /* #1E40AF */
+    border-color: var(--position-director-border);  /* #3B82F6 */
+}
+
+/* 감사 — 이사와 동일 */
+.badge-position--auditor {
+    background: var(--position-director-bg);
+    color: var(--position-director-text);
+    border-color: var(--position-director-border);
+}
+
+/* 일반회원 — 기본 (가장 낮은 시인성) */
+.badge-position--member {
+    background: var(--position-default-bg);         /* #F3F4F6 */
+    color: var(--position-default-text);            /* #6B7280 */
+    border-color: var(--position-default-border);   /* #E5E7EB */
+}
+```
+
+### 17-2. 직책 매핑 테이블
+
+| 직책 | CSS 클래스 | 배경 | 텍스트 | 테두리 |
+|------|-----------|------|--------|--------|
+| 회장 | `--president` | 금색 `#FEF3C7` | `#92400E` | `#F59E0B` |
+| 수석부회장 | `--svp` | 은색 `#F3F4F6` | `#374151` | `#9CA3AF` |
+| 부회장 | `--vp` | 청색 `#E8EDF3` | `#1E3A5F` | `#1E3A5F` |
+| 총무 | `--secretary` | 청색 (부회장 동일) | | |
+| 이사 | `--director` | 연청 `#DBEAFE` | `#1E40AF` | `#3B82F6` |
+| 감사 | `--auditor` | 연청 (이사 동일) | | |
+| 일반회원 | `--member` | 회색 `#F3F4F6` | `#6B7280` | `#E5E7EB` |
+
+### 17-3. 사용 위치
+
+- **프로필 화면**: 이름 아래 (`.profile-role-badge` 대체)
+- **회원 목록**: 이름 우측 (인라인, gap 6px)
+- **인물카드 상단**: 이름 우측
+- **참석자 명단**: 이름 우측
+- **댓글 작성자**: 이름 우측 (선택)
+
+### HTML 사용 예시
+
+```html
+<!-- 회원 목록 -->
+<div class="member-card">
+    <div class="avatar">김</div>
+    <div>
+        <span class="member-name">김영등</span>
+        <span class="badge-position badge-position--president">회장</span>
+    </div>
+</div>
+
+<!-- 프로필 -->
+<div class="profile-hero">
+    <div class="profile-avatar">김</div>
+    <div class="profile-name">김영등</div>
+    <span class="badge-position badge-position--president">회장</span>
+</div>
+```
+
+---
+
+## 18. 게시글 참석/불참 UI
+
+> 참조: `Docs/features/post-attendance-plan.md`
+> 일정 참석 UI(`12-attendance-vote-ui.md`)와 동일한 스타일 사용
+
+### 18-1. 참석 여부 섹션 (게시글 상세 하단)
+
+```css
+/* 참석 여부 섹션 래퍼 */
+.post-attendance {
+    border-top: 1px solid var(--color-border);
+    padding: var(--space-16);
+    margin-top: var(--space-16);
+}
+
+.post-attendance-title {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    margin-bottom: var(--space-12);
+}
+
+/* 참석/불참 버튼 그룹 */
+.attendance-buttons {
+    display: flex;
+    gap: var(--space-8);
+    margin-bottom: var(--space-12);
+}
+
+/* 참석 버튼 */
+.attendance-btn {
+    flex: 1;
+    height: 44px;
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all var(--duration-fast) var(--ease-default);
+}
+
+/* 미선택 상태 (기본) */
+.attendance-btn--attend {
+    background: var(--attendance-none-bg);
+    color: var(--attendance-none-color);
+    border: 1px solid var(--attendance-none-border);
+}
+
+.attendance-btn--absent {
+    background: var(--attendance-none-bg);
+    color: var(--attendance-none-color);
+    border: 1px solid var(--attendance-none-border);
+}
+
+/* 참석 선택됨 — 초록 */
+.attendance-btn--attend.active {
+    background: var(--attendance-attend-bg);         /* #F0FDF4 */
+    color: var(--attendance-attend-color);           /* #16A34A */
+    border-color: var(--attendance-attend-border);   /* #16A34A */
+}
+
+/* 불참 선택됨 — 빨강 */
+.attendance-btn--absent.active {
+    background: var(--attendance-absent-bg);         /* #FEF2F2 */
+    color: var(--attendance-absent-color);           /* #DC2626 */
+    border-color: var(--attendance-absent-border);   /* #DC2626 */
+}
+
+/* 참석 현황 요약 */
+.attendance-summary {
+    font-size: var(--text-sm);
+    color: var(--color-text-sub);
+    margin-bottom: var(--space-8);
+}
+
+.attendance-summary strong {
+    color: var(--color-text);
+}
+
+/* 명단 토글 */
+.attendance-toggle-list {
+    font-size: var(--text-sm);
+    color: var(--color-primary);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-weight: var(--weight-medium);
+}
+
+/* 명단 리스트 */
+.attendance-list {
+    margin-top: var(--space-8);
+}
+
+.attendance-list-group {
+    margin-bottom: var(--space-12);
+}
+
+.attendance-list-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-hint);
+    margin-bottom: var(--space-4);
+}
+
+.attendance-list-names {
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    line-height: var(--leading-relaxed);
+}
+```
+
+### 18-2. 게시글 작성 폼 — 참석 기능 토글
+
+```css
+/* 추가 옵션 섹션 */
+.post-form-options {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-16);
+    margin-top: var(--space-16);
+}
+
+.post-form-option-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-divider);
+}
+
+.post-form-option-row:last-child {
+    border-bottom: none;
+}
+
+.post-form-option-label {
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--color-text);
+}
+
+.post-form-option-desc {
+    font-size: var(--text-xs);
+    color: var(--color-text-hint);
+    margin-top: 2px;
+}
+```
+
+### 18-3. 게시글 목록 카드 참석 요약
+
+```css
+/* 게시글 카드 하단 참석 요약 */
+.post-card-attendance {
+    display: flex;
+    gap: var(--space-8);
+    font-size: var(--text-xs);
+    color: var(--color-text-sub);
+    margin-top: var(--space-8);
+}
+
+.post-card-attendance .attend-count {
+    color: var(--color-success);
+}
+
+.post-card-attendance .absent-count {
+    color: var(--color-error);
+}
+```
+
+### HTML 사용 예시
+
+```html
+<!-- 게시글 상세 — 참석 섹션 -->
+<div class="post-attendance">
+    <div class="post-attendance-title">📋 참석 여부</div>
+    <div class="attendance-buttons">
+        <button class="attendance-btn attendance-btn--attend active">✅ 참석</button>
+        <button class="attendance-btn attendance-btn--absent">❌ 불참</button>
+    </div>
+    <div class="attendance-summary">
+        참석 <strong>18</strong>명 · 불참 <strong>5</strong>명 · 미응답 <strong>10</strong>명
+    </div>
+    <button class="attendance-toggle-list">참석자 명단 보기 ▼</button>
+</div>
+
+<!-- 게시글 작성 폼 — 참석 토글 -->
+<div class="post-form-options">
+    <div class="post-form-option-row">
+        <div>
+            <div class="post-form-option-label">📋 참석 확인 기능</div>
+            <div class="post-form-option-desc">회원들의 참석/불참을 확인합니다</div>
+        </div>
+        <label class="toggle-switch">
+            <input type="checkbox" name="attendance_enabled" />
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
+</div>
+```
+
+---
+
+## 19. Push 알림 설정 UI (글쓰기 폼)
+
+> 참조: `Docs/features/push-notification-plan.md` §10
+
+### 19-1. 글쓰기 폼 내 알림 설정 섹션
+
+```css
+/* Push 알림 설정 섹션 */
+.push-settings {
+    background: var(--push-section-bg);             /* bg-secondary */
+    border: 1px solid var(--color-border);
+    border-radius: var(--push-section-radius);      /* 12px */
+    padding: var(--push-section-padding);           /* 16px */
+    margin-top: var(--space-16);
+}
+
+.push-settings-title {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    margin-bottom: var(--space-12);
+}
+
+/* 라디오 버튼 그룹 */
+.push-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+}
+
+.push-radio-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-12);
+    cursor: pointer;
+}
+
+/* 커스텀 라디오 */
+.push-radio {
+    width: var(--push-radio-size);                  /* 20px */
+    height: var(--push-radio-size);
+    border-radius: 50%;
+    border: 2px solid var(--push-radio-inactive);   /* border gray */
+    background: var(--color-surface);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    transition: border-color var(--duration-fast) var(--ease-default);
+}
+
+.push-radio-item.selected .push-radio {
+    border-color: var(--push-radio-active);         /* primary */
+}
+
+.push-radio-item.selected .push-radio::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--push-radio-active);
+}
+
+/* 라디오 라벨 */
+.push-radio-label {
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--color-text);
+}
+
+.push-radio-desc {
+    font-size: var(--text-xs);
+    color: var(--color-text-hint);
+    margin-top: 2px;
+}
+
+/* 예약 발송 — 날짜+시간 입력 (라디오 하위) */
+.push-schedule-inputs {
+    display: flex;
+    gap: var(--space-8);
+    margin-top: var(--space-8);
+    padding-left: 32px;               /* 라디오와 정렬 */
+}
+
+.push-schedule-inputs input {
+    flex: 1;
+}
+
+/* D-day 체크박스 그룹 (라디오 하위) */
+.push-dday-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8);
+    margin-top: var(--space-8);
+    padding-left: 32px;
+}
+
+/* 커스텀 체크박스 */
+.push-checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+
+.push-checkbox-box {
+    width: var(--push-checkbox-size);               /* 18px */
+    height: var(--push-checkbox-size);
+    border-radius: var(--radius-xs);                /* 4px */
+    border: 2px solid var(--push-radio-inactive);
+    background: var(--color-surface);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--duration-fast) var(--ease-default);
+}
+
+.push-checkbox.checked .push-checkbox-box {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.push-checkbox.checked .push-checkbox-box::after {
+    content: '✓';
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: var(--weight-bold);
+}
+
+/* 비활성 상태 (일정 미첨부 시 D-day 옵션) */
+.push-radio-item.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+```
+
+### 19-2. 라디오 옵션 정리
+
+| 옵션 | 라벨 | 설명 | 하위 입력 |
+|------|------|------|----------|
+| 즉시 발송 | 즉시 발송 | 게시 즉시 전체 회원에게 알림 | — |
+| 예약 발송 | 예약 발송 | 특정 날짜/시간에 Push 발송 | 날짜+시간 input |
+| 일정 연동 | 일정 연동 알림 | D-day 기준 알림 (일정 첨부 시만) | D-7, D-3, D-1, 당일 체크박스 |
+| 없음 | 알림 없음 | Push 알림을 보내지 않음 | — |
+
+### HTML 사용 예시
+
+```html
+<div class="push-settings">
+    <div class="push-settings-title">Push 알림 설정</div>
+    <div class="push-radio-group">
+        <!-- 즉시 발송 -->
+        <div class="push-radio-item selected">
+            <div class="push-radio"></div>
+            <div>
+                <div class="push-radio-label">즉시 발송</div>
+                <div class="push-radio-desc">게시 즉시 전체 회원에게 알림</div>
+            </div>
+        </div>
+
+        <!-- 예약 발송 -->
+        <div class="push-radio-item">
+            <div class="push-radio"></div>
+            <div>
+                <div class="push-radio-label">예약 발송</div>
+                <div class="push-schedule-inputs">
+                    <input type="date" />
+                    <input type="time" />
+                </div>
+            </div>
+        </div>
+
+        <!-- 일정 연동 -->
+        <div class="push-radio-item">
+            <div class="push-radio"></div>
+            <div>
+                <div class="push-radio-label">일정 연동 알림</div>
+                <div class="push-radio-desc">일정 첨부 시에만 활성화</div>
+                <div class="push-dday-options">
+                    <label class="push-checkbox checked">
+                        <span class="push-checkbox-box"></span> D-7
+                    </label>
+                    <label class="push-checkbox checked">
+                        <span class="push-checkbox-box"></span> D-3
+                    </label>
+                    <label class="push-checkbox checked">
+                        <span class="push-checkbox-box"></span> D-1
+                    </label>
+                    <label class="push-checkbox">
+                        <span class="push-checkbox-box"></span> 당일
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 알림 없음 -->
+        <div class="push-radio-item">
+            <div class="push-radio"></div>
+            <div>
+                <div class="push-radio-label">알림 없음</div>
+                <div class="push-radio-desc">Push 알림을 보내지 않음</div>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+---
+
 ## 변경 이력
 
 | 날짜 | 변경 내용 |
 |------|-----------|
+| 2026-03-14 | v2.1 — 인물카드(Dossier) 전체 UI, 수평탭, 타임라인, 정보그리드, 직책뱃지 7종, 참석/불참 UI, Push알림 설정 UI 추가 |
 | 2026-03-13 | v2.0 미니멀 리뉴얼 — CEO "촌스러움" 피드백 반영, 딥네이비+무채색, 입력필드/헤더/프로필/토글 전면 리디자인 |

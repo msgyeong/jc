@@ -211,6 +211,88 @@
   --nav-text-size:     var(--text-xs);
   --nav-active:        var(--color-primary);
   --nav-inactive:      var(--color-text-hint);
+
+  /* ── Dossier (인물카드) ── */
+  --dossier-header-bg:     #F4F6F9;   /* 상단 프로필 카드 배경 */
+  --dossier-header-border: var(--color-border);
+  --dossier-avatar-size:   120px;
+  --dossier-avatar-border: 3px solid var(--color-border);
+  --dossier-name-size:     var(--text-2xl);  /* 24px */
+  --dossier-name-weight:   var(--weight-bold);
+
+  /* Dossier 탭 네비게이션 (수평 스크롤) */
+  --dossier-tab-height:    44px;
+  --dossier-tab-font:      var(--text-sm);   /* 13px */
+  --dossier-tab-weight:    var(--weight-medium);
+  --dossier-tab-color:     var(--color-text-hint);
+  --dossier-tab-active:    var(--color-primary);
+  --dossier-tab-indicator: 2px solid var(--color-primary);
+  --dossier-tab-gap:       0px;              /* 탭 간 gap 없음, padding으로 제어 */
+
+  /* 타임라인 컴포넌트 (JC 이력 등) */
+  --timeline-line-color:   var(--color-border);
+  --timeline-line-width:   2px;
+  --timeline-dot-size:     10px;
+  --timeline-dot-color:    var(--color-primary);
+  --timeline-dot-border:   2px solid var(--color-primary);
+  --timeline-dot-bg:       #FFFFFF;
+  --timeline-gap:          var(--space-24);
+
+  /* 정보 라벨+값 레이아웃 (2단 그리드) */
+  --info-label-width:      100px;
+  --info-label-color:      var(--color-text-hint);
+  --info-label-size:       var(--text-sm);
+  --info-value-color:      var(--color-text);
+  --info-value-size:       var(--text-base);
+  --info-row-gap:          var(--space-12);
+
+  /* ── 직책 뱃지 ── */
+  --badge-position-size:   11px;
+  --badge-position-padding: 2px 8px;
+  --badge-position-radius: 10px;
+
+  /* 직책별 색상 */
+  --position-president-bg:    #FEF3C7;   /* 회장 — 금색 배경 */
+  --position-president-text:  #92400E;
+  --position-president-border: #F59E0B;
+
+  --position-svp-bg:          #F3F4F6;   /* 수석부회장 — 은색 배경 */
+  --position-svp-text:        #374151;
+  --position-svp-border:      #9CA3AF;
+
+  --position-vp-bg:           var(--color-primary-light); /* 부회장 — 청색 */
+  --position-vp-text:         var(--color-primary);
+  --position-vp-border:       var(--color-primary);
+
+  --position-director-bg:     #DBEAFE;   /* 이사 — 연청색 */
+  --position-director-text:   #1E40AF;
+  --position-director-border: #3B82F6;
+
+  --position-default-bg:      var(--color-border-light);  /* 일반회원 — 기본 */
+  --position-default-text:    var(--color-text-sub);
+  --position-default-border:  var(--color-border);
+
+  /* ── 참석/불참 버튼 ── */
+  --attendance-attend-bg:      #F0FDF4;
+  --attendance-attend-color:   #16A34A;
+  --attendance-attend-border:  #16A34A;
+  --attendance-attend-active:  #16A34A;   /* 활성 시 배경 */
+  --attendance-absent-bg:      #FEF2F2;
+  --attendance-absent-color:   #DC2626;
+  --attendance-absent-border:  #DC2626;
+  --attendance-absent-active:  #DC2626;
+  --attendance-none-bg:        var(--color-bg-secondary);
+  --attendance-none-color:     var(--color-text-hint);
+  --attendance-none-border:    var(--color-border);
+
+  /* ── Push 알림 설정 ── */
+  --push-radio-size:       20px;
+  --push-radio-active:     var(--color-primary);
+  --push-radio-inactive:   var(--color-border);
+  --push-checkbox-size:    18px;
+  --push-section-bg:       var(--color-bg-secondary);
+  --push-section-radius:   var(--radius-lg);
+  --push-section-padding:  var(--space-16);
 }
 
 /* ===================================================================
@@ -228,4 +310,24 @@
   --card-border:       var(--color-border);
 
   --toggle-bg-off:     #3D4E5C;
+
+  /* Dossier */
+  --dossier-header-bg:     #1A2332;
+  --dossier-header-border: var(--color-border);
+  --timeline-dot-bg:       #1E2937;
+
+  /* 직책 뱃지 — 다크 */
+  --position-president-bg:    #422006;
+  --position-president-text:  #FDE68A;
+  --position-svp-bg:          #1F2937;
+  --position-svp-text:        #D1D5DB;
+  --position-director-bg:     #1E3A5F;
+  --position-director-text:   #93C5FD;
+
+  /* 참석 — 다크 */
+  --attendance-attend-bg:     #14532D;
+  --attendance-attend-color:  #4ADE80;
+  --attendance-absent-bg:     #450A0A;
+  --attendance-absent-color:  #FCA5A5;
+  --attendance-none-bg:       var(--color-bg-secondary);
 }

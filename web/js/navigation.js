@@ -138,8 +138,9 @@ function navigateToScreen(screenName) {
             }
         }
 
-        // history.pushState for back navigation
-        if (!window._navPopstate) {
+        // history.pushState for back navigation (로그인 전 화면은 제외)
+        var authScreens = ['splash', 'login', 'signup', 'forgot-password', 'pending-approval'];
+        if (!window._navPopstate && authScreens.indexOf(screenName) === -1) {
             var stateObj = { screen: screenName };
             history.pushState(stateObj, '', '#' + screenName);
         }
@@ -418,9 +419,32 @@ async function handleForgotPassword(event) {
 
 // ========== 뒤로가기 (popstate) ==========
 
+// 로그인 전 화면 목록
+var _authScreenNames = ['splash', 'login', 'signup', 'forgot-password', 'pending-approval'];
+
+// 현재 활성 화면이 로그인 전 화면인지 확인
+function _isOnAuthScreen() {
+    for (var i = 0; i < _authScreenNames.length; i++) {
+        var el = document.getElementById(_authScreenNames[i] + '-screen');
+        if (el && el.classList.contains('active')) return true;
+    }
+    return false;
+}
+
+// 로그인 여부 확인
+function _isLoggedIn() {
+    return !!localStorage.getItem('auth_token');
+}
+
 window.addEventListener('popstate', function(e) {
+    // 로그인 전 화면이면 popstate 무시
+    if (_isOnAuthScreen() || !_isLoggedIn()) {
+        return;
+    }
+
     var state = e.state;
     if (state && state.screen) {
+        // 이전 화면으로 돌아가기
         window._navPopstate = true;
         if (state.tab) {
             switchTab(state.tab);
@@ -429,9 +453,10 @@ window.addEventListener('popstate', function(e) {
         }
         window._navPopstate = false;
     } else {
-        // 홈 화면이면 종료 확인 다이얼로그 표시
+        // history 스택 바닥 (홈에서 더 뒤로 갈 곳 없음) → exit 모달
         var homeScreen = document.getElementById('home-screen');
         if (homeScreen && homeScreen.classList.contains('active')) {
+            // 스택 복원해서 다시 뒤로가기 가능하게
             history.pushState({ screen: 'home' }, '', '#home');
             showExitDialog();
         }
@@ -450,8 +475,13 @@ function closeExitDialog() {
 
 function confirmExit() {
     closeExitDialog();
-    // 실제로는 웹앱이므로 홈으로 이동
-    window.close();
-    // window.close()가 작동하지 않으면 히스토리 뒤로
-    history.back();
+    // 로그아웃 후 로그인 화면으로 이동
+    if (typeof handleLogout === 'function') {
+        handleLogout();
+    } else {
+        // fallback
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_info');
+        navigateToScreen('login');
+    }
 }

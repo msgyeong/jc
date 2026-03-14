@@ -79,9 +79,12 @@ async function handleLogin(event) {
                 localStorage.setItem(STORAGE_KEYS.REMEMBER_ME, 'true');
             }
             
-            // 홈 화면으로 이동
+            // 홈 화면으로 이동 — history 스택 초기화
             currentAuthStatus = AuthStatus.AUTHENTICATED;
+            history.replaceState({ screen: 'home' }, '', '#home');
+            window._navPopstate = true; // 중복 pushState 방지
             navigateToScreen('home');
+            window._navPopstate = false;
             
             // 홈 화면 데이터 로드
             if (typeof loadHomeData === 'function') {

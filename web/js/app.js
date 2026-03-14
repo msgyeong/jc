@@ -80,7 +80,13 @@ async function showInitialScreen() {
     // 최소 1초 스플래시 표시 후 전환
     await new Promise(resolve => setTimeout(resolve, 1000));
     
+    // 초기 화면은 replaceState로 설정 (pushState 스택 오염 방지)
+    if (targetScreen === 'home') {
+        history.replaceState({ screen: 'home' }, '', '#home');
+        window._navPopstate = true; // navigateToScreen에서 중복 pushState 방지
+    }
     navigateToScreen(targetScreen);
+    window._navPopstate = false;
 
     // 로그인 상태이면 푸시 초기화 + 안읽은 알림 수 조회
     if (targetScreen === 'home') {

@@ -1017,8 +1017,8 @@
         </div>
 
         <!-- 뒤로가기 확인 모달 (이슈 #10) -->
-        <div id="exit-confirm-dialog" class="dialog-overlay">
-            <div class="dialog">
+        <div id="exit-confirm-dialog" class="dialog-overlay" onclick="closeExitDialog()">
+            <div class="dialog" onclick="event.stopPropagation()">
                 <div class="dialog-title">앱을 나가시겠습니까?</div>
                 <div class="dialog-body">뒤로 버튼을 한 번 더 누르면 앱을 종료합니다.</div>
                 <div class="dialog-actions">

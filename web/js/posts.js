@@ -311,6 +311,11 @@ function toggleScheduleAttach(containerId) {
             schedTitle.value = postTitle.value;
         }
     }
+    // Push 설정의 D-day 옵션 활성/비활성
+    const pushContainer = document.getElementById('post-create-push-setting');
+    if (pushContainer && currentBoardCategory === 'notice') {
+        renderPushSettingSection('post-create-push-setting');
+    }
 }
 
 function getScheduleAttachData() {
@@ -347,6 +352,11 @@ function handleCreatePost() {
     const noticeOpts = document.getElementById('post-create-notice-options');
     if (noticeOpts) noticeOpts.style.display = currentBoardCategory === 'notice' ? '' : 'none';
 
+    // 참석 토글 섹션
+    postCreateAttendanceEnabled = false;
+    const attendanceContainer = document.getElementById('post-create-attendance-section');
+    if (attendanceContainer) renderAttendanceToggleSection('post-create-attendance-section');
+
     // 일정 첨부 섹션 (공지탭일 때만)
     const schedAttachContainer = document.getElementById('post-create-schedule-attach');
     if (schedAttachContainer) {
@@ -354,6 +364,17 @@ function handleCreatePost() {
             renderScheduleAttachSection('post-create-schedule-attach');
         } else {
             schedAttachContainer.innerHTML = '';
+        }
+    }
+
+    // Push 알림 설정 (공지탭일 때만)
+    postCreatePushSetting = 'immediate';
+    const pushContainer = document.getElementById('post-create-push-setting');
+    if (pushContainer) {
+        if (currentBoardCategory === 'notice') {
+            renderPushSettingSection('post-create-push-setting');
+        } else {
+            pushContainer.innerHTML = '';
         }
     }
 
@@ -426,10 +447,19 @@ async function handlePostCreateSubmit(e) {
             category,
             is_pinned: isPinned ? isPinned.checked : false,
         };
+        // 참석 확인
+        if (postCreateAttendanceEnabled) {
+            payload.attendance_enabled = true;
+        }
         // M-12: 일정 첨부 데이터
         const scheduleData = getScheduleAttachData();
         if (scheduleData) {
             payload.schedule = scheduleData;
+        }
+        // Push 알림 설정 (공지만)
+        if (category === 'notice') {
+            const pushPayload = getPushSettingPayload();
+            Object.assign(payload, pushPayload);
         }
         const result = await apiClient.createPost(payload);
         if (result.success) {
@@ -492,6 +522,7 @@ async function loadPostDetail(postId) {
             container.innerHTML = renderPostDetail(result.post);
             loadCommentsForPost(postId);
             loadLinkedScheduleForPost(result.post);
+            loadPostAttendance(result.post);
         } else {
             container.innerHTML = renderErrorState('게시글을 불러올 수 없습니다', null, `loadPostDetail(${postId})`);
         }
@@ -614,6 +645,7 @@ function renderPostDetail(post) {
                 </button>
             </div>
             <div id="post-linked-schedule-container"></div>
+            <div id="post-attendance-container"></div>
             <div class="post-detail-comments">
                 <h4>댓글</h4>
                 <div class="post-detail-comments-list" id="post-detail-comments-list"></div>
@@ -846,6 +878,179 @@ async function loadLinkedScheduleForPost(post) {
             </div>
         `;
     } catch (_) { container.innerHTML = ''; }
+}
+
+// ── 게시글 참석 UI ──
+async function loadPostAttendance(post) {
+    const container = document.getElementById('post-attendance-container');
+    if (!container) return;
+    // attendance_enabled가 false이고 linked_schedule_id도 없으면 참석 UI 없음
+    if (!post.attendance_enabled && !post.linked_schedule_id) {
+        container.innerHTML = '';
+        return;
+    }
+    try {
+        const res = await apiClient.request('/posts/' + post.id + '/attendance/summary');
+        if (!res.success) { container.innerHTML = ''; return; }
+        const d = res.data;
+        const myStatus = d.my_status;
+        container.innerHTML = `
+            <div class="attendance-section">
+                <div class="attendance-section-title">참석 여부</div>
+                <div class="attendance-summary-row">
+                    <span class="attendance-count-badge attend">참석 ${d.attending}</span>
+                    <span class="attendance-count-badge absent">불참 ${d.not_attending}</span>
+                </div>
+                <div class="attendance-buttons">
+                    <button type="button" class="attendance-btn${myStatus === 'attending' ? ' active-attending' : ''}" onclick="submitPostAttendance('attending', ${post.id})">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 참석
+                    </button>
+                    <button type="button" class="attendance-btn${myStatus === 'not_attending' ? ' active-not-attending' : ''}" onclick="submitPostAttendance('not_attending', ${post.id})">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> 불참
+                    </button>
+                </div>
+                <div id="post-attendee-list"></div>
+            </div>
+        `;
+        loadPostAttendeeList(post.id);
+    } catch (_) { container.innerHTML = ''; }
+}
+
+async function submitPostAttendance(status, postId) {
+    try {
+        const res = await apiClient.request('/posts/' + postId + '/attendance', {
+            method: 'POST',
+            body: JSON.stringify({ status: status })
+        });
+        if (res.success) {
+            showToast(status === 'attending' ? '참석으로 표시했습니다' : '불참으로 표시했습니다', 'info');
+            // 다시 로드
+            const postRes = await apiClient.getPost(postId);
+            if (postRes.success && postRes.post) loadPostAttendance(postRes.post);
+        }
+    } catch (e) {
+        showToast(e.message || '참석 등록에 실패했습니다', 'error');
+    }
+}
+
+async function loadPostAttendeeList(postId) {
+    const container = document.getElementById('post-attendee-list');
+    if (!container) return;
+    try {
+        const res = await apiClient.request('/posts/' + postId + '/attendance/details');
+        if (!res.success) return;
+        const d = res.data;
+        let html = '';
+        if (d.attending && d.attending.length > 0) {
+            html += '<div class="attendee-group"><span class="attendee-group-label attendee-attend">참석 (' + d.attending.length + ')</span>';
+            html += '<div class="attendee-group-names">' + d.attending.map(a => escapeHtml(a.name || '알 수 없음')).join(', ') + '</div></div>';
+        }
+        if (d.not_attending && d.not_attending.length > 0) {
+            html += '<div class="attendee-group"><span class="attendee-group-label attendee-absent">불참 (' + d.not_attending.length + ')</span>';
+            html += '<div class="attendee-group-names">' + d.not_attending.map(a => escapeHtml(a.name || '알 수 없음')).join(', ') + '</div></div>';
+        }
+        container.innerHTML = html;
+    } catch (_) {}
+}
+
+// ── 게시글 작성: 참석 토글 + Push 알림 설정 ──
+let postCreateAttendanceEnabled = false;
+
+function renderAttendanceToggleSection(containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = `
+        <div class="post-create-divider"></div>
+        <div class="schedule-attach-header" style="cursor:default">
+            <span class="schedule-attach-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 참석 확인</span>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="post-attendance-toggle" onchange="postCreateAttendanceEnabled=this.checked">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+    `;
+}
+
+// ── Push 알림 설정 UI ──
+let postCreatePushSetting = 'immediate';
+
+function renderPushSettingSection(containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const hasSchedule = postCreateScheduleAttached;
+    el.innerHTML = `
+        <div class="post-create-divider"></div>
+        <span class="post-create-section-label">Push 알림 설정</span>
+        <div class="push-setting-options">
+            <label class="push-setting-option">
+                <input type="radio" name="push_setting" value="immediate" checked onchange="handlePushSettingChange(this.value)">
+                <div class="push-setting-text">
+                    <span class="push-setting-title">즉시 발송</span>
+                    <span class="push-setting-desc">게시 즉시 전체 회원에게 알림</span>
+                </div>
+            </label>
+            <label class="push-setting-option">
+                <input type="radio" name="push_setting" value="scheduled" onchange="handlePushSettingChange(this.value)">
+                <div class="push-setting-text">
+                    <span class="push-setting-title">예약 발송</span>
+                    <span class="push-setting-desc">특정 날짜/시간에 알림</span>
+                </div>
+            </label>
+            <div class="push-scheduled-fields" id="push-scheduled-fields" style="display:none">
+                <div class="date-time-row">
+                    <input type="date" id="push-scheduled-date">
+                    <input type="time" id="push-scheduled-time" value="09:00">
+                </div>
+            </div>
+            <label class="push-setting-option${hasSchedule ? '' : ' disabled'}">
+                <input type="radio" name="push_setting" value="d_day" ${hasSchedule ? '' : 'disabled'} onchange="handlePushSettingChange(this.value)">
+                <div class="push-setting-text">
+                    <span class="push-setting-title">일정 연동 알림</span>
+                    <span class="push-setting-desc">${hasSchedule ? 'D-day 기준 알림' : '일정 첨부 시 활성화'}</span>
+                </div>
+            </label>
+            <div class="push-dday-fields" id="push-dday-fields" style="display:none">
+                <label class="checkbox-label"><input type="checkbox" value="7" class="push-dday-check" checked> D-7 (7일 전)</label>
+                <label class="checkbox-label"><input type="checkbox" value="3" class="push-dday-check" checked> D-3 (3일 전)</label>
+                <label class="checkbox-label"><input type="checkbox" value="1" class="push-dday-check" checked> D-1 (1일 전)</label>
+                <label class="checkbox-label"><input type="checkbox" value="0" class="push-dday-check" checked> 당일 오전 9시</label>
+            </div>
+            <label class="push-setting-option">
+                <input type="radio" name="push_setting" value="none" onchange="handlePushSettingChange(this.value)">
+                <div class="push-setting-text">
+                    <span class="push-setting-title">알림 없음</span>
+                    <span class="push-setting-desc">Push 알림을 보내지 않음</span>
+                </div>
+            </label>
+        </div>
+    `;
+    postCreatePushSetting = 'immediate';
+}
+
+function handlePushSettingChange(value) {
+    postCreatePushSetting = value;
+    const schedFields = document.getElementById('push-scheduled-fields');
+    const ddayFields = document.getElementById('push-dday-fields');
+    if (schedFields) schedFields.style.display = value === 'scheduled' ? '' : 'none';
+    if (ddayFields) ddayFields.style.display = value === 'd_day' ? '' : 'none';
+}
+
+function getPushSettingPayload() {
+    if (postCreatePushSetting === 'immediate') return { push_setting: 'immediate' };
+    if (postCreatePushSetting === 'none') return { push_setting: 'none' };
+    if (postCreatePushSetting === 'scheduled') {
+        const date = document.getElementById('push-scheduled-date')?.value;
+        const time = document.getElementById('push-scheduled-time')?.value || '09:00';
+        if (!date) return { push_setting: 'immediate' };
+        return { push_setting: 'scheduled', push_scheduled_at: date + 'T' + time + ':00' };
+    }
+    if (postCreatePushSetting === 'd_day') {
+        const checks = document.querySelectorAll('.push-dday-check:checked');
+        const days = Array.from(checks).map(c => parseInt(c.value));
+        if (days.length === 0) return { push_setting: 'none' };
+        return { push_setting: 'd_day', push_d_day_options: days };
+    }
+    return { push_setting: 'none' };
 }
 
 // ── DOMContentLoaded ──

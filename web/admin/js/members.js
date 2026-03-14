@@ -139,15 +139,27 @@ async function loadMembers() {
 
 async function openMemberDetail(id) {
     try {
-        const res = await AdminAPI.get('/api/admin/members/' + id);
+        const [res, posRes] = await Promise.all([
+            AdminAPI.get('/api/admin/members/' + id),
+            AdminAPI.get('/api/admin/positions')
+        ]);
         if (!res.success) throw new Error(res.message);
         const m = res.data;
+        const positions = (posRes.success && posRes.data) || [];
+
+        const positionOptions = positions.map(function(p) {
+            const selected = m.position === p.name ? ' selected' : '';
+            return '<option value="' + p.id + '"' + selected + '>' + escapeHtml(p.name) + ' (Lv.' + p.level + ')</option>';
+        }).join('');
 
         openModal(`
-            <div class="modal">
+            <div class="modal" style="max-width:540px">
                 <div class="modal-header">
                     <h3>회원 상세</h3>
-                    <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <button class="btn btn-primary btn-sm" onclick="openMemberDossier(${m.id})">인물카드</button>
+                        <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                    </div>
                 </div>
                 <div class="modal-body">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
@@ -161,7 +173,16 @@ async function openMemberDetail(id) {
                     <table style="width:100%;font-size:13px">
                         <tr><td style="padding:6px 0;color:var(--c-text-sub);width:100px">전화번호</td><td style="padding:6px 0">${escapeHtml(m.phone || '-')}</td></tr>
                         <tr><td style="padding:6px 0;color:var(--c-text-sub)">생년월일</td><td style="padding:6px 0">${formatDate(m.birth_date)}</td></tr>
-                        <tr><td style="padding:6px 0;color:var(--c-text-sub)">직책</td><td style="padding:6px 0">${escapeHtml(m.position || '-')}</td></tr>
+                        <tr>
+                            <td style="padding:6px 0;color:var(--c-text-sub)">JC 직책</td>
+                            <td style="padding:6px 0">
+                                <select id="member-position-select" style="padding:4px 8px;border:1px solid var(--c-border);border-radius:6px;font-size:13px">
+                                    <option value="">미지정</option>
+                                    ${positionOptions}
+                                </select>
+                                <button class="btn btn-primary btn-sm" style="margin-left:6px;padding:3px 10px;font-size:12px" onclick="saveMemberPosition(${m.id})">저장</button>
+                            </td>
+                        </tr>
                         <tr><td style="padding:6px 0;color:var(--c-text-sub)">부서</td><td style="padding:6px 0">${escapeHtml(m.department || '-')}</td></tr>
                         <tr><td style="padding:6px 0;color:var(--c-text-sub)">회사</td><td style="padding:6px 0">${escapeHtml(m.company || '-')}</td></tr>
                         <tr><td style="padding:6px 0;color:var(--c-text-sub)">업종</td><td style="padding:6px 0">${escapeHtml(m.industry || '-')}</td></tr>
@@ -178,6 +199,23 @@ async function openMemberDetail(id) {
         `);
     } catch (err) {
         showAdminToast('회원 정보를 불러올 수 없습니다.', 'error');
+    }
+}
+
+async function saveMemberPosition(memberId) {
+    const sel = document.getElementById('member-position-select');
+    if (!sel) return;
+    const positionId = sel.value ? parseInt(sel.value) : null;
+    try {
+        // position_id를 직접 PUT으로 업데이트
+        const posName = positionId ? sel.options[sel.selectedIndex].text.split(' (')[0] : null;
+        await AdminAPI.put('/api/admin/members/' + memberId, {
+            position: posName
+        });
+        showAdminToast('직책이 변경되었습니다.');
+        loadMembers();
+    } catch (err) {
+        showAdminToast('직책 변경 실패: ' + err.message, 'error');
     }
 }
 

@@ -23,6 +23,19 @@ function getIndustryName(code) {
     return found ? found.name : code;
 }
 
+// 직책 뱃지 HTML 생성
+function getPositionBadgeHtml(positionName) {
+    if (!positionName) return '';
+    const classMap = {
+        '회장': 'pos-president', '수석부회장': 'pos-senior-vp',
+        '부회장': 'pos-vp', '총무': 'pos-secretary',
+        '이사': 'pos-director', '감사': 'pos-auditor',
+        '일반회원': 'pos-member'
+    };
+    const cls = classMap[positionName] || 'pos-default';
+    return '<span class="position-badge ' + cls + '">' + escapeHtml(positionName) + '</span>';
+}
+
 let currentMembersPage = 1;
 let membersLoading = false;
 let searchTimeout = null;
@@ -235,6 +248,7 @@ function createMemberCard(member) {
             <div class="member-info-v2">
                 <div class="member-name-row-v2">
                     <span class="member-name-v2">${escapeHtml(name)}</span>
+                    ${member.jc_position ? getPositionBadgeHtml(member.jc_position) : ''}
                     ${roleBadge}
                 </div>
                 ${position ? `<div class="member-position-v2">${escapeHtml(position)}</div>` : ''}
@@ -278,7 +292,7 @@ async function showMemberDetailScreen(memberId) {
                             : `<span>${escapeHtml((m.name || '?')[0])}</span>`
                         }
                     </div>
-                    <h2 class="profile-hero-name">${escapeHtml(m.name || '')}</h2>
+                    <h2 class="profile-hero-name">${escapeHtml(m.name || '')}${m.jc_position ? ' ' + getPositionBadgeHtml(m.jc_position) : ''}</h2>
                     <span class="profile-hero-role">${roleLabel}</span>
                 </div>
 

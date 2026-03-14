@@ -2673,6 +2673,27 @@ router.get('/members/:id/activities', async (req, res) => {
 });
 
 /**
+ * DELETE /api/admin/members/:id/activities/:activityId
+ * 활동 이력 삭제
+ */
+router.delete('/members/:id/activities/:activityId', async (req, res) => {
+    try {
+        const { id, activityId } = req.params;
+        const result = await query(
+            'DELETE FROM member_activities WHERE id = $1 AND user_id = $2 RETURNING id',
+            [activityId, id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '활동 이력을 찾을 수 없습니다.' });
+        }
+        res.json({ success: true, message: '활동 이력이 삭제되었습니다.' });
+    } catch (err) {
+        console.error('Delete member activity error:', err);
+        res.status(500).json({ success: false, message: '활동 이력 삭제 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
  * PUT /api/admin/members/:id/memo
  * 관리자 메모 수정
  */

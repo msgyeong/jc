@@ -1433,3 +1433,81 @@ tbody tr.clickable {
         border-radius: 12px;
     }
 }
+
+/* ==================== 인물카드 (Dossier) ==================== */
+.dossier-page { max-width: 900px; }
+.dossier-back { margin-bottom: 16px; }
+
+.dossier-profile-card {
+    background: var(--c-bg-card);
+    border-radius: var(--card-radius);
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.dossier-avatar {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: var(--c-primary-bg); color: var(--c-primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 700; flex-shrink: 0; overflow: hidden;
+}
+.dossier-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.dossier-profile-info { flex: 1; }
+.dossier-name { font-size: 20px; font-weight: 700; color: var(--c-text); margin-bottom: 4px; }
+.dossier-meta { font-size: 13px; color: var(--c-text-sub); display: flex; gap: 12px; margin-top: 2px; }
+
+.dossier-tabs {
+    display: flex; gap: 4px; overflow-x: auto;
+    border-bottom: 2px solid var(--c-border);
+    margin-bottom: 20px; padding-bottom: 0;
+}
+.dossier-tab {
+    padding: 10px 16px; font-size: 13px; font-weight: 600;
+    border: none; background: none; cursor: pointer;
+    color: var(--c-text-sub); white-space: nowrap;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
+}
+.dossier-tab:hover { color: var(--c-text); }
+.dossier-tab.active { color: var(--c-primary); border-bottom-color: var(--c-primary); }
+
+.dossier-tab-content {
+    background: var(--c-bg-card);
+    border-radius: var(--card-radius);
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+    min-height: 300px;
+}
+
+.dossier-section { margin-bottom: 24px; }
+.dossier-section:last-child { margin-bottom: 0; }
+.dossier-section-title { font-size: 15px; font-weight: 600; color: var(--c-text); margin-bottom: 12px; }
+
+.dossier-section-header-row {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+}
+.dossier-section-header-row .dossier-section-title { margin-bottom: 0; }
+
+.dossier-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;
+}
+.dossier-field { display: flex; flex-direction: column; }
+.dossier-field-label { font-size: 12px; color: var(--c-text-sub); margin-bottom: 2px; }
+.dossier-field-value { font-size: 14px; color: var(--c-text); }
+
+.dossier-item-card {
+    background: var(--c-bg); border-radius: 10px; padding: 14px 16px;
+    margin-bottom: 10px; border: 1px solid var(--c-border);
+}
+
+@media (max-width: 768px) {
+    .dossier-profile-card { flex-direction: column; text-align: center; }
+    .dossier-tabs { gap: 0; }
+    .dossier-tab { padding: 8px 12px; font-size: 12px; }
+    .dossier-grid { grid-template-columns: 1fr; }
+}

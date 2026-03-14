@@ -40,7 +40,7 @@ function renderProfile(p) {
                         : `<span>${escapeHtml((p.name || '?')[0])}</span>`
                     }
                 </div>
-                <h2 class="profile-hero-name">${escapeHtml(p.name || '이름 없음')}</h2>
+                <h2 class="profile-hero-name">${escapeHtml(p.name || '이름 없음')}${p.jc_position && typeof getPositionBadgeHtml === 'function' ? ' ' + getPositionBadgeHtml(p.jc_position) : ''}</h2>
                 <span class="profile-hero-role">${roleLabel}</span>
             </div>
 

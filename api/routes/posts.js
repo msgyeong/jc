@@ -3,6 +3,7 @@ const router = express.Router();
 const { query, transaction } = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { sendPushToAll, sendPushToUser } = require('../utils/pushSender');
+const { createScheduledNotifications } = require('../cron/notification-scheduler');
 
 /**
  * 공지사항 게시판(category=notice) 작성 가능 여부: super_admin, admin만
@@ -348,7 +349,7 @@ router.get('/:id', authenticate, async (req, res) => {
         const result = await query(
             `SELECT
                 p.id, p.title, p.content, p.images, p.category,
-                p.is_pinned, p.linked_schedule_id,
+                p.is_pinned, p.linked_schedule_id, p.attendance_enabled,
                 p.views, p.likes_count, p.comments_count,
                 p.created_at, p.updated_at,
                 u.id as author_id, u.name as author_name, u.profile_image as author_image
@@ -452,11 +453,12 @@ router.post('/', authenticate, async (req, res) => {
         if (schedule && cat === 'notice') {
             const result = await transaction(async (client) => {
                 // 1. 공지 생성
+                const attendance_enabled = req.body.attendance_enabled || false;
                 const postResult = await client.query(
-                    `INSERT INTO posts (author_id, title, content, images, category, is_pinned, created_at, updated_at)
-                     VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+                    `INSERT INTO posts (author_id, title, content, images, category, is_pinned, attendance_enabled, created_at, updated_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
                      RETURNING id`,
-                    [authorId, title, content, images || [], cat, pinned]
+                    [authorId, title, content, images || [], cat, pinned, attendance_enabled]
                 );
                 const postId = postResult.rows[0].id;
 
@@ -522,23 +524,49 @@ router.post('/', authenticate, async (req, res) => {
         }
 
         // 일정 연동 없는 일반 게시글/공지 작성
+        const attendance_enabled = req.body.attendance_enabled || false;
         const result = await query(
-            `INSERT INTO posts (author_id, title, content, images, category, is_pinned, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+            `INSERT INTO posts (author_id, title, content, images, category, is_pinned, attendance_enabled, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
              RETURNING id`,
-            [authorId, title, content, images || [], cat, pinned]
+            [authorId, title, content, images || [], cat, pinned, attendance_enabled]
         );
 
         const newPostId = result.rows[0].id;
 
-        // N-01 공지 알림 발송
-        if (cat === 'notice') {
+        // push_setting 처리
+        const push_setting = req.body.push_setting || 'none';
+        if (push_setting === 'immediate' && cat === 'notice') {
+            // 즉시 알림 (기존 N-01)
             sendPushToAll({
                 title: '\uD83D\uDCE2 \uC0C8 \uACF5\uC9C0\uC0AC\uD56D',
                 body: (title || '').substring(0, 80),
                 data: { url: `/#posts/${newPostId}`, post_id: newPostId },
                 type: 'N-01'
             }, authorId).catch(e => console.error('[Push] N-01 발송 에러:', e.message));
+        } else if (cat === 'notice' && push_setting === 'none') {
+            // 기존 동작 유지: 공지면 기본 즉시 알림
+            sendPushToAll({
+                title: '\uD83D\uDCE2 \uC0C8 \uACF5\uC9C0\uC0AC\uD56D',
+                body: (title || '').substring(0, 80),
+                data: { url: `/#posts/${newPostId}`, post_id: newPostId },
+                type: 'N-01'
+            }, authorId).catch(e => console.error('[Push] N-01 발송 에러:', e.message));
+        }
+
+        // 예약/D-Day 알림 등록
+        if (['scheduled', 'd_day'].includes(push_setting)) {
+            try {
+                await createScheduledNotifications({
+                    postId: newPostId,
+                    scheduleId: null,
+                    pushSetting: push_setting,
+                    scheduledAt: req.body.push_scheduled_at,
+                    eventDate: req.body.push_event_date,
+                });
+            } catch (e) {
+                console.error('[Push] 예약 알림 등록 에러:', e.message);
+            }
         }
 
         res.status(201).json({
@@ -727,6 +755,196 @@ router.delete('/:id', authenticate, async (req, res) => {
             success: false,
             message: '게시글 삭제 중 오류가 발생했습니다.'
         });
+    }
+});
+
+/* ======================================================
+   게시글 참석/불참 API
+   ====================================================== */
+
+/**
+ * POST /api/posts/:id/attendance
+ * 참석/불참 등록 또는 변경
+ */
+router.post('/:id/attendance', authenticate, async (req, res) => {
+    try {
+        const { id: postId } = req.params;
+        const userId = req.user.userId;
+        const { status } = req.body;
+
+        if (!status || !['attending', 'not_attending'].includes(status)) {
+            return res.status(400).json({ success: false, message: 'status는 attending 또는 not_attending이어야 합니다.' });
+        }
+
+        // 게시글 확인 + attendance_enabled 체크
+        const postResult = await query('SELECT id, attendance_enabled, linked_schedule_id FROM posts WHERE id = $1', [postId]);
+        if (postResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '게시글을 찾을 수 없습니다.' });
+        }
+
+        const post = postResult.rows[0];
+
+        // linked_schedule_id가 있으면 schedule_attendance 재활용
+        if (post.linked_schedule_id) {
+            await query(
+                `INSERT INTO schedule_attendance (schedule_id, user_id, status, responded_at, updated_at)
+                 VALUES ($1, $2, $3, NOW(), NOW())
+                 ON CONFLICT (schedule_id, user_id)
+                 DO UPDATE SET status = $3, updated_at = NOW()`,
+                [post.linked_schedule_id, userId, status]
+            );
+        } else {
+            await query(
+                `INSERT INTO post_attendance (post_id, user_id, status, responded_at)
+                 VALUES ($1, $2, $3, NOW())
+                 ON CONFLICT (post_id, user_id)
+                 DO UPDATE SET status = $3, responded_at = NOW()`,
+                [postId, userId, status]
+            );
+        }
+
+        res.json({ success: true, message: status === 'attending' ? '참석으로 등록되었습니다.' : '불참으로 등록되었습니다.' });
+    } catch (err) {
+        console.error('Post attendance error:', err);
+        res.status(500).json({ success: false, message: '참석 처리에 실패했습니다.' });
+    }
+});
+
+/**
+ * DELETE /api/posts/:id/attendance
+ * 참석 취소
+ */
+router.delete('/:id/attendance', authenticate, async (req, res) => {
+    try {
+        const { id: postId } = req.params;
+        const userId = req.user.userId;
+
+        const postResult = await query('SELECT linked_schedule_id FROM posts WHERE id = $1', [postId]);
+        if (postResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '게시글을 찾을 수 없습니다.' });
+        }
+
+        const linkedScheduleId = postResult.rows[0].linked_schedule_id;
+        if (linkedScheduleId) {
+            await query('DELETE FROM schedule_attendance WHERE schedule_id = $1 AND user_id = $2', [linkedScheduleId, userId]);
+        } else {
+            await query('DELETE FROM post_attendance WHERE post_id = $1 AND user_id = $2', [postId, userId]);
+        }
+
+        res.json({ success: true, message: '참석이 취소되었습니다.' });
+    } catch (err) {
+        console.error('Delete post attendance error:', err);
+        res.status(500).json({ success: false, message: '참석 취소에 실패했습니다.' });
+    }
+});
+
+/**
+ * GET /api/posts/:id/attendance/summary
+ * 참석 현황 요약 (참석/불참 수 + 내 상태)
+ */
+router.get('/:id/attendance/summary', authenticate, async (req, res) => {
+    try {
+        const { id: postId } = req.params;
+        const userId = req.user.userId;
+
+        const postResult = await query('SELECT linked_schedule_id FROM posts WHERE id = $1', [postId]);
+        if (postResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '게시글을 찾을 수 없습니다.' });
+        }
+
+        const linkedScheduleId = postResult.rows[0].linked_schedule_id;
+        let tableName, fkColumn, fkValue;
+
+        if (linkedScheduleId) {
+            tableName = 'schedule_attendance';
+            fkColumn = 'schedule_id';
+            fkValue = linkedScheduleId;
+        } else {
+            tableName = 'post_attendance';
+            fkColumn = 'post_id';
+            fkValue = postId;
+        }
+
+        const [countResult, myResult] = await Promise.all([
+            query(
+                `SELECT status, COUNT(*) as count FROM ${tableName} WHERE ${fkColumn} = $1 GROUP BY status`,
+                [fkValue]
+            ),
+            query(
+                `SELECT status FROM ${tableName} WHERE ${fkColumn} = $1 AND user_id = $2`,
+                [fkValue, userId]
+            )
+        ]);
+
+        const counts = { attending: 0, not_attending: 0 };
+        for (const row of countResult.rows) {
+            counts[row.status] = parseInt(row.count);
+        }
+
+        res.json({
+            success: true,
+            data: {
+                attending: counts.attending,
+                not_attending: counts.not_attending,
+                total: counts.attending + counts.not_attending,
+                my_status: myResult.rows.length > 0 ? myResult.rows[0].status : null
+            }
+        });
+    } catch (err) {
+        console.error('Post attendance summary error:', err);
+        res.status(500).json({ success: false, message: '참석 현황 조회에 실패했습니다.' });
+    }
+});
+
+/**
+ * GET /api/posts/:id/attendance/details
+ * 참석 상세 목록 (참석자/불참자 명단)
+ */
+router.get('/:id/attendance/details', authenticate, async (req, res) => {
+    try {
+        const { id: postId } = req.params;
+
+        const postResult = await query('SELECT linked_schedule_id FROM posts WHERE id = $1', [postId]);
+        if (postResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '게시글을 찾을 수 없습니다.' });
+        }
+
+        const linkedScheduleId = postResult.rows[0].linked_schedule_id;
+        let tableName, fkColumn, fkValue;
+
+        if (linkedScheduleId) {
+            tableName = 'schedule_attendance';
+            fkColumn = 'schedule_id';
+            fkValue = linkedScheduleId;
+        } else {
+            tableName = 'post_attendance';
+            fkColumn = 'post_id';
+            fkValue = postId;
+        }
+
+        const result = await query(
+            `SELECT a.status, a.responded_at,
+                    u.id as user_id, u.name, u.profile_image
+             FROM ${tableName} a
+             LEFT JOIN users u ON a.user_id = u.id
+             WHERE a.${fkColumn} = $1
+             ORDER BY a.responded_at DESC`,
+            [fkValue]
+        );
+
+        const attending = result.rows.filter(r => r.status === 'attending');
+        const not_attending = result.rows.filter(r => r.status === 'not_attending');
+
+        res.json({
+            success: true,
+            data: {
+                attending,
+                not_attending
+            }
+        });
+    } catch (err) {
+        console.error('Post attendance details error:', err);
+        res.status(500).json({ success: false, message: '참석 상세 조회에 실패했습니다.' });
     }
 });
 

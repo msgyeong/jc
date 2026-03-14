@@ -2389,4 +2389,317 @@ router.put('/positions/:id/permissions', authenticate, async (req, res) => {
     }
 });
 
+/* ======================================================
+   회원 직책 변경 + 이력 API
+   ====================================================== */
+
+/**
+ * PUT /api/admin/members/:id/position
+ * 회원 직책 변경 (position_history 자동 기록)
+ */
+router.put('/members/:id/position', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { position_id, notes } = req.body;
+        const adminId = req.user.userId;
+
+        if (!position_id) {
+            return res.status(400).json({ success: false, message: 'position_id를 입력해주세요.' });
+        }
+
+        // 직책 존재 확인
+        const posResult = await query('SELECT id, name FROM positions WHERE id = $1', [position_id]);
+        if (posResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '존재하지 않는 직책입니다.' });
+        }
+
+        // 회원 존재 확인
+        const memberResult = await query('SELECT id, name, position_id FROM users WHERE id = $1', [id]);
+        if (memberResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+        }
+
+        const beforePositionId = memberResult.rows[0].position_id;
+
+        // 트랜잭션: 직책 변경 + 이력 기록
+        await transaction(async (client) => {
+            await client.query(
+                'UPDATE users SET position_id = $1, updated_at = NOW() WHERE id = $2',
+                [position_id, id]
+            );
+            await client.query(
+                `INSERT INTO position_history (user_id, position_id, assigned_at, assigned_by, notes)
+                 VALUES ($1, $2, NOW(), $3, $4)`,
+                [id, position_id, adminId, notes || null]
+            );
+        });
+
+        writeAuditLog({
+            adminId, action: 'member.position_change',
+            targetType: 'member', targetId: parseInt(id),
+            before: { position_id: beforePositionId },
+            after: { position_id },
+            description: `회원 ${memberResult.rows[0].name} 직책 변경 → ${posResult.rows[0].name}`,
+            ipAddress: req.ip,
+        });
+
+        res.json({
+            success: true,
+            message: `직책이 ${posResult.rows[0].name}(으)로 변경되었습니다.`,
+            data: { position_id, position_name: posResult.rows[0].name }
+        });
+    } catch (err) {
+        console.error('Update member position error:', err);
+        res.status(500).json({ success: false, message: '직책 변경 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * GET /api/admin/members/:id/position-history
+ * 회원 직책 변동 이력
+ */
+router.get('/members/:id/position-history', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await query(
+            `SELECT ph.id, ph.position_id, p.name as position_name,
+                    ph.assigned_at, ph.notes,
+                    u.name as assigned_by_name
+             FROM position_history ph
+             LEFT JOIN positions p ON ph.position_id = p.id
+             LEFT JOIN users u ON ph.assigned_by = u.id
+             WHERE ph.user_id = $1
+             ORDER BY ph.assigned_at DESC`,
+            [id]
+        );
+
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error('Get position history error:', err);
+        res.status(500).json({ success: false, message: '직책 이력 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   회원 인물카드(Dossier) API
+   ====================================================== */
+
+/**
+ * GET /api/admin/members/:id/dossier
+ * 인물카드 전체 데이터 (기본정보+교육+경력+가족+활동+메모 통합)
+ */
+router.get('/members/:id/dossier', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [memberResult, activitiesResult, posHistoryResult] = await Promise.all([
+            query(
+                `SELECT u.id, u.email, u.name, u.phone, u.birth_date, u.gender,
+                        u.address, u.address_detail, u.postal_code,
+                        u.profile_image, u.role, u.status,
+                        u.position, u.position_id, p.name as position_name,
+                        u.department, u.join_number,
+                        u.company, u.work_phone, u.work_address,
+                        u.industry, u.industry_detail,
+                        u.hobbies, u.specialties, u.special_notes,
+                        u.admin_memo,
+                        u.educations, u.careers, u.families,
+                        u.emergency_contact, u.emergency_contact_name, u.emergency_relationship,
+                        u.created_at, u.updated_at
+                 FROM users u
+                 LEFT JOIN positions p ON u.position_id = p.id
+                 WHERE u.id = $1`,
+                [id]
+            ),
+            query(
+                `SELECT id, activity_type, title, date, description, created_at
+                 FROM member_activities
+                 WHERE user_id = $1
+                 ORDER BY date DESC NULLS LAST, created_at DESC`,
+                [id]
+            ),
+            query(
+                `SELECT ph.id, ph.position_id, pos.name as position_name,
+                        ph.assigned_at, ph.notes,
+                        u.name as assigned_by_name
+                 FROM position_history ph
+                 LEFT JOIN positions pos ON ph.position_id = pos.id
+                 LEFT JOIN users u ON ph.assigned_by = u.id
+                 WHERE ph.user_id = $1
+                 ORDER BY ph.assigned_at DESC`,
+                [id]
+            )
+        ]);
+
+        if (memberResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+        }
+
+        const member = memberResult.rows[0];
+
+        res.json({
+            success: true,
+            data: {
+                ...member,
+                activities: activitiesResult.rows,
+                position_history: posHistoryResult.rows
+            }
+        });
+    } catch (err) {
+        console.error('Get member dossier error:', err);
+        res.status(500).json({ success: false, message: '인물카드 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * PUT /api/admin/members/:id/dossier
+ * 인물카드 수정 (섹션별 부분 업데이트)
+ */
+router.put('/members/:id/dossier', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const adminId = req.user.userId;
+        const {
+            hobbies, specialties, special_notes, admin_memo,
+            educations, careers, families
+        } = req.body;
+
+        const memberResult = await query('SELECT id FROM users WHERE id = $1', [id]);
+        if (memberResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+        }
+
+        const setClauses = [];
+        const params = [];
+
+        const addField = (field, value, isJson) => {
+            if (value !== undefined) {
+                params.push(isJson ? JSON.stringify(value) : value);
+                setClauses.push(`${field} = $${params.length}`);
+            }
+        };
+
+        addField('hobbies', hobbies);
+        addField('specialties', specialties);
+        addField('special_notes', special_notes);
+        addField('admin_memo', admin_memo);
+        addField('educations', educations, true);
+        addField('careers', careers, true);
+        addField('families', families, true);
+
+        if (setClauses.length === 0) {
+            return res.status(400).json({ success: false, message: '수정할 필드가 없습니다.' });
+        }
+
+        setClauses.push('updated_at = NOW()');
+        params.push(id);
+
+        await query(
+            `UPDATE users SET ${setClauses.join(', ')} WHERE id = $${params.length}`,
+            params
+        );
+
+        writeAuditLog({
+            adminId, action: 'member.dossier_update',
+            targetType: 'member', targetId: parseInt(id),
+            description: `인물카드 수정: ${Object.keys(req.body).join(', ')}`,
+            ipAddress: req.ip,
+        });
+
+        res.json({ success: true, message: '인물카드가 수정되었습니다.' });
+    } catch (err) {
+        console.error('Update member dossier error:', err);
+        res.status(500).json({ success: false, message: '인물카드 수정 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * POST /api/admin/members/:id/activities
+ * 활동 이력 추가
+ */
+router.post('/members/:id/activities', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { activity_type, title, date, description } = req.body;
+
+        if (!activity_type || !title) {
+            return res.status(400).json({ success: false, message: 'activity_type과 title은 필수입니다.' });
+        }
+
+        const validTypes = ['committee', 'volunteer', 'award', 'training', 'other'];
+        if (!validTypes.includes(activity_type)) {
+            return res.status(400).json({ success: false, message: `activity_type은 ${validTypes.join(', ')} 중 하나여야 합니다.` });
+        }
+
+        const memberResult = await query('SELECT id FROM users WHERE id = $1', [id]);
+        if (memberResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+        }
+
+        const result = await query(
+            `INSERT INTO member_activities (user_id, activity_type, title, date, description)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id, activity_type, title, date, description, created_at`,
+            [id, activity_type, title, date || null, description || null]
+        );
+
+        res.status(201).json({ success: true, data: result.rows[0] });
+    } catch (err) {
+        console.error('Create member activity error:', err);
+        res.status(500).json({ success: false, message: '활동 이력 추가 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * GET /api/admin/members/:id/activities
+ * 활동 이력 조회
+ */
+router.get('/members/:id/activities', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await query(
+            `SELECT id, activity_type, title, date, description, created_at
+             FROM member_activities
+             WHERE user_id = $1
+             ORDER BY date DESC NULLS LAST, created_at DESC`,
+            [id]
+        );
+
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error('Get member activities error:', err);
+        res.status(500).json({ success: false, message: '활동 이력 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * PUT /api/admin/members/:id/memo
+ * 관리자 메모 수정
+ */
+router.put('/members/:id/memo', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { admin_memo } = req.body;
+
+        if (admin_memo === undefined) {
+            return res.status(400).json({ success: false, message: 'admin_memo 필드가 필요합니다.' });
+        }
+
+        const memberResult = await query('SELECT id FROM users WHERE id = $1', [id]);
+        if (memberResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+        }
+
+        await query(
+            'UPDATE users SET admin_memo = $1, updated_at = NOW() WHERE id = $2',
+            [admin_memo, id]
+        );
+
+        res.json({ success: true, message: '관리자 메모가 수정되었습니다.' });
+    } catch (err) {
+        console.error('Update member memo error:', err);
+        res.status(500).json({ success: false, message: '관리자 메모 수정 중 오류가 발생했습니다.' });
+    }
+});
+
 module.exports = router;

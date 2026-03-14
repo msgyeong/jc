@@ -20,6 +20,7 @@ const industriesRoutes = require('./routes/industries');
 const { notificationsRouter, pushRouter } = require('./routes/notifications');
 const settingsRoutes = require('./routes/settings');
 const { startReminderCron } = require('./utils/reminderCron');
+const { startNotificationScheduler } = require('./cron/notification-scheduler');
 
 // Express 앱 초기화
 const app = express();
@@ -137,6 +138,8 @@ app.listen(PORT, () => {
 
     // 리마인더 cron 시작
     startReminderCron();
+    // 예약 알림 스케줄러 시작
+    startNotificationScheduler();
 });
 
 // Graceful shutdown

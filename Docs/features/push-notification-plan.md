@@ -465,7 +465,194 @@ cron.schedule('0 0 * * *', async () => {
 
 ---
 
-## 10. 보안 및 에러 처리
+## 10. 게시글 작성 시 Push 알림 상세 설정 (2026-03-14 추가)
+
+> 관리자가 게시글(공지) 작성 시 Push 알림의 발송 방식을 상세하게 설정할 수 있는 기능.
+
+### 10-1. 알림 발송 옵션 3가지
+
+| 옵션 | 설명 | 트리거 |
+|------|------|--------|
+| **즉시 발송** | 게시글 등록과 동시에 전체 회원에게 Push | 게시 완료 시점 |
+| **예약 발송** | 특정 날짜/시간에 Push 발송 | 예약된 시간 (cron 체크) |
+| **일정 연동 알림** | 일정 첨부 시 D-day 기준 알림 | D-7, D-3, D-1, 당일 중 선택 |
+
+### 10-2. 글쓰기 폼 — 알림 설정 UI
+
+```
+┌─────────────────────────────────────────┐
+│  ─── Push 알림 설정 ──────────────────  │
+│                                         │
+│  ○ 즉시 발송                            │  ← 기본 선택
+│     게시 즉시 전체 회원에게 알림         │
+│                                         │
+│  ○ 예약 발송                            │
+│     ┌─────────────┐  ┌──────────┐     │
+│     │ 2026-03-20  │  │  09:00   │     │  ← 날짜+시간 선택
+│     └─────────────┘  └──────────┘     │
+│                                         │
+│  ○ 일정 연동 알림                       │  ← 일정 첨부 시만 활성화
+│     알림 시점 (복수 선택):               │
+│     ☑ D-7 (7일 전)                     │
+│     ☑ D-3 (3일 전)                     │
+│     ☑ D-1 (1일 전)                     │
+│     ☑ 당일 오전 9시                     │
+│                                         │
+│  ○ 알림 없음                            │
+│     Push 알림을 보내지 않음             │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+- **즉시 발송**: 기존 N-01 알림 로직 동일
+- **예약 발송**: 날짜+시간 입력 → `scheduled_notifications` 테이블에 저장
+- **일정 연동**: 일정 첨부(linked_schedule_id) 시에만 활성화, D-day 기준 복수 선택
+- **알림 없음**: Push 발송 스킵 (게시글만 등록)
+
+### 10-3. DB: scheduled_notifications 테이블
+
+```sql
+CREATE TABLE scheduled_notifications (
+  id SERIAL PRIMARY KEY,
+  post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  schedule_id INTEGER REFERENCES schedules(id) ON DELETE CASCADE,
+  notification_type VARCHAR(20) NOT NULL CHECK (
+    notification_type IN ('immediate', 'scheduled', 'd_day_7', 'd_day_3', 'd_day_1', 'd_day_0')
+  ),
+  scheduled_at TIMESTAMPTZ NOT NULL,
+  status VARCHAR(15) DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'cancelled', 'failed')),
+  sent_at TIMESTAMPTZ,
+  error_message TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_scheduled_notifications_status ON scheduled_notifications(status, scheduled_at);
+CREATE INDEX idx_scheduled_notifications_post ON scheduled_notifications(post_id);
+```
+
+### 10-4. 알림 메시지 형식
+
+| 발송 유형 | 제목 | 본문 예시 |
+|-----------|------|----------|
+| 즉시/예약 | 📢 새 공지사항 | "3월 정기 이사회 안내" |
+| D-7 | ⏰ 일정 7일 전 | "[D-7] 3월 정기 이사회가 7일 후 예정되어 있습니다" |
+| D-3 | ⏰ 일정 3일 전 | "[D-3] 3월 정기 이사회가 3일 후입니다" |
+| D-1 | ⏰ 내일 일정 | "[D-1] 내일 3월 정기 이사회가 있습니다 — 14:00 영등포구청" |
+| 당일 | ⏰ 오늘 일정 | "[D-Day] 오늘 3월 정기 이사회 — 14:00 영등포구청" |
+
+### 10-5. 서버 스케줄러 로직
+
+```javascript
+// 매 분 실행 (또는 5분 간격)
+cron.schedule('*/5 * * * *', async () => {
+  const now = new Date();
+
+  // 1. pending 상태이고 scheduled_at <= now인 알림 조회
+  const pending = await db.query(`
+    SELECT sn.*, p.title, p.category
+    FROM scheduled_notifications sn
+    JOIN posts p ON p.id = sn.post_id
+    WHERE sn.status = 'pending'
+      AND sn.scheduled_at <= $1
+    ORDER BY sn.scheduled_at ASC
+    LIMIT 50
+  `, [now]);
+
+  // 2. 각 알림 발송
+  for (const notification of pending.rows) {
+    try {
+      await sendPushToAllMembers(notification);
+      await db.query(
+        `UPDATE scheduled_notifications SET status = 'sent', sent_at = NOW() WHERE id = $1`,
+        [notification.id]
+      );
+    } catch (err) {
+      await db.query(
+        `UPDATE scheduled_notifications SET status = 'failed', error_message = $2 WHERE id = $1`,
+        [notification.id, err.message]
+      );
+    }
+  }
+});
+```
+
+### 10-6. API: 게시글 작성 시 알림 설정
+
+기존 `POST /api/posts` 확장:
+
+```
+POST /api/posts
+Body: {
+  "title": "3월 정기 이사회 안내",
+  "content": "...",
+  "category": "notice",
+  "linked_schedule_id": 15,
+  "notification_setting": {
+    "type": "d_day",           // "immediate" | "scheduled" | "d_day" | "none"
+    "scheduled_at": null,      // type=scheduled일 때만
+    "d_day_options": [7, 3, 1, 0]  // type=d_day일 때만 (D-7, D-3, D-1, 당일)
+  }
+}
+```
+
+**서버 처리 로직**:
+1. `type = "immediate"`: 게시글 저장 후 즉시 N-01 알림 발송
+2. `type = "scheduled"`: `scheduled_notifications`에 pending 레코드 INSERT
+3. `type = "d_day"`: `linked_schedule_id`의 `start_date` 기준으로 D-7/3/1/0 날짜 계산 → 각각 `scheduled_notifications`에 INSERT (scheduled_at = start_date - N일, 09:00 KST)
+4. `type = "none"`: 알림 발송 안 함
+
+### 10-7. 기존 알림 시스템과의 통합
+
+| 기존 알림 | 관계 | 통합 방안 |
+|-----------|------|----------|
+| N-01 (공지 알림) | 즉시 발송과 동일 | `notification_setting.type = "immediate"`일 때 기존 N-01 로직 실행 |
+| N-03 (일정 리마인더) | D-1 알림과 유사 | D-day 알림은 `scheduled_notifications`으로 관리, N-03은 기존 cron 유지 (중복 방지 로직 추가) |
+| N-04 (일정 변경) | 독립 | 일정 변경 시 기존 로직 유지, pending 상태의 D-day 알림은 자동 재계산 |
+
+**중복 방지**: 일정에 D-1 알림이 설정된 경우, N-03 cron의 리마인더는 해당 일정에 대해 스킵
+
+### 10-8. 마이그레이션 파일
+
+파일: `database/migrations/017_scheduled_notifications.sql`
+
+```sql
+-- 017: 예약/D-day 알림 스케줄 테이블
+CREATE TABLE IF NOT EXISTS scheduled_notifications (
+  id SERIAL PRIMARY KEY,
+  post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  schedule_id INTEGER REFERENCES schedules(id) ON DELETE CASCADE,
+  notification_type VARCHAR(20) NOT NULL CHECK (
+    notification_type IN ('immediate', 'scheduled', 'd_day_7', 'd_day_3', 'd_day_1', 'd_day_0')
+  ),
+  scheduled_at TIMESTAMPTZ NOT NULL,
+  status VARCHAR(15) DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'cancelled', 'failed')),
+  sent_at TIMESTAMPTZ,
+  error_message TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_scheduled_notifications_status
+  ON scheduled_notifications(status, scheduled_at);
+CREATE INDEX IF NOT EXISTS idx_scheduled_notifications_post
+  ON scheduled_notifications(post_id);
+```
+
+### 10-9. 구현 우선순위
+
+Phase 3에 추가:
+
+| 순서 | 작업 | 담당 | 설명 |
+|------|------|------|------|
+| 20 | DB 마이그레이션 (scheduled_notifications) | 백엔드 | `017_scheduled_notifications.sql` |
+| 21 | POST /api/posts 확장 (notification_setting) | 백엔드 | 즉시/예약/D-day/없음 분기 |
+| 22 | 예약 발송 cron 스케줄러 | 백엔드 | 5분 간격 폴링 |
+| 23 | 일정 변경 시 D-day 알림 재계산 | 백엔드 | pending 상태 업데이트 |
+| 24 | 글쓰기 폼 — Push 알림 설정 UI | 프론트 | 라디오 + 날짜선택 + 체크박스 |
+| 25 | 관리자 — 예약 알림 관리 화면 | 프론트 (admin) | 예약 목록, 취소 기능 |
+
+---
+
+## 11. 보안 및 에러 처리
 
 | 항목 | 처리 방식 |
 |------|----------|

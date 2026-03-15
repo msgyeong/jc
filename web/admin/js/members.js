@@ -106,9 +106,21 @@ async function loadMembers() {
             return;
         }
 
-        let html = `<div class="table-wrap"><table>
+        var CELL_EDIT_ICON = '<svg class="cell-edit-icon" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M11.13 1.87a1.25 1.25 0 0 1 1.77 0l1.23 1.23a1.25 1.25 0 0 1 0 1.77L5.04 13.96l-3.37.84.84-3.37L11.13 1.87z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+        let html = `<div class="table-wrap"><table class="member-table">
+            <colgroup>
+                <col style="width:50px">
+                <col style="width:80px">
+                <col style="width:100px">
+                <col style="width:110px">
+                <col style="width:140px">
+                <col>
+                <col style="width:100px">
+                <col style="width:60px">
+            </colgroup>
             <thead><tr>
-                <th style="width:40px"></th>
+                <th></th>
                 <th>이름</th>
                 <th>직책</th>
                 <th>가입일</th>
@@ -123,18 +135,18 @@ async function loadMembers() {
                 ? adminPositionBadge(m.position_name)
                 : '<span class="edit-placeholder">회원</span>';
             var profDisplay = m.profession
-                ? escapeHtml(m.profession)
+                ? '<span>' + escapeHtml(m.profession) + '</span>'
                 : '<span class="edit-placeholder">-</span>';
             html += `<tr>
                 <td>
                     <div class="avatar avatar-sm">${escapeHtml((m.name || '?').charAt(0))}</div>
                 </td>
                 <td><strong>${escapeHtml(m.name)}</strong></td>
-                <td class="inline-editable" onclick="startInlineEditPosition(this, ${m.id}, '${escapeHtml(m.position_name || '')}')">${posDisplay}</td>
+                <td class="editable-cell" onclick="startInlineEditPosition(this, ${m.id}, '${escapeHtml(m.position_name || '')}')">${posDisplay}${CELL_EDIT_ICON}</td>
                 <td class="text-sub text-sm">${formatDate(m.created_at)}</td>
                 <td class="text-sub">${escapeHtml(m.phone || '-')}</td>
-                <td class="text-sub">${escapeHtml(m.email)}</td>
-                <td class="inline-editable" onclick="startInlineEditProfession(this, ${m.id}, '${escapeHtml(m.profession || '')}')">${profDisplay}</td>
+                <td class="text-sub text-ellipsis">${escapeHtml(m.email)}</td>
+                <td class="editable-cell" onclick="startInlineEditProfession(this, ${m.id}, '${escapeHtml(m.profession || '')}')">${profDisplay}${CELL_EDIT_ICON}</td>
                 <td>
                     <div class="action-btns">
                         <button class="btn btn-ghost btn-sm" onclick="openMemberDetail(${m.id})">상세</button>
@@ -243,16 +255,15 @@ async function changeMemberStatus(id, status) {
     }
 }
 
-// ── 인라인 편집: 공통 ──
+// ── 인라인 편집: 공통 (hover-to-edit 패턴) ──
 function startInlineEdit(td, memberId, currentValue, placeholder, saveCallback) {
-    if (td.querySelector('input')) return;
+    if (td.querySelector('.cell-input')) return;
     td.onclick = null;
     var input = document.createElement('input');
     input.type = 'text';
-    input.className = 'edit-input';
+    input.className = 'cell-input';
     input.value = currentValue;
     input.placeholder = placeholder;
-    input.style.cssText = 'border:1px solid #1E3A5F;padding:4px 8px;border-radius:4px;font-size:13px;width:100%;outline:none';
     td.innerHTML = '';
     td.appendChild(input);
     input.focus();

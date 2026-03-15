@@ -1588,9 +1588,40 @@ tbody tr.clickable {
     width: 100%;
 }
 
-/* Table inline edit */
-td.inline-editable { cursor: pointer; }
-td.inline-editable:hover { background: var(--c-primary-bg); }
+/* Member table — fixed layout */
+.member-table { table-layout: fixed; width: 100%; }
+.member-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.text-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Table editable cell (hover-to-edit) */
+td.editable-cell {
+    cursor: pointer;
+    position: relative;
+}
+td.editable-cell .cell-edit-icon {
+    opacity: 0;
+    transition: opacity 0.2s;
+    color: #9CA3AF;
+    flex-shrink: 0;
+    vertical-align: middle;
+    margin-left: 4px;
+}
+td.editable-cell:hover {
+    background: var(--c-primary-bg);
+}
+td.editable-cell:hover .cell-edit-icon {
+    opacity: 1;
+}
+td.editable-cell .cell-input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #1E3A5F;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: inherit;
+    font-family: inherit;
+    outline: none;
+}
 
 @media (max-width: 768px) {
     .dossier-profile-card { flex-direction: column; text-align: center; }

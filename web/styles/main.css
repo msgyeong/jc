@@ -2953,20 +2953,40 @@ input[type="date"]:focus {
     align-items: center;
     justify-content: center;
     margin-bottom: 12px;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
-.profile-avatar-xl span {
-    font-size: 32px;
-    font-weight: 700;
-    color: inherit;
+.profile-avatar-xl svg {
+    width: 60%;
+    height: 60%;
 }
 
 .profile-avatar-xl img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 50%;
+}
+
+/* 카메라 버튼 오버레이 (카카오톡 스타일) */
+.avatar-camera-btn {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 28px;
+    height: 28px;
+    background: #fff;
+    border-radius: 50%;
+    border: 1.5px solid #E5E7EB;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.avatar-camera-btn svg {
+    width: 14px;
+    height: 14px;
 }
 
 .profile-hero-name {

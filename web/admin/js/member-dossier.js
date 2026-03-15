@@ -5,6 +5,7 @@
 var dossierData = null;
 var dossierMemberId = null;
 var dossierPositions = [];
+var DOSSIER_DEFAULT_AVATAR = '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="15" r="6" fill="#A0C4E8"/><ellipse cx="20" cy="32" rx="11" ry="8" fill="#A0C4E8"/></svg>';
 
 // 관리자: 회원 프로필 사진 업로드
 async function uploadDossierPhoto(input, memberId) {
@@ -18,7 +19,7 @@ async function uploadDossierPhoto(input, memberId) {
     try {
         var formData = new FormData();
         formData.append('photo', file);
-        var token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+        var token = localStorage.getItem('admin_token') || localStorage.getItem('auth_token');
         var res = await fetch('/api/admin/members/' + memberId + '/photo', {
             method: 'PUT',
             headers: { 'Authorization': 'Bearer ' + token },
@@ -164,12 +165,12 @@ function renderDossierPage(container) {
         + '<button class="btn btn-ghost btn-sm" onclick="navigateAdmin(\'members\')">← 회원 목록</button>'
         + '</div>'
         + '<div class="dossier-profile-card">'
-        + '<div class="dossier-avatar dossier-avatar-lg" style="position:relative;cursor:pointer" onclick="document.getElementById(\'dossier-photo-input\').click()">'
+        + '<div class="dossier-avatar dossier-avatar-lg" style="background:#DBEAFE;position:relative;cursor:pointer" onclick="document.getElementById(\'dossier-photo-input\').click()">'
         + (m.profile_image
             ? '<img src="' + escapeHtml(m.profile_image) + '" alt="">'
-            : '<span>' + escapeHtml((m.name || '?').charAt(0)) + '</span>')
-        + '<div style="position:absolute;bottom:0;right:0;width:36px;height:36px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center">'
-        + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
+            : DOSSIER_DEFAULT_AVATAR)
+        + '<div class="avatar-camera-btn avatar-camera-btn--lg">'
+        + '<svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.5"><rect x="2" y="6" width="20" height="14" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M7 6l1.5-2h7L17 6"/></svg>'
         + '</div>'
         + '<input type="file" id="dossier-photo-input" accept="image/*" style="display:none" onchange="uploadDossierPhoto(this, ' + m.id + ')">'
         + '</div>'

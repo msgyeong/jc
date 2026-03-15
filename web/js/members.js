@@ -1,5 +1,7 @@
 // 회원 관련 기능 - 개선판 (Railway API 연동)
 
+var DEFAULT_AVATAR_SVG_SM = '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="15" r="6" fill="#A0C4E8"/><ellipse cx="20" cy="32" rx="11" ry="8" fill="#A0C4E8"/></svg>';
+
 // M-13: 업종 카테고리 상수
 const INDUSTRY_CATEGORIES = [
     { code: 'law', name: '법률/법무' },
@@ -172,8 +174,8 @@ async function loadFavorites() {
                             ? `<a href="tel:${m.phone.replace(/\D/g, '')}" class="call-btn" aria-label="${escapeHtml(name)}에게 전화걸기" onclick="event.stopPropagation()">${phoneSvg20}</a>`
                             : '';
                         return `<div class="member-card-v2" onclick="navigateTo('/members/${m.id}')" style="padding:10px 14px">
-                            <div class="member-avatar-v2" style="background:var(--color-primary-bg);color:var(--color-primary);width:36px;height:36px;font-size:14px">
-                                ${m.profile_image ? `<img src="${m.profile_image}" alt="${escapeHtml(name)}">` : `<span>${escapeHtml(name[0])}</span>`}
+                            <div class="member-avatar-v2" style="background:#DBEAFE;width:36px;height:36px">
+                                ${m.profile_image ? `<img src="${m.profile_image}" alt="${escapeHtml(name)}">` : DEFAULT_AVATAR_SVG_SM}
                             </div>
                             <div class="member-info-v2">
                                 <span class="member-name-v2">${escapeHtml(name)}</span>
@@ -239,10 +241,10 @@ function createMemberCard(member) {
 
     return `
         <div class="member-card-v2" onclick="navigateTo('/members/${member.id}')">
-            <div class="member-avatar-v2" style="background:${bgColor}; color:${avatarTextColor}">
+            <div class="member-avatar-v2" style="background:#DBEAFE">
                 ${member.profile_image
                     ? `<img src="${member.profile_image}" alt="${escapeHtml(name)}">`
-                    : `<span>${escapeHtml(initial)}</span>`
+                    : DEFAULT_AVATAR_SVG_SM
                 }
             </div>
             <div class="member-info-v2">
@@ -286,10 +288,10 @@ async function showMemberDetailScreen(memberId) {
             <div class="detail-view">
                 <button class="btn-back" onclick="backToMemberList()">← 회원 목록</button>
                 <div class="profile-hero">
-                    <div class="profile-avatar-xl" style="background:var(--color-primary-bg); color:var(--color-primary)">
+                    <div class="profile-avatar-xl" style="background:#DBEAFE">
                         ${m.profile_image
                             ? `<img src="${m.profile_image}" alt="${escapeHtml(m.name)}">`
-                            : `<span>${escapeHtml((m.name || '?')[0])}</span>`
+                            : DEFAULT_AVATAR_SVG_SM
                         }
                     </div>
                     <h2 class="profile-hero-name">${escapeHtml(m.name || '')}${m.jc_position ? ' ' + getPositionBadgeHtml(m.jc_position) : ''}</h2>

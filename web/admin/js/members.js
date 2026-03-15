@@ -4,6 +4,8 @@
 
 let membersState = { page: 1, search: '', status: '', role: '', total: 0, totalPages: 0 };
 
+var ADMIN_DEFAULT_AVATAR = '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="15" r="6" fill="#A0C4E8"/><ellipse cx="20" cy="32" rx="11" ry="8" fill="#A0C4E8"/></svg>';
+
 // 직책 뱃지 (관리자용)
 function adminPositionBadge(posName) {
     if (!posName) return '';
@@ -139,7 +141,7 @@ async function loadMembers() {
                 : '<span class="edit-placeholder">-</span>';
             var avatarHtml = m.profile_image
                 ? '<div class="avatar avatar-sm"><img src="' + escapeHtml(m.profile_image) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>'
-                : '<div class="avatar avatar-sm">' + escapeHtml((m.name || '?').charAt(0)) + '</div>';
+                : '<div class="avatar avatar-sm" style="background:#DBEAFE">' + ADMIN_DEFAULT_AVATAR + '</div>';
             html += `<tr>
                 <td>${avatarHtml}</td>
                 <td><strong>${escapeHtml(m.name)}</strong></td>
@@ -292,7 +294,7 @@ function startInlineEdit(td, memberId, currentValue, placeholder, saveCallback) 
 }
 
 function startInlineEditPosition(td, memberId, currentValue) {
-    startInlineEdit(td, memberId, currentValue, '회장, 부회장, 감사, 이사...', async function(val) {
+    startInlineEdit(td, memberId, currentValue, '', async function(val) {
         if (val) {
             await AdminAPI.put('/api/admin/members/' + memberId + '/position', { position_name: val });
         } else {

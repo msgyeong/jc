@@ -62,7 +62,7 @@ router.get('/', authenticate, async (req, res) => {
                 u.id, u.email, u.name, u.phone, u.address,
                 u.profile_image, u.role, u.status,
                 u.company, u.position, u.department,
-                u.industry, u.industry_detail,
+                u.industry, u.industry_detail, u.profession,
                 u.position_id,
                 u.created_at,
                 CASE WHEN f.id IS NOT NULL THEN true ELSE false END as is_favorited
@@ -179,7 +179,7 @@ router.get('/:id', authenticate, async (req, res) => {
                 profile_image, role, status,
                 birth_date, gender,
                 company, position, department, work_phone,
-                industry, industry_detail,
+                industry, industry_detail, profession,
                 position_id,
                 created_at, updated_at
              FROM users

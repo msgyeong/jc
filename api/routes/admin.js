@@ -321,35 +321,38 @@ router.get('/members', async (req, res) => {
 
         if (search) {
             params.push(`%${search}%`);
-            whereClause += ` AND (name ILIKE $${params.length}
-                OR email ILIKE $${params.length}
-                OR phone ILIKE $${params.length})`;
+            whereClause += ` AND (u.name ILIKE $${params.length}
+                OR u.email ILIKE $${params.length}
+                OR u.phone ILIKE $${params.length})`;
         }
 
         if (status) {
             params.push(status);
-            whereClause += ` AND status = $${params.length}`;
+            whereClause += ` AND u.status = $${params.length}`;
         }
 
         if (role) {
             params.push(role);
-            whereClause += ` AND role = $${params.length}`;
+            whereClause += ` AND u.role = $${params.length}`;
         }
 
         const countResult = await query(
-            `SELECT COUNT(*) FROM users ${whereClause}`,
+            `SELECT COUNT(*) FROM users u ${whereClause}`,
             params
         );
         const total = parseInt(countResult.rows[0].count);
 
         params.push(limit, offset);
         const result = await query(
-            `SELECT id, email, name, phone, birth_date,
-                    profile_image, role, status, position, position_id, department, join_number,
-                    company, industry, created_at, updated_at
-             FROM users
+            `SELECT u.id, u.email, u.name, u.phone, u.birth_date,
+                    u.profile_image, u.role, u.status, u.position, u.position_id, u.department, u.join_number,
+                    u.company, u.industry, u.profession,
+                    u.created_at, u.updated_at,
+                    p.name as position_name
+             FROM users u
+             LEFT JOIN positions p ON u.position_id = p.id
              ${whereClause}
-             ORDER BY ${safeSort} ${sortOrder}
+             ORDER BY u.${safeSort} ${sortOrder}
              LIMIT $${params.length - 1} OFFSET $${params.length}`,
             params
         );
@@ -380,7 +383,7 @@ router.get('/members/:id', async (req, res) => {
         const result = await query(
             `SELECT u.id, u.email, u.name, u.phone, u.birth_date, u.gender, u.address, u.address_detail, u.postal_code,
                     u.profile_image, u.role, u.status, u.position, u.position_id, u.department, u.join_number,
-                    u.company, u.work_phone, u.work_address, u.industry, u.industry_detail,
+                    u.company, u.work_phone, u.work_address, u.industry, u.industry_detail, u.profession,
                     u.educations, u.careers, u.families, u.hobbies, u.specialties, u.special_notes,
                     u.admin_memo,
                     u.emergency_contact, u.emergency_contact_name, u.emergency_relationship,
@@ -415,7 +418,7 @@ router.put('/members/:id', async (req, res) => {
         const {
             position, department, join_number, role, status,
             name, phone, company, industry, industry_detail,
-            educations, careers, hobbies, special_notes,
+            profession, educations, careers, hobbies, special_notes,
         } = req.body;
         const requesterId = req.user.userId;
         const requesterRole = req.user.role;
@@ -474,6 +477,7 @@ router.put('/members/:id', async (req, res) => {
         addField('company', company);
         addField('industry', industry);
         addField('industry_detail', industry_detail);
+        addField('profession', profession);
         addField('educations', educations ? JSON.stringify(educations) : undefined);
         addField('careers', careers ? JSON.stringify(careers) : undefined);
         addField('hobbies', hobbies);
@@ -2503,7 +2507,7 @@ router.get('/members/:id/dossier', async (req, res) => {
                         u.position, u.position_id, p.name as position_name,
                         u.department, u.join_number,
                         u.company, u.work_phone, u.work_address,
-                        u.industry, u.industry_detail,
+                        u.industry, u.industry_detail, u.profession,
                         u.hobbies, u.specialties, u.special_notes,
                         u.admin_memo,
                         u.educations, u.careers, u.families,

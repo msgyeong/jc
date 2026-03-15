@@ -1506,6 +1506,51 @@ tbody tr.clickable {
     margin-bottom: 10px; border: 1px solid var(--c-border);
 }
 
+/* Dossier timeline */
+.dossier-timeline {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 16px;
+}
+.dossier-timeline::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: var(--c-border);
+}
+.dossier-timeline-item {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    padding-bottom: 16px;
+}
+.dossier-timeline-item:last-child { padding-bottom: 0; }
+.dossier-timeline-dot {
+    position: absolute;
+    left: -20px;
+    top: 4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--c-primary);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px var(--c-primary-light);
+    flex-shrink: 0;
+}
+.dossier-timeline-content {
+    flex: 1;
+    min-width: 0;
+}
+.dossier-timeline-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--c-text);
+    margin-bottom: 2px;
+}
+
 @media (max-width: 768px) {
     .dossier-profile-card { flex-direction: column; text-align: center; }
     .dossier-tabs { gap: 0; }

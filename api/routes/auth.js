@@ -321,10 +321,12 @@ router.post('/reset-password', async (req, res) => {
             });
         }
 
+        const crypto = require('crypto');
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
         let tempPassword = '';
+        const randomBytes = crypto.randomBytes(10);
         for (let i = 0; i < 10; i++) {
-            tempPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+            tempPassword += chars.charAt(randomBytes[i] % chars.length);
         }
 
         const passwordHash = await hashPassword(tempPassword);

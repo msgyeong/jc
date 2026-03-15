@@ -183,7 +183,7 @@ router.get('/:id', authenticate, async (req, res) => {
                 position_id,
                 created_at, updated_at
              FROM users
-             WHERE id = $1`,
+             WHERE id = $1 AND status NOT IN ('withdrawn', 'rejected')`,
             [id]
         );
 

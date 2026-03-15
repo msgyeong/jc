@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
@@ -28,8 +29,18 @@ const app = express();
 const PORT = process.env.API_PORT || 3000;
 
 // CORS 설정
+const allowedOrigins = process.env.NODE_ENV === 'production'
+    ? ['https://jc-production-7db6.up.railway.app']
+    : ['http://localhost:3000', 'http://localhost:8080', 'http://127.0.0.1:3000'];
 app.use(cors({
-    origin: '*', // 모든 도메인 허용 (프로덕션에서는 특정 도메인만 허용 권장)
+    origin: function (origin, callback) {
+        // 같은 오리진 요청(origin이 없는 경우) 또는 허용된 오리진
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(null, true); // 모바일 앱 등 다양한 클라이언트 허용
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -37,6 +48,18 @@ app.use(cors({
 // Body parser
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 인증 엔드포인트 레이트 리미팅
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15분
+    max: 10, // 15분당 최대 10회
+    message: { success: false, message: '너무 많은 요청이 발생했습니다. 15분 후 다시 시도해주세요.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/signup', authLimiter);
+app.use('/api/auth/reset-password', authLimiter);
 
 // 요청 로깅 (개발 환경)
 if (process.env.NODE_ENV === 'development') {
@@ -80,7 +103,10 @@ app.use('/api/members', membersRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/seed', seedRoutes);
+// seed 라우트는 개발 환경에서만 사용
+if (process.env.NODE_ENV !== 'production') {
+    app.use('/api/seed', seedRoutes);
+}
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/favorites', favoritesRoutes);
 app.use('/api/titles', titlesRoutes);

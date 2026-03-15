@@ -2,6 +2,42 @@
 
 ---
 
+## 2026-03-15
+
+### 작업 내용
+
+앱 내 관리자 권한 기능 기획서 작성 완료.
+
+#### 앱 내 관리자 권한 기획서
+- 파일: `Docs/features/mobile-admin-plan.md` (신규)
+- **배경**: 관리자가 PC 없이도 앱에서 긴급 관리 업무 처리 필요
+- **핵심 설계**:
+  - 기존 `role` 체계(super_admin/admin/member) 변경 없이, `mobile_admin_permissions` 테이블로 세부 권한 분리
+  - JWT에 권한 미포함 → DB 실시간 조회로 즉시 반영
+  - `requireMobilePermission()` 미들웨어 신규 추가 (기존 미들웨어 변경 없음)
+- **세부 권한 5종**: member_approve, post_manage, schedule_manage, notice_manage, push_send
+- **DB**: `mobile_admin_permissions` + `mobile_admin_log` (migration 018)
+- **역할별 기본 권한**: super_admin 전체 자동, admin 기본 ON, member 기본 OFF
+- **앱 UI**: 프로필 → 관리 허브 → 회원 승인/공지관리/긴급 푸시 + 게시글·일정 인라인 관리
+- **관리자 웹 UI**: 회원 상세에서 권한 토글 + 변경 이력 로그
+- **보안**: API 레벨 권한 체크, 감사 로그, 푸시 Rate limit, soft delete
+- Phase 1 (핵심 9단계) + Phase 2 (확장 7단계)
+
+### 생성 파일
+- `Docs/features/mobile-admin-plan.md` (신규)
+
+### 마이그레이션 파일 계획
+| 번호 | 파일명 | 내용 |
+|------|--------|------|
+| 018 | `018_mobile_admin_permissions.sql` | 앱 관리 권한 + 변경 로그 테이블 |
+
+### 전달사항
+- **백엔드**: `api/middleware/mobileAdmin.js` 신규 생성, `api/routes/mobile-admin.js` 신규 라우트
+- **프론트엔드**: `web/js/mobile-admin.js` 신규, 프로필 화면에 관리 메뉴 조건부 렌더링
+- **기존 코드 변경 없음**: authenticate, requireRole, adminAuth 미들웨어 전부 유지
+
+---
+
 ## 2026-03-13
 
 ### 작업 내용

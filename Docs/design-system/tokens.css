@@ -293,6 +293,34 @@
   --push-section-bg:       var(--color-bg-secondary);
   --push-section-radius:   var(--radius-lg);
   --push-section-padding:  var(--space-16);
+
+  /* ── 앱 관리 권한 (Admin) ── */
+  --admin-badge-bg:        #EFF6FF;   /* 관리 뱃지 배경 — 연한 블루 */
+  --admin-badge-text:      #1E40AF;   /* 관리 뱃지 텍스트 */
+  --admin-badge-border:    #93C5FD;   /* 관리 뱃지 테두리 */
+  --admin-icon-color:      var(--color-primary);
+
+  --admin-section-bg:      var(--color-bg-secondary);
+  --admin-section-border:  var(--color-border);
+
+  --admin-hub-card-bg:     var(--color-surface);
+  --admin-hub-card-border: var(--color-border);
+  --admin-hub-card-radius: var(--radius-lg);
+
+  --admin-pending-badge-bg:    var(--color-error);       /* 대기 건수 배지 */
+  --admin-pending-badge-text:  #FFFFFF;
+
+  --admin-action-btn-height:   36px;
+  --admin-action-btn-radius:   var(--radius-sm);
+
+  /* 긴급 발송 버튼 (위험 강조) */
+  --admin-send-btn-bg:         var(--color-error);
+  --admin-send-btn-hover:      var(--color-error-hover);
+  --admin-send-btn-text:       #FFFFFF;
+
+  /* 권한 토글 행 */
+  --admin-perm-row-height:     52px;
+  --admin-perm-row-border:     var(--color-divider);
 }
 
 /* ===================================================================
@@ -330,4 +358,12 @@
   --attendance-absent-bg:     #450A0A;
   --attendance-absent-color:  #FCA5A5;
   --attendance-none-bg:       var(--color-bg-secondary);
+
+  /* 관리 권한 — 다크 */
+  --admin-badge-bg:           #1E3A5F;
+  --admin-badge-text:         #93C5FD;
+  --admin-badge-border:       #2563EB;
+  --admin-hub-card-bg:        var(--color-surface);
+  --admin-hub-card-border:    var(--color-border);
+  --admin-pending-badge-bg:   #EF4444;
 }

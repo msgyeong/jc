@@ -1804,9 +1804,765 @@ textarea {
 
 ---
 
+---
+
+## 20. 앱 관리 권한 UI
+
+> 참조: `Docs/features/mobile-admin-plan.md`
+> 원칙: 관리 기능은 일반 기능과 시각적으로 구분 (🛡️ 아이콘 + admin 뱃지), 권한이 없는 사용자에게는 완전히 숨김
+
+### 20-1. 관리자 뱃지 (Admin Badge)
+
+관리 기능임을 표시하는 방패 아이콘 + 라벨 조합. 관리 영역 진입, 관리 액션 버튼에 사용.
+
+```css
+/* 관리 뱃지 — 관리 기능 표식 */
+.badge-admin {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    font-size: var(--text-xs);                      /* 12px */
+    font-weight: var(--weight-medium);
+    background: var(--admin-badge-bg);              /* #EFF6FF */
+    color: var(--admin-badge-text);                 /* #1E40AF */
+    border: 1px solid var(--admin-badge-border);    /* #93C5FD */
+    border-radius: var(--radius-full);
+    line-height: 1.4;
+}
+
+.badge-admin-icon {
+    width: 12px;
+    height: 12px;
+}
+```
+
+### 20-2. 관리자 웹 — 권한 관리 토글 UI
+
+인물카드 또는 회원 상세 화면에 "앱 관리 권한" 섹션으로 추가.
+
+```
+┌─────────────────────────────────────────────────┐
+│  ─── 📱 앱 관리 권한 ────────────────────────── │
+│                                                 │
+│  현재 역할: member                               │
+│                                                 │
+│  회원 승인/거부     member_approve      [OFF]   │
+│  게시글 관리       post_manage          [ON ]   │
+│  일정 관리         schedule_manage      [OFF]   │
+│  공지 관리         notice_manage        [OFF]   │
+│  긴급 푸시 발송    push_send            [OFF]   │
+│                                                 │
+│  변경 사유 (선택)                                │
+│  ┌─────────────────────────────────────────┐   │
+│  │                                         │   │
+│  └─────────────────────────────────────────┘   │
+│                                                 │
+│  ┌─────────────────────────────────────────┐   │
+│  │              권한 저장                   │   │
+│  └─────────────────────────────────────────┘   │
+│                                                 │
+│  ─── 권한 변경 이력 ─────────────────────────── │
+│                                                 │
+│  2026-03-15 10:00  member_approve 부여          │
+│    by 김관리자 — "회장 직책 부여"                │
+│                                                 │
+└─────────────────────────────────────────────────┘
+```
+
+```css
+/* 권한 관리 섹션 */
+.admin-perm-section {
+    background: var(--admin-section-bg);
+    border: 1px solid var(--admin-section-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-16);
+    margin-top: var(--space-16);
+}
+
+.admin-perm-section-title {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    margin-bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+}
+
+.admin-perm-role {
+    font-size: var(--text-sm);
+    color: var(--color-text-sub);
+    margin-bottom: var(--space-16);
+}
+
+/* 권한 토글 행 */
+.admin-perm-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: var(--admin-perm-row-height);       /* 52px */
+    padding: var(--space-8) 0;
+    border-bottom: 1px solid var(--admin-perm-row-border);
+}
+
+.admin-perm-row:last-child {
+    border-bottom: none;
+}
+
+.admin-perm-label {
+    flex: 1;
+}
+
+.admin-perm-name {
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--color-text);
+}
+
+.admin-perm-code {
+    font-size: var(--text-xs);
+    color: var(--color-text-hint);
+    font-family: monospace;
+}
+
+/* 변경 사유 입력 */
+.admin-perm-reason {
+    margin-top: var(--space-16);
+}
+
+.admin-perm-reason label {
+    display: block;
+    font-size: var(--text-sm);
+    color: var(--color-text-sub);
+    margin-bottom: var(--space-4);
+}
+
+/* 변경 이력 */
+.admin-perm-log {
+    margin-top: var(--space-16);
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-16);
+}
+
+.admin-perm-log-title {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-sub);
+    margin-bottom: var(--space-12);
+}
+
+.admin-perm-log-item {
+    padding: var(--space-8) 0;
+    border-bottom: 1px solid var(--color-divider);
+}
+
+.admin-perm-log-item:last-child {
+    border-bottom: none;
+}
+
+.admin-perm-log-action {
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+
+.admin-perm-log-action .grant {
+    color: var(--color-success);
+    font-weight: var(--weight-medium);
+}
+
+.admin-perm-log-action .revoke {
+    color: var(--color-error);
+    font-weight: var(--weight-medium);
+}
+
+.admin-perm-log-meta {
+    font-size: var(--text-xs);
+    color: var(--color-text-hint);
+    margin-top: 2px;
+}
+```
+
+### 20-3. 앱 — 관리 메뉴 배치 (프로필 화면)
+
+프로필 하단 설정 리스트에 "관리" 그룹 추가. `has_any_permission = true`일 때만 렌더링.
+
+```
+┌─────────────────────────────────────────┐
+│  ─── 관리 ──────────────────────────── │  ← 권한 보유 시만 표시
+│  ┌──────────────────────────────────┐  │
+│  │  🛡️ 앱 관리                  >  │  │
+│  └──────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+```
+
+```css
+/* 관리 메뉴 아이템 — 기존 settings-item 확장 */
+.settings-item--admin .settings-item-icon {
+    color: var(--admin-icon-color);                 /* primary */
+}
+
+.settings-item--admin .settings-item-label {
+    font-weight: var(--weight-medium);
+}
+```
+
+### 20-4. 앱 — 관리 허브 화면
+
+보유 권한에 해당하는 카드만 표시. `post_manage`/`schedule_manage`는 각 상세 화면에서 인라인 제공.
+
+```
+┌─────────────────────────────────────────┐
+│  ← 앱 관리                              │
+├─────────────────────────────────────────┤
+│                                         │
+│  ┌──────────────────────────────────┐  │
+│  │  👤 회원 승인 대기           3   │  │  ← member_approve
+│  │     승인 대기 중인 회원 목록      │  │
+│  └──────────────────────────────────┘  │
+│                                         │
+│  ┌──────────────────────────────────┐  │
+│  │  📢 공지 관리                    │  │  ← notice_manage
+│  │     공지 작성/수정/삭제           │  │
+│  └──────────────────────────────────┘  │
+│                                         │
+│  ┌──────────────────────────────────┐  │
+│  │  📣 긴급 푸시 발송               │  │  ← push_send
+│  │     즉시 전체/그룹 알림 발송      │  │
+│  └──────────────────────────────────┘  │
+│                                         │
+│  ℹ️ 게시글/일정 관리는 각 화면에서     │
+│     인라인으로 제공됩니다.              │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+```css
+/* 관리 허브 화면 */
+.admin-hub {
+    padding: var(--space-16);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+}
+
+/* 관리 허브 카드 */
+.admin-hub-card {
+    background: var(--admin-hub-card-bg);
+    border: 1px solid var(--admin-hub-card-border);
+    border-radius: var(--admin-hub-card-radius);    /* 12px */
+    padding: var(--space-16);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--space-12);
+    transition: background var(--duration-fast) var(--ease-default);
+}
+
+.admin-hub-card:hover {
+    background: var(--color-bg-secondary);
+}
+
+.admin-hub-card:active {
+    background: var(--color-border-light);
+}
+
+/* 카드 아이콘 (원형 배경) */
+.admin-hub-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--admin-badge-bg);              /* #EFF6FF */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+/* 카드 텍스트 */
+.admin-hub-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-hub-card-title {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+}
+
+.admin-hub-card-desc {
+    font-size: var(--text-sm);
+    color: var(--color-text-sub);
+    margin-top: 2px;
+}
+
+/* 대기 건수 배지 (빨간 원형) */
+.admin-pending-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: var(--radius-full);
+    background: var(--admin-pending-badge-bg);      /* red */
+    color: var(--admin-pending-badge-text);          /* white */
+    font-size: 11px;
+    font-weight: var(--weight-bold);
+}
+
+/* 허브 하단 안내 */
+.admin-hub-note {
+    font-size: var(--text-xs);
+    color: var(--color-text-hint);
+    text-align: center;
+    padding: var(--space-8) 0;
+}
+```
+
+### 20-5. 앱 — 회원가입 승인 화면
+
+```
+┌─────────────────────────────────────────┐
+│  ← 회원 승인 대기                        │
+├─────────────────────────────────────────┤
+│                                         │
+│  ┌──────────────────────────────────┐  │
+│  │  신청자1                         │  │
+│  │  new1@example.com                │  │
+│  │  010-1234-5678                   │  │
+│  │  추천인: 김영등                   │  │
+│  │  신청일: 2026-03-14              │  │
+│  │                                  │  │
+│  │  [거부]              [승인]      │  │
+│  └──────────────────────────────────┘  │
+│                                         │
+│  대기 중인 회원이 없습니다.              │  ← 빈 상태
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+```css
+/* 승인 대기 화면 */
+.admin-pending {
+    padding: var(--space-16);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+}
+
+/* 승인 대기 카드 */
+.admin-pending-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-16);
+}
+
+.admin-pending-card-name {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    margin-bottom: var(--space-8);
+}
+
+.admin-pending-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-16);
+}
+
+.admin-pending-card-row {
+    font-size: var(--text-sm);
+    color: var(--color-text-sub);
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+}
+
+/* 승인/거부 버튼 */
+.admin-pending-actions {
+    display: flex;
+    gap: var(--space-8);
+}
+
+.admin-pending-actions .btn {
+    flex: 1;
+    height: var(--admin-action-btn-height);         /* 36px */
+    border-radius: var(--admin-action-btn-radius);  /* 6px */
+    font-size: var(--text-sm);
+}
+
+/* 거부 버튼 — ghost + 빨강 텍스트 */
+.btn-reject {
+    background: transparent;
+    color: var(--color-error);
+    border: 1px solid var(--color-error);
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+}
+
+.btn-reject:hover {
+    background: var(--color-error-bg);
+}
+
+/* 승인 버튼 — primary */
+.btn-approve {
+    background: var(--color-primary);
+    color: #FFFFFF;
+    border: none;
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+}
+
+.btn-approve:hover {
+    background: var(--color-primary-hover);
+}
+
+/* 거부 사유 다이얼로그 */
+.admin-reject-dialog .dialog-body textarea {
+    min-height: 80px;
+}
+```
+
+### 20-6. 앱 — 게시글/일정 관리 버튼 (인라인)
+
+`post_manage` 또는 `schedule_manage` 권한 보유 시, 타인의 게시글/일정 상세 하단에 관리 영역 표시.
+
+```
+─── 🛡️ 관리 ──────────────────────
+[수정]  [삭제]
+```
+
+```css
+/* 인라인 관리 액션 영역 */
+.admin-inline-actions {
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-12);
+    margin-top: var(--space-16);
+}
+
+.admin-inline-actions-title {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-hint);
+    margin-bottom: var(--space-8);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.admin-inline-actions-buttons {
+    display: flex;
+    gap: var(--space-8);
+}
+
+/* 관리 액션 버튼 (소형) */
+.btn-admin-action {
+    height: var(--admin-action-btn-height);         /* 36px */
+    padding: 0 var(--space-16);
+    border-radius: var(--admin-action-btn-radius);  /* 6px */
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    transition: all var(--duration-fast) var(--ease-default);
+}
+
+/* 관리 수정 버튼 */
+.btn-admin-action--edit {
+    background: var(--admin-badge-bg);              /* #EFF6FF */
+    color: var(--admin-badge-text);                 /* #1E40AF */
+    border: 1px solid var(--admin-badge-border);    /* #93C5FD */
+}
+
+.btn-admin-action--edit:hover {
+    background: #DBEAFE;
+}
+
+/* 관리 삭제 버튼 */
+.btn-admin-action--delete {
+    background: var(--color-error-bg);              /* #FEF2F2 */
+    color: var(--color-error-text);                 /* #991B1B */
+    border: 1px solid var(--color-error);
+}
+
+.btn-admin-action--delete:hover {
+    background: #FEE2E2;
+}
+
+/* 삭제 확인 다이얼로그 — 사유 입력 */
+.admin-delete-dialog .dialog-body textarea {
+    min-height: 60px;
+    margin-top: var(--space-8);
+}
+```
+
+### 20-7. 앱 — 긴급 푸시 발송 화면
+
+```
+┌─────────────────────────────────────────┐
+│  ← 긴급 푸시 발송                        │
+├─────────────────────────────────────────┤
+│                                         │
+│  제목 (필수)                             │
+│  ┌─────────────────────────────────┐   │
+│  │ 긴급: 모임 장소 변경             │   │
+│  └─────────────────────────────────┘   │
+│                                         │
+│  내용 (필수)                             │
+│  ┌─────────────────────────────────┐   │
+│  │ 오늘 모임 장소가 변경되었습니다. │   │
+│  │ 영등포구청 3층 → 5층 대회의실   │   │
+│  └─────────────────────────────────┘   │
+│                                         │
+│  발송 대상                               │
+│  ┌─────────────────────────────────┐   │
+│  │ ● 전체 회원                     │   │
+│  │ ○ 직책별                        │   │
+│  │ ○ 분과별                        │   │
+│  └─────────────────────────────────┘   │
+│                                         │
+│  ⚠️ 즉시 발송됩니다. 신중히 작성하세요. │
+│                                         │
+│  ┌─────────────────────────────────┐   │
+│  │          📣 발송하기             │   │  ← 빨간 강조
+│  └─────────────────────────────────┘   │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+```css
+/* 긴급 푸시 발송 화면 */
+.admin-push-form {
+    padding: var(--space-16);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+}
+
+/* 발송 대상 라디오 그룹 */
+.admin-push-target {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-12);
+}
+
+.admin-push-target-title {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-sub);
+    margin-bottom: var(--space-8);
+}
+
+.admin-push-target-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    padding: var(--space-8) 0;
+    cursor: pointer;
+    font-size: var(--text-base);
+    color: var(--color-text);
+}
+
+/* 직책/분과 드롭다운 (라디오 하위) */
+.admin-push-target-select {
+    margin-top: var(--space-4);
+    padding-left: 28px;               /* 라디오와 정렬 */
+}
+
+/* 경고 메시지 */
+.admin-push-warning {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    padding: var(--space-12);
+    background: var(--color-warning-bg);
+    border: 1px solid var(--color-warning);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    color: var(--color-warning-text);
+}
+
+/* 발송 버튼 — 빨간색 강조 */
+.btn-admin-send {
+    width: 100%;
+    height: var(--btn-height);                      /* 44px */
+    border-radius: var(--btn-radius);
+    background: var(--admin-send-btn-bg);           /* red */
+    color: var(--admin-send-btn-text);              /* white */
+    border: none;
+    font-size: var(--btn-font-size);
+    font-weight: var(--weight-bold);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-8);
+    transition: background var(--duration-fast) var(--ease-default);
+}
+
+.btn-admin-send:hover:not(:disabled) {
+    background: var(--admin-send-btn-hover);
+}
+
+.btn-admin-send:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* 발송 확인 다이얼로그 */
+.admin-push-confirm .dialog {
+    max-width: 340px;
+}
+
+.admin-push-confirm-summary {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--space-12);
+    margin: var(--space-8) 0;
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+}
+
+.admin-push-confirm-summary dt {
+    color: var(--color-text-hint);
+    font-size: var(--text-xs);
+    margin-bottom: 2px;
+}
+
+.admin-push-confirm-summary dd {
+    color: var(--color-text);
+    margin: 0 0 var(--space-8) 0;
+}
+
+/* 발송 결과 토스트 */
+.admin-push-result {
+    font-size: var(--text-sm);
+}
+
+.admin-push-result .sent-count {
+    color: var(--color-success);
+    font-weight: var(--weight-semibold);
+}
+
+.admin-push-result .failed-count {
+    color: var(--color-error);
+    font-weight: var(--weight-semibold);
+}
+```
+
+### 20-8. 디자인 원칙 요약
+
+| 원칙 | 적용 방식 |
+|------|----------|
+| **관리 = 🛡️ 방패 아이콘** | 관리 메뉴, 인라인 관리 영역, 관리 뱃지에 일관 사용 |
+| **관리 색상 = 연한 블루** | `#EFF6FF` 배경 + `#1E40AF` 텍스트 (일반 Primary와 구분) |
+| **위험 액션 = 빨강 강조** | 긴급 푸시 발송, 관리 삭제 버튼은 `error` 계열 |
+| **권한 없으면 완전 숨김** | `display: none` — 흐리게/비활성이 아닌 완전 제거 |
+| **확인 다이얼로그 필수** | 승인/거부/삭제/발송 모두 확인 단계 포함 |
+| **변경 이력 추적** | 권한 변경 로그 UI 제공 (관리자 웹) |
+
+### 20-9. CSS 클래스 네이밍 컨벤션
+
+```
+admin-*              — 관리 기능 전용 프리픽스
+badge-admin          — 관리 뱃지
+admin-hub-*          — 관리 허브 화면
+admin-pending-*      — 회원 승인 대기
+admin-inline-*       — 인라인 관리 (게시글/일정)
+admin-push-*         — 긴급 푸시 발송
+admin-perm-*         — 권한 관리 (관리자 웹)
+btn-admin-*          — 관리 전용 버튼
+btn-approve / btn-reject — 승인/거부 (짝 버튼)
+```
+
+### HTML 사용 예시
+
+```html
+<!-- 프로필 — 관리 메뉴 -->
+<div class="settings-group">
+    <div class="settings-group-title">관리</div>
+    <div class="settings-item settings-item--admin" onclick="navigateTo('mobile-admin')">
+        <svg class="settings-item-icon"><!-- shield icon --></svg>
+        <span class="settings-item-label">앱 관리</span>
+        <svg class="settings-item-chevron"><!-- > --></svg>
+    </div>
+</div>
+
+<!-- 관리 허브 -->
+<div class="admin-hub">
+    <div class="admin-hub-card" onclick="navigateTo('admin-pending')">
+        <div class="admin-hub-card-icon">👤</div>
+        <div class="admin-hub-card-info">
+            <div class="admin-hub-card-title">
+                회원 승인 대기
+                <span class="admin-pending-count">3</span>
+            </div>
+            <div class="admin-hub-card-desc">승인 대기 중인 회원 목록</div>
+        </div>
+    </div>
+</div>
+
+<!-- 게시글 상세 — 인라인 관리 -->
+<div class="admin-inline-actions">
+    <div class="admin-inline-actions-title">
+        🛡️ 관리
+    </div>
+    <div class="admin-inline-actions-buttons">
+        <button class="btn-admin-action btn-admin-action--edit">수정</button>
+        <button class="btn-admin-action btn-admin-action--delete">삭제</button>
+    </div>
+</div>
+
+<!-- 회원 승인 카드 -->
+<div class="admin-pending-card">
+    <div class="admin-pending-card-name">신청자1</div>
+    <div class="admin-pending-card-info">
+        <div class="admin-pending-card-row">✉️ new1@example.com</div>
+        <div class="admin-pending-card-row">📞 010-1234-5678</div>
+        <div class="admin-pending-card-row">추천인: 김영등</div>
+        <div class="admin-pending-card-row">신청일: 2026-03-14</div>
+    </div>
+    <div class="admin-pending-actions">
+        <button class="btn btn-reject">거부</button>
+        <button class="btn btn-approve">승인</button>
+    </div>
+</div>
+
+<!-- 관리자 웹 — 권한 토글 -->
+<div class="admin-perm-section">
+    <div class="admin-perm-section-title">📱 앱 관리 권한</div>
+    <div class="admin-perm-role">현재 역할: member</div>
+    <div class="admin-perm-row">
+        <div class="admin-perm-label">
+            <div class="admin-perm-name">회원 승인/거부</div>
+            <div class="admin-perm-code">member_approve</div>
+        </div>
+        <label class="toggle-switch">
+            <input type="checkbox" />
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
+    <!-- ... 나머지 권한 ... -->
+</div>
+```
+
+---
+
 ## 변경 이력
 
 | 날짜 | 변경 내용 |
 |------|-----------|
+| 2026-03-15 | v2.2 — §20 앱 관리 권한 UI (관리뱃지, 권한토글, 관리허브, 회원승인, 인라인관리, 긴급푸시) 추가 |
 | 2026-03-14 | v2.1 — 인물카드(Dossier) 전체 UI, 수평탭, 타임라인, 정보그리드, 직책뱃지 7종, 참석/불참 UI, Push알림 설정 UI 추가 |
 | 2026-03-13 | v2.0 미니멀 리뉴얼 — CEO "촌스러움" 피드백 반영, 딥네이비+무채색, 입력필드/헤더/프로필/토글 전면 리디자인 |

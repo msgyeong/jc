@@ -44,9 +44,16 @@ router.get('/', authenticate, async (req, res) => {
             });
         }
 
+        // 앱 관리 권한 조회
+        const { getMobilePermissions } = require('../middleware/mobileAdmin');
+        const mobilePerms = await getMobilePermissions(userId, result.rows[0].role);
+
         res.json({
             success: true,
-            profile: result.rows[0]
+            profile: {
+                ...result.rows[0],
+                mobile_permissions: mobilePerms
+            }
         });
     } catch (error) {
         console.error('Get profile error:', error);

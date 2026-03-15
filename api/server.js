@@ -19,6 +19,7 @@ const titlesRoutes = require('./routes/titles');
 const industriesRoutes = require('./routes/industries');
 const { notificationsRouter, pushRouter } = require('./routes/notifications');
 const settingsRoutes = require('./routes/settings');
+const mobileAdminRoutes = require('./routes/mobile-admin');
 const { startReminderCron } = require('./utils/reminderCron');
 const { startNotificationScheduler } = require('./cron/notification-scheduler');
 
@@ -87,6 +88,7 @@ app.use('/api/industries', industriesRoutes);
 app.use('/api/push', pushRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/mobile-admin', mobileAdminRoutes);
 
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

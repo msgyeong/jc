@@ -2804,4 +2804,166 @@ router.put('/members/:id/photo', photoUpload.single('photo'), async (req, res) =
     }
 });
 
+/* ======================================================
+   GET /api/admin/members/:id/mobile-permissions
+   회원의 앱 관리 권한 조회
+   ====================================================== */
+router.get('/members/:id/mobile-permissions', async (req, res) => {
+    try {
+        const memberId = parseInt(req.params.id);
+        const { getMobilePermissions } = require('../middleware/mobileAdmin');
+
+        const userResult = await query(
+            'SELECT id, name, role FROM users WHERE id = $1',
+            [memberId]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+        }
+
+        const user = userResult.rows[0];
+        const permissions = await getMobilePermissions(user.id, user.role);
+
+        res.json({
+            success: true,
+            data: {
+                user_id: user.id,
+                name: user.name,
+                role: user.role,
+                permissions
+            }
+        });
+    } catch (err) {
+        console.error('Get member permissions error:', err);
+        res.status(500).json({ success: false, message: '권한 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   PUT /api/admin/members/:id/mobile-permissions
+   회원 앱 관리 권한 부여/회수
+   ====================================================== */
+router.put('/members/:id/mobile-permissions', async (req, res) => {
+    try {
+        const memberId = parseInt(req.params.id);
+        const adminUserId = req.user.userId;
+        const adminRole = req.user.role;
+        const { permissions, reason } = req.body;
+        const { ALL_PERMISSIONS } = require('../middleware/mobileAdmin');
+
+        if (!permissions || typeof permissions !== 'object') {
+            return res.status(400).json({ success: false, message: '권한 목록을 입력해주세요.' });
+        }
+
+        // 대상 회원 조회
+        const userResult = await query('SELECT id, role FROM users WHERE id = $1', [memberId]);
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+        }
+
+        const targetRole = userResult.rows[0].role;
+
+        // 권한 부여 제한: admin은 member에게만, super_admin은 모두에게
+        if (adminRole === 'admin' && targetRole !== 'member') {
+            return res.status(403).json({ success: false, message: 'admin은 일반 회원에게만 권한을 변경할 수 있습니다.' });
+        }
+
+        // super_admin의 권한은 변경 불가
+        if (targetRole === 'super_admin') {
+            return res.status(403).json({ success: false, message: 'super_admin의 권한은 변경할 수 없습니다.' });
+        }
+
+        await transaction(async (client) => {
+            for (const perm of ALL_PERMISSIONS) {
+                if (permissions[perm] === undefined) continue;
+
+                const granted = !!permissions[perm];
+
+                // UPSERT
+                await client.query(
+                    `INSERT INTO mobile_admin_permissions (user_id, permission, granted, granted_by, granted_at)
+                     VALUES ($1, $2, $3, $4, NOW())
+                     ON CONFLICT (user_id, permission)
+                     DO UPDATE SET granted = $3, granted_by = $4, granted_at = NOW()`,
+                    [memberId, perm, granted, adminUserId]
+                );
+
+                // 감사 로그
+                await client.query(
+                    `INSERT INTO mobile_admin_log (target_user_id, permission, action, performed_by, reason, created_at)
+                     VALUES ($1, $2, $3, $4, $5, NOW())`,
+                    [memberId, perm, granted ? 'grant' : 'revoke', adminUserId, reason || null]
+                );
+            }
+        });
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Update member permissions error:', err);
+        res.status(500).json({ success: false, message: '권한 변경 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   GET /api/admin/mobile-admin-log
+   권한 변경 이력 조회
+   ====================================================== */
+router.get('/mobile-admin-log', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const offset = (page - 1) * limit;
+        const userId = req.query.user_id ? parseInt(req.query.user_id) : null;
+
+        let whereClause = '';
+        const params = [];
+
+        if (userId) {
+            whereClause = 'WHERE l.target_user_id = $1';
+            params.push(userId);
+        }
+
+        const countResult = await query(
+            `SELECT COUNT(*) FROM mobile_admin_log l ${whereClause}`,
+            params
+        );
+        const total = parseInt(countResult.rows[0].count);
+
+        const logResult = await query(
+            `SELECT l.id, l.permission, l.action, l.reason, l.created_at,
+                    tu.id AS target_user_id, tu.name AS target_user_name,
+                    pu.id AS performer_id, pu.name AS performer_name
+             FROM mobile_admin_log l
+             LEFT JOIN users tu ON tu.id = l.target_user_id
+             LEFT JOIN users pu ON pu.id = l.performed_by
+             ${whereClause}
+             ORDER BY l.created_at DESC
+             LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+            [...params, limit, offset]
+        );
+
+        res.json({
+            success: true,
+            data: {
+                items: logResult.rows.map(r => ({
+                    id: r.id,
+                    target_user: { id: r.target_user_id, name: r.target_user_name },
+                    permission: r.permission,
+                    action: r.action,
+                    performed_by: { id: r.performer_id, name: r.performer_name },
+                    reason: r.reason,
+                    created_at: r.created_at
+                })),
+                total,
+                page,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+    } catch (err) {
+        console.error('Get admin log error:', err);
+        res.status(500).json({ success: false, message: '권한 이력 조회 중 오류가 발생했습니다.' });
+    }
+});
+
 module.exports = router;

@@ -404,4 +404,28 @@ router.post('/withdraw', authenticate, async (req, res) => {
     }
 });
 
+/**
+ * GET /api/auth/my-permissions
+ * 로그인 사용자의 앱 관리 권한 조회
+ */
+router.get('/my-permissions', authenticate, async (req, res) => {
+    try {
+        const { getMobilePermissions } = require('../middleware/mobileAdmin');
+        const permissions = await getMobilePermissions(req.user.userId, req.user.role);
+        const hasAny = Object.values(permissions).some(v => v === true);
+
+        res.json({
+            success: true,
+            data: {
+                role: req.user.role,
+                mobile_permissions: permissions,
+                has_any_permission: hasAny
+            }
+        });
+    } catch (err) {
+        console.error('Get my permissions error:', err);
+        res.status(500).json({ success: false, message: '권한 조회 중 오류가 발생했습니다.' });
+    }
+});
+
 module.exports = router;

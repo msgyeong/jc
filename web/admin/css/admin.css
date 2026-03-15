@@ -1551,6 +1551,47 @@ tbody tr.clickable {
     margin-bottom: 2px;
 }
 
+/* Editable field (hover-to-edit) */
+.editable-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+.editable-field:hover {
+    background: var(--c-primary-bg);
+}
+.editable-field .edit-icon {
+    opacity: 0;
+    transition: opacity 0.2s;
+    width: 14px;
+    height: 14px;
+    color: #9CA3AF;
+    flex-shrink: 0;
+}
+.editable-field:hover .edit-icon {
+    opacity: 1;
+}
+.editable-field .edit-placeholder {
+    color: #9CA3AF;
+    font-style: italic;
+}
+.editable-field .edit-input {
+    border: 1px solid #1E3A5F;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: inherit;
+    outline: none;
+    width: 100%;
+}
+
+/* Table inline edit */
+td.inline-editable { cursor: pointer; }
+td.inline-editable:hover { background: var(--c-primary-bg); }
+
 @media (max-width: 768px) {
     .dossier-profile-card { flex-direction: column; text-align: center; }
     .dossier-tabs { gap: 0; }

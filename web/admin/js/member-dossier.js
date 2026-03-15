@@ -44,35 +44,75 @@ function dossierPositionBadge(posName) {
     return ' <span class="badge" style="margin-left:6px;font-size:11px;' + style + '">' + escapeHtml(posName) + '</span>';
 }
 
-// JC 직책 저장 (positions 테이블에서 이름으로 매칭)
-async function saveDossierJcPosition() {
-    var input = document.getElementById('dossier-position-input');
-    if (!input) return;
-    var posName = input.value.trim();
-    try {
-        if (!posName) {
-            // 직책 제거
-            await AdminAPI.put('/api/admin/members/' + dossierMemberId, { position: null });
-            showAdminToast('JC 직책이 제거되었습니다.');
-        } else {
-            // positions 테이블에서 이름으로 검색
-            var posRes = await AdminAPI.get('/api/admin/positions');
-            var positions = (posRes.success && posRes.data && posRes.data.items) || [];
-            var match = positions.find(function(p) { return p.name === posName; });
-            if (match) {
-                await AdminAPI.put('/api/admin/members/' + dossierMemberId + '/position', { position_id: match.id });
-                showAdminToast('JC 직책이 변경되었습니다.');
-            } else {
-                showAdminToast('등록된 JC 직책이 아닙니다: ' + posName + '. 설정 > 직책관리에서 먼저 등록하세요.', 'error');
-                return;
-            }
+// 편집 아이콘 SVG
+var EDIT_ICON_SVG = '<svg class="edit-icon" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M11.13 1.87a1.25 1.25 0 0 1 1.77 0l1.23 1.23a1.25 1.25 0 0 1 0 1.77L5.04 13.96l-3.37.84.84-3.37L11.13 1.87z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+// hover-to-edit 시작 (범용)
+function startHoverEdit(container, currentValue, placeholder, onSave) {
+    if (container.querySelector('.edit-input')) return;
+    var input = document.createElement('input');
+    input.className = 'edit-input';
+    input.type = 'text';
+    input.value = currentValue || '';
+    input.placeholder = placeholder || '';
+    container.innerHTML = '';
+    container.appendChild(input);
+    input.focus();
+    input.select();
+
+    var saving = false;
+    async function save() {
+        if (saving) return;
+        saving = true;
+        try {
+            await onSave(input.value.trim());
+        } catch (err) {
+            showAdminToast('저장 실패: ' + err.message, 'error');
+            saving = false;
         }
-        await refreshDossier();
-        var main = document.getElementById('main-content');
-        if (main) renderDossierPage(main);
-    } catch (err) {
-        showAdminToast('JC 직책 저장 실패: ' + err.message, 'error');
     }
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        if (e.key === 'Escape') { refreshDossierAndRerender(); }
+    });
+    input.addEventListener('blur', function() { save(); });
+}
+
+async function refreshDossierAndRerender() {
+    await refreshDossier();
+    var main = document.getElementById('main-content');
+    if (main) renderDossierPage(main);
+}
+
+// 직책 hover-to-edit 시작
+function startDossierPositionEdit(el) {
+    startHoverEdit(el, dossierData.position_name || '', '회장, 부회장, 감사, 이사...', async function(val) {
+        if (val) {
+            await AdminAPI.put('/api/admin/members/' + dossierMemberId + '/position', { position_name: val });
+        } else {
+            await AdminAPI.put('/api/admin/members/' + dossierMemberId, { position: null });
+        }
+        showAdminToast('직책이 저장되었습니다.');
+        await refreshDossierAndRerender();
+    });
+}
+
+// 직업 hover-to-edit 시작
+function startDossierProfessionEdit(el) {
+    startHoverEdit(el, dossierData.profession || '', '변호사, 한의사, 개발자 등', async function(val) {
+        await AdminAPI.put('/api/admin/members/' + dossierMemberId, { profession: val || null });
+        showAdminToast('직업이 저장되었습니다.');
+        await refreshDossierAndRerender();
+    });
+}
+
+// 인준번호 hover-to-edit 시작
+function startDossierJoinNumberEdit(el) {
+    startHoverEdit(el, dossierData.join_number || '', '인준번호 입력', async function(val) {
+        await AdminAPI.put('/api/admin/members/' + dossierMemberId, { join_number: val || null });
+        showAdminToast('인준번호가 저장되었습니다.');
+        await refreshDossierAndRerender();
+    });
 }
 
 function renderDossierPage(container) {
@@ -105,9 +145,15 @@ function renderDossierPage(container) {
         + (m.email ? '<span>' + escapeHtml(m.email) + '</span>' : '')
         + (m.phone ? '<span>' + escapeHtml(m.phone) + '</span>' : '')
         + '</div>'
-        + '<div class="dossier-position-edit" style="margin-top:8px;display:flex;align-items:center;gap:4px">'
-        + '<input id="dossier-position-input" type="text" value="' + escapeHtml(m.position_name || '') + '" placeholder="JC 직책 입력 (회장, 부회장, 감사, 이사 등)" style="padding:4px 8px;border:1px solid var(--c-border);border-radius:6px;font-size:12px;width:280px">'
-        + '<button class="btn btn-primary btn-sm" style="padding:3px 10px;font-size:11px" onclick="saveDossierJcPosition()">저장</button>'
+        + '<div style="margin-top:8px;display:flex;align-items:center;gap:16px;font-size:13px">'
+        + '<div style="display:flex;align-items:center;gap:4px"><span class="text-sub">직책:</span> '
+        + '<span class="editable-field" onclick="startDossierPositionEdit(this)">'
+        + (m.position_name ? '<span>' + escapeHtml(m.position_name) + '</span>' : '<span class="edit-placeholder">회원</span>')
+        + EDIT_ICON_SVG + '</span></div>'
+        + '<div style="display:flex;align-items:center;gap:4px"><span class="text-sub">직업:</span> '
+        + '<span class="editable-field" onclick="startDossierProfessionEdit(this)">'
+        + (m.profession ? '<span>' + escapeHtml(m.profession) + '</span>' : '<span class="edit-placeholder">-</span>')
+        + EDIT_ICON_SVG + '</span></div>'
         + '</div>'
         + '</div>'
         + '<div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
@@ -151,10 +197,10 @@ function renderDossierBasic(el) {
         + '<div class="dossier-section">'
         + '<h4 class="dossier-section-title" style="font-weight:600;font-size:15px;color:#1E3A5F;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">JC 정보</h4>'
         + '<div class="dossier-grid">'
-        + dossierField('JC 직책', m.position_name)
-        + dossierEditableField('직업(직종)', m.profession, 'profession', '변호사, 한의사, 개발자 등')
+        + dossierHoverEditField('직책', m.position_name, '회원', 'startDossierPositionEdit')
+        + dossierHoverEditField('직업(직종)', m.profession, '-', 'startDossierProfessionEdit')
         + dossierField('가입일', formatDateTime(m.created_at))
-        + dossierField('가입번호', m.join_number)
+        + dossierHoverEditField('인준번호', m.join_number, '-', 'startDossierJoinNumberEdit')
         + '</div></div>'
         // 섹션 2: 기본 정보
         + '<div class="dossier-section">'
@@ -685,28 +731,15 @@ function dossierField(label, value) {
     return '<div class="dossier-field"><span class="dossier-field-label">' + label + '</span><span class="dossier-field-value">' + escapeHtml(value || '-') + '</span></div>';
 }
 
-function dossierEditableField(label, value, fieldName, placeholder) {
+function dossierHoverEditField(label, value, placeholder, onclickFn) {
+    var display = value
+        ? '<span>' + escapeHtml(value) + '</span>'
+        : '<span class="edit-placeholder">' + escapeHtml(placeholder) + '</span>';
     return '<div class="dossier-field">'
         + '<span class="dossier-field-label">' + label + '</span>'
-        + '<div style="display:flex;align-items:center;gap:4px">'
-        + '<input id="dossier-edit-' + fieldName + '" type="text" value="' + escapeHtml(value || '') + '" placeholder="' + escapeHtml(placeholder || '') + '" style="padding:3px 8px;border:1px solid var(--c-border);border-radius:6px;font-size:13px;width:180px">'
-        + '<button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="saveDossierInlineField(\'' + fieldName + '\')">저장</button>'
-        + '</div></div>';
-}
-
-async function saveDossierInlineField(fieldName) {
-    var input = document.getElementById('dossier-edit-' + fieldName);
-    if (!input) return;
-    var val = input.value.trim();
-    try {
-        var body = {};
-        body[fieldName] = val || null;
-        await AdminAPI.put('/api/admin/members/' + dossierMemberId, body);
-        showAdminToast('저장되었습니다.');
-        await refreshDossier();
-    } catch (err) {
-        showAdminToast('저장 실패: ' + err.message, 'error');
-    }
+        + '<span class="editable-field" onclick="' + onclickFn + '(this)">'
+        + display + EDIT_ICON_SVG
+        + '</span></div>';
 }
 
 async function saveDossierField(field, value) {

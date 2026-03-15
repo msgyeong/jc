@@ -2403,15 +2403,37 @@ router.put('/positions/:id/permissions', authenticate, async (req, res) => {
 /**
  * PUT /api/admin/members/:id/position
  * 회원 직책 변경 (position_history 자동 기록)
+ * - position_id: 직책 ID로 지정 (기존 방식)
+ * - position_name: 직책명 텍스트로 지정 (자동 생성, 신규 방식)
  */
 router.put('/members/:id/position', async (req, res) => {
     try {
         const { id } = req.params;
-        const { position_id, notes } = req.body;
+        let { position_id, position_name, notes } = req.body;
         const adminId = req.user.userId;
 
+        // position_name이 주어지면 positions 테이블에서 찾거나 자동 생성
+        if (!position_id && position_name) {
+            const trimmedName = String(position_name).trim();
+            if (!trimmedName) {
+                return res.status(400).json({ success: false, message: '직책명을 입력해주세요.' });
+            }
+            // 기존 직책 검색
+            const existing = await query('SELECT id, name FROM positions WHERE name = $1', [trimmedName]);
+            if (existing.rows.length > 0) {
+                position_id = existing.rows[0].id;
+            } else {
+                // 자동 생성
+                const inserted = await query(
+                    'INSERT INTO positions (name, level, created_at, updated_at) VALUES ($1, 0, NOW(), NOW()) RETURNING id, name',
+                    [trimmedName]
+                );
+                position_id = inserted.rows[0].id;
+            }
+        }
+
         if (!position_id) {
-            return res.status(400).json({ success: false, message: 'position_id를 입력해주세요.' });
+            return res.status(400).json({ success: false, message: 'position_id 또는 position_name을 입력해주세요.' });
         }
 
         // 직책 존재 확인

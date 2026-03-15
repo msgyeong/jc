@@ -6,6 +6,38 @@ var dossierData = null;
 var dossierMemberId = null;
 var dossierPositions = [];
 
+// 관리자: 회원 프로필 사진 업로드
+async function uploadDossierPhoto(input, memberId) {
+    if (!input.files || !input.files[0]) return;
+    var file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+        showAdminToast('파일 크기는 5MB 이하여야 합니다.', 'error');
+        input.value = '';
+        return;
+    }
+    try {
+        var formData = new FormData();
+        formData.append('photo', file);
+        var token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+        var res = await fetch('/api/admin/members/' + memberId + '/photo', {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + token },
+            body: formData
+        });
+        var data = await res.json();
+        if (data.success) {
+            showAdminToast('프로필 사진이 변경되었습니다.');
+            openMemberDossier(memberId);
+        } else {
+            showAdminToast(data.message || '업로드 실패', 'error');
+        }
+    } catch (err) {
+        console.error('Upload dossier photo error:', err);
+        showAdminToast('프로필 사진 업로드 중 오류가 발생했습니다.', 'error');
+    }
+    input.value = '';
+}
+
 async function openMemberDossier(memberId) {
     closeModal();
     dossierMemberId = memberId;
@@ -132,10 +164,14 @@ function renderDossierPage(container) {
         + '<button class="btn btn-ghost btn-sm" onclick="navigateAdmin(\'members\')">← 회원 목록</button>'
         + '</div>'
         + '<div class="dossier-profile-card">'
-        + '<div class="dossier-avatar dossier-avatar-lg">'
+        + '<div class="dossier-avatar dossier-avatar-lg" style="position:relative;cursor:pointer" onclick="document.getElementById(\'dossier-photo-input\').click()">'
         + (m.profile_image
             ? '<img src="' + escapeHtml(m.profile_image) + '" alt="">'
             : '<span>' + escapeHtml((m.name || '?').charAt(0)) + '</span>')
+        + '<div style="position:absolute;bottom:0;right:0;width:36px;height:36px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center">'
+        + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
+        + '</div>'
+        + '<input type="file" id="dossier-photo-input" accept="image/*" style="display:none" onchange="uploadDossierPhoto(this, ' + m.id + ')">'
         + '</div>'
         + '<div class="dossier-profile-info">'
         + '<div class="dossier-name">' + escapeHtml(m.name || '이름 없음')

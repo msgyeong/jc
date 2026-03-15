@@ -3,6 +3,38 @@
 let profileLoaded = false;
 let currentProfile = null;
 
+// 프로필 사진 업로드
+async function uploadProfilePhoto(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('파일 크기는 5MB 이하여야 합니다.', 'error');
+        input.value = '';
+        return;
+    }
+    try {
+        const formData = new FormData();
+        formData.append('photo', file);
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/profile/photo', {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + token },
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('프로필 사진이 변경되었습니다.');
+            loadProfile();
+        } else {
+            showToast(data.message || '업로드 실패', 'error');
+        }
+    } catch (err) {
+        console.error('Upload profile photo error:', err);
+        showToast('프로필 사진 업로드 중 오류가 발생했습니다.', 'error');
+    }
+    input.value = '';
+}
+
 // 내 프로필 로드
 async function loadProfile() {
     const container = document.getElementById('profile-content');
@@ -34,11 +66,15 @@ function renderProfile(p) {
         <div class="profile-v2">
             <!-- 프로필 히어로 -->
             <div class="profile-hero">
-                <div class="profile-avatar-xl" style="background:var(--color-primary-bg); color:var(--color-primary)">
+                <div class="profile-avatar-xl" style="background:var(--color-primary-bg); color:var(--color-primary); position:relative; cursor:pointer" onclick="document.getElementById('profile-photo-input').click()">
                     ${p.profile_image
                         ? `<img src="${p.profile_image}" alt="${escapeHtml(p.name)}">`
                         : `<span>${escapeHtml((p.name || '?')[0])}</span>`
                     }
+                    <div style="position:absolute;bottom:0;right:0;width:36px;height:36px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </div>
+                    <input type="file" id="profile-photo-input" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this)">
                 </div>
                 <h2 class="profile-hero-name">${escapeHtml(p.name || '이름 없음')}${p.jc_position && typeof getPositionBadgeHtml === 'function' ? ' ' + getPositionBadgeHtml(p.jc_position) : ''}</h2>
                 <span class="profile-hero-role">${roleLabel}</span>

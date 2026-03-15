@@ -112,11 +112,11 @@ async function loadMembers() {
             <colgroup>
                 <col style="width:50px">
                 <col style="width:80px">
+                <col style="width:90px">
                 <col style="width:100px">
-                <col style="width:110px">
-                <col style="width:140px">
-                <col>
-                <col style="width:100px">
+                <col style="width:130px">
+                <col style="width:200px">
+                <col style="width:90px">
                 <col style="width:60px">
             </colgroup>
             <thead><tr>
@@ -137,15 +137,16 @@ async function loadMembers() {
             var profDisplay = m.profession
                 ? '<span>' + escapeHtml(m.profession) + '</span>'
                 : '<span class="edit-placeholder">-</span>';
+            var avatarHtml = m.profile_image
+                ? '<div class="avatar avatar-sm"><img src="' + escapeHtml(m.profile_image) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>'
+                : '<div class="avatar avatar-sm">' + escapeHtml((m.name || '?').charAt(0)) + '</div>';
             html += `<tr>
-                <td>
-                    <div class="avatar avatar-sm">${escapeHtml((m.name || '?').charAt(0))}</div>
-                </td>
+                <td>${avatarHtml}</td>
                 <td><strong>${escapeHtml(m.name)}</strong></td>
                 <td class="editable-cell" onclick="startInlineEditPosition(this, ${m.id}, '${escapeHtml(m.position_name || '')}')">${posDisplay}${CELL_EDIT_ICON}</td>
                 <td class="text-sub text-sm">${formatDate(m.created_at)}</td>
                 <td class="text-sub">${escapeHtml(m.phone || '-')}</td>
-                <td class="text-sub text-ellipsis">${escapeHtml(m.email)}</td>
+                <td class="text-sub" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(m.email)}</td>
                 <td class="editable-cell" onclick="startInlineEditProfession(this, ${m.id}, '${escapeHtml(m.profession || '')}')">${profDisplay}${CELL_EDIT_ICON}</td>
                 <td>
                     <div class="action-btns">

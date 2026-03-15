@@ -162,11 +162,13 @@ async function handleSignup(event) {
         const career = careerData.join('\n');
         
         // Step 5: 가족 정보
-        const maritalStatus = document.querySelector('input[name="marital-status"]:checked').value;
+        const maritalRadio = document.querySelector('input[name="marital-status"]:checked');
+        const maritalStatus = maritalRadio ? maritalRadio.value : '';
         const spouseName = document.getElementById('spouse-name')?.value.trim() || '';
         const spouseBirth = document.getElementById('spouse-birth')?.value || '';
-        
-        const hasChildren = document.querySelector('input[name="has-children"]:checked').value;
+
+        const childrenRadio = document.querySelector('input[name="has-children"]:checked');
+        const hasChildren = childrenRadio ? childrenRadio.value : 'no';
         const childItems = document.querySelectorAll('.child-item');
         const childrenData = [];
         childItems.forEach(item => {

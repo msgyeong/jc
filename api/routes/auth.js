@@ -189,6 +189,22 @@ router.post('/login', async (req, res) => {
             });
         }
 
+        if (user.status === 'rejected') {
+            return res.status(403).json({
+                success: false,
+                message: '가입이 거절된 계정입니다. 관리자에게 문의하세요.',
+                status: 'rejected'
+            });
+        }
+
+        if (user.status === 'withdrawn') {
+            return res.status(403).json({
+                success: false,
+                message: '탈퇴한 계정입니다.',
+                status: 'withdrawn'
+            });
+        }
+
         // JWT 토큰 생성
         const token = generateToken(user.id, user.email, user.role);
 

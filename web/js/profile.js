@@ -18,7 +18,8 @@ async function uploadProfilePhoto(input) {
         const formData = new FormData();
         formData.append('photo', file);
         const token = localStorage.getItem('auth_token');
-        const res = await fetch('/api/profile/photo', {
+        const baseURL = (window.apiClient && window.apiClient.baseURL) || '/api';
+        const res = await fetch(baseURL + '/profile/photo', {
             method: 'PUT',
             headers: { 'Authorization': 'Bearer ' + token },
             body: formData
@@ -129,7 +130,7 @@ function renderProfile(p) {
                 </div>` : ''}
             </div>
             <div class="settings-group">
-                <div class="settings-item settings-item--danger" onclick="handleLogout()">
+                <div class="settings-item settings-item--danger" onclick="handleProfileLogout()">
                     <span class="settings-item-icon">&#10132;</span>
                     <span class="settings-item-label">로그아웃</span>
                 </div>
@@ -311,13 +312,15 @@ async function handlePasswordChange(event) {
     }
 }
 
-// 로그아웃
-async function handleLogout() {
+// 로그아웃 (프로필 화면 전용 — auth.js의 handleLogout 호출)
+async function handleProfileLogout() {
     if (!confirm('로그아웃 하시겠습니까?')) return;
-    try { await apiClient.logout(); } catch (_) {}
     profileLoaded = false;
     currentProfile = null;
-    navigateToScreen('login');
+    // auth.js의 handleLogout 호출하여 전역 상태 정리
+    if (typeof handleLogout === 'function') {
+        handleLogout();
+    }
 }
 
 function getRoleText(role) {

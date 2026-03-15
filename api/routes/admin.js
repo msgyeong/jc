@@ -767,50 +767,80 @@ router.post('/members/:id/reject', async (req, res) => {
 
 // PATCH approve/reject (하위호환)
 router.patch('/members/:id/approve', async (req, res) => {
-    const { id } = req.params;
-    await query("UPDATE users SET status = 'active', role = 'member', updated_at = NOW() WHERE id = $1", [id]);
-    writeAuditLog({ adminId: req.user.userId, action: 'member.approve', targetType: 'member', targetId: parseInt(id), description: '가입 승인 (legacy)', ipAddress: req.ip });
-    res.json({ success: true, message: '회원이 승인되었습니다.' });
+    try {
+        const { id } = req.params;
+        await query("UPDATE users SET status = 'active', role = 'member', updated_at = NOW() WHERE id = $1", [id]);
+        writeAuditLog({ adminId: req.user.userId, action: 'member.approve', targetType: 'member', targetId: parseInt(id), description: '가입 승인 (legacy)', ipAddress: req.ip });
+        res.json({ success: true, message: '회원이 승인되었습니다.' });
+    } catch (error) {
+        console.error('Approve error:', error);
+        res.status(500).json({ success: false, message: '승인 처리 중 오류가 발생했습니다.' });
+    }
 });
 
 router.delete('/members/:id/reject', async (req, res) => {
-    const { id } = req.params;
-    await query("DELETE FROM users WHERE id = $1 AND status = 'pending'", [id]);
-    res.json({ success: true, message: '가입이 거부되었습니다.' });
+    try {
+        const { id } = req.params;
+        await query("UPDATE users SET status = 'rejected', updated_at = NOW() WHERE id = $1 AND status = 'pending'", [id]);
+        res.json({ success: true, message: '가입이 거부되었습니다.' });
+    } catch (error) {
+        console.error('Reject error:', error);
+        res.status(500).json({ success: false, message: '거부 처리 중 오류가 발생했습니다.' });
+    }
 });
 
 // PATCH role/suspend/activate (하위호환)
 router.patch('/members/:id/role', async (req, res) => {
-    const { id } = req.params;
-    const { role } = req.body;
-    const validRoles = ['member', 'admin'];
-    if (req.user.role === 'super_admin') validRoles.push('super_admin');
-    if (!validRoles.includes(role)) return res.status(400).json({ success: false, message: '유효하지 않은 역할입니다.' });
-    if (String(id) === String(req.user.userId)) return res.status(403).json({ success: false, message: '자신의 역할은 변경할 수 없습니다.' });
-    await query('UPDATE users SET role = $1, updated_at = NOW() WHERE id = $2', [role, id]);
-    writeAuditLog({ adminId: req.user.userId, action: 'member.role_change', targetType: 'member', targetId: parseInt(id), after: { role }, ipAddress: req.ip });
-    res.json({ success: true, message: '역할이 변경되었습니다.' });
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+        const validRoles = ['member', 'admin'];
+        if (req.user.role === 'super_admin') validRoles.push('super_admin');
+        if (!validRoles.includes(role)) return res.status(400).json({ success: false, message: '유효하지 않은 역할입니다.' });
+        if (String(id) === String(req.user.userId)) return res.status(403).json({ success: false, message: '자신의 역할은 변경할 수 없습니다.' });
+        await query('UPDATE users SET role = $1, updated_at = NOW() WHERE id = $2', [role, id]);
+        writeAuditLog({ adminId: req.user.userId, action: 'member.role_change', targetType: 'member', targetId: parseInt(id), after: { role }, ipAddress: req.ip });
+        res.json({ success: true, message: '역할이 변경되었습니다.' });
+    } catch (error) {
+        console.error('Role change error:', error);
+        res.status(500).json({ success: false, message: '역할 변경 중 오류가 발생했습니다.' });
+    }
 });
 
 router.patch('/members/:id/suspend', async (req, res) => {
-    const { id } = req.params;
-    await query("UPDATE users SET status = 'suspended', updated_at = NOW() WHERE id = $1", [id]);
-    writeAuditLog({ adminId: req.user.userId, action: 'member.status_change', targetType: 'member', targetId: parseInt(id), after: { status: 'suspended' }, ipAddress: req.ip });
-    res.json({ success: true, message: '회원이 정지되었습니다.' });
+    try {
+        const { id } = req.params;
+        await query("UPDATE users SET status = 'suspended', updated_at = NOW() WHERE id = $1", [id]);
+        writeAuditLog({ adminId: req.user.userId, action: 'member.status_change', targetType: 'member', targetId: parseInt(id), after: { status: 'suspended' }, ipAddress: req.ip });
+        res.json({ success: true, message: '회원이 정지되었습니다.' });
+    } catch (error) {
+        console.error('Suspend error:', error);
+        res.status(500).json({ success: false, message: '정지 처리 중 오류가 발생했습니다.' });
+    }
 });
 
 router.patch('/members/:id/activate', async (req, res) => {
-    const { id } = req.params;
-    await query("UPDATE users SET status = 'active', updated_at = NOW() WHERE id = $1", [id]);
-    writeAuditLog({ adminId: req.user.userId, action: 'member.status_change', targetType: 'member', targetId: parseInt(id), after: { status: 'active' }, ipAddress: req.ip });
-    res.json({ success: true, message: '회원이 복구되었습니다.' });
+    try {
+        const { id } = req.params;
+        await query("UPDATE users SET status = 'active', updated_at = NOW() WHERE id = $1", [id]);
+        writeAuditLog({ adminId: req.user.userId, action: 'member.status_change', targetType: 'member', targetId: parseInt(id), after: { status: 'active' }, ipAddress: req.ip });
+        res.json({ success: true, message: '회원이 복구되었습니다.' });
+    } catch (error) {
+        console.error('Activate error:', error);
+        res.status(500).json({ success: false, message: '복구 처리 중 오류가 발생했습니다.' });
+    }
 });
 
 // PATCH /api/admin/members/:id (permissions, 하위호환)
 router.patch('/members/:id', async (req, res) => {
-    const { id } = req.params;
-    await query('UPDATE users SET updated_at = NOW() WHERE id = $1', [id]);
-    return res.json({ success: true, message: '저장되었습니다.' });
+    try {
+        const { id } = req.params;
+        await query('UPDATE users SET updated_at = NOW() WHERE id = $1', [id]);
+        return res.json({ success: true, message: '저장되었습니다.' });
+    } catch (error) {
+        console.error('Member update error:', error);
+        res.status(500).json({ success: false, message: '저장 중 오류가 발생했습니다.' });
+    }
 });
 
 /* ======================================================

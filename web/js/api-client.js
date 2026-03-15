@@ -49,14 +49,19 @@ class ApiClient {
             const data = await response.json();
 
             if (!response.ok) {
-                // 401 Unauthorized → 토큰 만료/무효 → 로그인 화면으로 이동
+                // 401 Unauthorized → 인증 엔드포인트가 아닌 경우만 자동 로그아웃
                 if (response.status === 401) {
-                    console.warn('인증 만료 — 로그인 화면으로 이동');
-                    this.clearToken();
-                    if (typeof navigateToScreen === 'function') {
-                        navigateToScreen('login');
+                    const isAuthEndpoint = endpoint.startsWith('/auth/');
+                    if (!isAuthEndpoint) {
+                        console.warn('인증 만료 — 로그인 화면으로 이동');
+                        this.clearToken();
+                        if (typeof navigateToScreen === 'function') {
+                            navigateToScreen('login');
+                        }
+                        throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
                     }
-                    throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
+                    // 로그인/비밀번호 찾기 등 인증 엔드포인트는 서버 메시지 그대로 전달
+                    throw new Error(data.message || '인증에 실패했습니다.');
                 }
                 // 500 서버 에러
                 if (response.status >= 500) {

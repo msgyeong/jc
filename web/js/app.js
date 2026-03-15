@@ -59,13 +59,13 @@ async function showInitialScreen() {
     let targetScreen = 'login';
     
     if (result !== 'timeout') {
-        const status = await authCheck;
-        console.log('📊 인증 상태:', status);
-        
-        if (status === AuthStatus.AUTHENTICATED) {
+        await authCheck;
+        console.log('📊 인증 상태:', currentAuthStatus);
+
+        if (currentAuthStatus === AuthStatus.AUTHENTICATED) {
             targetScreen = 'home';
             console.log('✅ 인증됨 → 홈 화면');
-        } else if (status === AuthStatus.PENDING_APPROVAL) {
+        } else if (currentAuthStatus === AuthStatus.PENDING_APPROVAL) {
             targetScreen = 'pending-approval';
             console.log('⏳ 승인 대기 → 승인 대기 화면');
         } else {

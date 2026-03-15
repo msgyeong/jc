@@ -231,22 +231,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
     }
-    
-    // 로그아웃 버튼
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
-    }
-    
-    // 회원가입 링크
-    const signupLink = document.getElementById('signup-link');
-    if (signupLink) {
-        signupLink.addEventListener('click', () => {
-            navigateToScreen('signup');
-        });
-    }
-    
-    // 비밀번호 토글
+
+    // 비밀번호 토글 (signup-link, logout-btn은 navigation.js의 setupSignupEvents에서 등록)
     document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', function() {
             const targetId = this.getAttribute('data-target');

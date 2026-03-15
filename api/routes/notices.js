@@ -182,7 +182,7 @@ router.put('/:id', authenticate, async (req, res) => {
             });
         }
 
-        const isAuthor = postResult.rows[0].author_id === userId;
+        const isAuthor = Number(postResult.rows[0].author_id) === Number(userId);
         const isAdmin = ['super_admin', 'admin'].includes(userRole);
         if (!isAuthor && !isAdmin) {
             return res.status(403).json({
@@ -232,7 +232,7 @@ router.delete('/:id', authenticate, async (req, res) => {
             });
         }
 
-        const isAuthor = postResult.rows[0].author_id === userId;
+        const isAuthor = Number(postResult.rows[0].author_id) === Number(userId);
         const isAdmin = ['super_admin', 'admin'].includes(userRole);
         if (!isAuthor && !isAdmin) {
             return res.status(403).json({

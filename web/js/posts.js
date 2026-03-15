@@ -731,7 +731,7 @@ async function loadPostForEdit(postId) {
     const errorEl = document.getElementById('post-edit-error');
     if (!titleEl || !contentEl) return;
 
-    errorEl.textContent = '';
+    if (errorEl) errorEl.textContent = '';
     titleEl.value = '';
     contentEl.value = '';
     titleEl.disabled = true;

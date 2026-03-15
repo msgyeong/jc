@@ -217,6 +217,8 @@ function initNavBadges() {
 }
 
 async function updateNavBadges() {
+    // 로그인 전에는 API 호출하지 않음
+    if (!localStorage.getItem('auth_token')) return;
     try {
         // 새 공지 개수 (3일 이내)
         const postsRes = await apiClient.getPosts(1, 20, 'notice');

@@ -300,7 +300,7 @@ router.post('/push/send', requireMobilePermission('push_send'), async (req, res)
 
         // 대상 구독자 조회
         let subscriptionQuery = `
-            SELECT ps.endpoint, ps.p256dh, ps.auth_key
+            SELECT ps.endpoint, ps.p256dh, ps.auth
             FROM push_subscriptions ps
             JOIN users u ON u.id = ps.user_id
             WHERE u.status = 'active'

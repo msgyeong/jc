@@ -214,7 +214,7 @@ router.put('/:id', authenticate, async (req, res) => {
         }
 
         // 작성자 본인이거나 관리자인 경우만 수정 가능
-        const isAuthor = scheduleResult.rows[0].created_by === userId;
+        const isAuthor = Number(scheduleResult.rows[0].created_by) === Number(userId);
         const isAdmin = ['super_admin', 'admin'].includes(userRole);
 
         if (!isAuthor && !isAdmin) {
@@ -278,7 +278,7 @@ router.delete('/:id', authenticate, async (req, res) => {
         }
 
         // 작성자 본인이거나 관리자인 경우만 삭제 가능
-        const isAuthor = scheduleResult.rows[0].created_by === userId;
+        const isAuthor = Number(scheduleResult.rows[0].created_by) === Number(userId);
         const isAdmin = ['super_admin', 'admin'].includes(userRole);
 
         if (!isAuthor && !isAdmin) {
@@ -474,7 +474,7 @@ router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
             return res.status(404).json({ success: false, message: '댓글을 찾을 수 없습니다.' });
         }
 
-        const isAuthor = commentResult.rows[0].author_id === userId;
+        const isAuthor = Number(commentResult.rows[0].author_id) === Number(userId);
         const isAdmin = userRole && ['super_admin', 'admin'].includes(userRole);
         if (!isAuthor && !isAdmin) {
             return res.status(403).json({ success: false, message: '댓글 삭제 권한이 없습니다.' });

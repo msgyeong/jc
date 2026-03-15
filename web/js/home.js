@@ -340,19 +340,7 @@ function formatRelativeTime(dateString) {
 document.addEventListener('DOMContentLoaded', () => {
     // 홈 화면이 활성화될 때 데이터 로드
     const homeScreen = document.getElementById('home-screen');
-    if (homeScreen) {
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.attributeName === 'class') {
-                    if (homeScreen.classList.contains('active')) {
-                        loadHomeData();
-                    }
-                }
-            });
-        });
-        
-        observer.observe(homeScreen, { attributes: true });
-    }
+    // MutationObserver 제거 — navigateToScreen에서 loadHomeData() 호출하므로 중복 방지
 });
 
 console.log('✅ Home 모듈 로드 완료 (Railway API)');

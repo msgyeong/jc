@@ -1,5 +1,7 @@
 // 프로필 기능 - 개선판 (Railway API 연동)
 
+var DEFAULT_AVATAR_SVG = '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="15" r="6" fill="#A0C4E8"/><ellipse cx="20" cy="32" rx="11" ry="8" fill="#A0C4E8"/></svg>';
+
 let profileLoaded = false;
 let currentProfile = null;
 
@@ -15,7 +17,7 @@ async function uploadProfilePhoto(input) {
     try {
         const formData = new FormData();
         formData.append('photo', file);
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('auth_token');
         const res = await fetch('/api/profile/photo', {
             method: 'PUT',
             headers: { 'Authorization': 'Bearer ' + token },
@@ -66,13 +68,13 @@ function renderProfile(p) {
         <div class="profile-v2">
             <!-- 프로필 히어로 -->
             <div class="profile-hero">
-                <div class="profile-avatar-xl" style="background:var(--color-primary-bg); color:var(--color-primary); position:relative; cursor:pointer" onclick="document.getElementById('profile-photo-input').click()">
+                <div class="profile-avatar-xl" style="background:#DBEAFE; position:relative; cursor:pointer" onclick="document.getElementById('profile-photo-input').click()">
                     ${p.profile_image
                         ? `<img src="${p.profile_image}" alt="${escapeHtml(p.name)}">`
-                        : `<span>${escapeHtml((p.name || '?')[0])}</span>`
+                        : DEFAULT_AVATAR_SVG
                     }
-                    <div style="position:absolute;bottom:0;right:0;width:36px;height:36px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <div class="avatar-camera-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.5"><rect x="2" y="6" width="20" height="14" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M7 6l1.5-2h7L17 6"/></svg>
                     </div>
                     <input type="file" id="profile-photo-input" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this)">
                 </div>

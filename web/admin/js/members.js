@@ -139,13 +139,15 @@ async function loadMembers() {
 
 async function openMemberDetail(id) {
     try {
-        const [res, posRes] = await Promise.all([
+        const [res, posRes, histRes] = await Promise.all([
             AdminAPI.get('/api/admin/members/' + id),
-            AdminAPI.get('/api/admin/positions')
+            AdminAPI.get('/api/admin/positions'),
+            AdminAPI.get('/api/admin/members/' + id + '/position-history')
         ]);
         if (!res.success) throw new Error(res.message);
         const m = res.data;
         const positions = (posRes.success && posRes.data) || [];
+        const posHistory = (histRes.success && histRes.data) || [];
 
         const positionOptions = positions.map(function(p) {
             const selected = m.position === p.name ? ' selected' : '';
@@ -188,6 +190,20 @@ async function openMemberDetail(id) {
                         <tr><td style="padding:6px 0;color:var(--c-text-sub)">업종</td><td style="padding:6px 0">${escapeHtml(m.industry || '-')}</td></tr>
                         <tr><td style="padding:6px 0;color:var(--c-text-sub)">가입일</td><td style="padding:6px 0">${formatDateTime(m.created_at)}</td></tr>
                     </table>
+
+                    ${posHistory.length > 0 ? `
+                    <div style="margin-top:16px">
+                        <div style="font-size:13px;font-weight:600;color:var(--c-text);margin-bottom:8px">직책 변동 이력</div>
+                        <div style="border-left:2px solid var(--c-border);padding-left:12px;margin-left:4px">
+                            ${posHistory.map(h => `
+                                <div style="position:relative;padding:6px 0;font-size:12px;color:var(--c-text-sub)">
+                                    <span style="position:absolute;left:-18px;top:10px;width:8px;height:8px;border-radius:50%;background:var(--c-primary)"></span>
+                                    <div><strong style="color:var(--c-text)">${escapeHtml(h.position_name || '-')}</strong></div>
+                                    <div>${formatDate(h.assigned_at)}${h.assigned_by_name ? ' · ' + escapeHtml(h.assigned_by_name) : ''}${h.notes ? ' · ' + escapeHtml(h.notes) : ''}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>` : ''}
                 </div>
                 <div class="modal-footer">
                     ${m.status === 'pending' ? '<button class="btn btn-primary btn-sm" onclick="approveMember(' + m.id + ');closeModal()">승인</button>' : ''}

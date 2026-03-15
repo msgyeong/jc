@@ -47,12 +47,26 @@ class ApiClient {
             });
             
             const data = await response.json();
-            
+
             if (!response.ok) {
+                // 401 Unauthorized → 토큰 만료/무효 → 로그인 화면으로 이동
+                if (response.status === 401) {
+                    console.warn('인증 만료 — 로그인 화면으로 이동');
+                    this.clearToken();
+                    if (typeof navigateToScreen === 'function') {
+                        navigateToScreen('login');
+                    }
+                    throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
+                }
+                // 500 서버 에러
+                if (response.status >= 500) {
+                    console.error('서버 에러:', response.status, data.message || data);
+                    throw new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                }
                 console.error('API 에러:', data.message || data);
                 throw new Error(data.message || 'API 요청 실패');
             }
-            
+
             return data;
         } catch (error) {
             if (error.message && !error.message.startsWith('API')) {

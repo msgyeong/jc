@@ -1,10 +1,21 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const { query, transaction } = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { comparePassword, hashPassword } = require('../utils/password');
 const { generateToken } = require('../utils/jwt');
 const { writeAuditLog } = require('../utils/auditLog');
+
+const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const photoUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+        if (ALLOWED_MIME.includes(file.mimetype)) cb(null, true);
+        else cb(new Error('허용 형식: JPEG, PNG, GIF, WebP'));
+    }
+});
 
 /* ======================================================
    POST /api/admin/auth/login
@@ -2749,6 +2760,47 @@ router.put('/members/:id/memo', async (req, res) => {
     } catch (err) {
         console.error('Update member memo error:', err);
         res.status(500).json({ success: false, message: '관리자 메모 수정 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * PUT /api/admin/members/:id/photo
+ * 관리자가 회원 프로필 사진 변경
+ */
+router.put('/members/:id/photo', photoUpload.single('photo'), async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!req.file || !req.file.buffer) {
+            return res.status(400).json({ success: false, message: '사진 파일을 선택해주세요.' });
+        }
+
+        const memberResult = await query('SELECT id FROM users WHERE id = $1', [id]);
+        if (memberResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+        }
+
+        const ext = (req.file.originalname || 'photo.jpg').replace(/[^a-zA-Z0-9.-]/g, '_').slice(-40);
+        const filename = `profile-${id}-${Date.now()}-${ext}`;
+
+        const imgResult = await query(
+            `INSERT INTO post_images (filename, mime_type, image_data, file_size, uploaded_by)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id`,
+            [filename, req.file.mimetype, req.file.buffer, req.file.size, req.user.userId]
+        );
+
+        const imageUrl = `/api/upload/images/${imgResult.rows[0].id}`;
+
+        await query(
+            'UPDATE users SET profile_image = $1, updated_at = NOW() WHERE id = $2',
+            [imageUrl, id]
+        );
+
+        res.json({ success: true, message: '프로필 사진이 변경되었습니다.', imageUrl });
+    } catch (err) {
+        console.error('Admin update member photo error:', err);
+        res.status(500).json({ success: false, message: '프로필 사진 변경 중 오류가 발생했습니다.' });
     }
 });
 

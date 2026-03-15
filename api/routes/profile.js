@@ -1,7 +1,18 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const { query } = require('../config/database');
 const { authenticate } = require('../middleware/auth');
+
+const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const photoUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+        if (ALLOWED_MIME.includes(file.mimetype)) cb(null, true);
+        else cb(new Error('허용 형식: JPEG, PNG, GIF, WebP'));
+    }
+});
 
 /**
  * GET /api/profile
@@ -200,8 +211,7 @@ router.put('/password', authenticate, async (req, res) => {
 
 /**
  * PUT /api/profile/image
- * 프로필 이미지 URL 업데이트
- * (실제 이미지 업로드는 별도 Storage 서비스 필요)
+ * 프로필 이미지 URL 업데이트 (하위호환)
  */
 router.put('/image', authenticate, async (req, res) => {
     try {
@@ -215,7 +225,6 @@ router.put('/image', authenticate, async (req, res) => {
             });
         }
 
-        // 프로필 이미지 URL 업데이트
         await query(
             'UPDATE users SET profile_image = $1, updated_at = NOW() WHERE id = $2',
             [profile_image, userId]
@@ -231,6 +240,60 @@ router.put('/image', authenticate, async (req, res) => {
             success: false,
             message: '프로필 이미지 업데이트 중 오류가 발생했습니다.'
         });
+    }
+});
+
+/**
+ * PUT /api/profile/photo
+ * 프로필 사진 파일 업로드 → DB(post_images) 저장 → users.profile_image 업데이트
+ */
+router.put('/photo', authenticate, photoUpload.single('photo'), async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        if (!req.file || !req.file.buffer) {
+            return res.status(400).json({ success: false, message: '사진 파일을 선택해주세요.' });
+        }
+
+        const ext = (req.file.originalname || 'photo.jpg').replace(/[^a-zA-Z0-9.-]/g, '_').slice(-40);
+        const filename = `profile-${userId}-${Date.now()}-${ext}`;
+
+        const imgResult = await query(
+            `INSERT INTO post_images (filename, mime_type, image_data, file_size, uploaded_by)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id`,
+            [filename, req.file.mimetype, req.file.buffer, req.file.size, userId]
+        );
+
+        const imageUrl = `/api/upload/images/${imgResult.rows[0].id}`;
+
+        await query(
+            'UPDATE users SET profile_image = $1, updated_at = NOW() WHERE id = $2',
+            [imageUrl, userId]
+        );
+
+        res.json({ success: true, message: '프로필 사진이 업데이트되었습니다.', imageUrl });
+    } catch (error) {
+        console.error('Upload profile photo error:', error);
+        res.status(500).json({ success: false, message: '프로필 사진 업로드 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * DELETE /api/profile/photo
+ * 프로필 사진 삭제 (users.profile_image = NULL)
+ */
+router.delete('/photo', authenticate, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        await query(
+            'UPDATE users SET profile_image = NULL, updated_at = NOW() WHERE id = $1',
+            [userId]
+        );
+        res.json({ success: true, message: '프로필 사진이 삭제되었습니다.' });
+    } catch (error) {
+        console.error('Delete profile photo error:', error);
+        res.status(500).json({ success: false, message: '프로필 사진 삭제 중 오류가 발생했습니다.' });
     }
 });
 

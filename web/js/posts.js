@@ -6,7 +6,8 @@ let currentPostsPage = 0;
 let postsLoading = false;
 let hasMorePosts = true;
 let postsInfiniteScrollSetup = false;
-let postCreateImageUrls = [];
+let postCreateImageUrls = [];     // server URLs for form submission
+let postCreatePreviewUrls = [];   // local blob URLs for preview display
 let postEditImageUrls = [];
 
 // ── 현재 활성 탭 카테고리 ──
@@ -75,8 +76,9 @@ async function loadPosts(page = 1) {
 function createPostCard(post) {
     const isNew = isNewContent(post.created_at);
     const unread = isNew && (post.read_by_current_user !== true);
-    const hasImages = post.images && post.images.length > 0;
-    const firstImage = hasImages ? post.images[0] : null;
+    const parsedImages = parseImageArray(post.images);
+    const hasImages = parsedImages.length > 0;
+    const firstImage = hasImages ? parsedImages[0] : null;
     const isPinned = post.is_pinned === true;
 
     const avatarHtml = post.author_image
@@ -176,6 +178,18 @@ function updateCreatePostBtnVisibility() {
 }
 
 // ── 이미지 유틸 ──
+// PostgreSQL TEXT[] → JS 배열 안전 파싱
+function parseImageArray(val) {
+    if (Array.isArray(val)) return val.filter(u => u && typeof u === 'string' && u.trim());
+    if (typeof val === 'string') {
+        // PostgreSQL TEXT[] 리터럴: {url1,url2,...}
+        var m = val.match(/^\{(.+)\}$/);
+        if (m) return m[1].split(',').map(s => s.replace(/^"|"$/g, '').trim()).filter(Boolean);
+        try { var parsed = JSON.parse(val); if (Array.isArray(parsed)) return parsed.filter(Boolean); } catch(_) {}
+    }
+    return [];
+}
+
 function sanitizeImageUrls(arr) {
     if (!Array.isArray(arr)) return [];
     return arr
@@ -184,16 +198,19 @@ function sanitizeImageUrls(arr) {
         .slice(0, MAX_POST_IMAGES);
 }
 
-function renderPostFormImages(containerId, urls, onRemove) {
+function renderPostFormImages(containerId, urls, onRemove, previewUrls) {
     const el = document.getElementById(containerId);
     if (!el) return;
     const list = sanitizeImageUrls(urls);
-    el.innerHTML = list.map((url, idx) => `
-        <div class="post-form-image-item" data-index="${idx}">
-            <img src="${escapeHtml(url)}" alt="첨부" class="post-form-image-thumb" onerror="this.parentElement.classList.add('thumb-error')">
-            <button type="button" class="post-form-image-remove" data-index="${idx}" aria-label="제거">×</button>
-        </div>
-    `).join('');
+    // previewUrls가 있으면 미리보기용으로 사용 (로컬 blob URL)
+    var displayUrls = previewUrls && previewUrls.length > 0 ? previewUrls : list;
+    el.innerHTML = list.map((url, idx) => {
+        var displaySrc = (displayUrls[idx] || url);
+        return `<div class="post-form-image-item" data-index="${idx}">
+            <img src="${escapeHtml(displaySrc)}" alt="첨부" class="post-form-image-thumb" onerror="this.parentElement.classList.add('thumb-error')">
+            <button type="button" class="post-form-image-remove" data-index="${idx}" aria-label="제거">&times;</button>
+        </div>`;
+    }).join('');
     list.forEach((_, idx) => {
         const btn = el.querySelector(`.post-form-image-remove[data-index="${idx}"]`);
         if (btn) btn.addEventListener('click', () => onRemove(idx));
@@ -204,7 +221,7 @@ function renderPostFormImages(containerId, urls, onRemove) {
 }
 
 function getPostCreateImages() {
-    return sanitizeImageUrls(postCreateImageUrls);
+    return sanitizeImageUrls(postCreateImageUrls.filter(u => u !== '__uploading__'));
 }
 
 function getPostEditImages() {
@@ -212,8 +229,13 @@ function getPostEditImages() {
 }
 
 function removePostCreateImage(idx) {
+    // blob URL 해제
+    if (postCreatePreviewUrls[idx]) {
+        URL.revokeObjectURL(postCreatePreviewUrls[idx]);
+    }
     postCreateImageUrls = getPostCreateImages().filter((_, i) => i !== idx);
-    renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage);
+    postCreatePreviewUrls = postCreatePreviewUrls.filter((_, i) => i !== idx);
+    renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage, postCreatePreviewUrls);
 }
 
 // ── 작성 화면: 파일 선택 (다중 파일 지원) ──
@@ -229,14 +251,36 @@ async function handlePostCreateFileSelect(e) {
     var errEl = document.getElementById('post-create-error');
 
     for (var i = 0; i < filesToUpload.length; i++) {
+        // 즉시 로컬 blob URL로 미리보기 표시
+        var blobUrl = URL.createObjectURL(filesToUpload[i]);
+        postCreatePreviewUrls.push(blobUrl);
+        // 임시 placeholder URL (서버 업로드 완료 전)
+        postCreateImageUrls.push('__uploading__');
+        renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage, postCreatePreviewUrls);
+
         try {
             var result = await apiClient.uploadPostImage(filesToUpload[i]);
             if (result && result.url) {
-                postCreateImageUrls = getPostCreateImages().concat([result.url]).slice(0, MAX_POST_IMAGES);
-                renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage);
+                // placeholder를 실제 서버 URL로 교체
+                var placeholderIdx = postCreateImageUrls.indexOf('__uploading__');
+                if (placeholderIdx !== -1) {
+                    postCreateImageUrls[placeholderIdx] = result.url;
+                } else {
+                    postCreateImageUrls.push(result.url);
+                }
+                postCreateImageUrls = sanitizeImageUrls(postCreateImageUrls.filter(u => u !== '__uploading__')).slice(0, MAX_POST_IMAGES);
+                renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage, postCreatePreviewUrls);
             }
             if (errEl) { errEl.textContent = ''; errEl.classList.remove('show'); }
         } catch (err) {
+            // 업로드 실패 시 placeholder 및 blob URL 제거
+            var failIdx = postCreateImageUrls.indexOf('__uploading__');
+            if (failIdx !== -1) {
+                postCreateImageUrls.splice(failIdx, 1);
+                if (postCreatePreviewUrls[failIdx]) URL.revokeObjectURL(postCreatePreviewUrls[failIdx]);
+                postCreatePreviewUrls.splice(failIdx, 1);
+            }
+            renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage, postCreatePreviewUrls);
             if (errEl) {
                 errEl.textContent = err.message || '이미지 업로드에 실패했습니다.';
                 errEl.classList.add('show');
@@ -340,7 +384,10 @@ function getScheduleAttachData() {
 
 // ── 게시글 작성 버튼 → 작성 화면 이동 ──
 function handleCreatePost() {
+    // 이전 blob URL 해제
+    postCreatePreviewUrls.forEach(u => { if (u) URL.revokeObjectURL(u); });
     postCreateImageUrls = [];
+    postCreatePreviewUrls = [];
     postCreateScheduleAttached = false;
     renderPostFormImages('post-create-images-list', [], removePostCreateImage);
 
@@ -472,7 +519,9 @@ async function handlePostCreateSubmit(e) {
             }
             titleEl.value = '';
             contentEl.value = '';
+            postCreatePreviewUrls.forEach(u => { if (u) URL.revokeObjectURL(u); });
             postCreateImageUrls = [];
+            postCreatePreviewUrls = [];
             renderPostFormImages('post-create-images-list', [], removePostCreateImage);
         } else {
             if (errorEl) {
@@ -603,7 +652,7 @@ function renderPostDetail(post) {
     const canEdit = isAuthor || isAdmin;
 
     const liked = post.user_has_liked === true;
-    const images = post.images && Array.isArray(post.images) ? post.images : [];
+    const images = parseImageArray(post.images);
     const imagesHtml = images.length > 0
         ? `<div class="post-detail-images">
             ${images.map(url =>
@@ -702,9 +751,7 @@ async function loadPostForEdit(postId) {
             if (catEl) catEl.value = (p.category === 'notice' ? 'notice' : 'general');
             const sidEl = document.getElementById('post-edit-schedule-id');
             if (sidEl) sidEl.value = (p.schedule_id != null && p.schedule_id !== '') ? String(p.schedule_id) : '';
-            postEditImageUrls = Array.isArray(p.images)
-                ? p.images.filter(u => u && typeof u === 'string')
-                : [];
+            postEditImageUrls = parseImageArray(p.images);
             renderPostFormImages('post-edit-images-list', postEditImageUrls, removePostEditImage);
         } else {
             errorEl.textContent = '게시글을 불러올 수 없습니다.';

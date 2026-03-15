@@ -81,7 +81,7 @@ function renderMembers(container) {
 
 async function loadMembers() {
     const wrap = document.getElementById('members-table-wrap');
-    showTableSkeleton(wrap, 7);
+    showTableSkeleton(wrap, 8);
 
     try {
         const params = new URLSearchParams({
@@ -108,30 +108,27 @@ async function loadMembers() {
 
         let html = `<div class="table-wrap"><table>
             <thead><tr>
-                <th>회원</th>
-                <th>이메일</th>
-                <th>전화번호</th>
-                <th>직책</th>
-                <th>상태</th>
-                <th>역할</th>
+                <th style="width:40px"></th>
+                <th>이름</th>
+                <th>JC직책</th>
                 <th>가입일</th>
+                <th>전화번호</th>
+                <th>이메일</th>
+                <th>직업</th>
                 <th>관리</th>
             </tr></thead><tbody>`;
 
         res.members.forEach(m => {
             html += `<tr>
                 <td>
-                    <div style="display:flex;align-items:center;gap:8px">
-                        <div class="avatar avatar-sm">${escapeHtml((m.name || '?').charAt(0))}</div>
-                        <span>${escapeHtml(m.name)}</span>
-                    </div>
+                    <div class="avatar avatar-sm">${escapeHtml((m.name || '?').charAt(0))}</div>
                 </td>
-                <td class="text-sub">${escapeHtml(m.email)}</td>
-                <td class="text-sub">${escapeHtml(m.phone || '-')}</td>
-                <td>${m.position ? adminPositionBadge(m.position) : '<span class="text-sub">-</span>'}</td>
-                <td>${statusBadge(m.status)}</td>
-                <td>${roleBadge(m.role)}</td>
+                <td><strong>${escapeHtml(m.name)}</strong></td>
+                <td>${m.position_name ? adminPositionBadge(m.position_name) : '<span class="text-sub">-</span>'}</td>
                 <td class="text-sub text-sm">${formatDate(m.created_at)}</td>
+                <td class="text-sub">${escapeHtml(m.phone || '-')}</td>
+                <td class="text-sub">${escapeHtml(m.email)}</td>
+                <td class="text-sub">${escapeHtml(m.profession || '-')}</td>
                 <td>
                     <div class="action-btns">
                         <button class="btn btn-ghost btn-sm" onclick="openMemberDetail(${m.id})">상세</button>

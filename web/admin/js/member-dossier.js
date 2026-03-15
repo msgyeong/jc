@@ -148,10 +148,12 @@ function renderDossierBasic(el) {
         + dossierField('주소', (m.address || '') + (m.address_detail ? ' ' + m.address_detail : ''))
         + '</div></div>'
         + '<div class="dossier-section">'
-        + '<h4 class="dossier-section-title">직장 정보</h4>'
+        + '<h4 class="dossier-section-title">직업 / 직장 정보</h4>'
         + '<div class="dossier-grid">'
+        + dossierEditableField('직종(직업)', m.profession, 'profession', '변호사, 한의사, 개발자, PD 등')
+        + dossierField('JC 직책', m.position_name)
         + dossierField('회사', m.company)
-        + dossierField('직책', m.position)
+        + dossierField('직장 직위', m.position)
         + dossierField('부서', m.department)
         + dossierField('업종', m.industry)
         + dossierField('업종 상세', m.industry_detail)
@@ -576,21 +578,44 @@ async function saveDossierFamily() {
     await saveDossierField('families', families);
 }
 
-// ═══ Tab 5: 취미/특기 ═══
+// ═══ Tab 5: 취미/특기 (분리) ═══
 function renderDossierHobbies(el) {
     var hobbies = dossierData.hobbies || '';
+    var specialties = dossierData.specialties || '';
+    // specialties가 JSON 배열(수동 JC이력)인 경우 빈 문자열로 표시
+    if (typeof specialties === 'string') {
+        try { var parsed = JSON.parse(specialties); if (Array.isArray(parsed)) specialties = ''; } catch (_) {}
+    } else if (Array.isArray(specialties)) {
+        specialties = '';
+    }
     el.innerHTML = ''
         + '<div class="dossier-section">'
-        + '<h4 class="dossier-section-title">취미 / 특기</h4>'
-        + '<textarea id="dossier-hobbies" rows="5" style="width:100%;padding:10px;border:1px solid var(--c-border);border-radius:8px;font-size:14px;resize:vertical">' + escapeHtml(hobbies) + '</textarea>'
+        + '<h4 class="dossier-section-title">취미</h4>'
+        + '<textarea id="dossier-hobbies" rows="4" style="width:100%;padding:10px;border:1px solid var(--c-border);border-radius:8px;font-size:14px;resize:vertical" placeholder="골프, 독서, 등산 등">' + escapeHtml(hobbies) + '</textarea>'
+        + '</div>'
+        + '<div class="dossier-section">'
+        + '<h4 class="dossier-section-title">특기</h4>'
+        + '<textarea id="dossier-specialties" rows="4" style="width:100%;padding:10px;border:1px solid var(--c-border);border-radius:8px;font-size:14px;resize:vertical" placeholder="외국어, 악기 연주, 요리 등">' + escapeHtml(specialties) + '</textarea>'
+        + '</div>'
         + '<div style="margin-top:12px;text-align:right">'
         + '<button class="btn btn-primary btn-sm" onclick="saveDossierHobbies()">저장</button>'
-        + '</div></div>';
+        + '</div>';
 }
 
 async function saveDossierHobbies() {
-    var val = (document.getElementById('dossier-hobbies') || {}).value || '';
-    await saveDossierField('hobbies', val);
+    var hobbies = (document.getElementById('dossier-hobbies') || {}).value || '';
+    var specialties = (document.getElementById('dossier-specialties') || {}).value || '';
+    try {
+        await AdminAPI.put('/api/admin/members/' + dossierMemberId + '/dossier', {
+            hobbies: hobbies,
+            specialties: specialties
+        });
+        closeModal();
+        showAdminToast('저장되었습니다.');
+        await refreshDossier();
+    } catch (err) {
+        showAdminToast('저장 실패: ' + err.message, 'error');
+    }
 }
 
 // ═══ Tab 6: 관리자 메모 ═══
@@ -623,6 +648,30 @@ function parseJsonbField(val) {
 
 function dossierField(label, value) {
     return '<div class="dossier-field"><span class="dossier-field-label">' + label + '</span><span class="dossier-field-value">' + escapeHtml(value || '-') + '</span></div>';
+}
+
+function dossierEditableField(label, value, fieldName, placeholder) {
+    return '<div class="dossier-field">'
+        + '<span class="dossier-field-label">' + label + '</span>'
+        + '<div style="display:flex;align-items:center;gap:4px">'
+        + '<input id="dossier-edit-' + fieldName + '" type="text" value="' + escapeHtml(value || '') + '" placeholder="' + escapeHtml(placeholder || '') + '" style="padding:3px 8px;border:1px solid var(--c-border);border-radius:6px;font-size:13px;width:180px">'
+        + '<button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="saveDossierInlineField(\'' + fieldName + '\')">저장</button>'
+        + '</div></div>';
+}
+
+async function saveDossierInlineField(fieldName) {
+    var input = document.getElementById('dossier-edit-' + fieldName);
+    if (!input) return;
+    var val = input.value.trim();
+    try {
+        var body = {};
+        body[fieldName] = val || null;
+        await AdminAPI.put('/api/admin/members/' + dossierMemberId, body);
+        showAdminToast('저장되었습니다.');
+        await refreshDossier();
+    } catch (err) {
+        showAdminToast('저장 실패: ' + err.message, 'error');
+    }
 }
 
 async function saveDossierField(field, value) {

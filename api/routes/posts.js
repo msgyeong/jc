@@ -563,6 +563,7 @@ router.post('/', authenticate, async (req, res) => {
                     pushSetting: push_setting,
                     scheduledAt: req.body.push_scheduled_at,
                     eventDate: req.body.push_event_date,
+                    dDayOptions: req.body.push_d_day_options,
                 });
             } catch (e) {
                 console.error('[Push] 예약 알림 등록 에러:', e.message);

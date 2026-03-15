@@ -58,3 +58,22 @@
 - `api/routes/admin.js` (직책 변경/이력 + 인물카드 5개 API)
 - `api/cron/notification-scheduler.js` (신규)
 - `api/server.js` (notification scheduler import + 시작)
+
+---
+
+## 긴급 버그 수정 — 2026-03-15
+
+### 원인
+- `jc_position` 컬럼이 DB에 존재하지 않음 (profile.js, members.js에서 참조)
+- 마이그레이션 015에서 추가한 것은 `position_id` 컬럼인데, 코드에서 `jc_position`을 참조
+
+### 수정 내용
+| 파일 | 변경 | 결과 |
+|------|------|------|
+| `api/routes/profile.js` | `jc_position` → `position_id` | 프로필 조회 200 OK |
+| `api/routes/members.js` | `jc_position` → `position_id` (목록/상세 2곳) | 회원 목록/상세 200 OK |
+| `api/cron/notification-scheduler.js` | `dDayOptions` 파라미터 추가 — D-day 개별 선택(d7/d3/d1/d0) 지원 | 선택된 옵션만 등록 |
+| `api/routes/posts.js` | `push_d_day_options` body 파라미터를 `createScheduledNotifications`에 전달 | D-day 개별 선택 동작 |
+
+### 테스트 결과: 6/6 PASS
+- Login, GET /api/profile, GET /api/members, GET /api/members/1, GET /api/members/search, POST with d_day_options

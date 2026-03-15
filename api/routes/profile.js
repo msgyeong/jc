@@ -19,7 +19,7 @@ router.get('/', authenticate, async (req, res) => {
                 birth_date, gender,
                 company, position, department, work_phone,
                 industry, industry_detail,
-                jc_position,
+                position_id,
                 created_at, updated_at
              FROM users
              WHERE id = $1`,

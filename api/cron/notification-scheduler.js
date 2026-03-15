@@ -88,8 +88,9 @@ function startNotificationScheduler() {
  * @param {string} options.pushSetting - 'immediate' | 'scheduled' | 'd_day' | 'none'
  * @param {string} options.scheduledAt - ISO date string (pushSetting='scheduled' 일 때)
  * @param {string} options.eventDate - 일정 날짜 (pushSetting='d_day' 일 때)
+ * @param {object} options.dDayOptions - D-day 개별 선택 {d7: true, d3: true, d1: false, d0: true}
  */
-async function createScheduledNotifications({ postId, scheduleId, pushSetting, scheduledAt, eventDate }) {
+async function createScheduledNotifications({ postId, scheduleId, pushSetting, scheduledAt, eventDate, dDayOptions }) {
     if (!pushSetting || pushSetting === 'none') return;
 
     if (pushSetting === 'immediate') {
@@ -105,13 +106,18 @@ async function createScheduledNotifications({ postId, scheduleId, pushSetting, s
             [postId || null, scheduleId || null, scheduledAt]
         );
     } else if (pushSetting === 'd_day' && eventDate) {
-        // D-7, D-3, D-1, 당일(D-0)
-        const dDays = [
-            { type: 'd_day_7', offset: -7 },
-            { type: 'd_day_3', offset: -3 },
-            { type: 'd_day_1', offset: -1 },
-            { type: 'd_day_0', offset: 0 },
+        // D-7, D-3, D-1, 당일(D-0) — 개별 선택 지원
+        const allDDays = [
+            { type: 'd_day_7', offset: -7, key: 'd7' },
+            { type: 'd_day_3', offset: -3, key: 'd3' },
+            { type: 'd_day_1', offset: -1, key: 'd1' },
+            { type: 'd_day_0', offset: 0,  key: 'd0' },
         ];
+
+        // dDayOptions가 있으면 선택된 항목만, 없으면 전체 등록
+        const dDays = dDayOptions
+            ? allDDays.filter(d => dDayOptions[d.key] === true)
+            : allDDays;
 
         for (const d of dDays) {
             // 과거 날짜는 건너뜀

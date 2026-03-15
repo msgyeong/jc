@@ -2,6 +2,23 @@
 
 var DEFAULT_AVATAR_SVG_SM = '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="15" r="6" fill="#A0C4E8"/><ellipse cx="20" cy="32" rx="11" ry="8" fill="#A0C4E8"/></svg>';
 
+// 풀스크린 이미지 뷰어
+function openFullscreenViewer(imageUrl) {
+    if (!imageUrl) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'fullscreen-viewer';
+    overlay.innerHTML = '<button class="fs-close-btn" aria-label="닫기">&times;</button>'
+        + '<img src="' + imageUrl.replace(/"/g, '&quot;') + '" alt="프로필 사진">';
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay || e.target.classList.contains('fs-close-btn')) {
+            overlay.style.opacity = '0';
+            overlay.style.transition = 'opacity 0.15s';
+            setTimeout(function() { overlay.remove(); }, 150);
+        }
+    });
+    document.body.appendChild(overlay);
+}
+
 // M-13: 업종 카테고리 상수
 const INDUSTRY_CATEGORIES = [
     { code: 'law', name: '법률/법무' },
@@ -288,7 +305,7 @@ async function showMemberDetailScreen(memberId) {
             <div class="detail-view">
                 <button class="btn-back" onclick="backToMemberList()">← 회원 목록</button>
                 <div class="profile-hero">
-                    <div class="profile-avatar-xl" style="background:#DBEAFE">
+                    <div class="profile-avatar-xl" style="background:#DBEAFE${m.profile_image ? ';cursor:pointer' : ''}" ${m.profile_image ? `onclick="openFullscreenViewer('${m.profile_image.replace(/'/g, "\\'")}')"` : ''}>
                         ${m.profile_image
                             ? `<img src="${m.profile_image}" alt="${escapeHtml(m.name)}">`
                             : DEFAULT_AVATAR_SVG_SM

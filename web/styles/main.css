@@ -5568,14 +5568,14 @@ input[type="date"]:focus {
     border-bottom: 1px solid var(--border-color);
 }
 
-.profile-hero-name {
-    font-size: 20px;
+.profile-hero .profile-hero-name {
+    font-size: 22px;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #1E293B;
     margin-bottom: 4px;
 }
 
-.profile-hero-role {
+.profile-hero .profile-hero-role {
     display: inline-block;
     padding: 4px 12px;
     font-size: 12px;
@@ -5584,6 +5584,26 @@ input[type="date"]:focus {
     background: var(--primary-light);
     border-radius: 9999px;
 }
+
+/* ==================== 풀스크린 이미지 뷰어 ==================== */
+.fullscreen-viewer {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95); z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    animation: fsViewerFadeIn 0.2s;
+}
+.fullscreen-viewer img {
+    max-width: 95%; max-height: 90vh; object-fit: contain; border-radius: 0;
+    animation: fsViewerScaleIn 0.2s;
+}
+.fullscreen-viewer .fs-close-btn {
+    position: fixed; top: 16px; right: 16px;
+    width: 40px; height: 40px; background: none; border: none;
+    color: white; font-size: 28px; cursor: pointer; z-index: 10001;
+    display: flex; align-items: center; justify-content: center;
+}
+@keyframes fsViewerFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fsViewerScaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 /* ==================== 환경설정 화면 (이슈 #9) ==================== */
 .settings-screen-content {

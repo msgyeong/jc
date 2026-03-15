@@ -345,7 +345,7 @@ router.get('/members', async (req, res) => {
         params.push(limit, offset);
         const result = await query(
             `SELECT id, email, name, phone, birth_date,
-                    profile_image, role, status, position, department, join_number,
+                    profile_image, role, status, position, position_id, department, join_number,
                     company, industry, created_at, updated_at
              FROM users
              ${whereClause}
@@ -378,13 +378,17 @@ router.get('/members/:id', async (req, res) => {
         if (id === 'pending') return; // /members/pending 이 먼저 매칭됨
 
         const result = await query(
-            `SELECT id, email, name, phone, birth_date, gender, address, address_detail, postal_code,
-                    profile_image, role, status, position, department, join_number,
-                    company, work_phone, work_address, industry, industry_detail,
-                    educations, careers, families, hobbies, special_notes,
-                    emergency_contact, emergency_contact_name, emergency_relationship,
-                    created_at, updated_at
-             FROM users WHERE id = $1`,
+            `SELECT u.id, u.email, u.name, u.phone, u.birth_date, u.gender, u.address, u.address_detail, u.postal_code,
+                    u.profile_image, u.role, u.status, u.position, u.position_id, u.department, u.join_number,
+                    u.company, u.work_phone, u.work_address, u.industry, u.industry_detail,
+                    u.educations, u.careers, u.families, u.hobbies, u.specialties, u.special_notes,
+                    u.admin_memo,
+                    u.emergency_contact, u.emergency_contact_name, u.emergency_relationship,
+                    u.created_at, u.updated_at,
+                    p.name as position_name
+             FROM users u
+             LEFT JOIN positions p ON u.position_id = p.id
+             WHERE u.id = $1`,
             [id]
         );
 
@@ -392,7 +396,6 @@ router.get('/members/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
         }
 
-        // SSN 필드는 관리자에게도 마스킹
         const member = result.rows[0];
 
         res.json({ success: true, data: member });

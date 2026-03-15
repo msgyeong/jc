@@ -4,6 +4,22 @@
 
 let membersState = { page: 1, search: '', status: '', role: '', total: 0, totalPages: 0 };
 
+// 직책 뱃지 (관리자용)
+function adminPositionBadge(posName) {
+    if (!posName) return '';
+    const colorMap = {
+        '회장': 'background:#FEF3C7;color:#92400E',
+        '수석부회장': 'background:#F3F4F6;color:#374151',
+        '부회장': 'background:#DBEAFE;color:#1E40AF',
+        '총무': 'background:#DBEAFE;color:#1E40AF',
+        '이사': 'background:#E0F2FE;color:#0369A1',
+        '감사': 'background:#E0F2FE;color:#0369A1',
+        '일반회원': 'background:#F3F4F6;color:#6B7280'
+    };
+    const style = colorMap[posName] || 'background:#F3F4F6;color:#6B7280';
+    return '<span class="badge" style="' + style + '">' + escapeHtml(posName) + '</span>';
+}
+
 function renderMembers(container) {
     container.innerHTML = `
         <div class="page-toolbar">
@@ -65,7 +81,7 @@ function renderMembers(container) {
 
 async function loadMembers() {
     const wrap = document.getElementById('members-table-wrap');
-    showTableSkeleton(wrap, 6);
+    showTableSkeleton(wrap, 7);
 
     try {
         const params = new URLSearchParams({
@@ -95,6 +111,7 @@ async function loadMembers() {
                 <th>회원</th>
                 <th>이메일</th>
                 <th>전화번호</th>
+                <th>직책</th>
                 <th>상태</th>
                 <th>역할</th>
                 <th>가입일</th>
@@ -111,6 +128,7 @@ async function loadMembers() {
                 </td>
                 <td class="text-sub">${escapeHtml(m.email)}</td>
                 <td class="text-sub">${escapeHtml(m.phone || '-')}</td>
+                <td>${m.position ? adminPositionBadge(m.position) : '<span class="text-sub">-</span>'}</td>
                 <td>${statusBadge(m.status)}</td>
                 <td>${roleBadge(m.role)}</td>
                 <td class="text-sub text-sm">${formatDate(m.created_at)}</td>
@@ -138,83 +156,11 @@ async function loadMembers() {
 }
 
 async function openMemberDetail(id) {
-    try {
-        const [res, posRes, histRes] = await Promise.all([
-            AdminAPI.get('/api/admin/members/' + id),
-            AdminAPI.get('/api/admin/positions'),
-            AdminAPI.get('/api/admin/members/' + id + '/position-history')
-        ]);
-        if (!res.success) throw new Error(res.message);
-        const m = res.data;
-        const positions = (posRes.success && posRes.data) || [];
-        const posHistory = (histRes.success && histRes.data) || [];
-
-        const positionOptions = positions.map(function(p) {
-            const selected = m.position === p.name ? ' selected' : '';
-            return '<option value="' + p.id + '"' + selected + '>' + escapeHtml(p.name) + ' (Lv.' + p.level + ')</option>';
-        }).join('');
-
-        openModal(`
-            <div class="modal" style="max-width:540px">
-                <div class="modal-header">
-                    <h3>회원 상세</h3>
-                    <div style="display:flex;gap:8px;align-items:center">
-                        <button class="btn btn-primary btn-sm" onclick="openMemberDossier(${m.id})">인물카드</button>
-                        <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-                    </div>
-                </div>
-                <div class="modal-body">
-                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-                        <div class="avatar">${escapeHtml((m.name || '?').charAt(0))}</div>
-                        <div>
-                            <div style="font-weight:600;font-size:16px">${escapeHtml(m.name)}</div>
-                            <div class="text-sub text-sm">${escapeHtml(m.email)}</div>
-                        </div>
-                        <div style="margin-left:auto">${statusBadge(m.status)} ${roleBadge(m.role)}</div>
-                    </div>
-                    <table style="width:100%;font-size:13px">
-                        <tr><td style="padding:6px 0;color:var(--c-text-sub);width:100px">전화번호</td><td style="padding:6px 0">${escapeHtml(m.phone || '-')}</td></tr>
-                        <tr><td style="padding:6px 0;color:var(--c-text-sub)">생년월일</td><td style="padding:6px 0">${formatDate(m.birth_date)}</td></tr>
-                        <tr>
-                            <td style="padding:6px 0;color:var(--c-text-sub)">JC 직책</td>
-                            <td style="padding:6px 0">
-                                <select id="member-position-select" style="padding:4px 8px;border:1px solid var(--c-border);border-radius:6px;font-size:13px">
-                                    <option value="">미지정</option>
-                                    ${positionOptions}
-                                </select>
-                                <button class="btn btn-primary btn-sm" style="margin-left:6px;padding:3px 10px;font-size:12px" onclick="saveMemberPosition(${m.id})">저장</button>
-                            </td>
-                        </tr>
-                        <tr><td style="padding:6px 0;color:var(--c-text-sub)">부서</td><td style="padding:6px 0">${escapeHtml(m.department || '-')}</td></tr>
-                        <tr><td style="padding:6px 0;color:var(--c-text-sub)">회사</td><td style="padding:6px 0">${escapeHtml(m.company || '-')}</td></tr>
-                        <tr><td style="padding:6px 0;color:var(--c-text-sub)">업종</td><td style="padding:6px 0">${escapeHtml(m.industry || '-')}</td></tr>
-                        <tr><td style="padding:6px 0;color:var(--c-text-sub)">가입일</td><td style="padding:6px 0">${formatDateTime(m.created_at)}</td></tr>
-                    </table>
-
-                    ${posHistory.length > 0 ? `
-                    <div style="margin-top:16px">
-                        <div style="font-size:13px;font-weight:600;color:var(--c-text);margin-bottom:8px">직책 변동 이력</div>
-                        <div style="border-left:2px solid var(--c-border);padding-left:12px;margin-left:4px">
-                            ${posHistory.map(h => `
-                                <div style="position:relative;padding:6px 0;font-size:12px;color:var(--c-text-sub)">
-                                    <span style="position:absolute;left:-18px;top:10px;width:8px;height:8px;border-radius:50%;background:var(--c-primary)"></span>
-                                    <div><strong style="color:var(--c-text)">${escapeHtml(h.position_name || '-')}</strong></div>
-                                    <div>${formatDate(h.assigned_at)}${h.assigned_by_name ? ' · ' + escapeHtml(h.assigned_by_name) : ''}${h.notes ? ' · ' + escapeHtml(h.notes) : ''}</div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>` : ''}
-                </div>
-                <div class="modal-footer">
-                    ${m.status === 'pending' ? '<button class="btn btn-primary btn-sm" onclick="approveMember(' + m.id + ');closeModal()">승인</button>' : ''}
-                    ${m.status === 'active' ? '<button class="btn btn-danger btn-sm" onclick="changeMemberStatus(' + m.id + ',\'suspended\')">정지</button>' : ''}
-                    ${m.status === 'suspended' ? '<button class="btn btn-primary btn-sm" onclick="changeMemberStatus(' + m.id + ',\'active\')">해제</button>' : ''}
-                    <button class="btn btn-ghost btn-sm" onclick="closeModal()">닫기</button>
-                </div>
-            </div>
-        `);
-    } catch (err) {
-        showAdminToast('회원 정보를 불러올 수 없습니다.', 'error');
+    // 인물카드(dossier)로 바로 이동
+    if (typeof openMemberDossier === 'function') {
+        openMemberDossier(id);
+    } else {
+        showAdminToast('인물카드 모듈을 로드할 수 없습니다.', 'error');
     }
 }
 
@@ -222,13 +168,16 @@ async function saveMemberPosition(memberId) {
     const sel = document.getElementById('member-position-select');
     if (!sel) return;
     const positionId = sel.value ? parseInt(sel.value) : null;
+    if (!positionId) {
+        showAdminToast('직책을 선택해주세요.', 'error');
+        return;
+    }
     try {
-        // position_id를 직접 PUT으로 업데이트
-        const posName = positionId ? sel.options[sel.selectedIndex].text.split(' (')[0] : null;
-        await AdminAPI.put('/api/admin/members/' + memberId, {
-            position: posName
+        await AdminAPI.put('/api/admin/members/' + memberId + '/position', {
+            position_id: positionId
         });
         showAdminToast('직책이 변경되었습니다.');
+        closeModal();
         loadMembers();
     } catch (err) {
         showAdminToast('직책 변경 실패: ' + err.message, 'error');

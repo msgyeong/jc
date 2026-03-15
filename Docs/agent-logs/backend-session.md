@@ -77,3 +77,23 @@
 
 ### 테스트 결과: 6/6 PASS
 - Login, GET /api/profile, GET /api/members, GET /api/members/1, GET /api/members/search, POST with d_day_options
+
+---
+
+## 관리자 웹 회원 상세 로드 실패 수정 — 2026-03-15 (2차)
+
+### 원인
+1. `GET /api/admin/members/:id` 쿼리에 `position_id`, `position_name`, `admin_memo`, `specialties` 컬럼 누락
+2. `GET /api/admin/members` 목록 쿼리에 `position_id` 누락
+3. 프론트엔드 `members.js`에서 positions API 응답 구조 불일치 (`data.items` vs `data` 배열)
+4. `saveMemberPosition()`이 구형 `PUT /api/admin/members/:id`로 position 문자열 전송 → 새 API 미사용
+
+### 수정 내용
+| 파일 | 변경 |
+|------|------|
+| `api/routes/admin.js` (members/:id) | SELECT에 position_id, position_name(JOIN), admin_memo, specialties 추가 |
+| `api/routes/admin.js` (members 목록) | SELECT에 position_id 추가 |
+| `web/admin/js/members.js` | positions 응답 `data.items` 대응, position_id 기준 selected 비교 |
+| `web/admin/js/members.js` | saveMemberPosition → `PUT /api/admin/members/:id/position` + `position_id` 전송 |
+
+### 테스트 결과: 9/9 PASS

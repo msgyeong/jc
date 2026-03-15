@@ -124,11 +124,11 @@ async function loadMembers() {
                     <div class="avatar avatar-sm">${escapeHtml((m.name || '?').charAt(0))}</div>
                 </td>
                 <td><strong>${escapeHtml(m.name)}</strong></td>
-                <td>${m.position_name ? adminPositionBadge(m.position_name) : '<span class="text-sub">-</span>'}</td>
+                <td class="inline-editable" onclick="startInlineEditPosition(this, ${m.id}, '${escapeHtml(m.position_name || '')}')">${m.position_name ? adminPositionBadge(m.position_name) : '<span class="text-sub" style="cursor:pointer">-</span>'}</td>
                 <td class="text-sub text-sm">${formatDate(m.created_at)}</td>
                 <td class="text-sub">${escapeHtml(m.phone || '-')}</td>
                 <td class="text-sub">${escapeHtml(m.email)}</td>
-                <td class="text-sub">${escapeHtml(m.profession || '-')}</td>
+                <td class="inline-editable" onclick="startInlineEditProfession(this, ${m.id}, '${escapeHtml(m.profession || '')}')">${m.profession ? '<span class="text-sub" style="cursor:pointer">' + escapeHtml(m.profession) + '</span>' : '<span class="text-sub" style="cursor:pointer">-</span>'}</td>
                 <td>
                     <div class="action-btns">
                         <button class="btn btn-ghost btn-sm" onclick="openMemberDetail(${m.id})">상세</button>
@@ -235,4 +235,98 @@ async function changeMemberStatus(id, status) {
     } catch (err) {
         showAdminToast('상태 변경 실패: ' + err.message, 'error');
     }
+}
+
+// ── 인라인 편집: JC 직책 ──
+var _inlinePositionsCache = null;
+
+function startInlineEditPosition(td, memberId, currentValue) {
+    if (td.querySelector('input')) return;
+    td.onclick = null;
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentValue;
+    input.placeholder = '회장, 부회장, 감사, 이사...';
+    input.style.cssText = 'border:1px solid #1E3A5F;padding:4px 8px;border-radius:6px;font-size:13px;width:100%;outline:none';
+    td.innerHTML = '';
+    td.appendChild(input);
+    input.focus();
+    input.select();
+
+    var saving = false;
+    async function save() {
+        if (saving) return;
+        saving = true;
+        var val = input.value.trim();
+        try {
+            if (!val) {
+                // 직책 제거: position_id를 null로
+                await AdminAPI.put('/api/admin/members/' + memberId, { position: null });
+                showAdminToast('직책이 제거되었습니다.');
+            } else {
+                // positions 테이블에서 이름으로 검색
+                if (!_inlinePositionsCache) {
+                    var posRes = await AdminAPI.get('/api/admin/positions');
+                    _inlinePositionsCache = (posRes.success && posRes.data && posRes.data.items) || [];
+                }
+                var match = _inlinePositionsCache.find(function(p) { return p.name === val; });
+                if (match) {
+                    await AdminAPI.put('/api/admin/members/' + memberId + '/position', { position_id: match.id });
+                    showAdminToast('JC 직책이 변경되었습니다.');
+                } else {
+                    showAdminToast('등록된 JC 직책이 아닙니다: ' + val + '. 설정 > 직책관리에서 먼저 등록하세요.', 'error');
+                    saving = false;
+                    return;
+                }
+            }
+            loadMembers();
+        } catch (err) {
+            showAdminToast('저장 실패: ' + err.message, 'error');
+            saving = false;
+            loadMembers();
+        }
+    }
+
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        if (e.key === 'Escape') { loadMembers(); }
+    });
+    input.addEventListener('blur', function() { save(); });
+}
+
+// ── 인라인 편집: 직업(profession) ──
+function startInlineEditProfession(td, memberId, currentValue) {
+    if (td.querySelector('input')) return;
+    td.onclick = null;
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentValue;
+    input.placeholder = '변호사, 한의사, 개발자, PD 등';
+    input.style.cssText = 'border:1px solid #1E3A5F;padding:4px 8px;border-radius:6px;font-size:13px;width:100%;outline:none';
+    td.innerHTML = '';
+    td.appendChild(input);
+    input.focus();
+    input.select();
+
+    var saving = false;
+    async function save() {
+        if (saving) return;
+        saving = true;
+        var val = input.value.trim();
+        try {
+            await AdminAPI.put('/api/admin/members/' + memberId, { profession: val || null });
+            showAdminToast('직업이 저장되었습니다.');
+            loadMembers();
+        } catch (err) {
+            showAdminToast('저장 실패: ' + err.message, 'error');
+            saving = false;
+            loadMembers();
+        }
+    }
+
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        if (e.key === 'Escape') { loadMembers(); }
+    });
+    input.addEventListener('blur', function() { save(); });
 }

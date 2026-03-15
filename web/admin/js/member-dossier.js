@@ -44,20 +44,34 @@ function dossierPositionBadge(posName) {
     return ' <span class="badge" style="margin-left:6px;font-size:11px;' + style + '">' + escapeHtml(posName) + '</span>';
 }
 
-// 직책 텍스트 저장
-async function saveDossierPositionText() {
+// JC 직책 저장 (positions 테이블에서 이름으로 매칭)
+async function saveDossierJcPosition() {
     var input = document.getElementById('dossier-position-input');
     if (!input) return;
     var posName = input.value.trim();
     try {
-        // position 필드를 PUT /admin/members/:id로 업데이트
-        await AdminAPI.put('/api/admin/members/' + dossierMemberId, { position: posName || null });
-        showAdminToast('직책이 저장되었습니다.');
+        if (!posName) {
+            // 직책 제거
+            await AdminAPI.put('/api/admin/members/' + dossierMemberId, { position: null });
+            showAdminToast('JC 직책이 제거되었습니다.');
+        } else {
+            // positions 테이블에서 이름으로 검색
+            var posRes = await AdminAPI.get('/api/admin/positions');
+            var positions = (posRes.success && posRes.data && posRes.data.items) || [];
+            var match = positions.find(function(p) { return p.name === posName; });
+            if (match) {
+                await AdminAPI.put('/api/admin/members/' + dossierMemberId + '/position', { position_id: match.id });
+                showAdminToast('JC 직책이 변경되었습니다.');
+            } else {
+                showAdminToast('등록된 JC 직책이 아닙니다: ' + posName + '. 설정 > 직책관리에서 먼저 등록하세요.', 'error');
+                return;
+            }
+        }
         await refreshDossier();
         var main = document.getElementById('main-content');
         if (main) renderDossierPage(main);
     } catch (err) {
-        showAdminToast('직책 저장 실패: ' + err.message, 'error');
+        showAdminToast('JC 직책 저장 실패: ' + err.message, 'error');
     }
 }
 
@@ -85,19 +99,15 @@ function renderDossierPage(container) {
         + '</div>'
         + '<div class="dossier-profile-info">'
         + '<div class="dossier-name">' + escapeHtml(m.name || '이름 없음')
-        + (m.position ? dossierPositionBadge(m.position) : (m.position_name ? dossierPositionBadge(m.position_name) : ''))
+        + (m.position_name ? dossierPositionBadge(m.position_name) : '')
         + '</div>'
         + '<div class="dossier-meta">'
         + (m.email ? '<span>' + escapeHtml(m.email) + '</span>' : '')
         + (m.phone ? '<span>' + escapeHtml(m.phone) + '</span>' : '')
         + '</div>'
-        + '<div class="dossier-meta">'
-        + (m.company ? '<span>' + escapeHtml(m.company) + '</span>' : '')
-        + (m.department ? '<span>' + escapeHtml(m.department) + '</span>' : '')
-        + '</div>'
         + '<div class="dossier-position-edit" style="margin-top:8px;display:flex;align-items:center;gap:4px">'
-        + '<input id="dossier-position-input" type="text" value="' + escapeHtml(m.position || '') + '" placeholder="직책을 입력하세요 (예: 회장, 상임부회장, 감사...)" style="padding:4px 8px;border:1px solid var(--c-border);border-radius:6px;font-size:12px;width:260px">'
-        + '<button class="btn btn-primary btn-sm" style="padding:3px 10px;font-size:11px" onclick="saveDossierPositionText()">저장</button>'
+        + '<input id="dossier-position-input" type="text" value="' + escapeHtml(m.position_name || '') + '" placeholder="JC 직책 입력 (회장, 부회장, 감사, 이사 등)" style="padding:4px 8px;border:1px solid var(--c-border);border-radius:6px;font-size:12px;width:280px">'
+        + '<button class="btn btn-primary btn-sm" style="padding:3px 10px;font-size:11px" onclick="saveDossierJcPosition()">저장</button>'
         + '</div>'
         + '</div>'
         + '<div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
@@ -137,8 +147,18 @@ function switchDossierTab(tabId) {
 function renderDossierBasic(el) {
     var m = dossierData;
     el.innerHTML = ''
+        // 섹션 1: JC 정보 (최상단)
         + '<div class="dossier-section">'
-        + '<h4 class="dossier-section-title">기본 정보</h4>'
+        + '<h4 class="dossier-section-title" style="font-weight:600;font-size:15px;color:#1E3A5F;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">JC 정보</h4>'
+        + '<div class="dossier-grid">'
+        + dossierField('JC 직책', m.position_name)
+        + dossierEditableField('직업(직종)', m.profession, 'profession', '변호사, 한의사, 개발자 등')
+        + dossierField('가입일', formatDateTime(m.created_at))
+        + dossierField('가입번호', m.join_number)
+        + '</div></div>'
+        // 섹션 2: 기본 정보
+        + '<div class="dossier-section">'
+        + '<h4 class="dossier-section-title" style="font-weight:600;font-size:15px;color:#1E3A5F;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">기본 정보</h4>'
         + '<div class="dossier-grid">'
         + dossierField('이름', m.name)
         + dossierField('이메일', m.email)
@@ -147,27 +167,42 @@ function renderDossierBasic(el) {
         + dossierField('성별', m.gender === 'male' ? '남성' : m.gender === 'female' ? '여성' : '-')
         + dossierField('주소', (m.address || '') + (m.address_detail ? ' ' + m.address_detail : ''))
         + '</div></div>'
+        // 섹션 3: 직장 정보 (접힌 상태)
         + '<div class="dossier-section">'
-        + '<h4 class="dossier-section-title">직업 / 직장 정보</h4>'
+        + '<div class="dossier-collapsible-header" onclick="toggleDossierSection(this)" style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600;font-size:15px;color:#1E3A5F;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">'
+        + '<span class="dossier-collapse-arrow" style="font-size:12px;color:#6B7280;transition:transform 0.3s">&#9654;</span> 직장 정보'
+        + '</div>'
+        + '<div class="dossier-collapsible-body" style="max-height:0;overflow:hidden;transition:max-height 0.3s ease">'
         + '<div class="dossier-grid">'
-        + dossierEditableField('직종(직업)', m.profession, 'profession', '변호사, 한의사, 개발자, PD 등')
-        + dossierField('JC 직책', m.position_name)
         + dossierField('회사', m.company)
         + dossierField('직장 직위', m.position)
         + dossierField('부서', m.department)
         + dossierField('업종', m.industry)
         + dossierField('업종 상세', m.industry_detail)
         + dossierField('직장 전화', m.work_phone)
-        + '</div></div>'
+        + '</div></div></div>'
+        // 섹션 4: 기타
         + '<div class="dossier-section">'
-        + '<h4 class="dossier-section-title">기타</h4>'
+        + '<h4 class="dossier-section-title" style="font-weight:600;font-size:15px;color:#1E3A5F;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">기타</h4>'
         + '<div class="dossier-grid">'
         + dossierField('긴급연락처', m.emergency_contact)
         + dossierField('긴급연락자', m.emergency_contact_name)
         + dossierField('관계', m.emergency_relationship)
-        + dossierField('가입일', formatDateTime(m.created_at))
-        + dossierField('가입번호', m.join_number)
         + '</div></div>';
+}
+
+function toggleDossierSection(header) {
+    var body = header.nextElementSibling;
+    var arrow = header.querySelector('.dossier-collapse-arrow');
+    if (!body) return;
+    var isOpen = body.style.maxHeight && body.style.maxHeight !== '0px';
+    if (isOpen) {
+        body.style.maxHeight = '0';
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
+    } else {
+        body.style.maxHeight = body.scrollHeight + 'px';
+        if (arrow) arrow.style.transform = 'rotate(90deg)';
+    }
 }
 
 // ═══ Tab 2: JC 이력/활동/교육 (통합) ═══

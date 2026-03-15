@@ -164,6 +164,40 @@ async function openMemberDetail(id) {
     }
 }
 
+// 빠른 편집 모달 (상태 변경 + 직책 변경용)
+async function openMemberQuickModal(id) {
+    try {
+        const res = await AdminAPI.get('/api/admin/members/' + id);
+        if (!res.success) throw new Error(res.message);
+        const m = res.data;
+
+        openModal(`
+            <div class="modal" style="max-width:440px">
+                <div class="modal-header">
+                    <h3>빠른 편집 — ${escapeHtml(m.name)}</h3>
+                    <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                </div>
+                <div class="modal-body">
+                    <table style="width:100%;font-size:13px">
+                        <tr><td style="padding:6px 0;color:var(--c-text-sub);width:80px">상태</td><td style="padding:6px 0">${statusBadge(m.status)}</td></tr>
+                        <tr><td style="padding:6px 0;color:var(--c-text-sub)">역할</td><td style="padding:6px 0">${roleBadge(m.role)}</td></tr>
+                        <tr><td style="padding:6px 0;color:var(--c-text-sub)">가입일</td><td style="padding:6px 0">${formatDateTime(m.created_at)}</td></tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    ${m.status === 'pending' ? '<button class="btn btn-primary btn-sm" onclick="approveMember(' + m.id + ');closeModal()">승인</button>' : ''}
+                    ${m.status === 'active' ? '<button class="btn btn-danger btn-sm" onclick="changeMemberStatus(' + m.id + ',\'suspended\')">정지</button>' : ''}
+                    ${m.status === 'suspended' ? '<button class="btn btn-primary btn-sm" onclick="changeMemberStatus(' + m.id + ',\'active\')">해제</button>' : ''}
+                    <button class="btn btn-ghost btn-sm" onclick="closeModal()">닫기</button>
+                </div>
+            </div>
+        `);
+    } catch (err) {
+        console.error('Quick modal error:', err);
+        showAdminToast('회원 정보를 불러올 수 없습니다: ' + err.message, 'error');
+    }
+}
+
 async function saveMemberPosition(memberId) {
     const sel = document.getElementById('member-position-select');
     if (!sel) return;

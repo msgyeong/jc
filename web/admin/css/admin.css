@@ -1455,6 +1455,7 @@ tbody tr.clickable {
     display: flex; align-items: center; justify-content: center;
     font-size: 28px; font-weight: 700; flex-shrink: 0; overflow: hidden;
 }
+.dossier-avatar.dossier-avatar-lg { width: 120px; height: 120px; font-size: 40px; }
 .dossier-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 .dossier-profile-info { flex: 1; }

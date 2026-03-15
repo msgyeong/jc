@@ -4,6 +4,7 @@
 
 let dossierData = null;
 let dossierMemberId = null;
+let dossierPositions = []; // 직책 목록 캐시
 
 async function openMemberDossier(memberId) {
     closeModal();
@@ -12,14 +13,62 @@ async function openMemberDossier(memberId) {
     const main = document.getElementById('main-content');
     main.innerHTML = '<div class="table-empty"><p>인물카드 로딩 중...</p></div>';
 
+    // 헤더 제목 업데이트
+    const titleEl = document.getElementById('header-title');
+    if (titleEl) titleEl.textContent = '인물카드';
+
     try {
-        const res = await AdminAPI.get('/api/admin/members/' + memberId + '/dossier');
+        const [res, posRes] = await Promise.all([
+            AdminAPI.get('/api/admin/members/' + memberId + '/dossier'),
+            AdminAPI.get('/api/admin/positions')
+        ]);
         if (!res.success) throw new Error(res.message);
         dossierData = res.data;
+        const posData = (posRes.success && posRes.data) || {};
+        dossierPositions = Array.isArray(posData) ? posData : (posData.items || []);
         renderDossierPage(main);
     } catch (err) {
-        main.innerHTML = '<div class="table-empty"><p>인물카드를 불러올 수 없습니다.</p></div>';
-        showAdminToast(err.message, 'error');
+        main.innerHTML = '<div class="table-empty"><p>인물카드를 불러올 수 없습니다: ' + escapeHtml(err.message) + '</p></div>';
+        console.error('Dossier load error:', err);
+    }
+}
+
+// 직책 뱃지 (색상 코딩)
+function dossierPositionBadge(posName) {
+    if (!posName) return '';
+    var colorMap = {
+        '회장': 'background:#FEF3C7;color:#92400E;border:1px solid #F59E0B',
+        '수석부회장': 'background:#F3F4F6;color:#374151;border:1px solid #9CA3AF',
+        '부회장': 'background:#DBEAFE;color:#1E40AF;border:1px solid #93C5FD',
+        '총무': 'background:#DBEAFE;color:#1E40AF;border:1px solid #93C5FD',
+        '이사': 'background:#E0F2FE;color:#0369A1;border:1px solid #7DD3FC',
+        '감사': 'background:#E0F2FE;color:#0369A1;border:1px solid #7DD3FC',
+        '일반회원': 'background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB'
+    };
+    var style = colorMap[posName] || 'background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB';
+    return ' <span class="badge" style="margin-left:6px;font-size:11px;' + style + '">' + escapeHtml(posName) + '</span>';
+}
+
+// 직책 변경 저장
+async function saveDossierPosition() {
+    var sel = document.getElementById('dossier-position-select');
+    if (!sel) return;
+    var positionId = sel.value ? parseInt(sel.value) : null;
+    if (!positionId) {
+        showAdminToast('직책을 선택해주세요.', 'error');
+        return;
+    }
+    try {
+        await AdminAPI.put('/api/admin/members/' + dossierMemberId + '/position', {
+            position_id: positionId
+        });
+        showAdminToast('직책이 변경되었습니다.');
+        // 인물카드 새로고침
+        await refreshDossier();
+        var main = document.getElementById('main-content');
+        if (main) renderDossierPage(main);
+    } catch (err) {
+        showAdminToast('직책 변경 실패: ' + err.message, 'error');
     }
 }
 
@@ -42,13 +91,13 @@ function renderDossierPage(container) {
                 <button class="btn btn-ghost btn-sm" onclick="navigateAdmin('members')">← 회원 목록</button>
             </div>
             <div class="dossier-profile-card">
-                <div class="dossier-avatar">${m.profile_image
+                <div class="dossier-avatar dossier-avatar-lg">${m.profile_image
                     ? '<img src="' + escapeHtml(m.profile_image) + '" alt="">'
                     : '<span>' + escapeHtml((m.name || '?').charAt(0)) + '</span>'
                 }</div>
                 <div class="dossier-profile-info">
                     <div class="dossier-name">${escapeHtml(m.name || '이름 없음')}
-                        ${m.position ? '<span class="badge badge-admin" style="margin-left:6px;font-size:11px">' + escapeHtml(m.position) + '</span>' : ''}
+                        ${m.position_name ? dossierPositionBadge(m.position_name) : ''}
                     </div>
                     <div class="dossier-meta">
                         ${m.email ? '<span>' + escapeHtml(m.email) + '</span>' : ''}
@@ -58,8 +107,23 @@ function renderDossierPage(container) {
                         ${m.company ? '<span>' + escapeHtml(m.company) + '</span>' : ''}
                         ${m.department ? '<span>' + escapeHtml(m.department) + '</span>' : ''}
                     </div>
+                    <div class="dossier-position-edit" style="margin-top:8px">
+                        <select id="dossier-position-select" style="padding:4px 8px;border:1px solid var(--c-border);border-radius:6px;font-size:12px">
+                            <option value="">직책 미지정</option>
+                            ${dossierPositions.map(function(p) {
+                                var selected = m.position_id === p.id ? ' selected' : '';
+                                return '<option value="' + p.id + '"' + selected + '>' + escapeHtml(p.name) + '</option>';
+                            }).join('')}
+                        </select>
+                        <button class="btn btn-primary btn-sm" style="padding:3px 10px;font-size:11px;margin-left:4px" onclick="saveDossierPosition()">변경</button>
+                    </div>
                 </div>
-                <div style="margin-left:auto">${statusBadge(m.status)} ${roleBadge(m.role)}</div>
+                <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                    <div>${statusBadge(m.status)} ${roleBadge(m.role)}</div>
+                    <div style="display:flex;gap:6px">
+                        <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="openMemberQuickModal(${m.id})">빠른편집</button>
+                    </div>
+                </div>
             </div>
             <div class="dossier-tabs">
                 ${tabs.map((t, i) => '<button class="dossier-tab' + (i === 0 ? ' active' : '') + '" data-tab="' + t.id + '" onclick="switchDossierTab(\'' + t.id + '\')">' + t.label + '</button>').join('')}

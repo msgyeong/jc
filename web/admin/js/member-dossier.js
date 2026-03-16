@@ -813,17 +813,47 @@ async function refreshDossier() {
 // ═══ Tab 7: 앱 권한 ═══
 
 var PERM_LABELS = {
-    member_approve: { label: '회원 승인/거부', desc: '대기 회원 목록 + 승인/거부 버튼' },
-    post_manage: { label: '게시글 관리', desc: '타인 게시글 수정/삭제' },
-    schedule_manage: { label: '일정 관리', desc: '타인 일정 수정/삭제' },
-    notice_manage: { label: '공지 관리', desc: '공지 작성/수정/삭제' },
-    push_send: { label: '긴급 푸시 발송', desc: '즉시 푸시 알림 발송' }
+    member_approve: {
+        label: '회원 승인/거부',
+        desc: '대기 회원 목록 + 승인/거부 버튼',
+        iconClass: 'icon-member',
+        icon: '<svg viewBox="0 0 20 20" fill="#2563EB"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 0114 0H3z"/></svg>'
+    },
+    post_manage: {
+        label: '게시글 관리',
+        desc: '타인 게시글 수정/삭제',
+        iconClass: 'icon-post',
+        icon: '<svg viewBox="0 0 20 20" fill="#D97706"><path d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z"/></svg>'
+    },
+    schedule_manage: {
+        label: '일정 관리',
+        desc: '타인 일정 수정/삭제',
+        iconClass: 'icon-schedule',
+        icon: '<svg viewBox="0 0 20 20" fill="#059669"><path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1z"/></svg>'
+    },
+    notice_manage: {
+        label: '공지 관리',
+        desc: '공지 작성/수정/삭제',
+        iconClass: 'icon-notice',
+        icon: '<svg viewBox="0 0 20 20" fill="#7C3AED"><path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v6.114A4.369 4.369 0 005 11a3 3 0 103 3V7.82l8-1.6v5.894A4.37 4.37 0 0015 12a3 3 0 103 3V3z"/></svg>'
+    },
+    push_send: {
+        label: '긴급 푸시 발송',
+        desc: '즉시 푸시 알림 발송',
+        iconClass: 'icon-push',
+        icon: '<svg viewBox="0 0 20 20" fill="#DC2626"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zm0 16a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>'
+    }
+};
+
+var ROLE_LABELS = {
+    super_admin: '총관리자',
+    admin: '관리자',
+    member: '일반회원'
 };
 
 var dossierPermissionsData = null;
 
 async function renderDossierPermissions(el) {
-    var m = dossierData;
     el.innerHTML = '<div class="table-empty"><p>권한 정보 로딩 중...</p></div>';
 
     try {
@@ -838,57 +868,79 @@ async function renderDossierPermissions(el) {
     var perms = dossierPermissionsData.permissions;
     var role = dossierPermissionsData.role;
     var isSuperAdmin = role === 'super_admin';
+    var roleLabel = ROLE_LABELS[role] || role;
 
-    var html = '<div class="dossier-section">'
-        + '<h4 class="dossier-section-title" style="font-weight:600;font-size:15px;color:#1E3A5F;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">'
-        + '<span style="margin-right:6px">&#128241;</span> 앱 관리 권한</h4>'
-        + '<div style="margin-bottom:12px;font-size:13px;color:#6B7280">현재 역할: <strong>' + escapeHtml(role) + '</strong>'
-        + (isSuperAdmin ? ' <span style="color:#059669;font-size:12px">(모든 권한 자동 보유)</span>' : '')
+    var html = '<div class="dossier-section">';
+
+    // 역할 뱃지
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">'
+        + '<span style="font-size:14px;font-weight:600;color:#374151">현재 역할</span>'
+        + '<span class="perm-role-badge role-' + escapeHtml(role) + '">' + escapeHtml(roleLabel) + '</span>'
         + '</div>';
 
+    // super_admin 안내
+    if (isSuperAdmin) {
+        html += '<div class="perm-super-notice">'
+            + '<svg viewBox="0 0 20 20" fill="#6B7280"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>'
+            + '<span>총관리자는 모든 앱 관리 권한을 자동으로 보유합니다.</span>'
+            + '</div>';
+    }
+
+    // 권한 카드 목록
     var permKeys = ['member_approve', 'post_manage', 'schedule_manage', 'notice_manage', 'push_send'];
     permKeys.forEach(function(key) {
         var info = PERM_LABELS[key];
-        var granted = perms[key] === true;
-        html += '<div class="perm-toggle-row">'
-            + '<div class="perm-toggle-info">'
-            + '<div class="perm-toggle-label">' + escapeHtml(info.label) + '</div>'
-            + '<div class="perm-toggle-desc">' + escapeHtml(info.desc) + '</div>'
+        var granted = isSuperAdmin ? true : (perms[key] === true);
+        html += '<div class="permission-card" data-perm-card="' + key + '">'
+            + '<div class="permission-info">'
+            + '<div class="permission-icon ' + info.iconClass + '">' + info.icon + '</div>'
+            + '<div class="permission-text">'
+            + '<div class="permission-name">' + escapeHtml(info.label) + '</div>'
+            + '<div class="permission-desc">' + escapeHtml(info.desc) + '</div>'
             + '</div>'
-            + '<label class="perm-switch' + (isSuperAdmin ? ' perm-switch--disabled' : '') + '">'
+            + '</div>'
+            + '<label class="perm-toggle">'
             + '<input type="checkbox" data-perm="' + key + '"' + (granted ? ' checked' : '') + (isSuperAdmin ? ' disabled' : '') + '>'
             + '<span class="perm-slider"></span>'
             + '</label>'
             + '</div>';
     });
 
-    if (!isSuperAdmin) {
-        html += '<div style="margin-top:16px">'
-            + '<div class="form-field"><label style="font-size:13px;font-weight:600;color:#374151">변경 사유 (선택)</label>'
-            + '<input id="perm-reason" placeholder="권한 변경 사유" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px"></div>'
-            + '<button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="saveDossierPermissions()">권한 저장</button>'
-            + '</div>';
-    }
-
     html += '</div>';
     el.innerHTML = html;
+
+    // 즉시 저장: 토글 변경 시 개별 API 호출
+    if (!isSuperAdmin) {
+        el.querySelectorAll('.perm-toggle input[data-perm]').forEach(function(input) {
+            input.addEventListener('change', function() {
+                saveSinglePermission(input.dataset.perm, input.checked);
+            });
+        });
+    }
 }
 
-async function saveDossierPermissions() {
-    var checkboxes = document.querySelectorAll('.perm-toggle-row input[data-perm]');
+async function saveSinglePermission(permKey, value) {
+    var card = document.querySelector('[data-perm-card="' + permKey + '"]');
+    if (card) card.classList.add('perm-saving');
+
+    // 현재 모든 권한 상태를 수집해서 전송
+    var checkboxes = document.querySelectorAll('.permission-card input[data-perm]');
     var permissions = {};
     checkboxes.forEach(function(cb) {
         permissions[cb.dataset.perm] = cb.checked;
     });
-    var reason = (document.getElementById('perm-reason') || {}).value || '';
 
     try {
         await AdminAPI.put('/api/admin/members/' + dossierMemberId + '/mobile-permissions', {
-            permissions: permissions,
-            reason: reason.trim() || undefined
+            permissions: permissions
         });
-        showAdminToast('권한이 저장되었습니다.');
+        showAdminToast('권한이 변경되었습니다.');
     } catch (err) {
-        showAdminToast('권한 저장 실패: ' + err.message, 'error');
+        // 실패 시 토글 되돌리기
+        var input = document.querySelector('input[data-perm="' + permKey + '"]');
+        if (input) input.checked = !value;
+        showAdminToast('권한 변경 실패: ' + err.message, 'error');
+    } finally {
+        if (card) card.classList.remove('perm-saving');
     }
 }

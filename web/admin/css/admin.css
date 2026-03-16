@@ -1630,9 +1630,120 @@ td.editable-cell .cell-input {
     outline: none;
 }
 
+/* ---- 앱 권한 탭 (Permission Cards) ---- */
+.perm-role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+.perm-role-badge.role-super_admin { background: #FEE2E2; color: #DC2626; }
+.perm-role-badge.role-admin { background: #DBEAFE; color: #2563EB; }
+.perm-role-badge.role-member { background: #F3F4F6; color: #6B7280; }
+
+.perm-super-notice {
+    font-size: 13px;
+    color: #6B7280;
+    background: #F3F4F6;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.5;
+}
+.perm-super-notice svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.permission-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: #F9FAFB;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: background 0.15s;
+}
+.permission-card:hover { background: #F3F4F6; }
+.permission-card.perm-saving { opacity: 0.6; pointer-events: none; }
+
+.permission-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.permission-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.permission-icon svg { width: 20px; height: 20px; }
+
+.permission-icon.icon-member { background: #DBEAFE; }
+.permission-icon.icon-post { background: #FEF3C7; }
+.permission-icon.icon-schedule { background: #D1FAE5; }
+.permission-icon.icon-notice { background: #EDE9FE; }
+.permission-icon.icon-push { background: #FEE2E2; }
+
+.permission-text { min-width: 0; }
+.permission-name { font-weight: 600; font-size: 14px; color: #1E293B; }
+.permission-desc { font-size: 12px; color: #6B7280; margin-top: 2px; }
+
+.perm-toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+.perm-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+.perm-toggle .perm-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #D1D5DB;
+    border-radius: 24px;
+    transition: background 0.3s ease;
+}
+.perm-toggle .perm-slider::before {
+    content: '';
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.perm-toggle input:checked + .perm-slider { background: #1E3A5F; }
+.perm-toggle input:checked + .perm-slider::before { transform: translateX(20px); }
+.perm-toggle input:disabled + .perm-slider { cursor: not-allowed; opacity: 0.7; }
+
 @media (max-width: 768px) {
     .dossier-profile-card { flex-direction: column; text-align: center; }
     .dossier-tabs { gap: 0; }
     .dossier-tab { padding: 8px 12px; font-size: 12px; }
     .dossier-grid { grid-template-columns: 1fr; }
+    .permission-card { padding: 12px; }
+    .permission-icon { width: 36px; height: 36px; }
+    .permission-icon svg { width: 18px; height: 18px; }
+    .permission-name { font-size: 13px; }
+    .permission-desc { font-size: 11px; }
 }

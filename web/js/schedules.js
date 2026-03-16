@@ -206,6 +206,8 @@ async function showScheduleDetailScreen(scheduleId) {
         const s = res.schedule;
         const user = getCurrentUserSafe();
         const canEdit = user && (String(user.id) === String(s.author_id || s.created_by) || ['super_admin', 'admin'].includes(user.role));
+        const hasScheduleManage = typeof hasMobilePermission === 'function' && hasMobilePermission('schedule_manage');
+        const canManage = canEdit || hasScheduleManage;
 
         const category = s.category || 'other';
         const categoryLabel = CATEGORY_LABELS[category] || category;
@@ -254,17 +256,17 @@ async function showScheduleDetailScreen(scheduleId) {
                 <div class="schedule-detail-section">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start">
                         <span class="schedule-category-badge ${badgeClass}">${categoryLabel}</span>
-                        ${canEdit ? `<div style="position:relative">
+                        ${canManage ? `<div style="position:relative">
                             <button class="schedule-more-btn" onclick="toggleScheduleDropdown(event)" style="color:#6B7280">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
                             </button>
                             <div class="schedule-dropdown" id="schedule-dropdown">
-                                <button class="schedule-dropdown-item" data-action="schedule-edit" data-id="${s.id}">
+                                ${canEdit ? `<button class="schedule-dropdown-item" data-action="schedule-edit" data-id="${s.id}">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     수정
                                 </button>
-                                <div class="schedule-dropdown-divider"></div>
-                                <button class="schedule-dropdown-item schedule-dropdown-item--danger" data-action="schedule-delete" data-id="${s.id}">
+                                <div class="schedule-dropdown-divider"></div>` : ''}
+                                <button class="schedule-dropdown-item schedule-dropdown-item--danger" data-action="${canEdit ? 'schedule-delete' : 'schedule-admin-delete'}" data-id="${s.id}">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                     삭제
                                 </button>
@@ -991,6 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (action === 'schedule-back-list') backToScheduleList();
             if (action === 'schedule-edit' && id) handleEditSchedule(id);
             if (action === 'schedule-delete' && id) handleDeleteSchedule(id);
+            if (action === 'schedule-admin-delete' && id && typeof adminDeleteSchedule === 'function') adminDeleteSchedule(id);
         });
     }
 });

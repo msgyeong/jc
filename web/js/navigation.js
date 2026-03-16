@@ -450,6 +450,12 @@ window.addEventListener('popstate', function(e) {
         window._navPopstate = true;
         if (state.tab) {
             switchTab(state.tab);
+        } else if (state.screen === 'admin-hub' && typeof showAdminHub === 'function') {
+            showAdminHub();
+        } else if (state.screen === 'pending-members' && typeof showPendingMembersScreen === 'function') {
+            showPendingMembersScreen();
+        } else if (state.screen === 'push-send' && typeof showPushSendScreen === 'function') {
+            showPushSendScreen();
         } else {
             navigateToScreen(state.screen);
         }

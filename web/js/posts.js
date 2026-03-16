@@ -650,6 +650,8 @@ function renderPostDetail(post) {
     const isAdmin = userInfo && ['admin', 'super_admin'].includes(userInfo.role);
     const isAuthor = userId && String(post.author_id) === String(userId);
     const canEdit = isAuthor || isAdmin;
+    const hasPostManage = typeof hasMobilePermission === 'function' && hasMobilePermission('post_manage');
+    const showAdminActions = !canEdit && hasPostManage;
 
     const liked = post.user_has_liked === true;
     const images = parseImageArray(post.images);
@@ -661,12 +663,17 @@ function renderPostDetail(post) {
            </div>`
         : '';
 
-    const actionsHtml = canEdit
-        ? `<div class="post-detail-actions">
+    let actionsHtml = '';
+    if (canEdit) {
+        actionsHtml = `<div class="post-detail-actions">
             <button type="button" class="btn btn-secondary btn-sm" onclick="handlePostEdit(${post.id})">수정</button>
             <button type="button" class="btn btn-secondary btn-sm" onclick="handlePostDelete(${post.id})">삭제</button>
-           </div>`
-        : '';
+           </div>`;
+    } else if (showAdminActions) {
+        actionsHtml = `<div class="post-detail-actions admin-inline-actions">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="adminDeletePost(${post.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> 삭제</button>
+           </div>`;
+    }
 
     return `
         <article class="post-detail" data-post-id="${post.id}">

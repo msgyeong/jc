@@ -156,7 +156,8 @@ function renderDossierPage(container) {
         { id: 'career', label: '경력' },
         { id: 'family', label: '가족' },
         { id: 'hobbies', label: '취미/특기' },
-        { id: 'memo', label: '관리자 메모' }
+        { id: 'memo', label: '관리자 메모' },
+        { id: 'permissions', label: '앱 권한' }
     ];
 
     container.innerHTML = ''
@@ -218,7 +219,8 @@ function switchDossierTab(tabId) {
         career: renderDossierCareer,
         family: renderDossierFamily,
         hobbies: renderDossierHobbies,
-        memo: renderDossierMemo
+        memo: renderDossierMemo,
+        permissions: renderDossierPermissions
     };
 
     var renderer = renderers[tabId];
@@ -806,4 +808,87 @@ async function refreshDossier() {
         var res = await AdminAPI.get('/api/admin/members/' + dossierMemberId + '/dossier');
         if (res.success) dossierData = res.data;
     } catch (_) {}
+}
+
+// ═══ Tab 7: 앱 권한 ═══
+
+var PERM_LABELS = {
+    member_approve: { label: '회원 승인/거부', desc: '대기 회원 목록 + 승인/거부 버튼' },
+    post_manage: { label: '게시글 관리', desc: '타인 게시글 수정/삭제' },
+    schedule_manage: { label: '일정 관리', desc: '타인 일정 수정/삭제' },
+    notice_manage: { label: '공지 관리', desc: '공지 작성/수정/삭제' },
+    push_send: { label: '긴급 푸시 발송', desc: '즉시 푸시 알림 발송' }
+};
+
+var dossierPermissionsData = null;
+
+async function renderDossierPermissions(el) {
+    var m = dossierData;
+    el.innerHTML = '<div class="table-empty"><p>권한 정보 로딩 중...</p></div>';
+
+    try {
+        var res = await AdminAPI.get('/api/admin/members/' + dossierMemberId + '/mobile-permissions');
+        if (!res.success) throw new Error(res.message || '조회 실패');
+        dossierPermissionsData = res.data;
+    } catch (err) {
+        el.innerHTML = '<div class="table-empty"><p>권한 정보를 불러올 수 없습니다: ' + escapeHtml(err.message) + '</p></div>';
+        return;
+    }
+
+    var perms = dossierPermissionsData.permissions;
+    var role = dossierPermissionsData.role;
+    var isSuperAdmin = role === 'super_admin';
+
+    var html = '<div class="dossier-section">'
+        + '<h4 class="dossier-section-title" style="font-weight:600;font-size:15px;color:#1E3A5F;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">'
+        + '<span style="margin-right:6px">&#128241;</span> 앱 관리 권한</h4>'
+        + '<div style="margin-bottom:12px;font-size:13px;color:#6B7280">현재 역할: <strong>' + escapeHtml(role) + '</strong>'
+        + (isSuperAdmin ? ' <span style="color:#059669;font-size:12px">(모든 권한 자동 보유)</span>' : '')
+        + '</div>';
+
+    var permKeys = ['member_approve', 'post_manage', 'schedule_manage', 'notice_manage', 'push_send'];
+    permKeys.forEach(function(key) {
+        var info = PERM_LABELS[key];
+        var granted = perms[key] === true;
+        html += '<div class="perm-toggle-row">'
+            + '<div class="perm-toggle-info">'
+            + '<div class="perm-toggle-label">' + escapeHtml(info.label) + '</div>'
+            + '<div class="perm-toggle-desc">' + escapeHtml(info.desc) + '</div>'
+            + '</div>'
+            + '<label class="perm-switch' + (isSuperAdmin ? ' perm-switch--disabled' : '') + '">'
+            + '<input type="checkbox" data-perm="' + key + '"' + (granted ? ' checked' : '') + (isSuperAdmin ? ' disabled' : '') + '>'
+            + '<span class="perm-slider"></span>'
+            + '</label>'
+            + '</div>';
+    });
+
+    if (!isSuperAdmin) {
+        html += '<div style="margin-top:16px">'
+            + '<div class="form-field"><label style="font-size:13px;font-weight:600;color:#374151">변경 사유 (선택)</label>'
+            + '<input id="perm-reason" placeholder="권한 변경 사유" style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px"></div>'
+            + '<button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="saveDossierPermissions()">권한 저장</button>'
+            + '</div>';
+    }
+
+    html += '</div>';
+    el.innerHTML = html;
+}
+
+async function saveDossierPermissions() {
+    var checkboxes = document.querySelectorAll('.perm-toggle-row input[data-perm]');
+    var permissions = {};
+    checkboxes.forEach(function(cb) {
+        permissions[cb.dataset.perm] = cb.checked;
+    });
+    var reason = (document.getElementById('perm-reason') || {}).value || '';
+
+    try {
+        await AdminAPI.put('/api/admin/members/' + dossierMemberId + '/mobile-permissions', {
+            permissions: permissions,
+            reason: reason.trim() || undefined
+        });
+        showAdminToast('권한이 저장되었습니다.');
+    } catch (err) {
+        showAdminToast('권한 저장 실패: ' + err.message, 'error');
+    }
 }

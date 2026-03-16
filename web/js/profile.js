@@ -51,6 +51,12 @@ async function loadProfile() {
             container.innerHTML = renderProfile(result.profile);
             profileLoaded = true;
             if (result.profile.id) loadProfileTitleHistory(result.profile.id);
+            // 관리 권한 로드 후 관리 메뉴 표시
+            if (typeof loadMyPermissions === 'function') {
+                loadMyPermissions().then(function() {
+                    if (typeof renderAdminMenuInProfile === 'function') renderAdminMenuInProfile();
+                });
+            }
         } else {
             container.innerHTML = renderErrorState('프로필을 불러올 수 없습니다', '잠시 후 다시 시도해주세요', 'loadProfile()');
         }

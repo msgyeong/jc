@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영등포 JC - 회원관리 앱</title>
     <!-- Build: 2026-02-06 v2.1 -->
-    <link rel="stylesheet" href="styles/main.css?v=20260315h">
+    <link rel="stylesheet" href="styles/main.css?v=20260316a">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FFFFFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1007,6 +1007,42 @@
             </nav>
         </div>
 
+        <!-- 앱 관리 허브 화면 -->
+        <div id="admin-hub-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="handleAdminHubBack()">
+                    <span class="icon">&larr;</span>
+                </button>
+                <h1 class="app-bar-title">앱 관리</h1>
+            </div>
+            <div class="screen-content" id="admin-hub-content">
+            </div>
+        </div>
+
+        <!-- 회원 승인 대기 화면 -->
+        <div id="pending-members-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="handlePendingMembersBack()">
+                    <span class="icon">&larr;</span>
+                </button>
+                <h1 class="app-bar-title">회원 승인 대기</h1>
+            </div>
+            <div class="screen-content" id="pending-members-list">
+            </div>
+        </div>
+
+        <!-- 긴급 푸시 발송 화면 -->
+        <div id="push-send-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="handlePushSendBack()">
+                    <span class="icon">&larr;</span>
+                </button>
+                <h1 class="app-bar-title">긴급 푸시 발송</h1>
+            </div>
+            <div class="screen-content" id="push-send-content">
+            </div>
+        </div>
+
         <!-- 환경설정 화면 (이슈 #9) -->
         <div id="settings-screen" class="screen">
             <div class="app-bar">
@@ -1132,7 +1168,8 @@
     <script src="js/notifications.js?v=20260315a"></script>
     <script src="js/notification-settings.js?v=20260315a"></script>
     <script src="js/settings.js?v=20260315a"></script>
-    <script src="js/navigation.js?v=20260315a"></script>
-    <script src="js/app.js?v=20260315a"></script>
+    <script src="js/admin-app.js?v=20260316a"></script>
+    <script src="js/navigation.js?v=20260316a"></script>
+    <script src="js/app.js?v=20260316a"></script>
 </body>
 </html>

@@ -5827,3 +5827,309 @@ input[type="date"]:focus {
 
 .date-time-row { display: flex; gap: 8px; }
 .date-time-row input { flex: 1; }
+
+/* ══════════════════════════════════════
+   앱 관리 기능 스타일
+   ══════════════════════════════════════ */
+
+/* 프로필 관리 섹션 */
+.admin-section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1E3A5F;
+    padding: 8px 16px 4px;
+}
+
+/* 관리 허브 카드 */
+.admin-hub-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    margin: 0 16px 12px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.admin-hub-card:active { background: #F9FAFB; }
+
+.admin-hub-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.admin-hub-card-body { flex: 1; min-width: 0; }
+
+.admin-hub-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-hub-card-desc {
+    font-size: 13px;
+    color: #6B7280;
+    margin-top: 2px;
+}
+
+.admin-hub-badge {
+    display: none;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #EF4444;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    line-height: 20px;
+    text-align: center;
+}
+
+.admin-hub-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 20px;
+    margin: 8px 16px;
+    font-size: 13px;
+    color: #6B7280;
+    background: #F9FAFB;
+    border-radius: 8px;
+}
+
+.admin-hub-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: #9CA3AF;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* 대기 회원 카드 */
+.pending-member-card {
+    padding: 16px;
+    margin: 0 16px 12px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.pending-member-info { margin-bottom: 12px; }
+
+.pending-member-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.pending-member-meta {
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.5;
+}
+
+.pending-member-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.btn-admin-approve {
+    padding: 8px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #10B981;
+    color: #fff;
+    transition: background 0.15s;
+}
+.btn-admin-approve:active { background: #059669; }
+
+.btn-admin-reject {
+    padding: 8px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #FEE2E2;
+    color: #EF4444;
+    transition: background 0.15s;
+}
+.btn-admin-reject:active { background: #FECACA; }
+
+/* 관리 모달 */
+.admin-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+}
+
+.admin-modal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+
+.admin-modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+/* 인라인 관리 액션 */
+.admin-inline-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #1E3A5F;
+    font-size: 12px;
+}
+
+/* 긴급 푸시 */
+.push-send-form {
+    padding: 16px;
+}
+.push-send-form .form-group {
+    margin-bottom: 16px;
+}
+.push-send-form .form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+.push-send-form .form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+.push-send-form .form-input:focus {
+    outline: none;
+    border-color: #1E3A5F;
+    box-shadow: 0 0 0 2px rgba(30,58,95,0.1);
+}
+.push-target-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+}
+.push-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #92400E;
+    margin-bottom: 20px;
+}
+.btn-push-send {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #DC2626;
+    color: #fff;
+    transition: background 0.15s;
+}
+.btn-push-send:active { background: #B91C1C; }
+
+/* ── 관리자 웹: 권한 토글 스위치 ── */
+.perm-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #F3F4F6;
+}
+.perm-toggle-row:last-of-type { border-bottom: none; }
+
+.perm-toggle-info { flex: 1; min-width: 0; }
+.perm-toggle-label { font-size: 14px; font-weight: 500; color: #111827; }
+.perm-toggle-desc { font-size: 12px; color: #6B7280; margin-top: 2px; }
+
+.perm-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+.perm-switch input { opacity: 0; width: 0; height: 0; }
+.perm-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #D1D5DB;
+    border-radius: 24px;
+    transition: background 0.2s;
+}
+.perm-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+.perm-switch input:checked + .perm-slider { background: #10B981; }
+.perm-switch input:checked + .perm-slider::before { transform: translateX(20px); }
+.perm-switch--disabled .perm-slider { opacity: 0.5; cursor: not-allowed; }
+.perm-switch--disabled input:checked + .perm-slider { background: #9CA3AF; }

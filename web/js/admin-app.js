@@ -1,5 +1,4 @@
-// 앱 관리 기능 — 권한 로드 + 관리 허브 + 회원 승인
-// B-1: 권한 로드, B-2: 관리 메뉴, B-3: 회원가입 승인
+// 앱 관리 기능 — 권한 로드 + 관리 허브 + 회원 승인 + 공지/게시글/일정 관리 + 푸시
 
 // ══════════════════════════════════════
 // B-1: 권한 로드 및 헬퍼
@@ -31,7 +30,6 @@ function hasMobilePermission(permission) {
 // ══════════════════════════════════════
 
 function renderAdminMenuInProfile() {
-    // 기존 관리 섹션 제거 (중복 방지)
     var existing = document.getElementById('profile-admin-section');
     if (existing) existing.remove();
 
@@ -53,7 +51,6 @@ function renderAdminMenuInProfile() {
         + '<span class="settings-item-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>'
         + '</div>';
 
-    // 첫 번째 settings-group 뒤에 삽입
     settingsGroups[0].after(section);
 }
 
@@ -66,6 +63,7 @@ function showAdminHub() {
     if (!screen) return;
     document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
     screen.classList.add('active');
+    removeFloatingDeleteBar();
     renderAdminHubContent();
     history.pushState({ screen: 'admin-hub' }, '', '#admin-hub');
 }
@@ -74,6 +72,7 @@ function renderAdminHubContent() {
     var container = document.getElementById('admin-hub-content');
     if (!container) return;
 
+    var chevron = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>';
     var html = '';
 
     if (hasMobilePermission('member_approve')) {
@@ -84,23 +83,41 @@ function renderAdminHubContent() {
             + '<div class="admin-hub-card-body">'
             + '<div class="admin-hub-card-title">회원 승인 대기<span class="admin-hub-badge" id="pending-count-badge"></span></div>'
             + '<div class="admin-hub-card-desc">승인 대기 중인 회원 목록</div>'
-            + '</div>'
-            + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>'
-            + '</div>';
+            + '</div>' + chevron + '</div>';
         loadPendingCount();
     }
 
     if (hasMobilePermission('notice_manage')) {
-        html += '<div class="admin-hub-card" onclick="showToast(\'공지 관리는 게시판 공지탭에서 이용하세요.\')">'
+        html += '<div class="admin-hub-card" onclick="showNoticeManageScreen()">'
             + '<div class="admin-hub-card-icon" style="background:#FEF3C7;color:#D97706">'
             + '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
             + '</div>'
             + '<div class="admin-hub-card-body">'
             + '<div class="admin-hub-card-title">공지 관리</div>'
             + '<div class="admin-hub-card-desc">공지 작성/수정/삭제</div>'
+            + '</div>' + chevron + '</div>';
+    }
+
+    if (hasMobilePermission('post_manage')) {
+        html += '<div class="admin-hub-card" onclick="showPostManageScreen()">'
+            + '<div class="admin-hub-card-icon" style="background:#EDE9FE;color:#7C3AED">'
+            + '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
             + '</div>'
-            + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>'
-            + '</div>';
+            + '<div class="admin-hub-card-body">'
+            + '<div class="admin-hub-card-title">게시글 관리</div>'
+            + '<div class="admin-hub-card-desc">게시글 일괄 삭제</div>'
+            + '</div>' + chevron + '</div>';
+    }
+
+    if (hasMobilePermission('schedule_manage')) {
+        html += '<div class="admin-hub-card" onclick="showScheduleManageScreen()">'
+            + '<div class="admin-hub-card-icon" style="background:#D1FAE5;color:#059669">'
+            + '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+            + '</div>'
+            + '<div class="admin-hub-card-body">'
+            + '<div class="admin-hub-card-title">일정 관리</div>'
+            + '<div class="admin-hub-card-desc">일정 일괄 삭제</div>'
+            + '</div>' + chevron + '</div>';
     }
 
     if (hasMobilePermission('push_send')) {
@@ -110,17 +127,8 @@ function renderAdminHubContent() {
             + '</div>'
             + '<div class="admin-hub-card-body">'
             + '<div class="admin-hub-card-title">긴급 푸시 발송</div>'
-            + '<div class="admin-hub-card-desc">즉시 전체/그룹 알림 발송</div>'
-            + '</div>'
-            + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>'
-            + '</div>';
-    }
-
-    if (hasMobilePermission('post_manage') || hasMobilePermission('schedule_manage')) {
-        html += '<div class="admin-hub-info">'
-            + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
-            + ' 게시글/일정 관리는 각 화면에서 인라인으로 제공됩니다.'
-            + '</div>';
+            + '<div class="admin-hub-card-desc">즉시 전체/선택 알림 발송</div>'
+            + '</div>' + chevron + '</div>';
     }
 
     if (!html) {
@@ -197,7 +205,6 @@ async function approvePendingMember(memberId, name) {
             showToast(name + '님의 가입이 승인되었습니다.', 'success');
             var card = document.getElementById('pending-member-' + memberId);
             if (card) card.style.display = 'none';
-            // 남은 카드 없으면 새로고침
             var remaining = document.querySelectorAll('.pending-member-card[style*="display: none"]');
             var total = document.querySelectorAll('.pending-member-card');
             if (remaining.length >= total.length) loadPendingMembers();
@@ -210,7 +217,6 @@ async function approvePendingMember(memberId, name) {
 }
 
 function rejectPendingMember(memberId, name) {
-    // 거부 사유 입력 모달
     var overlay = document.createElement('div');
     overlay.className = 'admin-modal-overlay';
     overlay.innerHTML = '<div class="admin-modal">'
@@ -267,14 +273,449 @@ async function confirmRejectMember(memberId, name, btnEl) {
 }
 
 // ══════════════════════════════════════
-// 긴급 푸시 발송 화면
+// 공지 관리 화면
 // ══════════════════════════════════════
+
+var _noticeSelectedIds = new Set();
+
+function showNoticeManageScreen() {
+    var screen = document.getElementById('notice-manage-screen');
+    if (!screen) return;
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    screen.classList.add('active');
+    _noticeSelectedIds.clear();
+    loadNoticeManageList();
+    history.pushState({ screen: 'notice-manage' }, '', '#notice-manage');
+}
+
+async function loadNoticeManageList() {
+    var container = document.getElementById('notice-manage-content');
+    if (!container) return;
+    container.innerHTML = renderSkeleton('list');
+    removeFloatingDeleteBar();
+
+    try {
+        var res = await apiClient.request('/admin-app/notices?limit=100');
+        if (!res.success) throw new Error(res.message || '조회 실패');
+
+        var items = (res.data && res.data.items) || [];
+        if (items.length === 0) {
+            container.innerHTML = '<div class="admin-hub-empty" style="padding:40px 0">'
+                + '<div style="color:#9CA3AF">등록된 공지가 없습니다.</div>'
+                + '</div>';
+            return;
+        }
+
+        var html = '<div class="admin-list-header">'
+            + '<label class="admin-checkbox"><input type="checkbox" onchange="toggleAllNotices(this.checked)"><span class="checkmark"></span></label>'
+            + '<span>전체 선택</span>'
+            + '</div>';
+
+        items.forEach(function(n) {
+            html += '<div class="admin-list-item" onclick="onNoticeItemClick(event, ' + n.id + ')">'
+                + '<label class="admin-checkbox" onclick="event.stopPropagation()">'
+                + '<input type="checkbox" data-notice-id="' + n.id + '" onchange="onNoticeCheckChange()">'
+                + '<span class="checkmark"></span></label>'
+                + '<div class="admin-list-item-body">'
+                + '<div class="admin-list-item-title">'
+                + (n.is_pinned ? '<span class="pin-tag">고정</span> ' : '')
+                + escapeHtml(n.title) + '</div>'
+                + '<div class="admin-list-item-meta">'
+                + '<span>' + escapeHtml(n.author_name || '') + '</span>'
+                + '<span>' + formatDate(n.created_at) + '</span>'
+                + '</div>'
+                + '</div>'
+                + '</div>';
+        });
+
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = renderErrorState('공지를 불러올 수 없습니다', err.message, 'loadNoticeManageList()');
+    }
+}
+
+function onNoticeItemClick(event, noticeId) {
+    if (event.target.closest('.admin-checkbox')) return;
+    showNoticeEditor(noticeId);
+}
+
+function toggleAllNotices(checked) {
+    var cbs = document.querySelectorAll('[data-notice-id]');
+    cbs.forEach(function(cb) { cb.checked = checked; });
+    onNoticeCheckChange();
+}
+
+function onNoticeCheckChange() {
+    var cbs = document.querySelectorAll('[data-notice-id]');
+    _noticeSelectedIds.clear();
+    cbs.forEach(function(cb) { if (cb.checked) _noticeSelectedIds.add(parseInt(cb.dataset.noticeId)); });
+    updateFloatingDeleteBar(_noticeSelectedIds.size, function() { bulkDeleteNotices(); });
+}
+
+async function bulkDeleteNotices() {
+    var ids = Array.from(_noticeSelectedIds);
+    if (ids.length === 0) return;
+    if (!confirm('선택한 ' + ids.length + '개의 공지를 삭제하시겠습니까?')) return;
+
+    try {
+        var res = await apiClient.request('/admin-app/notices/bulk', {
+            method: 'DELETE',
+            body: JSON.stringify({ ids: ids })
+        });
+        if (res.success) {
+            showToast(res.deletedCount + '개 공지가 삭제되었습니다.', 'success');
+            _noticeSelectedIds.clear();
+            removeFloatingDeleteBar();
+            loadNoticeManageList();
+        } else {
+            showToast(res.message || '삭제 실패', 'error');
+        }
+    } catch (err) {
+        showToast(err.message || '삭제 중 오류', 'error');
+    }
+}
+
+// 공지 작성/수정 에디터
+var _editingNoticeId = null;
+
+function showNoticeEditor(noticeId) {
+    var screen = document.getElementById('notice-edit-screen');
+    if (!screen) return;
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    screen.classList.add('active');
+    removeFloatingDeleteBar();
+
+    _editingNoticeId = noticeId || null;
+    var titleEl = document.getElementById('notice-edit-title');
+    if (titleEl) titleEl.textContent = _editingNoticeId ? '공지 수정' : '새 공지 작성';
+
+    var container = document.getElementById('notice-edit-content');
+    if (!container) return;
+
+    if (_editingNoticeId) {
+        container.innerHTML = renderSkeleton('list');
+        loadNoticeForEdit(noticeId, container);
+    } else {
+        renderNoticeEditForm(container, { title: '', content: '', is_pinned: false });
+    }
+
+    history.pushState({ screen: 'notice-edit' }, '', '#notice-edit');
+}
+
+async function loadNoticeForEdit(noticeId, container) {
+    try {
+        // GET from existing posts endpoint (notices are posts with category=notice)
+        var res = await apiClient.request('/notices/' + noticeId);
+        if (res.success && res.data) {
+            var n = res.data.notice || res.data;
+            renderNoticeEditForm(container, { title: n.title || '', content: n.content || '', is_pinned: !!n.is_pinned });
+        } else {
+            container.innerHTML = renderErrorState('공지를 불러올 수 없습니다', '', 'showNoticeManageScreen()');
+        }
+    } catch (err) {
+        container.innerHTML = renderErrorState('공지를 불러올 수 없습니다', err.message, 'showNoticeManageScreen()');
+    }
+}
+
+function renderNoticeEditForm(container, data) {
+    container.innerHTML = '<div class="notice-edit-form">'
+        + '<div class="form-group">'
+        + '<label class="form-label">제목 (필수)</label>'
+        + '<input type="text" id="notice-edit-input-title" class="form-input" placeholder="공지 제목" maxlength="200" value="' + escapeHtml(data.title) + '">'
+        + '</div>'
+        + '<div class="form-group">'
+        + '<label class="form-label">내용 (필수)</label>'
+        + '<textarea id="notice-edit-input-content" class="form-input" rows="8" placeholder="공지 내용을 입력하세요">' + escapeHtml(data.content) + '</textarea>'
+        + '</div>'
+        + '<div class="notice-pin-toggle">'
+        + '<div><div class="pin-label">상단 고정</div><div class="pin-desc">공지 목록 상단에 고정합니다</div></div>'
+        + '<label class="perm-switch"><input type="checkbox" id="notice-edit-pinned"' + (data.is_pinned ? ' checked' : '') + '><span class="perm-slider"></span></label>'
+        + '</div>'
+        + '<button class="btn-notice-save" onclick="saveNotice()">저장</button>'
+        + (_editingNoticeId ? '<button class="btn-admin-reject" style="width:100%;padding:14px;font-size:16px;font-weight:700;margin-top:8px" onclick="deleteSingleNotice(' + _editingNoticeId + ')">삭제</button>' : '')
+        + '</div>';
+}
+
+async function saveNotice() {
+    var title = (document.getElementById('notice-edit-input-title') || {}).value.trim();
+    var content = (document.getElementById('notice-edit-input-content') || {}).value.trim();
+    var is_pinned = !!(document.getElementById('notice-edit-pinned') || {}).checked;
+
+    if (!title) { showToast('제목을 입력하세요.', 'error'); return; }
+    if (!content) { showToast('내용을 입력하세요.', 'error'); return; }
+
+    try {
+        var endpoint = _editingNoticeId
+            ? '/admin-app/notices/' + _editingNoticeId
+            : '/admin-app/notices';
+        var method = _editingNoticeId ? 'PUT' : 'POST';
+
+        var res = await apiClient.request(endpoint, {
+            method: method,
+            body: JSON.stringify({ title: title, content: content, is_pinned: is_pinned })
+        });
+        if (res.success) {
+            showToast(_editingNoticeId ? '공지가 수정되었습니다.' : '공지가 등록되었습니다.', 'success');
+            showNoticeManageScreen();
+        } else {
+            showToast(res.message || '저장 실패', 'error');
+        }
+    } catch (err) {
+        showToast(err.message || '저장 중 오류', 'error');
+    }
+}
+
+async function deleteSingleNotice(noticeId) {
+    if (!confirm('이 공지를 삭제하시겠습니까?')) return;
+    try {
+        var res = await apiClient.request('/admin-app/notices/' + noticeId, { method: 'DELETE' });
+        if (res.success) {
+            showToast('공지가 삭제되었습니다.', 'success');
+            showNoticeManageScreen();
+        } else {
+            showToast(res.message || '삭제 실패', 'error');
+        }
+    } catch (err) {
+        showToast(err.message || '삭제 중 오류', 'error');
+    }
+}
+
+// ══════════════════════════════════════
+// 게시글 관리 화면 (일괄 삭제)
+// ══════════════════════════════════════
+
+var _postSelectedIds = new Set();
+
+function showPostManageScreen() {
+    var screen = document.getElementById('post-manage-screen');
+    if (!screen) return;
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    screen.classList.add('active');
+    _postSelectedIds.clear();
+    loadPostManageList();
+    history.pushState({ screen: 'post-manage' }, '', '#post-manage');
+}
+
+async function loadPostManageList() {
+    var container = document.getElementById('post-manage-content');
+    if (!container) return;
+    container.innerHTML = renderSkeleton('list');
+    removeFloatingDeleteBar();
+
+    try {
+        var res = await apiClient.request('/posts?limit=100');
+        if (!res.success) throw new Error(res.message || '조회 실패');
+
+        var items = (res.data && res.data.posts) || (res.data && res.data.items) || [];
+        if (items.length === 0) {
+            container.innerHTML = '<div class="admin-hub-empty" style="padding:40px 0"><div style="color:#9CA3AF">게시글이 없습니다.</div></div>';
+            return;
+        }
+
+        var html = '<div class="admin-list-header">'
+            + '<label class="admin-checkbox"><input type="checkbox" onchange="toggleAllPosts(this.checked)"><span class="checkmark"></span></label>'
+            + '<span>전체 선택</span>'
+            + '</div>';
+
+        items.forEach(function(p) {
+            html += '<div class="admin-list-item">'
+                + '<label class="admin-checkbox" onclick="event.stopPropagation()">'
+                + '<input type="checkbox" data-post-id="' + p.id + '" onchange="onPostCheckChange()">'
+                + '<span class="checkmark"></span></label>'
+                + '<div class="admin-list-item-body">'
+                + '<div class="admin-list-item-title">' + escapeHtml(p.title) + '</div>'
+                + '<div class="admin-list-item-meta">'
+                + '<span>' + escapeHtml(p.author_name || p.author || '') + '</span>'
+                + '<span>' + formatDate(p.created_at) + '</span>'
+                + '</div>'
+                + '</div>'
+                + '</div>';
+        });
+
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = renderErrorState('게시글을 불러올 수 없습니다', err.message, 'loadPostManageList()');
+    }
+}
+
+function toggleAllPosts(checked) {
+    document.querySelectorAll('[data-post-id]').forEach(function(cb) { cb.checked = checked; });
+    onPostCheckChange();
+}
+
+function onPostCheckChange() {
+    _postSelectedIds.clear();
+    document.querySelectorAll('[data-post-id]').forEach(function(cb) {
+        if (cb.checked) _postSelectedIds.add(parseInt(cb.dataset.postId));
+    });
+    updateFloatingDeleteBar(_postSelectedIds.size, function() { bulkDeletePosts(); });
+}
+
+async function bulkDeletePosts() {
+    var ids = Array.from(_postSelectedIds);
+    if (ids.length === 0) return;
+    if (!confirm('선택한 ' + ids.length + '개의 게시글을 삭제하시겠습니까?')) return;
+
+    try {
+        var res = await apiClient.request('/admin-app/posts/bulk', {
+            method: 'DELETE',
+            body: JSON.stringify({ ids: ids })
+        });
+        if (res.success) {
+            showToast((res.deletedCount || ids.length) + '개 게시글이 삭제되었습니다.', 'success');
+            _postSelectedIds.clear();
+            removeFloatingDeleteBar();
+            loadPostManageList();
+        } else {
+            showToast(res.message || '삭제 실패', 'error');
+        }
+    } catch (err) {
+        showToast(err.message || '삭제 중 오류', 'error');
+    }
+}
+
+// ══════════════════════════════════════
+// 일정 관리 화면 (일괄 삭제)
+// ══════════════════════════════════════
+
+var _scheduleSelectedIds = new Set();
+
+function showScheduleManageScreen() {
+    var screen = document.getElementById('schedule-manage-screen');
+    if (!screen) return;
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    screen.classList.add('active');
+    _scheduleSelectedIds.clear();
+    loadScheduleManageList();
+    history.pushState({ screen: 'schedule-manage' }, '', '#schedule-manage');
+}
+
+async function loadScheduleManageList() {
+    var container = document.getElementById('schedule-manage-content');
+    if (!container) return;
+    container.innerHTML = renderSkeleton('list');
+    removeFloatingDeleteBar();
+
+    try {
+        var res = await apiClient.request('/schedules?limit=100');
+        if (!res.success) throw new Error(res.message || '조회 실패');
+
+        var items = (res.data && res.data.schedules) || (res.data && res.data.items) || [];
+        if (items.length === 0) {
+            container.innerHTML = '<div class="admin-hub-empty" style="padding:40px 0"><div style="color:#9CA3AF">일정이 없습니다.</div></div>';
+            return;
+        }
+
+        var html = '<div class="admin-list-header">'
+            + '<label class="admin-checkbox"><input type="checkbox" onchange="toggleAllSchedules(this.checked)"><span class="checkmark"></span></label>'
+            + '<span>전체 선택</span>'
+            + '</div>';
+
+        items.forEach(function(s) {
+            html += '<div class="admin-list-item">'
+                + '<label class="admin-checkbox" onclick="event.stopPropagation()">'
+                + '<input type="checkbox" data-schedule-id="' + s.id + '" onchange="onScheduleCheckChange()">'
+                + '<span class="checkmark"></span></label>'
+                + '<div class="admin-list-item-body">'
+                + '<div class="admin-list-item-title">' + escapeHtml(s.title) + '</div>'
+                + '<div class="admin-list-item-meta">'
+                + '<span>' + escapeHtml(s.creator_name || s.created_by_name || '') + '</span>'
+                + '<span>' + formatDate(s.start_date) + '</span>'
+                + '</div>'
+                + '</div>'
+                + '</div>';
+        });
+
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = renderErrorState('일정을 불러올 수 없습니다', err.message, 'loadScheduleManageList()');
+    }
+}
+
+function toggleAllSchedules(checked) {
+    document.querySelectorAll('[data-schedule-id]').forEach(function(cb) { cb.checked = checked; });
+    onScheduleCheckChange();
+}
+
+function onScheduleCheckChange() {
+    _scheduleSelectedIds.clear();
+    document.querySelectorAll('[data-schedule-id]').forEach(function(cb) {
+        if (cb.checked) _scheduleSelectedIds.add(parseInt(cb.dataset.scheduleId));
+    });
+    updateFloatingDeleteBar(_scheduleSelectedIds.size, function() { bulkDeleteSchedules(); });
+}
+
+async function bulkDeleteSchedules() {
+    var ids = Array.from(_scheduleSelectedIds);
+    if (ids.length === 0) return;
+    if (!confirm('선택한 ' + ids.length + '개의 일정을 삭제하시겠습니까?\n(참석 데이터도 함께 삭제됩니다)')) return;
+
+    try {
+        var res = await apiClient.request('/admin-app/schedules/bulk', {
+            method: 'DELETE',
+            body: JSON.stringify({ ids: ids })
+        });
+        if (res.success) {
+            showToast((res.deletedCount || ids.length) + '개 일정이 삭제되었습니다.', 'success');
+            _scheduleSelectedIds.clear();
+            removeFloatingDeleteBar();
+            loadScheduleManageList();
+        } else {
+            showToast(res.message || '삭제 실패', 'error');
+        }
+    } catch (err) {
+        showToast(err.message || '삭제 중 오류', 'error');
+    }
+}
+
+// ══════════════════════════════════════
+// 플로팅 삭제 바 (공통)
+// ══════════════════════════════════════
+
+var _floatingDeleteCallback = null;
+
+function updateFloatingDeleteBar(count, onDelete) {
+    _floatingDeleteCallback = onDelete;
+    var bar = document.getElementById('floating-delete-bar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'floating-delete-bar';
+        bar.className = 'floating-delete-bar';
+        bar.innerHTML = '<span class="selected-count"></span><button class="btn-bulk-delete" onclick="onFloatingDeleteClick()">삭제</button>';
+        document.body.appendChild(bar);
+    }
+    bar.querySelector('.selected-count').textContent = count + '개 선택됨';
+    if (count > 0) {
+        bar.classList.add('visible');
+    } else {
+        bar.classList.remove('visible');
+    }
+}
+
+function removeFloatingDeleteBar() {
+    var bar = document.getElementById('floating-delete-bar');
+    if (bar) bar.classList.remove('visible');
+    _floatingDeleteCallback = null;
+}
+
+function onFloatingDeleteClick() {
+    if (typeof _floatingDeleteCallback === 'function') _floatingDeleteCallback();
+}
+
+// ══════════════════════════════════════
+// 긴급 푸시 발송 화면 (대상 선택 + 발송 기록)
+// ══════════════════════════════════════
+
+var _pushMembersList = [];
+var _pushSelectedUserIds = new Set();
 
 function showPushSendScreen() {
     var screen = document.getElementById('push-send-screen');
     if (!screen) return;
     document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
     screen.classList.add('active');
+    removeFloatingDeleteBar();
+    _pushSelectedUserIds.clear();
     history.pushState({ screen: 'push-send' }, '', '#push-send');
 
     var container = document.getElementById('push-send-content');
@@ -293,45 +734,204 @@ function showPushSendScreen() {
         + '<div class="form-group">'
         + '<label class="form-label">발송 대상</label>'
         + '<div class="push-target-options">'
-        + '<label class="radio-option"><input type="radio" name="push-target" value="all" checked> 전체 회원</label>'
+        + '<label class="radio-option"><input type="radio" name="push-target" value="all" checked onchange="onPushTargetChange()"> 전체 회원</label>'
+        + '<label class="radio-option"><input type="radio" name="push-target" value="selected" onchange="onPushTargetChange()"> 선택 회원</label>'
         + '</div>'
+        + '<div id="push-member-select-area" style="display:none"></div>'
         + '</div>'
         + '<div class="push-warning">'
         + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
         + ' 즉시 발송됩니다. 신중히 작성하세요.'
         + '</div>'
-        + '<button class="btn-push-send" onclick="handlePushSend()">발송하기</button>'
+        + '<button class="btn-push-send" id="btn-push-send" onclick="handlePushSend()">발송하기</button>'
+        + '</div>'
+        + '<div class="push-log-section">'
+        + '<div class="push-log-section-title">발송 기록</div>'
+        + '<div id="push-log-list"></div>'
         + '</div>';
+
+    loadPushLog();
+}
+
+function onPushTargetChange() {
+    var target = (document.querySelector('input[name="push-target"]:checked') || {}).value;
+    var area = document.getElementById('push-member-select-area');
+    if (!area) return;
+
+    if (target === 'selected') {
+        area.style.display = 'block';
+        area.innerHTML = '<div style="padding:12px;text-align:center;color:#9CA3AF;font-size:13px">회원 목록 로딩 중...</div>';
+        loadPushMembers();
+    } else {
+        area.style.display = 'none';
+        _pushSelectedUserIds.clear();
+    }
+}
+
+async function loadPushMembers() {
+    var area = document.getElementById('push-member-select-area');
+    if (!area) return;
+
+    try {
+        var res = await apiClient.request('/admin-app/members-simple');
+        if (!res.success) throw new Error(res.message || '조회 실패');
+
+        _pushMembersList = res.data || [];
+        renderPushMemberSelect('');
+    } catch (err) {
+        area.innerHTML = '<div style="padding:12px;color:#EF4444;font-size:13px">회원 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
+    }
+}
+
+function renderPushMemberSelect(filter) {
+    var area = document.getElementById('push-member-select-area');
+    if (!area) return;
+
+    var filtered = _pushMembersList;
+    if (filter) {
+        var f = filter.toLowerCase();
+        filtered = _pushMembersList.filter(function(m) {
+            return (m.name && m.name.toLowerCase().indexOf(f) >= 0)
+                || (m.phone && m.phone.indexOf(f) >= 0);
+        });
+    }
+
+    var html = '<div class="push-member-select">'
+        + '<input type="text" class="push-member-search" placeholder="이름 또는 전화번호 검색" oninput="renderPushMemberSelect(this.value)" value="' + escapeHtml(filter) + '">'
+        + '<div class="admin-list-header" style="border-bottom:1px solid #E5E7EB">'
+        + '<label class="admin-checkbox"><input type="checkbox" onchange="toggleAllPushMembers(this.checked)"' + (_pushSelectedUserIds.size === _pushMembersList.length && _pushMembersList.length > 0 ? ' checked' : '') + '><span class="checkmark"></span></label>'
+        + '<span>전체 선택</span>'
+        + '</div>'
+        + '<div class="push-member-list">';
+
+    filtered.forEach(function(m) {
+        var selected = _pushSelectedUserIds.has(m.id);
+        html += '<div class="push-member-item' + (selected ? ' selected' : '') + '" onclick="togglePushMember(' + m.id + ')">'
+            + '<label class="admin-checkbox" onclick="event.stopPropagation()">'
+            + '<input type="checkbox" data-push-member="' + m.id + '"' + (selected ? ' checked' : '') + ' onchange="togglePushMember(' + m.id + ')">'
+            + '<span class="checkmark"></span></label>'
+            + '<div class="push-member-item-info">'
+            + '<div class="push-member-item-name">' + escapeHtml(m.name) + '</div>'
+            + '<div class="push-member-item-sub">'
+            + (m.position_name ? escapeHtml(m.position_name) : '')
+            + (m.phone ? (m.position_name ? ' · ' : '') + escapeHtml(m.phone) : '')
+            + '</div>'
+            + '</div>'
+            + '</div>';
+    });
+
+    html += '</div>';
+
+    if (_pushSelectedUserIds.size > 0) {
+        html += '<div class="push-selected-summary">' + _pushSelectedUserIds.size + '명 선택됨</div>';
+    }
+
+    html += '</div>';
+    area.innerHTML = html;
+}
+
+function togglePushMember(id) {
+    if (_pushSelectedUserIds.has(id)) {
+        _pushSelectedUserIds.delete(id);
+    } else {
+        _pushSelectedUserIds.add(id);
+    }
+    var searchInput = document.querySelector('.push-member-search');
+    var filter = searchInput ? searchInput.value : '';
+    renderPushMemberSelect(filter);
+}
+
+function toggleAllPushMembers(checked) {
+    _pushSelectedUserIds.clear();
+    if (checked) {
+        _pushMembersList.forEach(function(m) { _pushSelectedUserIds.add(m.id); });
+    }
+    var searchInput = document.querySelector('.push-member-search');
+    var filter = searchInput ? searchInput.value : '';
+    renderPushMemberSelect(filter);
 }
 
 async function handlePushSend() {
     var title = (document.getElementById('push-title') || {}).value.trim();
     var body = (document.getElementById('push-body') || {}).value.trim();
+    var target = (document.querySelector('input[name="push-target"]:checked') || {}).value || 'all';
 
     if (!title) { showToast('제목을 입력하세요.', 'error'); return; }
     if (!body) { showToast('내용을 입력하세요.', 'error'); return; }
 
-    if (!confirm('전체 회원에게 즉시 발송됩니다.\n\n제목: ' + title + '\n내용: ' + body + '\n\n발송하시겠습니까?')) return;
+    if (target === 'selected' && _pushSelectedUserIds.size === 0) {
+        showToast('발송 대상 회원을 선택하세요.', 'error');
+        return;
+    }
+
+    var targetDesc = target === 'all' ? '전체 회원' : _pushSelectedUserIds.size + '명';
+    if (!confirm(targetDesc + '에게 즉시 발송됩니다.\n\n제목: ' + title + '\n내용: ' + body + '\n\n발송하시겠습니까?')) return;
+
+    var btn = document.getElementById('btn-push-send');
+    if (btn) { btn.disabled = true; btn.textContent = '발송 중...'; }
 
     try {
-        var res = await apiClient.request('/mobile-admin/push/send', {
+        var payload = { title: title, body: body, target: target };
+        if (target === 'selected') {
+            payload.userIds = Array.from(_pushSelectedUserIds);
+        }
+
+        var res = await apiClient.request('/admin-app/push/send', {
             method: 'POST',
-            body: JSON.stringify({ title: title, body: body, target: 'all' })
+            body: JSON.stringify(payload)
         });
         if (res.success) {
             var data = res.data || {};
             showToast('발송 완료 (성공: ' + (data.sent_count || 0) + '건, 실패: ' + (data.failed_count || 0) + '건)', 'success');
-            showAdminHub();
+            // 폼 초기화
+            if (document.getElementById('push-title')) document.getElementById('push-title').value = '';
+            if (document.getElementById('push-body')) document.getElementById('push-body').value = '';
+            _pushSelectedUserIds.clear();
+            loadPushLog();
         } else {
             showToast(res.message || '발송 실패', 'error');
         }
     } catch (err) {
         showToast(err.message || '발송 중 오류', 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '발송하기'; }
+    }
+}
+
+async function loadPushLog() {
+    var container = document.getElementById('push-log-list');
+    if (!container) return;
+    container.innerHTML = '<div style="padding:12px;text-align:center;color:#9CA3AF;font-size:13px">로딩 중...</div>';
+
+    try {
+        var res = await apiClient.request('/admin-app/push-log?limit=20');
+        if (!res.success) throw new Error(res.message || '조회 실패');
+
+        var items = (res.data && res.data.items) || [];
+        if (items.length === 0) {
+            container.innerHTML = '<div style="padding:20px;text-align:center;color:#9CA3AF;font-size:13px">발송 기록이 없습니다.</div>';
+            return;
+        }
+
+        container.innerHTML = items.map(function(log) {
+            var targetLabel = log.target_type === 'all' ? '전체' : (log.target_count || 0) + '명';
+            return '<div class="push-log-card">'
+                + '<div class="push-log-card-title">' + escapeHtml(log.title) + '</div>'
+                + '<div class="push-log-card-body">' + escapeHtml(log.content) + '</div>'
+                + '<div class="push-log-card-meta">'
+                + '<span>대상: ' + targetLabel + '</span>'
+                + '<span>' + escapeHtml(log.sent_by_name || '') + '</span>'
+                + '<span>' + formatDate(log.sent_at) + '</span>'
+                + '</div>'
+                + '</div>';
+        }).join('');
+    } catch (err) {
+        container.innerHTML = '<div style="padding:12px;color:#EF4444;font-size:13px">발송 기록 로드 실패</div>';
     }
 }
 
 // ══════════════════════════════════════
-// B-4: 게시글/일정 관리 삭제 (admin-app API)
+// B-4: 게시글/일정 관리 삭제 (개별, 인라인용)
 // ══════════════════════════════════════
 
 async function adminDeletePost(postId) {
@@ -369,6 +969,7 @@ async function adminDeleteSchedule(scheduleId) {
 // ══════════════════════════════════════
 
 function handleAdminHubBack() {
+    removeFloatingDeleteBar();
     switchTab('profile');
 }
 
@@ -377,6 +978,25 @@ function handlePendingMembersBack() {
 }
 
 function handlePushSendBack() {
+    showAdminHub();
+}
+
+function handleNoticeManageBack() {
+    removeFloatingDeleteBar();
+    showAdminHub();
+}
+
+function handleNoticeEditBack() {
+    showNoticeManageScreen();
+}
+
+function handlePostManageBack() {
+    removeFloatingDeleteBar();
+    showAdminHub();
+}
+
+function handleScheduleManageBack() {
+    removeFloatingDeleteBar();
     showAdminHub();
 }
 

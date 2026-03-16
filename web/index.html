@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영등포 JC - 회원관리 앱</title>
     <!-- Build: 2026-02-06 v2.1 -->
-    <link rel="stylesheet" href="styles/main.css?v=20260316a">
+    <link rel="stylesheet" href="styles/main.css?v=20260316b">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FFFFFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1043,6 +1043,55 @@
             </div>
         </div>
 
+        <!-- 공지 관리 화면 -->
+        <div id="notice-manage-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="handleNoticeManageBack()">
+                    <span class="icon">&larr;</span>
+                </button>
+                <h1 class="app-bar-title">공지 관리</h1>
+                <button class="app-bar-action" onclick="showNoticeEditor()" style="font-size:14px;font-weight:600;color:#1E3A5F;background:none;border:none;cursor:pointer">+ 새 공지</button>
+            </div>
+            <div class="screen-content" id="notice-manage-content">
+            </div>
+        </div>
+
+        <!-- 공지 작성/수정 화면 -->
+        <div id="notice-edit-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="handleNoticeEditBack()">
+                    <span class="icon">&larr;</span>
+                </button>
+                <h1 class="app-bar-title" id="notice-edit-title">새 공지 작성</h1>
+            </div>
+            <div class="screen-content" id="notice-edit-content">
+            </div>
+        </div>
+
+        <!-- 게시글 관리 화면 -->
+        <div id="post-manage-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="handlePostManageBack()">
+                    <span class="icon">&larr;</span>
+                </button>
+                <h1 class="app-bar-title">게시글 관리</h1>
+            </div>
+            <div class="screen-content" id="post-manage-content">
+            </div>
+        </div>
+
+        <!-- 일정 관리 화면 -->
+        <div id="schedule-manage-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="handleScheduleManageBack()">
+                    <span class="icon">&larr;</span>
+                </button>
+                <h1 class="app-bar-title">일정 관리</h1>
+            </div>
+            <div class="screen-content" id="schedule-manage-content">
+            </div>
+        </div>
+
         <!-- 환경설정 화면 (이슈 #9) -->
         <div id="settings-screen" class="screen">
             <div class="app-bar">
@@ -1168,8 +1217,8 @@
     <script src="js/notifications.js?v=20260315a"></script>
     <script src="js/notification-settings.js?v=20260315a"></script>
     <script src="js/settings.js?v=20260315a"></script>
-    <script src="js/admin-app.js?v=20260316a"></script>
-    <script src="js/navigation.js?v=20260316a"></script>
-    <script src="js/app.js?v=20260316a"></script>
+    <script src="js/admin-app.js?v=20260316b"></script>
+    <script src="js/navigation.js?v=20260316b"></script>
+    <script src="js/app.js?v=20260316b"></script>
 </body>
 </html>

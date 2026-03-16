@@ -456,6 +456,14 @@ window.addEventListener('popstate', function(e) {
             showPendingMembersScreen();
         } else if (state.screen === 'push-send' && typeof showPushSendScreen === 'function') {
             showPushSendScreen();
+        } else if (state.screen === 'notice-manage' && typeof showNoticeManageScreen === 'function') {
+            showNoticeManageScreen();
+        } else if (state.screen === 'notice-edit' && typeof showNoticeManageScreen === 'function') {
+            showNoticeManageScreen();
+        } else if (state.screen === 'post-manage' && typeof showPostManageScreen === 'function') {
+            showPostManageScreen();
+        } else if (state.screen === 'schedule-manage' && typeof showScheduleManageScreen === 'function') {
+            showScheduleManageScreen();
         } else {
             navigateToScreen(state.screen);
         }

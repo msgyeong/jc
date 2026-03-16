@@ -115,6 +115,7 @@ app.use('/api/push', pushRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/mobile-admin', mobileAdminRoutes);
+app.use('/api/admin-app', mobileAdminRoutes);
 
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

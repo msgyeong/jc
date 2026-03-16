@@ -8,7 +8,7 @@ const { requireMobilePermission, getMobilePermissions } = require('../middleware
 router.use(authenticate);
 
 /* ======================================================
-   GET /api/mobile-admin/pending-members
+   GET /pending-members
    가입 대기 회원 목록 (member_approve 권한)
    ====================================================== */
 router.get('/pending-members', requireMobilePermission('member_approve'), async (req, res) => {
@@ -33,7 +33,7 @@ router.get('/pending-members', requireMobilePermission('member_approve'), async 
 });
 
 /* ======================================================
-   POST /api/mobile-admin/members/:id/approve
+   POST /members/:id/approve
    회원 승인 (member_approve 권한)
    ====================================================== */
 router.post('/members/:id/approve', requireMobilePermission('member_approve'), async (req, res) => {
@@ -58,7 +58,7 @@ router.post('/members/:id/approve', requireMobilePermission('member_approve'), a
 });
 
 /* ======================================================
-   POST /api/mobile-admin/members/:id/reject
+   POST /members/:id/reject
    회원 거부 (member_approve 권한)
    ====================================================== */
 router.post('/members/:id/reject', requireMobilePermission('member_approve'), async (req, res) => {
@@ -89,7 +89,45 @@ router.post('/members/:id/reject', requireMobilePermission('member_approve'), as
 });
 
 /* ======================================================
-   PUT /api/mobile-admin/posts/:id
+   DELETE /posts/bulk  ← bulk 라우트를 :id 라우트보다 먼저 정의
+   게시글 일괄 삭제 (post_manage 권한)
+   FK CASCADE로 comments, likes, post_reads, post_attendance 등 자동 삭제
+   ====================================================== */
+router.delete('/posts/bulk', requireMobilePermission('post_manage'), async (req, res) => {
+    try {
+        const { ids } = req.body;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, message: '삭제할 게시글 ID 배열을 입력해주세요.' });
+        }
+
+        const safeIds = ids.map(Number).filter(n => Number.isInteger(n) && n > 0);
+        if (safeIds.length === 0) {
+            return res.status(400).json({ success: false, message: '유효한 게시글 ID가 없습니다.' });
+        }
+
+        await transaction(async (client) => {
+            // 연결 일정의 linked_post_id 해제
+            await client.query(
+                `UPDATE schedules SET linked_post_id = NULL WHERE linked_post_id = ANY($1)`,
+                [safeIds]
+            );
+            // 게시글 삭제 (FK CASCADE로 관련 데이터 자동 삭제)
+            await client.query(
+                `DELETE FROM posts WHERE id = ANY($1)`,
+                [safeIds]
+            );
+        });
+
+        res.json({ success: true, deletedCount: safeIds.length });
+    } catch (err) {
+        console.error('Bulk delete posts error:', err);
+        res.status(500).json({ success: false, message: '게시글 일괄 삭제 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   PUT /posts/:id
    게시글 수정 (post_manage 권한)
    ====================================================== */
 router.put('/posts/:id', requireMobilePermission('post_manage'), async (req, res) => {
@@ -103,7 +141,7 @@ router.put('/posts/:id', requireMobilePermission('post_manage'), async (req, res
 
         const result = await query(
             `UPDATE posts SET title = $2, content = $3, updated_at = NOW()
-             WHERE id = $1 AND (deleted_at IS NULL)
+             WHERE id = $1
              RETURNING id`,
             [postId, title, content]
         );
@@ -120,23 +158,20 @@ router.put('/posts/:id', requireMobilePermission('post_manage'), async (req, res
 });
 
 /* ======================================================
-   DELETE /api/mobile-admin/posts/:id
-   게시글 삭제 — soft delete (post_manage 권한)
+   DELETE /posts/:id
+   게시글 삭제 (post_manage 권한)
    ====================================================== */
 router.delete('/posts/:id', requireMobilePermission('post_manage'), async (req, res) => {
     try {
         const postId = parseInt(req.params.id);
 
-        const result = await query(
-            `UPDATE posts SET deleted_at = NOW(), updated_at = NOW()
-             WHERE id = $1 AND (deleted_at IS NULL)
-             RETURNING id`,
-            [postId]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: '게시글을 찾을 수 없습니다.' });
-        }
+        await transaction(async (client) => {
+            await client.query(
+                `UPDATE schedules SET linked_post_id = NULL WHERE linked_post_id = $1`,
+                [postId]
+            );
+            await client.query('DELETE FROM posts WHERE id = $1', [postId]);
+        });
 
         res.json({ success: true });
     } catch (err) {
@@ -146,7 +181,45 @@ router.delete('/posts/:id', requireMobilePermission('post_manage'), async (req, 
 });
 
 /* ======================================================
-   PUT /api/mobile-admin/schedules/:id
+   DELETE /schedules/bulk  ← bulk 라우트를 :id 라우트보다 먼저 정의
+   일정 일괄 삭제 (schedule_manage 권한)
+   FK CASCADE로 schedule_attendance, comments 등 자동 삭제
+   ====================================================== */
+router.delete('/schedules/bulk', requireMobilePermission('schedule_manage'), async (req, res) => {
+    try {
+        const { ids } = req.body;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, message: '삭제할 일정 ID 배열을 입력해주세요.' });
+        }
+
+        const safeIds = ids.map(Number).filter(n => Number.isInteger(n) && n > 0);
+        if (safeIds.length === 0) {
+            return res.status(400).json({ success: false, message: '유효한 일정 ID가 없습니다.' });
+        }
+
+        await transaction(async (client) => {
+            // 연결 게시글의 linked_schedule_id 해제
+            await client.query(
+                `UPDATE posts SET linked_schedule_id = NULL WHERE linked_schedule_id = ANY($1)`,
+                [safeIds]
+            );
+            // 일정 삭제 (FK CASCADE로 관련 데이터 자동 삭제)
+            await client.query(
+                `DELETE FROM schedules WHERE id = ANY($1)`,
+                [safeIds]
+            );
+        });
+
+        res.json({ success: true, deletedCount: safeIds.length });
+    } catch (err) {
+        console.error('Bulk delete schedules error:', err);
+        res.status(500).json({ success: false, message: '일정 일괄 삭제 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   PUT /schedules/:id
    일정 수정 (schedule_manage 권한)
    ====================================================== */
 router.put('/schedules/:id', requireMobilePermission('schedule_manage'), async (req, res) => {
@@ -160,7 +233,7 @@ router.put('/schedules/:id', requireMobilePermission('schedule_manage'), async (
 
         const result = await query(
             `UPDATE schedules SET title = $2, description = $3, start_date = $4, end_date = $5, location = $6, updated_at = NOW()
-             WHERE id = $1 AND (deleted_at IS NULL)
+             WHERE id = $1
              RETURNING id`,
             [scheduleId, title, description || null, start_date, end_date || null, location || null]
         );
@@ -177,23 +250,20 @@ router.put('/schedules/:id', requireMobilePermission('schedule_manage'), async (
 });
 
 /* ======================================================
-   DELETE /api/mobile-admin/schedules/:id
-   일정 삭제 — soft delete (schedule_manage 권한)
+   DELETE /schedules/:id
+   일정 삭제 (schedule_manage 권한)
    ====================================================== */
 router.delete('/schedules/:id', requireMobilePermission('schedule_manage'), async (req, res) => {
     try {
         const scheduleId = parseInt(req.params.id);
 
-        const result = await query(
-            `UPDATE schedules SET deleted_at = NOW(), updated_at = NOW()
-             WHERE id = $1 AND (deleted_at IS NULL)
-             RETURNING id`,
-            [scheduleId]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: '일정을 찾을 수 없습니다.' });
-        }
+        await transaction(async (client) => {
+            await client.query(
+                `UPDATE posts SET linked_schedule_id = NULL WHERE linked_schedule_id = $1`,
+                [scheduleId]
+            );
+            await client.query('DELETE FROM schedules WHERE id = $1', [scheduleId]);
+        });
 
         res.json({ success: true });
     } catch (err) {
@@ -203,7 +273,48 @@ router.delete('/schedules/:id', requireMobilePermission('schedule_manage'), asyn
 });
 
 /* ======================================================
-   POST /api/mobile-admin/notices
+   GET /notices
+   공지 목록 (notice_manage 권한)
+   ====================================================== */
+router.get('/notices', requireMobilePermission('notice_manage'), async (req, res) => {
+    try {
+        const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+        const offset = parseInt(req.query.offset) || 0;
+
+        const countResult = await query(
+            `SELECT COUNT(*) FROM posts WHERE category = 'notice'`
+        );
+        const total = parseInt(countResult.rows[0].count);
+
+        const result = await query(
+            `SELECT p.id, p.title, p.content, p.is_pinned, p.views, p.likes_count,
+                    p.comments_count, p.created_at, p.updated_at,
+                    u.name AS author_name
+             FROM posts p
+             LEFT JOIN users u ON u.id = p.author_id
+             WHERE p.category = 'notice'
+             ORDER BY p.is_pinned DESC, p.created_at DESC
+             LIMIT $1 OFFSET $2`,
+            [limit, offset]
+        );
+
+        res.json({
+            success: true,
+            data: {
+                items: result.rows,
+                total,
+                limit,
+                offset
+            }
+        });
+    } catch (err) {
+        console.error('Get notices (admin-app) error:', err);
+        res.status(500).json({ success: false, message: '공지 목록 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   POST /notices
    공지 작성 (notice_manage 권한)
    ====================================================== */
 router.post('/notices', requireMobilePermission('notice_manage'), async (req, res) => {
@@ -230,7 +341,36 @@ router.post('/notices', requireMobilePermission('notice_manage'), async (req, re
 });
 
 /* ======================================================
-   PUT /api/mobile-admin/notices/:id
+   DELETE /notices/bulk  ← bulk 라우트를 :id 라우트보다 먼저 정의
+   공지 일괄 삭제 (notice_manage 권한)
+   ====================================================== */
+router.delete('/notices/bulk', requireMobilePermission('notice_manage'), async (req, res) => {
+    try {
+        const { ids } = req.body;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, message: '삭제할 공지 ID 배열을 입력해주세요.' });
+        }
+
+        const safeIds = ids.map(Number).filter(n => Number.isInteger(n) && n > 0);
+        if (safeIds.length === 0) {
+            return res.status(400).json({ success: false, message: '유효한 공지 ID가 없습니다.' });
+        }
+
+        const result = await query(
+            `DELETE FROM posts WHERE id = ANY($1) AND category = 'notice' RETURNING id`,
+            [safeIds]
+        );
+
+        res.json({ success: true, deletedCount: result.rows.length });
+    } catch (err) {
+        console.error('Bulk delete notices error:', err);
+        res.status(500).json({ success: false, message: '공지 일괄 삭제 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   PUT /notices/:id
    공지 수정 (notice_manage 권한)
    ====================================================== */
 router.put('/notices/:id', requireMobilePermission('notice_manage'), async (req, res) => {
@@ -244,7 +384,7 @@ router.put('/notices/:id', requireMobilePermission('notice_manage'), async (req,
 
         const result = await query(
             `UPDATE posts SET title = $2, content = $3, is_pinned = $4, updated_at = NOW()
-             WHERE id = $1 AND category = 'notice' AND (deleted_at IS NULL)
+             WHERE id = $1 AND category = 'notice'
              RETURNING id`,
             [noticeId, title, content, is_pinned !== undefined ? is_pinned : false]
         );
@@ -261,17 +401,15 @@ router.put('/notices/:id', requireMobilePermission('notice_manage'), async (req,
 });
 
 /* ======================================================
-   DELETE /api/mobile-admin/notices/:id
-   공지 삭제 — soft delete (notice_manage 권한)
+   DELETE /notices/:id
+   공지 삭제 (notice_manage 권한)
    ====================================================== */
 router.delete('/notices/:id', requireMobilePermission('notice_manage'), async (req, res) => {
     try {
         const noticeId = parseInt(req.params.id);
 
         const result = await query(
-            `UPDATE posts SET deleted_at = NOW(), updated_at = NOW()
-             WHERE id = $1 AND category = 'notice' AND (deleted_at IS NULL)
-             RETURNING id`,
+            `DELETE FROM posts WHERE id = $1 AND category = 'notice' RETURNING id`,
             [noticeId]
         );
 
@@ -287,27 +425,37 @@ router.delete('/notices/:id', requireMobilePermission('notice_manage'), async (r
 });
 
 /* ======================================================
-   POST /api/mobile-admin/push/send
+   POST /push/send
    긴급 푸시 발송 (push_send 권한)
+   - target: 'all' | 'selected'
+   - userIds: [1,2,3] (target='selected' 시 필수)
    ====================================================== */
 router.post('/push/send', requireMobilePermission('push_send'), async (req, res) => {
     try {
-        const { title, body, target, target_value, linked_post_id } = req.body;
+        const { title, body: pushBody, content, target, target_value, linked_post_id, userIds } = req.body;
+        const msgBody = pushBody || content;
 
-        if (!title || !body) {
+        if (!title || !msgBody) {
             return res.status(400).json({ success: false, message: '제목과 내용을 입력해주세요.' });
         }
 
         // 대상 구독자 조회
         let subscriptionQuery = `
-            SELECT ps.endpoint, ps.p256dh, ps.auth
+            SELECT ps.endpoint, ps.p256dh, ps.auth, ps.user_id
             FROM push_subscriptions ps
             JOIN users u ON u.id = ps.user_id
             WHERE u.status = 'active'
         `;
         const params = [];
+        let targetType = 'all';
+        let targetUserIds = null;
 
-        if (target === 'position' && target_value) {
+        if (target === 'selected' && Array.isArray(userIds) && userIds.length > 0) {
+            targetType = 'selected';
+            targetUserIds = userIds.map(Number);
+            subscriptionQuery += ` AND ps.user_id = ANY($1)`;
+            params.push(targetUserIds);
+        } else if (target === 'position' && target_value) {
             subscriptionQuery += ` AND u.position_id = $1`;
             params.push(target_value);
         } else if (target === 'department' && target_value) {
@@ -336,7 +484,7 @@ router.post('/push/send', requireMobilePermission('push_send'), async (req, res)
 
                 const payload = JSON.stringify({
                     title,
-                    body,
+                    body: msgBody,
                     data: { post_id: linked_post_id || null }
                 });
 
@@ -344,7 +492,7 @@ router.post('/push/send', requireMobilePermission('push_send'), async (req, res)
                     try {
                         await webpush.sendNotification({
                             endpoint: sub.endpoint,
-                            keys: { p256dh: sub.p256dh, auth: sub.auth_key }
+                            keys: { p256dh: sub.p256dh, auth: sub.auth }
                         }, payload);
                         sentCount++;
                     } catch (e) {
@@ -359,6 +507,19 @@ router.post('/push/send', requireMobilePermission('push_send'), async (req, res)
             failedCount = subscriptions.length;
         }
 
+        // 발송 이력 저장
+        const targetCount = targetType === 'selected' ? (targetUserIds ? targetUserIds.length : 0) : subscriptions.length;
+        const logStatus = (sentCount > 0 || subscriptions.length === 0) ? 'sent' : 'failed';
+        try {
+            await query(
+                `INSERT INTO push_send_log (title, content, target_type, target_user_ids, target_count, sent_by, status)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                [title, msgBody, targetType, targetUserIds, targetCount, req.user.userId, logStatus]
+            );
+        } catch (logErr) {
+            console.error('Push log save error:', logErr);
+        }
+
         res.json({
             success: true,
             data: { sent_count: sentCount, failed_count: failedCount }
@@ -366,6 +527,65 @@ router.post('/push/send', requireMobilePermission('push_send'), async (req, res)
     } catch (err) {
         console.error('Admin push send error:', err);
         res.status(500).json({ success: false, message: '푸시 발송 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   GET /push-log
+   푸시 발송 이력 조회 (push_send 권한)
+   ====================================================== */
+router.get('/push-log', requireMobilePermission('push_send'), async (req, res) => {
+    try {
+        const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+        const offset = parseInt(req.query.offset) || 0;
+
+        const countResult = await query('SELECT COUNT(*) FROM push_send_log');
+        const total = parseInt(countResult.rows[0].count);
+
+        const result = await query(
+            `SELECT pl.id, pl.title, pl.content, pl.target_type, pl.target_user_ids,
+                    pl.target_count, pl.sent_at, pl.status,
+                    u.name AS sent_by_name
+             FROM push_send_log pl
+             LEFT JOIN users u ON u.id = pl.sent_by
+             ORDER BY pl.sent_at DESC
+             LIMIT $1 OFFSET $2`,
+            [limit, offset]
+        );
+
+        res.json({
+            success: true,
+            data: {
+                items: result.rows,
+                total,
+                limit,
+                offset
+            }
+        });
+    } catch (err) {
+        console.error('Get push log error:', err);
+        res.status(500).json({ success: false, message: '푸시 이력 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
+   GET /members-simple
+   푸시 대상 선택용 간단 회원 목록 (push_send 권한)
+   ====================================================== */
+router.get('/members-simple', requireMobilePermission('push_send'), async (req, res) => {
+    try {
+        const result = await query(
+            `SELECT u.id, u.name, u.phone, p.name AS position_name
+             FROM users u
+             LEFT JOIN positions p ON p.id = u.position_id
+             WHERE u.status = 'active'
+             ORDER BY u.name`
+        );
+
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error('Get simple members error:', err);
+        res.status(500).json({ success: false, message: '회원 목록 조회 중 오류가 발생했습니다.' });
     }
 });
 

@@ -104,43 +104,90 @@
                 <h1 class="app-bar-title">비밀번호 찾기</h1>
             </div>
             <div class="screen-content">
-                <div class="info-box">
-                    가입 시 등록한 이메일과 이름을 입력하면<br>임시 비밀번호가 발급됩니다.
+                <!-- Step 1: 이메일 + 이름 입력 -->
+                <div id="forgot-step1">
+                    <div class="info-box">
+                        본인확인을 위해 가입 시 등록한<br>이메일과 이름을 입력해주세요.
+                    </div>
+
+                    <form id="forgot-password-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="forgot-email">이메일</label>
+                            <input
+                                type="email"
+                                id="forgot-email"
+                                placeholder="가입 시 사용한 이메일"
+                                required
+                            >
+                            <span class="error-message" id="forgot-email-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="forgot-name">이름</label>
+                            <input
+                                type="text"
+                                id="forgot-name"
+                                placeholder="가입 시 등록한 이름"
+                                required
+                            >
+                            <span class="error-message" id="forgot-name-error"></span>
+                        </div>
+
+                        <div class="inline-error-message" id="forgot-inline-error"></div>
+
+                        <button type="submit" class="btn btn-primary btn-forgot-password">
+                            <span class="btn-text">다음</span>
+                            <span class="btn-loading" style="display: none;">
+                                <span class="spinner"></span>
+                            </span>
+                        </button>
+                    </form>
                 </div>
 
-                <form id="forgot-password-form" class="auth-form">
-                    <div class="form-group">
-                        <label for="forgot-email">이메일</label>
-                        <input 
-                            type="email" 
-                            id="forgot-email" 
-                            placeholder="가입 시 사용한 이메일"
-                            required
-                        >
-                        <span class="error-message" id="forgot-email-error"></span>
+                <!-- Step 2: 본인확인 (생년월일 + 랜덤 질문) -->
+                <div id="forgot-step2" style="display: none;">
+                    <div class="info-box">
+                        본인확인을 위해 추가 정보를 입력해주세요.
                     </div>
 
-                    <div class="form-group">
-                        <label for="forgot-name">이름</label>
-                        <input 
-                            type="text" 
-                            id="forgot-name" 
-                            placeholder="가입 시 등록한 이름"
-                            required
-                        >
-                        <span class="error-message" id="forgot-name-error"></span>
-                    </div>
+                    <form id="forgot-verify-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="forgot-birth">생년월일 (주민번호 앞 6자리)</label>
+                            <input
+                                type="text"
+                                id="forgot-birth"
+                                placeholder="예: 901231"
+                                maxlength="6"
+                                inputmode="numeric"
+                                pattern="[0-9]{6}"
+                                required
+                            >
+                            <span class="error-message" id="forgot-birth-error"></span>
+                        </div>
 
-                    <div class="inline-error-message" id="forgot-inline-error"></div>
+                        <div class="form-group">
+                            <label for="forgot-answer" id="forgot-question-label">추가 확인 질문</label>
+                            <input
+                                type="text"
+                                id="forgot-answer"
+                                placeholder=""
+                                required
+                            >
+                            <span class="error-message" id="forgot-answer-error"></span>
+                        </div>
 
-                    <button type="submit" class="btn btn-primary btn-forgot-password">
-                        <span class="btn-text">임시 비밀번호 발급</span>
-                        <span class="btn-loading" style="display: none;">
-                            <span class="spinner"></span>
-                        </span>
-                    </button>
-                </form>
+                        <div class="inline-error-message" id="forgot-verify-error"></div>
 
+                        <button type="submit" class="btn btn-primary btn-forgot-verify">
+                            <span class="btn-text">임시 비밀번호 발급</span>
+                            <span class="btn-loading" style="display: none;">
+                                <span class="spinner"></span>
+                            </span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 결과 표시 -->
                 <div id="forgot-password-result" class="forgot-result" style="display: none;">
                     <div class="result-box success-box">
                         <h3>임시 비밀번호가 발급되었습니다</h3>

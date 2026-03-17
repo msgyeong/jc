@@ -643,8 +643,13 @@ router.delete('/members/:id/permanent', async (req, res) => {
         for (const [table, col] of tables) {
             await query(`DELETE FROM ${table} WHERE ${col} = $1`, [id]).catch(() => {});
         }
-        // 게시글 삭제
+        // 회의 관련 (created_by)
+        await query('DELETE FROM meeting_votes WHERE created_by = $1', [id]).catch(() => {});
+        await query('DELETE FROM meeting_minutes WHERE uploaded_by = $1', [id]).catch(() => {});
+        await query('DELETE FROM meetings WHERE created_by = $1', [id]).catch(() => {});
+        // 게시글/일정 삭제
         await query('DELETE FROM posts WHERE author_id = $1', [id]).catch(() => {});
+        await query('DELETE FROM schedules WHERE created_by = $1', [id]).catch(() => {});
         // 사용자 삭제
         await query('DELETE FROM users WHERE id = $1', [id]);
 

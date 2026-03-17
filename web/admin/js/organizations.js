@@ -323,13 +323,181 @@ async function assignLocalAdmin(orgId, userId) {
     }
 }
 
-// 로컬 선택 → 사이드바 하위 메뉴 표시
+// 로컬 선택 → 로컬 상세 페이지
 var selectedOrgId = null;
+var selectedOrgName = '';
 function selectOrg(orgId, orgName) {
     selectedOrgId = orgId;
+    selectedOrgName = orgName;
+    // 사이드바 하위 메뉴 표시
     var subNav = document.getElementById('org-sub-nav');
     var subLabel = document.getElementById('org-sub-label');
     if (subNav) subNav.style.display = 'block';
     if (subLabel) subLabel.textContent = orgName;
-    showAdminToast(orgName + ' 선택됨 — 사이드바에서 회원/게시판/일정 관리 가능');
+    // 로컬 상세 페이지 렌더링
+    renderOrgDetail(orgId, orgName);
+}
+
+function renderOrgDetail(orgId, orgName) {
+    var container = document.getElementById('main-content');
+    var titleEl = document.getElementById('header-title');
+    if (titleEl) titleEl.textContent = orgName + ' 관리';
+
+    container.innerHTML = '<div style="padding:0">' +
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">' +
+            '<button class="btn btn-ghost" onclick="navigateAdmin(\'organizations\')">← 로컬 목록</button>' +
+            '<h2 style="margin:0">' + escapeHtml(orgName) + '</h2>' +
+        '</div>' +
+        '<div class="org-detail-tabs" style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">' +
+            '<button class="btn btn-primary btn-sm org-tab active" data-tab="members" onclick="switchOrgTab(\'members\',' + orgId + ')">회원 관리</button>' +
+            '<button class="btn btn-ghost btn-sm org-tab" data-tab="admins" onclick="switchOrgTab(\'admins\',' + orgId + ')">관리자</button>' +
+            '<button class="btn btn-ghost btn-sm org-tab" data-tab="posts" onclick="switchOrgTab(\'posts\',' + orgId + ')">게시판</button>' +
+            '<button class="btn btn-ghost btn-sm org-tab" data-tab="schedules" onclick="switchOrgTab(\'schedules\',' + orgId + ')">일정</button>' +
+            '<button class="btn btn-ghost btn-sm org-tab" data-tab="stats" onclick="switchOrgTab(\'stats\',' + orgId + ')">통계</button>' +
+        '</div>' +
+        '<div id="org-detail-content">로딩 중...</div>' +
+    '</div>';
+
+    // 기본: 회원 목록
+    switchOrgTab('members', orgId);
+}
+
+function switchOrgTab(tab, orgId) {
+    document.querySelectorAll('.org-tab').forEach(function(b) {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-ghost');
+        if (b.dataset.tab === tab) {
+            b.classList.remove('btn-ghost');
+            b.classList.add('btn-primary');
+        }
+    });
+    var el = document.getElementById('org-detail-content');
+    if (!el) return;
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:#9CA3AF">로딩 중...</div>';
+
+    if (tab === 'members') loadOrgMembers(orgId, el);
+    else if (tab === 'admins') loadOrgAdmins(orgId, el);
+    else if (tab === 'posts') el.innerHTML = '<div style="color:#9CA3AF;padding:24px;text-align:center">게시판 관리는 앱 내 로컬 관리에서 진행합니다.</div>';
+    else if (tab === 'schedules') el.innerHTML = '<div style="color:#9CA3AF;padding:24px;text-align:center">일정 관리는 앱 내 로컬 관리에서 진행합니다.</div>';
+    else if (tab === 'stats') loadOrgStats(orgId, el);
+}
+
+async function loadOrgMembers(orgId, el) {
+    try {
+        var res = await AdminAPI.get('/api/admin/members?limit=100');
+        if (!res.success) throw new Error(res.message);
+        var members = (res.data && res.data.items) || res.data || [];
+        // org_id 필터 (추후 서버에서 필터링)
+        if (members.length === 0) {
+            el.innerHTML = '<div style="color:#9CA3AF;padding:24px;text-align:center">회원이 없습니다.</div>';
+            return;
+        }
+        var html = '<div class="table-wrap"><table class="data-table"><thead><tr>' +
+            '<th>이름</th><th>이메일</th><th>역할</th><th>상태</th><th>관리</th>' +
+            '</tr></thead><tbody>';
+        members.forEach(function(m) {
+            html += '<tr>' +
+                '<td>' + escapeHtml(m.name || '') + '</td>' +
+                '<td>' + escapeHtml(m.email || '') + '</td>' +
+                '<td>' + roleBadge(m.role) + '</td>' +
+                '<td>' + statusBadge(m.status) + '</td>' +
+                '<td><button class="btn btn-sm btn-outline" onclick="openMemberQuickModal(' + m.id + ')">편집</button></td>' +
+                '</tr>';
+        });
+        html += '</tbody></table></div>';
+        el.innerHTML = html;
+    } catch (err) {
+        el.innerHTML = '<div style="color:#DC2626;padding:24px">회원 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
+    }
+}
+
+async function loadOrgAdmins(orgId, el) {
+    try {
+        var res = await AdminAPI.get('/api/admin/members?limit=100');
+        if (!res.success) throw new Error(res.message);
+        var members = (res.data && res.data.items) || res.data || [];
+        var admins = members.filter(function(m) {
+            return ['admin', 'local_admin', 'super_admin'].includes(m.role);
+        });
+
+        var html = '<h3 style="font-size:16px;margin:0 0 12px">현재 관리자 (' + admins.length + '명)</h3>';
+        if (admins.length > 0) {
+            html += '<div style="margin-bottom:16px">';
+            admins.forEach(function(a) {
+                html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F3F4F6">' +
+                    '<span style="font-weight:500">' + escapeHtml(a.name) + '</span>' +
+                    '<span style="font-size:12px;color:#6B7280">' + escapeHtml(a.email) + '</span>' +
+                    roleBadge(a.role) +
+                    '</div>';
+            });
+            html += '</div>';
+        }
+
+        // 관리자 추가
+        html += '<h3 style="font-size:16px;margin:16px 0 12px">관리자 추가</h3>' +
+            '<div style="display:flex;gap:8px;margin-bottom:12px">' +
+                '<input type="text" id="admin-search-input" placeholder="회원 이름 검색..." style="flex:1;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px">' +
+                '<button class="btn btn-primary btn-sm" onclick="searchAndAssignAdmin(' + orgId + ')">검색</button>' +
+            '</div>' +
+            '<div id="admin-search-results"></div>';
+
+        el.innerHTML = html;
+    } catch (err) {
+        el.innerHTML = '<div style="color:#DC2626;padding:24px">관리자 목록 로드 실패</div>';
+    }
+}
+
+async function searchAndAssignAdmin(orgId) {
+    var q = document.getElementById('admin-search-input')?.value?.trim();
+    if (!q) return;
+    var el = document.getElementById('admin-search-results');
+    if (!el) return;
+    el.innerHTML = '검색 중...';
+    try {
+        var res = await AdminAPI.get('/api/members/search?q=' + encodeURIComponent(q));
+        if (!res.success) throw new Error(res.message);
+        var members = res.data || res.members || [];
+        if (members.length === 0) {
+            el.innerHTML = '<div style="color:#9CA3AF">검색 결과 없음</div>';
+            return;
+        }
+        el.innerHTML = members.map(function(m) {
+            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px;border:1px solid #E5E7EB;border-radius:6px;margin-bottom:6px">' +
+                '<div><strong>' + escapeHtml(m.name) + '</strong> <span style="color:#6B7280;font-size:13px">' + escapeHtml(m.email) + '</span></div>' +
+                '<button class="btn btn-primary btn-sm" onclick="doAssignAdmin(' + orgId + ',' + m.id + ',\'' + escapeHtml(m.name).replace(/'/g,"\\'") + '\')">관리자 지정</button>' +
+                '</div>';
+        }).join('');
+    } catch (err) {
+        el.innerHTML = '<div style="color:#DC2626">검색 실패: ' + escapeHtml(err.message) + '</div>';
+    }
+}
+
+async function doAssignAdmin(orgId, userId, userName) {
+    try {
+        var res = await AdminAPI.post('/api/organizations/' + orgId + '/assign-admin', { user_id: userId });
+        if (res.success) {
+            showAdminToast(userName + '님이 관리자로 지정되었습니다.');
+            switchOrgTab('admins', orgId);
+        } else {
+            showAdminToast(res.error || '지정 실패', 'error');
+        }
+    } catch (err) {
+        showAdminToast('관리자 지정 실패: ' + err.message, 'error');
+    }
+}
+
+async function loadOrgStats(orgId, el) {
+    try {
+        var res = await AdminAPI.get('/api/admin/dashboard/stats');
+        if (!res.success) throw new Error();
+        var d = res.data;
+        el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">' +
+            '<div style="background:#F0FDF4;padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:#16A34A">' + (d.members?.total || 0) + '</div><div style="font-size:13px;color:#6B7280">전체 회원</div></div>' +
+            '<div style="background:#FEF3C7;padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:#D97706">' + (d.members?.pending || 0) + '</div><div style="font-size:13px;color:#6B7280">승인 대기</div></div>' +
+            '<div style="background:#DBEAFE;padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:#2563EB">' + (d.posts?.total || 0) + '</div><div style="font-size:13px;color:#6B7280">게시글</div></div>' +
+            '<div style="background:#FEE2E2;padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:#DC2626">' + (d.schedules?.total || 0) + '</div><div style="font-size:13px;color:#6B7280">일정</div></div>' +
+            '</div>';
+    } catch (_) {
+        el.innerHTML = '<div style="color:#9CA3AF;padding:24px;text-align:center">통계를 불러올 수 없습니다.</div>';
+    }
 }

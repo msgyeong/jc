@@ -127,7 +127,8 @@ async function handleSignup(event) {
         const phone = document.getElementById('signup-phone').value.trim();
         const address = document.getElementById('signup-address').value.trim();
         const address_detail = document.getElementById('signup-address-detail').value.trim();
-        
+        const join_date = document.getElementById('signup-join-date')?.value || '';
+
         // Step 3: 직장 정보
         const company = document.getElementById('signup-company').value.trim();
         const position = document.getElementById('signup-position').value.trim();
@@ -217,6 +218,7 @@ async function handleSignup(event) {
             phone,
             address,
             address_detail,
+            join_date: join_date || undefined,
             // Step 3
             company,
             position,

@@ -228,6 +228,8 @@ app.listen(PORT, () => {
     dbQuery("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('super_admin', 'admin', 'local_admin', 'member', 'pending'))").catch(() => {});
     // 기본 조직 생성 + 기존 회원 매핑 (순차 실행)
     dbQuery("INSERT INTO organizations (name, code, district, region, description) VALUES ('영등포JC', 'yeongdeungpo', '서울지구', '서울', '영등포청년회의소') ON CONFLICT (code) DO NOTHING").catch(() => {});
+    // 입회일 컬럼
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS join_date DATE").catch(() => {});
     // JC 지도 컬럼
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS map_visible BOOLEAN DEFAULT true").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lat DOUBLE PRECISION").catch(() => {});

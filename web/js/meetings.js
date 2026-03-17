@@ -52,11 +52,16 @@ async function showMeetingDetail(meetingId) {
         const typeLabel = { regular: '정기회의', board: '이사회', general_assembly: '정기총회' }[m.meeting_type] || m.meeting_type;
         const statusLabel = { scheduled: '예정', in_progress: '진행 중', completed: '완료', cancelled: '취소' }[m.status] || m.status;
 
+        var userInfo = typeof getCurrentUser === 'function' ? getCurrentUser() : JSON.parse(localStorage.getItem('user_info') || 'null');
+        var isAdminUser = userInfo && ['admin', 'super_admin', 'local_admin'].includes(userInfo.role);
+
         let html = `<div class="detail-view">
             <button class="btn-back" onclick="loadMeetingsScreen()">← 회의 목록</button>
-            <div style="padding:16px 0">
+            <div style="padding:16px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                 <span class="meeting-type-badge">${escapeHtml(typeLabel)}</span>
-                <span class="meeting-status">${escapeHtml(statusLabel)}</span>
+                <span class="meeting-status ${m.status === 'in_progress' ? 'badge-active' : ''}">${escapeHtml(statusLabel)}</span>
+                ${isAdminUser && m.status === 'scheduled' ? `<button class="btn btn-primary btn-sm" onclick="startMeeting(${meetingId})">회의 시작</button>` : ''}
+                ${isAdminUser && m.status === 'in_progress' ? `<button class="btn btn-secondary btn-sm" style="color:#DC2626" onclick="endMeeting(${meetingId})">회의 종료</button>` : ''}
             </div>
             <h2 style="margin:0 0 8px">${escapeHtml(m.title)}</h2>
             <div style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">
@@ -65,19 +70,29 @@ async function showMeetingDetail(meetingId) {
             </div>
             ${m.description ? '<p style="margin-bottom:16px">' + escapeHtml(m.description) + '</p>' : ''}`;
 
-        // 참석 현황
+        // 참석 체크
         html += `<div class="info-section">
             <h3 class="info-section-title">참석 현황</h3>
             <div id="meeting-attendance-${meetingId}">로딩 중...</div>
             ${m.status !== 'completed' ? `<div style="display:flex;gap:8px;margin-top:12px">
-                <button class="btn btn-primary btn-sm" onclick="markAttendance(${meetingId},'attending')">참석</button>
+                <button class="btn btn-primary btn-sm" onclick="markAttendance(${meetingId},'attending')">참석 체크</button>
                 <button class="btn btn-secondary btn-sm" onclick="markAttendance(${meetingId},'absent')">불참</button>
             </div>` : ''}
         </div>`;
 
-        // 투표
+        // 투표 (진행 중/완료 시 표시)
         html += `<div class="info-section">
-            <h3 class="info-section-title">투표</h3>
+            <h3 class="info-section-title">투표 <span style="font-size:12px;color:var(--text-secondary)">(익명 투표)</span></h3>
+            ${isAdminUser && m.status === 'in_progress' ? `<div style="margin-bottom:12px">
+                <button class="btn btn-primary btn-sm" onclick="showCreateVoteForm(${meetingId})">+ 투표 추가</button>
+            </div>
+            <div id="create-vote-form-${meetingId}" style="display:none;margin-bottom:16px;padding:12px;border:1px solid var(--border-color);border-radius:8px">
+                <input type="text" id="new-vote-title-${meetingId}" placeholder="투표 제목 (예: 예산안 승인)" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:6px;margin-bottom:8px;box-sizing:border-box">
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-primary btn-sm" onclick="createVote(${meetingId})">등록</button>
+                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('create-vote-form-${meetingId}').style.display='none'">취소</button>
+                </div>
+            </div>` : ''}
             <div id="meeting-votes-${meetingId}">로딩 중...</div>
         </div>`;
 
@@ -150,19 +165,27 @@ async function loadMeetingVotes(meetingId) {
             el.innerHTML = '<div style="color:var(--text-secondary);font-size:14px">등록된 투표가 없습니다</div>';
             return;
         }
+        var userInfo2 = typeof getCurrentUser === 'function' ? getCurrentUser() : JSON.parse(localStorage.getItem('user_info') || 'null');
+        var isAdmin2 = userInfo2 && ['admin', 'super_admin', 'local_admin'].includes(userInfo2.role);
+
         el.innerHTML = res.data.votes.map(v => {
             const options = v.options || ['찬성', '반대', '기권'];
             const results = v.results || {};
             const totalVotes = Object.values(results).reduce((s, n) => s + n, 0);
             return `<div class="vote-card">
-                <div style="font-weight:600;margin-bottom:8px">${escapeHtml(v.title)}</div>
-                ${v.status === 'open' ? `<div style="display:flex;gap:8px;margin-bottom:8px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                    <span style="font-weight:600">${escapeHtml(v.title)}</span>
+                    ${v.status === 'open' && isAdmin2 ? `<button class="btn btn-sm" style="color:#DC2626;font-size:11px" onclick="closeVote(${meetingId},${v.id})">마감</button>` : ''}
+                    ${v.status === 'closed' ? '<span style="color:#DC2626;font-size:12px;font-weight:600">마감</span>' : ''}
+                </div>
+                ${v.status === 'open' ? `<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
                     ${options.map(opt => `<button class="btn btn-sm ${v.my_vote === opt ? 'btn-primary' : 'btn-secondary'}"
                         onclick="castVote(${meetingId},${v.id},'${escapeHtml(opt)}')">${escapeHtml(opt)}</button>`).join('')}
-                </div>` : ''}
+                </div>
+                <div style="font-size:11px;color:#9CA3AF;margin-bottom:4px">* 참석 체크된 회원만 투표 가능 (익명)</div>` : ''}
                 <div style="font-size:13px;color:var(--text-secondary)">
                     ${options.map(opt => `${escapeHtml(opt)}: ${results[opt] || 0}표`).join(' · ')}
-                    (총 ${totalVotes}표) ${v.status === 'closed' ? '· 마감' : ''}
+                    (총 ${totalVotes}표)
                 </div>
             </div>`;
         }).join('');
@@ -191,6 +214,92 @@ async function castVote(meetingId, voteId, option) {
     } catch (err) {
         showToast('투표 실패: ' + (err.message || '네트워크 오류'), 'error');
     }
+}
+
+// 회의 시작
+async function startMeeting(meetingId) {
+    if (!confirm('회의를 시작하시겠습니까?')) return;
+    try {
+        var res = await fetch('/api/meetings/' + meetingId + '/start', {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') }
+        });
+        var data = await res.json();
+        if (data.success) {
+            showToast('회의가 시작되었습니다');
+            showMeetingDetail(meetingId);
+        } else {
+            showToast(data.error || '회의 시작 실패', 'error');
+        }
+    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+}
+
+// 회의 종료
+async function endMeeting(meetingId) {
+    if (!confirm('회의를 종료하시겠습니까?\n진행 중인 모든 투표가 마감됩니다.')) return;
+    try {
+        var res = await fetch('/api/meetings/' + meetingId + '/end', {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') }
+        });
+        var data = await res.json();
+        if (data.success) {
+            showToast('회의가 종료되었습니다');
+            showMeetingDetail(meetingId);
+        } else {
+            showToast(data.error || '회의 종료 실패', 'error');
+        }
+    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+}
+
+// 투표 추가 폼 표시
+function showCreateVoteForm(meetingId) {
+    var form = document.getElementById('create-vote-form-' + meetingId);
+    if (form) form.style.display = 'block';
+    var input = document.getElementById('new-vote-title-' + meetingId);
+    if (input) { input.value = ''; input.focus(); }
+}
+
+// 투표 생성
+async function createVote(meetingId) {
+    var title = document.getElementById('new-vote-title-' + meetingId)?.value?.trim();
+    if (!title) { showToast('투표 제목을 입력하세요', 'error'); return; }
+    try {
+        var res = await fetch('/api/meetings/' + meetingId + '/votes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            body: JSON.stringify({ title: title, options: ['찬성', '반대', '기권'] })
+        });
+        var data = await res.json();
+        if (data.success) {
+            showToast('투표가 추가되었습니다');
+            document.getElementById('create-vote-form-' + meetingId).style.display = 'none';
+            loadMeetingVotes(meetingId);
+        } else {
+            showToast(data.error || '투표 생성 실패', 'error');
+        }
+    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+}
+
+// 투표 마감 (관리자)
+async function closeVote(meetingId, voteId) {
+    if (!confirm('이 투표를 마감하시겠습니까?')) return;
+    try {
+        var res = await fetch('/api/meetings/' + meetingId + '/votes/' + voteId + '/close', {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') }
+        });
+        var data = await res.json();
+        if (data.success) {
+            showToast('투표가 마감되었습니다');
+            loadMeetingVotes(meetingId);
+        } else {
+            showToast(data.error || '마감 실패', 'error');
+        }
+    } catch (err) { showToast('오류: ' + err.message, 'error'); }
 }
 
 async function loadMeetingMinutes(meetingId) {

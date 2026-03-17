@@ -375,6 +375,51 @@ router.put('/:id', authenticate, async (req, res) => {
 });
 
 /**
+ * PUT /api/meetings/:id/start
+ * 회의 시작 (관리자만)
+ */
+router.put('/:id/start', authenticate, async (req, res) => {
+    try {
+        const meetingId = parseInt(req.params.id);
+        if (!isAdmin(req.user.role)) {
+            return res.status(403).json({ success: false, error: '관리자만 회의를 시작할 수 있습니다.' });
+        }
+        await query(
+            `UPDATE meetings SET status = 'in_progress', updated_at = NOW() WHERE id = $1`,
+            [meetingId]
+        );
+        return res.json({ success: true, data: { status: 'in_progress' } });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * PUT /api/meetings/:id/end
+ * 회의 종료 (관리자만)
+ */
+router.put('/:id/end', authenticate, async (req, res) => {
+    try {
+        const meetingId = parseInt(req.params.id);
+        if (!isAdmin(req.user.role)) {
+            return res.status(403).json({ success: false, error: '관리자만 회의를 종료할 수 있습니다.' });
+        }
+        // 진행 중인 투표 모두 마감
+        await query(
+            `UPDATE meeting_votes SET status = 'closed', closed_at = NOW() WHERE meeting_id = $1 AND status = 'open'`,
+            [meetingId]
+        );
+        await query(
+            `UPDATE meetings SET status = 'completed', updated_at = NOW() WHERE id = $1`,
+            [meetingId]
+        );
+        return res.json({ success: true, data: { status: 'completed' } });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * DELETE /api/meetings/:id
  * 회의 삭제 (관리자 또는 작성자)
  */
@@ -617,6 +662,18 @@ router.post('/:id/votes/:voteId/cast', authenticate, async (req, res) => {
             });
         }
 
+        // 참석자만 투표 가능 — attending 상태 확인
+        const attendanceCheck = await query(
+            `SELECT status FROM meeting_attendance WHERE meeting_id = $1 AND user_id = $2`,
+            [meetingId, req.user.userId]
+        );
+        if (attendanceCheck.rows.length === 0 || attendanceCheck.rows[0].status !== 'attending') {
+            return res.status(403).json({
+                success: false,
+                error: '회의에 참석한 회원만 투표할 수 있습니다.'
+            });
+        }
+
         // UPSERT: 중복 투표 시 변경
         const result = await query(
             `INSERT INTO meeting_vote_responses (vote_id, user_id, selected_option)
@@ -711,11 +768,10 @@ router.get('/:id/votes/:voteId', authenticate, async (req, res) => {
 
         const vote = voteResult.rows[0];
 
-        // 응답 목록
+        // 응답 목록 (익명 — 이름 미포함, 집계만)
         const responsesResult = await query(
-            `SELECT mvr.*, u.name as user_name
+            `SELECT mvr.vote_id, mvr.user_id, mvr.selected_option, mvr.voted_at
              FROM meeting_vote_responses mvr
-             LEFT JOIN users u ON mvr.user_id = u.id
              WHERE mvr.vote_id = $1
              ORDER BY mvr.voted_at DESC`,
             [voteId]

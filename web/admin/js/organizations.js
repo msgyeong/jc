@@ -82,8 +82,9 @@ async function loadOrganizations() {
                 : '<span class="badge badge-suspended">비활성</span>';
             var memberCount = org.member_count != null ? org.member_count : (org.members_count != null ? org.members_count : '-');
 
+            var nameEsc = escapeHtml(org.name).replace(/'/g, "\\'");
             html += '<tr>' +
-                '<td><strong style="cursor:pointer;color:var(--c-primary)" onclick="selectOrg(' + org.id + ',\'' + escapeHtml(org.name).replace(/'/g, "\\'") + '\')">' + escapeHtml(org.name) + '</strong></td>' +
+                '<td><a href="javascript:void(0)" style="color:#2563EB;font-weight:600;text-decoration:underline;cursor:pointer" onclick="selectOrg(' + org.id + ',\'' + nameEsc + '\')">' + escapeHtml(org.name) + '</a></td>' +
                 '<td>' + escapeHtml(org.code || '-') + '</td>' +
                 '<td>' + escapeHtml(org.district || '-') + '</td>' +
                 '<td>' + escapeHtml(org.region || '-') + '</td>' +
@@ -91,9 +92,9 @@ async function loadOrganizations() {
                 '<td>' + statusHtml + '</td>' +
                 '<td>' + formatDate(org.created_at) + '</td>' +
                 '<td class="actions-cell">' +
+                    '<button class="btn btn-sm btn-primary" onclick="selectOrg(' + org.id + ',\'' + nameEsc + '\')">관리</button> ' +
                     '<button class="btn btn-sm btn-outline" onclick="openOrgModal(' + org.id + ')">편집</button> ' +
-                    '<button class="btn btn-sm ' + (isActive ? 'btn-danger-outline' : 'btn-outline') + '" onclick="toggleOrgActive(' + org.id + ', ' + isActive + ')">' + (isActive ? '비활성화' : '활성화') + '</button> ' +
-                    '<button class="btn btn-sm btn-outline" onclick="openAssignAdminModal(' + org.id + ', \'' + escapeHtml(org.name).replace(/'/g, "\\'") + '\')">관리자 지정</button>' +
+                    '<button class="btn btn-sm ' + (isActive ? 'btn-danger-outline' : 'btn-outline') + '" onclick="toggleOrgActive(' + org.id + ', ' + isActive + ')">' + (isActive ? '비활성화' : '활성화') + '</button>' +
                 '</td>' +
                 '</tr>';
         }
@@ -386,8 +387,7 @@ async function loadOrgMembers(orgId, el) {
     try {
         var res = await AdminAPI.get('/api/admin/members?limit=100');
         if (!res.success) throw new Error(res.message);
-        var members = (res.data && res.data.items) || res.data || [];
-        // org_id 필터 (추후 서버에서 필터링)
+        var members = res.members || (res.data && res.data.items) || [];
         if (members.length === 0) {
             el.innerHTML = '<div style="color:#9CA3AF;padding:24px;text-align:center">회원이 없습니다.</div>';
             return;
@@ -396,12 +396,22 @@ async function loadOrgMembers(orgId, el) {
             '<th>이름</th><th>이메일</th><th>역할</th><th>상태</th><th>관리</th>' +
             '</tr></thead><tbody>';
         members.forEach(function(m) {
+            var roleSelect = '<select onchange="changeOrgMemberRole(' + m.id + ',this.value,' + orgId + ')" style="padding:4px;border:1px solid #D1D5DB;border-radius:4px;font-size:12px">' +
+                '<option value="member"' + (m.role==='member'?' selected':'') + '>회원</option>' +
+                '<option value="local_admin"' + (m.role==='local_admin'?' selected':'') + '>중간관리자</option>' +
+                '<option value="admin"' + (m.role==='admin'?' selected':'') + '>관리자</option>' +
+                '</select>';
             html += '<tr>' +
-                '<td>' + escapeHtml(m.name || '') + '</td>' +
-                '<td>' + escapeHtml(m.email || '') + '</td>' +
-                '<td>' + roleBadge(m.role) + '</td>' +
+                '<td><strong>' + escapeHtml(m.name || '') + '</strong></td>' +
+                '<td style="font-size:13px;color:#6B7280">' + escapeHtml(m.email || '') + '</td>' +
+                '<td>' + roleSelect + '</td>' +
                 '<td>' + statusBadge(m.status) + '</td>' +
-                '<td><button class="btn btn-sm btn-outline" onclick="openMemberQuickModal(' + m.id + ')">편집</button></td>' +
+                '<td class="actions-cell">' +
+                    (m.status==='pending' ? '<button class="btn btn-sm btn-primary" onclick="orgApproveMember(' + m.id + ',' + orgId + ')">승인</button> ' : '') +
+                    (m.status==='active' ? '<button class="btn btn-sm btn-outline" onclick="orgSuspendMember(' + m.id + ',' + orgId + ')">정지</button> ' : '') +
+                    (m.status==='suspended' ? '<button class="btn btn-sm btn-outline" onclick="orgActivateMember(' + m.id + ',' + orgId + ')">해제</button> ' : '') +
+                    '<button class="btn btn-sm btn-danger-outline" onclick="orgDeleteMember(' + m.id + ',\'' + escapeHtml(m.name).replace(/'/g,"\\'") + '\',' + orgId + ')">삭제</button>' +
+                '</td>' +
                 '</tr>';
         });
         html += '</tbody></table></div>';
@@ -409,6 +419,48 @@ async function loadOrgMembers(orgId, el) {
     } catch (err) {
         el.innerHTML = '<div style="color:#DC2626;padding:24px">회원 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
     }
+}
+
+async function changeOrgMemberRole(memberId, newRole, orgId) {
+    try {
+        await AdminAPI.put('/api/admin/members/' + memberId, { role: newRole });
+        showAdminToast('역할이 변경되었습니다.');
+    } catch (err) { showAdminToast('역할 변경 실패: ' + err.message, 'error'); }
+}
+
+async function orgApproveMember(memberId, orgId) {
+    try {
+        await AdminAPI.post('/api/admin/members/' + memberId + '/approve', {});
+        showAdminToast('승인 완료');
+        switchOrgTab('members', orgId);
+    } catch (err) { showAdminToast('승인 실패: ' + err.message, 'error'); }
+}
+
+async function orgSuspendMember(memberId, orgId) {
+    if (!confirm('이 회원을 정지하시겠습니까?')) return;
+    try {
+        await AdminAPI.put('/api/admin/members/' + memberId, { status: 'suspended' });
+        showAdminToast('정지 처리 완료');
+        switchOrgTab('members', orgId);
+    } catch (err) { showAdminToast('정지 실패: ' + err.message, 'error'); }
+}
+
+async function orgActivateMember(memberId, orgId) {
+    try {
+        await AdminAPI.put('/api/admin/members/' + memberId, { status: 'active' });
+        showAdminToast('활성화 완료');
+        switchOrgTab('members', orgId);
+    } catch (err) { showAdminToast('활성화 실패: ' + err.message, 'error'); }
+}
+
+async function orgDeleteMember(memberId, name, orgId) {
+    if (!confirm(name + ' 회원을 완전히 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+    if (!confirm('정말 삭제하시겠습니까? (최종 확인)')) return;
+    try {
+        var res = await AdminAPI.delete('/api/admin/members/' + memberId + '/permanent');
+        showAdminToast(res.message || '삭제 완료');
+        switchOrgTab('members', orgId);
+    } catch (err) { showAdminToast('삭제 실패: ' + err.message, 'error'); }
 }
 
 async function loadOrgAdmins(orgId, el) {

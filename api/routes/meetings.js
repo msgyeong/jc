@@ -469,14 +469,23 @@ router.post('/:id/attend', authenticate, async (req, res) => {
             return res.status(400).json({ success: false, error: '유효하지 않은 회의 ID입니다.' });
         }
 
-        const { status } = req.body;
-        const allowedStatuses = ['attending', 'absent'];
+        const { status, user_id: targetUserId } = req.body;
+        // 일반 회원: attending/absent만 (본인만)
+        // 관리자: confirmed/observer도 가능 (다른 회원도 가능)
+        const selfStatuses = ['attending', 'absent'];
+        const adminStatuses = ['attending', 'absent', 'confirmed', 'observer'];
+        const isAdminRole = isAdmin(req.user.role);
+        const allowedStatuses = isAdminRole ? adminStatuses : selfStatuses;
         if (!status || !allowedStatuses.includes(status)) {
             return res.status(400).json({
                 success: false,
-                error: '참석 상태는 attending 또는 absent 중 하나여야 합니다.'
+                error: isAdminRole
+                    ? '참석 상태: attending, absent, confirmed, observer 중 하나'
+                    : '참석 상태: attending(참석예정) 또는 absent(불참) 중 하나'
             });
         }
+        // 관리자가 다른 회원의 상태를 변경하는 경우
+        const effectiveUserId = (isAdminRole && targetUserId) ? targetUserId : req.user.userId;
 
         // 회의 존재 확인
         const meetingResult = await query('SELECT id, status FROM meetings WHERE id = $1', [meetingId]);
@@ -484,15 +493,15 @@ router.post('/:id/attend', authenticate, async (req, res) => {
             return res.status(404).json({ success: false, error: '회의를 찾을 수 없습니다.' });
         }
 
-        const checkedInAt = status === 'attending' ? new Date() : null;
+        const checkedInAt = (status === 'attending' || status === 'confirmed') ? new Date() : null;
 
         const result = await query(
             `INSERT INTO meeting_attendance (meeting_id, user_id, status, checked_in_at)
              VALUES ($1, $2, $3, $4)
              ON CONFLICT (meeting_id, user_id)
-             DO UPDATE SET status = $3, checked_in_at = $4
+             DO UPDATE SET status = $3, checked_in_at = COALESCE($4, meeting_attendance.checked_in_at)
              RETURNING *`,
-            [meetingId, req.user.userId, status, checkedInAt]
+            [meetingId, effectiveUserId, status, checkedInAt]
         );
 
         return res.json({
@@ -662,16 +671,17 @@ router.post('/:id/votes/:voteId/cast', authenticate, async (req, res) => {
             });
         }
 
-        // 참석자만 투표 가능 — attending 상태 확인
+        // 실제 참석자(confirmed)만 투표 가능 — observer/attending/absent는 불가
         const attendanceCheck = await query(
             `SELECT status FROM meeting_attendance WHERE meeting_id = $1 AND user_id = $2`,
             [meetingId, req.user.userId]
         );
-        if (attendanceCheck.rows.length === 0 || attendanceCheck.rows[0].status !== 'attending') {
-            return res.status(403).json({
-                success: false,
-                error: '회의에 참석한 회원만 투표할 수 있습니다.'
-            });
+        const attStatus = attendanceCheck.rows.length > 0 ? attendanceCheck.rows[0].status : null;
+        if (attStatus !== 'confirmed') {
+            const msg = attStatus === 'observer'
+                ? '옵서버는 투표권이 없습니다.'
+                : '실제 참석 확인된 회원만 투표할 수 있습니다.';
+            return res.status(403).json({ success: false, error: msg });
         }
 
         // UPSERT: 중복 투표 시 변경

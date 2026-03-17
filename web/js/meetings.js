@@ -74,9 +74,12 @@ async function showMeetingDetail(meetingId) {
         html += `<div class="info-section">
             <h3 class="info-section-title">참석 현황</h3>
             <div id="meeting-attendance-${meetingId}">로딩 중...</div>
-            ${m.status !== 'completed' ? `<div style="display:flex;gap:8px;margin-top:12px">
-                <button class="btn btn-primary btn-sm" onclick="markAttendance(${meetingId},'attending')">참석 체크</button>
-                <button class="btn btn-secondary btn-sm" onclick="markAttendance(${meetingId},'absent')">불참</button>
+            ${m.status !== 'completed' ? `<div style="margin-top:12px">
+                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">참석 조사 (본인)</div>
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-primary btn-sm" onclick="markAttendance(${meetingId},'attending')">참석 예정</button>
+                    <button class="btn btn-secondary btn-sm" onclick="markAttendance(${meetingId},'absent')">불참</button>
+                </div>
             </div>` : ''}
         </div>`;
 
@@ -143,14 +146,38 @@ async function loadMeetingAttendance(meetingId) {
         const res = await apiClient.request('/meetings/' + meetingId + '/attendance');
         if (!res.success) { el.innerHTML = '참석 정보 없음'; return; }
         const att = (res.data && res.data.items) || res.data || [];
-        const summary = (res.data && res.data.summary) || {};
+        const confirmed = Array.isArray(att) ? att.filter(a => a.status === 'confirmed') : [];
+        const observers = Array.isArray(att) ? att.filter(a => a.status === 'observer') : [];
         const attending = Array.isArray(att) ? att.filter(a => a.status === 'attending') : [];
         const absent = Array.isArray(att) ? att.filter(a => a.status === 'absent') : [];
-        el.innerHTML = `<div style="font-size:14px">
-            <span style="color:#16A34A;font-weight:600">참석 ${attending.length}명</span>
-            <span style="color:#DC2626;margin-left:12px">불참 ${absent.length}명</span>
+
+        var userInfo3 = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+        var isAdmin3 = userInfo3 && ['admin', 'super_admin', 'local_admin'].includes(userInfo3.role);
+
+        el.innerHTML = `<div style="font-size:14px;display:flex;gap:12px;flex-wrap:wrap">
+            <span style="color:#16A34A;font-weight:600">실제참석 ${confirmed.length}명</span>
+            <span style="color:#6B7280">옵서버 ${observers.length}명</span>
+            <span style="color:#3B82F6">참석예정 ${attending.length}명</span>
+            <span style="color:#DC2626">불참 ${absent.length}명</span>
         </div>
-        ${attending.length > 0 ? '<div style="margin-top:8px;font-size:13px;color:var(--text-secondary)">' + attending.map(a => escapeHtml(a.user_name)).join(', ') + '</div>' : ''}`;
+        ${confirmed.length > 0 ? '<div style="margin-top:6px;font-size:13px"><span style="color:#16A34A">실제참석:</span> ' + confirmed.map(a => escapeHtml(a.user_name)).join(', ') + '</div>' : ''}
+        ${observers.length > 0 ? '<div style="margin-top:4px;font-size:13px"><span style="color:#6B7280">옵서버:</span> ' + observers.map(a => escapeHtml(a.user_name)).join(', ') + '</div>' : ''}
+        ${attending.length > 0 ? '<div style="margin-top:4px;font-size:13px"><span style="color:#3B82F6">참석예정:</span> ' + attending.map(a => escapeHtml(a.user_name)).join(', ') + '</div>' : ''}
+        ${isAdmin3 ? '<div style="margin-top:12px;font-size:12px;color:var(--text-secondary)">관리자: 참석 예정자를 "실제참석" 또는 "옵서버"로 변경할 수 있습니다</div><div id="admin-attendance-controls-' + meetingId + '" style="margin-top:8px"></div>' : ''}`
+
+        // 관리자용 참석 상태 변경 컨트롤
+        if (isAdmin3) {
+            var ctrlEl = document.getElementById('admin-attendance-controls-' + meetingId);
+            if (ctrlEl && attending.length > 0) {
+                ctrlEl.innerHTML = attending.map(a =>
+                    '<div style="display:flex;align-items:center;gap:8px;padding:4px 0">' +
+                    '<span style="font-size:13px;min-width:60px">' + escapeHtml(a.user_name) + '</span>' +
+                    '<button class="btn btn-sm btn-primary" style="font-size:11px" onclick="setAttendanceStatus(' + meetingId + ',' + a.user_id + ',\'confirmed\')">실제참석</button>' +
+                    '<button class="btn btn-sm btn-secondary" style="font-size:11px" onclick="setAttendanceStatus(' + meetingId + ',' + a.user_id + ',\'observer\')">옵서버</button>' +
+                    '</div>'
+                ).join('');
+            }
+        }
     } catch (_) {
         el.innerHTML = '참석 정보를 불러올 수 없습니다';
     }
@@ -214,6 +241,28 @@ async function castVote(meetingId, voteId, option) {
     } catch (err) {
         showToast('투표 실패: ' + (err.message || '네트워크 오류'), 'error');
     }
+}
+
+// 관리자가 회원의 참석 상태 변경 (confirmed/observer)
+async function setAttendanceStatus(meetingId, userId, status) {
+    try {
+        var res = await fetch('/api/meetings/' + meetingId + '/attend', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            body: JSON.stringify({ status: status, user_id: userId })
+        });
+        var data = await res.json();
+        if (data.success) {
+            var label = status === 'confirmed' ? '실제참석' : '옵서버';
+            showToast(label + '으로 변경했습니다');
+            loadMeetingAttendance(meetingId);
+        } else {
+            showToast(data.error || '변경 실패', 'error');
+        }
+    } catch (err) { showToast('오류: ' + err.message, 'error'); }
 }
 
 // 회의 시작

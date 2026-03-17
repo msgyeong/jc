@@ -179,17 +179,25 @@ async function loadBannerSummary() {
             });
         }
 
-        // 최신 공지 배너
-        const noticeRes = await apiClient.getPosts(1, 5, 'notice');
+        // 공지 배너 (is_banner 체크된 공지 우선, 없으면 최신 공지)
+        const noticeRes = await apiClient.getPosts(1, 10, 'notice');
         const notices = noticeRes.posts || (noticeRes.data && (noticeRes.data.posts || noticeRes.data.items)) || [];
-        if (notices.length > 0) {
-            const latest = notices[0];
-            banners.push({
-                gradient: 'linear-gradient(135deg, #1E3A5F 0%, #6B9BC3 100%)',
-                title: escapeHtml(latest.title),
-                subtitle: formatDate(latest.created_at),
-                cta: '공지 보기',
-                action: "navigateTo('/posts/" + latest.id + "')"
+        const bannerNotices = notices.filter(n => n.is_banner);
+        const displayNotices = bannerNotices.length > 0 ? bannerNotices : notices.slice(0, 1);
+        if (displayNotices.length > 0) {
+            const gradients = [
+                'linear-gradient(135deg, #1E3A5F 0%, #6B9BC3 100%)',
+                'linear-gradient(135deg, #2D4A6F 0%, #5B8DB8 100%)',
+                'linear-gradient(135deg, #1A3550 0%, #4A7FA5 100%)'
+            ];
+            displayNotices.forEach((n, i) => {
+                banners.push({
+                    gradient: gradients[i % gradients.length],
+                    title: escapeHtml(n.title),
+                    subtitle: formatDate(n.created_at),
+                    cta: '공지 보기',
+                    action: "navigateTo('/posts/" + n.id + "')"
+                });
             });
         } else {
             banners.push({

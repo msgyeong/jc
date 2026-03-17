@@ -325,7 +325,7 @@ async function showMemberDetailScreen(memberId) {
                     ${m.created_at ? infoRow('가입일', formatDate(m.created_at, 'YYYY-MM-DD')) : ''}
                 </div>
 
-                ${(m.company || m.position || m.department || m.industry) ? `
+                ${(m.company || m.position || m.department || m.industry || m.website) ? `
                 <div class="info-section">
                     <h3 class="info-section-title">직장 정보</h3>
                     ${infoRow('회사', m.company)}
@@ -333,6 +333,7 @@ async function showMemberDetailScreen(memberId) {
                     ${infoRow('부서', m.department)}
                     ${m.industry ? infoRow('업종', getIndustryName(m.industry) + (m.industry_detail ? ' · ' + m.industry_detail : '')) : ''}
                     ${m.work_phone ? infoRow('직장 전화', m.work_phone, true) : ''}
+                    ${m.website ? `<div class="info-row"><span class="info-label">홈페이지</span><span class="info-value"><a href="${escapeHtml(m.website)}" target="_blank" rel="noopener" style="color:var(--primary-color);text-decoration:underline;word-break:break-all">${escapeHtml(m.website)}</a></span></div>` : ''}
                 </div>` : ''}
 
                 <div id="title-history-container"></div>

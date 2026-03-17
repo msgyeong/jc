@@ -180,7 +180,7 @@ router.get('/:id', authenticate, async (req, res) => {
                 birth_date, gender,
                 company, position, department, work_phone,
                 industry, industry_detail, profession,
-                position_id,
+                position_id, website,
                 created_at, updated_at
              FROM users
              WHERE id = $1 AND status NOT IN ('withdrawn', 'rejected')`,

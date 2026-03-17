@@ -76,7 +76,7 @@ router.put('/', authenticate, async (req, res) => {
     try {
         const userId = req.user.userId;
         const userRole = req.user.role;
-        const { name, phone, address, birth_date, gender, company, work_phone, industry, industry_detail } = req.body;
+        const { name, phone, address, birth_date, gender, company, work_phone, industry, industry_detail, website } = req.body;
 
         // 유효성 검증
         if (!name) {
@@ -119,9 +119,9 @@ router.put('/', authenticate, async (req, res) => {
                      birth_date = $4, gender = $5,
                      company = $6, position = $7, department = $8, work_phone = $9,
                      industry = $10, industry_detail = $11, join_number = $12,
-                     updated_at = NOW()
-                 WHERE id = $13`,
-                [name, phone, address, birth_date, gender, company, position || null, department || null, work_phone, industry || null, industry_detail || null, join_number || null, userId]
+                     website = $13, updated_at = NOW()
+                 WHERE id = $14`,
+                [name, phone, address, birth_date, gender, company, position || null, department || null, work_phone, industry || null, industry_detail || null, join_number || null, website || null, userId]
             );
         } else {
             // 일반 회원: position, department, join_number 필드 제외
@@ -131,9 +131,9 @@ router.put('/', authenticate, async (req, res) => {
                      birth_date = $4, gender = $5,
                      company = $6, work_phone = $7,
                      industry = $8, industry_detail = $9,
-                     updated_at = NOW()
-                 WHERE id = $10`,
-                [name, phone, address, birth_date, gender, company, work_phone, industry || null, industry_detail || null, userId]
+                     website = $10, updated_at = NOW()
+                 WHERE id = $11`,
+                [name, phone, address, birth_date, gender, company, work_phone, industry || null, industry_detail || null, website || null, userId]
             );
         }
 

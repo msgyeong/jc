@@ -165,6 +165,11 @@ app.listen(PORT, () => {
     console.log(`  - GET    /api/notifications`);
     console.log('='.repeat(50));
 
+    // 자동 마이그레이션 (신규 컬럼)
+    const { query: dbQuery } = require('./config/database');
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS website VARCHAR(500)").catch(() => {});
+    dbQuery("ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_banner BOOLEAN DEFAULT false").catch(() => {});
+
     // 리마인더 cron 시작
     startReminderCron();
     // 예약 알림 스케줄러 시작

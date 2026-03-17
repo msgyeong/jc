@@ -16,7 +16,7 @@ router.post('/signup', async (req, res) => {
             // Step 2: 기본 정보 추가
             ssnFront, ssnBack, postal_code, profile_image, birth_date, gender,
             // Step 3: 직장 정보
-            company, position, department, work_phone, work_address,
+            company, position, department, work_phone, work_address, website,
             // Step 4: 학력/경력 정보 (문자열)
             education, career,
             // Step 5: 가족 정보 (문자열)
@@ -97,20 +97,20 @@ router.post('/signup', async (req, res) => {
             `INSERT INTO users (
                 email, password_hash, name, phone, address, address_detail, postal_code,
                 ssn, profile_image, birth_date, gender,
-                company, position, department, work_phone, work_address,
+                company, position, department, work_phone, work_address, website,
                 educations, careers, families,
                 hobbies, emergency_contact_name, emergency_contact, emergency_relationship, special_notes,
                 role, status, created_at, updated_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, 'member', 'pending', NOW(), NOW())
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, 'member', 'pending', NOW(), NOW())
             RETURNING id, email, name, role, status`,
             [
-                email.toLowerCase(), passwordHash, name, phone, address, 
+                email.toLowerCase(), passwordHash, name, phone, address,
                 address_detail || null, postal_code || null,
                 maskedSsn, profile_image || null, birth_date || null, gender || null,
-                company || null, position || null, department || null, work_phone || null, work_address || null,
+                company || null, position || null, department || null, work_phone || null, work_address || null, website || null,
                 educations, careers, families,
-                hobbies || null, emergency_contact_name || null, emergency_contact || null, 
+                hobbies || null, emergency_contact_name || null, emergency_contact || null,
                 emergency_relationship || null, special_notes || null
             ]
         );

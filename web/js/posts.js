@@ -487,12 +487,14 @@ async function handlePostCreateSubmit(e) {
     try {
         const images = getPostCreateImages();
         const isPinned = document.getElementById('post-create-is-pinned');
+        const isBanner = document.getElementById('post-create-is-banner');
         const payload = {
             title,
             content,
             images,
             category,
             is_pinned: isPinned ? isPinned.checked : false,
+            is_banner: isBanner ? isBanner.checked : false,
         };
         // 참석 확인
         if (postCreateAttendanceEnabled) {
@@ -569,6 +571,7 @@ async function loadPostDetail(postId) {
         const result = await apiClient.getPost(postId);
         if (result.success && result.post) {
             container.innerHTML = renderPostDetail(result.post);
+            initPostGallery(result.post.id);
             loadCommentsForPost(postId);
             loadLinkedScheduleForPost(result.post);
             loadPostAttendance(result.post);
@@ -655,13 +658,20 @@ function renderPostDetail(post) {
 
     const liked = post.user_has_liked === true;
     const images = parseImageArray(post.images);
-    const imagesHtml = images.length > 0
-        ? `<div class="post-detail-images">
-            ${images.map(url =>
-                `<img src="${String(url).replace(/"/g, '&quot;')}" alt="첨부" class="post-detail-image" onerror="this.style.display='none'">`
-            ).join('')}
-           </div>`
-        : '';
+    let imagesHtml = '';
+    if (images.length > 0) {
+        imagesHtml = `<div class="post-image-gallery" id="post-gallery-${post.id}">
+            <div class="gallery-track">
+                ${images.map((url, i) =>
+                    `<div class="gallery-slide"><img src="${String(url).replace(/"/g, '&quot;')}" alt="첨부 ${i+1}" class="gallery-image" onerror="this.parentElement.style.display='none'" onclick="openFullscreenViewer('${String(url).replace(/'/g, "\\'")}')" loading="lazy"></div>`
+                ).join('')}
+            </div>
+            ${images.length > 1 ? `<div class="gallery-dots">${images.map((_, i) => `<span class="gallery-dot${i === 0 ? ' active' : ''}" data-idx="${i}"></span>`).join('')}</div>
+            <button class="gallery-arrow gallery-prev" aria-label="이전">‹</button>
+            <button class="gallery-arrow gallery-next" aria-label="다음">›</button>` : ''}
+            <span class="gallery-counter">${images.length > 1 ? `1 / ${images.length}` : ''}</span>
+        </div>`;
+    }
 
     let actionsHtml = '';
     if (canEdit) {
@@ -1208,5 +1218,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// ── 이미지 갤러리 (스와이프) ──
+function initPostGallery(postId) {
+    const gallery = document.getElementById('post-gallery-' + postId);
+    if (!gallery) return;
+    const track = gallery.querySelector('.gallery-track');
+    const dots = gallery.querySelectorAll('.gallery-dot');
+    const counter = gallery.querySelector('.gallery-counter');
+    const slides = gallery.querySelectorAll('.gallery-slide');
+    if (slides.length <= 1) return;
+
+    let current = 0;
+    const total = slides.length;
+
+    function goTo(idx) {
+        if (idx < 0) idx = 0;
+        if (idx >= total) idx = total - 1;
+        current = idx;
+        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+        if (counter) counter.textContent = (current + 1) + ' / ' + total;
+    }
+
+    const prev = gallery.querySelector('.gallery-prev');
+    const next = gallery.querySelector('.gallery-next');
+    if (prev) prev.addEventListener('click', () => goTo(current - 1));
+    if (next) next.addEventListener('click', () => goTo(current + 1));
+    dots.forEach(d => d.addEventListener('click', () => goTo(parseInt(d.dataset.idx))));
+
+    // 터치 스와이프
+    let startX = 0, deltaX = 0;
+    track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; deltaX = 0; }, { passive: true });
+    track.addEventListener('touchmove', e => { deltaX = e.touches[0].clientX - startX; }, { passive: true });
+    track.addEventListener('touchend', () => {
+        if (Math.abs(deltaX) > 50) goTo(current + (deltaX < 0 ? 1 : -1));
+    });
+}
 
 console.log('✅ Posts 모듈 로드 완료 (서브탭 + 카드 재디자인)');

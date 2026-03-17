@@ -359,6 +359,16 @@
                         >
                     </div>
 
+                    <div class="form-group">
+                        <label for="signup-website">홈페이지 <span class="badge-optional">선택</span></label>
+                        <input
+                            type="url"
+                            id="signup-website"
+                            placeholder="https://www.example.com"
+                            maxlength="500"
+                        >
+                    </div>
+
                     <!-- Step 4: 학력/경력 정보 (선택) -->
                     <h3 class="section-title">Step 4: 학력/경력 정보</h3>
 
@@ -756,6 +766,10 @@
                         <label class="post-create-switch">
                             <input type="checkbox" id="post-create-is-pinned">
                             <span>상단 고정</span>
+                        </label>
+                        <label class="post-create-switch" style="margin-left:16px">
+                            <input type="checkbox" id="post-create-is-banner">
+                            <span>홈 배너 표시</span>
                         </label>
                     </div>
                     <!-- 참석 확인 토글 -->

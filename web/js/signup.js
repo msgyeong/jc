@@ -133,7 +133,8 @@ async function handleSignup(event) {
         const work_address = document.getElementById('signup-work-address').value.trim();
         const industry = document.getElementById('signup-industry')?.value || '';
         const industry_detail = document.getElementById('signup-industry-detail')?.value?.trim() || '';
-        
+        const website = document.getElementById('signup-website')?.value?.trim() || '';
+
         // Step 4: 학력/경력 정보
         
         // 학력 정보 수집 (동적 필드)
@@ -219,6 +220,7 @@ async function handleSignup(event) {
             work_address,
             industry: industry || undefined,
             industry_detail: industry_detail || undefined,
+            website: website || undefined,
             // Step 4
             education,
             career,

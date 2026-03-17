@@ -1245,8 +1245,77 @@ input::-ms-clear {
     max-width: 100%;
     height: auto;
     border-radius: var(--border-radius);
-    object-fit: cover;
-    max-height: 240px;
+    object-fit: contain;
+    max-height: 400px;
+}
+
+/* 이미지 갤러리 (스와이프) */
+.post-image-gallery {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-md);
+    background: #F3F4F6;
+}
+.gallery-track {
+    display: flex;
+    transition: transform 0.3s ease;
+}
+.gallery-slide {
+    min-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.gallery-image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    cursor: pointer;
+}
+.gallery-dots {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+}
+.gallery-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.gallery-dot.active {
+    background: #fff;
+}
+.gallery-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.3);
+    color: #fff;
+    border: none;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.gallery-prev { left: 8px; }
+.gallery-next { right: 8px; }
+.gallery-counter {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 10px;
 }
 
 .post-detail-meta {

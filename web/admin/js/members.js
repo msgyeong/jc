@@ -206,6 +206,7 @@ async function openMemberQuickModal(id) {
                     ${m.status === 'pending' ? '<button class="btn btn-primary btn-sm" onclick="approveMember(' + m.id + ');closeModal()">승인</button>' : ''}
                     ${m.status === 'active' ? '<button class="btn btn-danger btn-sm" onclick="changeMemberStatus(' + m.id + ',\'suspended\')">정지</button>' : ''}
                     ${m.status === 'suspended' ? '<button class="btn btn-primary btn-sm" onclick="changeMemberStatus(' + m.id + ',\'active\')">해제</button>' : ''}
+                    <button class="btn btn-danger btn-sm" onclick="permanentDeleteMember(${m.id},'${escapeHtml(m.name)}')">완전삭제</button>
                     <button class="btn btn-ghost btn-sm" onclick="closeModal()">닫기</button>
                 </div>
             </div>
@@ -255,6 +256,19 @@ async function changeMemberStatus(id, status) {
         loadMembers();
     } catch (err) {
         showAdminToast('상태 변경 실패: ' + err.message, 'error');
+    }
+}
+
+async function permanentDeleteMember(id, name) {
+    if (!confirm('⚠️ ' + name + ' 회원을 완전히 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.\n회원의 게시글, 댓글, 참석 기록 등 모든 데이터가 삭제됩니다.')) return;
+    if (!confirm('정말로 완전 삭제하시겠습니까? (최종 확인)')) return;
+    try {
+        const res = await AdminAPI.delete('/api/admin/members/' + id + '/permanent');
+        showAdminToast(res.message || '완전 삭제 완료');
+        closeModal();
+        loadMembers();
+    } catch (err) {
+        showAdminToast('완전 삭제 실패: ' + err.message, 'error');
     }
 }
 

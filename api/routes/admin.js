@@ -604,6 +604,57 @@ router.delete('/members/:id', async (req, res) => {
 });
 
 /**
+ * DELETE /api/admin/members/:id/permanent
+ * 회원 완전 삭제 (DB에서 영구 삭제)
+ * super_admin만 사용 가능
+ */
+router.delete('/members/:id/permanent', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const adminId = req.user.userId;
+
+        if (req.user.role !== 'super_admin') {
+            return res.status(403).json({ success: false, message: '최고 관리자만 완전 삭제가 가능합니다.' });
+        }
+        if (String(id) === String(adminId)) {
+            return res.status(403).json({ success: false, message: '자기 자신은 삭제할 수 없습니다.' });
+        }
+
+        const before = await query('SELECT name, email, role FROM users WHERE id = $1', [id]);
+        if (before.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+        }
+
+        // 관련 데이터 삭제 (댓글, 좋아요, 참석, 즐겨찾기 등)
+        await query('DELETE FROM comments WHERE author_id = $1', [id]);
+        await query('DELETE FROM post_likes WHERE user_id = $1', [id]);
+        await query('DELETE FROM post_attendance WHERE user_id = $1', [id]);
+        await query('DELETE FROM schedule_attendance WHERE user_id = $1', [id]);
+        await query('DELETE FROM favorites WHERE user_id = $1', [id]);
+        await query('DELETE FROM push_subscriptions WHERE user_id = $1', [id]);
+        await query('DELETE FROM notifications WHERE user_id = $1', [id]);
+        await query('DELETE FROM position_history WHERE user_id = $1', [id]);
+        await query('DELETE FROM user_settings WHERE user_id = $1', [id]);
+        // 게시글 삭제
+        await query('DELETE FROM posts WHERE author_id = $1', [id]);
+        // 사용자 삭제
+        await query('DELETE FROM users WHERE id = $1', [id]);
+
+        writeAuditLog({
+            adminId, action: 'member.permanent_delete',
+            targetType: 'member', targetId: parseInt(id),
+            description: `회원 완전 삭제: ${before.rows[0].name} (${before.rows[0].email})`,
+            ipAddress: req.ip,
+        });
+
+        res.json({ success: true, message: `${before.rows[0].name} 회원이 완전히 삭제되었습니다.` });
+    } catch (error) {
+        console.error('Admin permanent delete error:', error);
+        res.status(500).json({ success: false, message: '완전 삭제 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
  * POST /api/admin/members/:id/reset-password
  * 임시 비밀번호 발급
  */

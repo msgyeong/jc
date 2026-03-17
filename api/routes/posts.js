@@ -454,11 +454,12 @@ router.post('/', authenticate, async (req, res) => {
             const result = await transaction(async (client) => {
                 // 1. 공지 생성
                 const attendance_enabled = req.body.attendance_enabled || false;
+                const is_banner = req.body.is_banner || false;
                 const postResult = await client.query(
-                    `INSERT INTO posts (author_id, title, content, images, category, is_pinned, attendance_enabled, created_at, updated_at)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+                    `INSERT INTO posts (author_id, title, content, images, category, is_pinned, is_banner, attendance_enabled, created_at, updated_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
                      RETURNING id`,
-                    [authorId, title, content, images || [], cat, pinned, attendance_enabled]
+                    [authorId, title, content, images || [], cat, pinned, is_banner, attendance_enabled]
                 );
                 const postId = postResult.rows[0].id;
 
@@ -525,11 +526,12 @@ router.post('/', authenticate, async (req, res) => {
 
         // 일정 연동 없는 일반 게시글/공지 작성
         const attendance_enabled = req.body.attendance_enabled || false;
+        const is_banner = req.body.is_banner || false;
         const result = await query(
-            `INSERT INTO posts (author_id, title, content, images, category, is_pinned, attendance_enabled, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+            `INSERT INTO posts (author_id, title, content, images, category, is_pinned, is_banner, attendance_enabled, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
              RETURNING id`,
-            [authorId, title, content, images || [], cat, pinned, attendance_enabled]
+            [authorId, title, content, images || [], cat, pinned, is_banner, attendance_enabled]
         );
 
         const newPostId = result.rows[0].id;

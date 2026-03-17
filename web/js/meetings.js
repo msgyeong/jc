@@ -453,11 +453,12 @@ async function loadMeetingMinutes(meetingId) {
     if (!el) return;
     try {
         const res = await apiClient.request('/meetings/' + meetingId + '/minutes');
-        if (!res.success || !res.data || res.data.length === 0) {
+        const minutes = (res.data && res.data.items) || res.data || [];
+        if (!res.success || !Array.isArray(minutes) || minutes.length === 0) {
             el.innerHTML = '<div style="color:var(--text-secondary);font-size:14px">등록된 회의록이 없습니다</div>';
             return;
         }
-        el.innerHTML = res.data.map(m => `<a href="/api/meetings/minutes/${m.id}" target="_blank"
+        el.innerHTML = minutes.map(m => `<a href="/api/meetings/minutes/${m.id}" target="_blank"
             style="display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--border-color);border-radius:8px;margin-bottom:8px;text-decoration:none;color:var(--text-primary)">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <div>

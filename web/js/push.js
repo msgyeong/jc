@@ -25,6 +25,33 @@ async function initPush() {
     pushSubscription = await swRegistration.pushManager.getSubscription();
     if (pushSubscription) {
       console.log('[Push] 기존 구독 있음');
+    } else if ('Notification' in window && Notification.permission === 'granted') {
+      // 권한은 허용했지만 구독이 없는 경우 → 자동 재구독 시도 (배너 없이)
+      console.log('[Push] 권한 허용됨, 자동 재구독 시도');
+      try {
+        const vapidKey = await getVapidPublicKey();
+        if (vapidKey) {
+          pushSubscription = await swRegistration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(vapidKey)
+          });
+          await apiClient.request('/push/subscribe', {
+            method: 'POST',
+            body: JSON.stringify({
+              subscription: {
+                endpoint: pushSubscription.endpoint,
+                keys: {
+                  p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(pushSubscription.getKey('p256dh')))),
+                  auth: btoa(String.fromCharCode.apply(null, new Uint8Array(pushSubscription.getKey('auth'))))
+                }
+              }
+            })
+          });
+          console.log('[Push] 자동 재구독 완료');
+        }
+      } catch (resubErr) {
+        console.warn('[Push] 자동 재구독 실패:', resubErr);
+      }
     } else {
       console.log('[Push] 구독 없음');
       showPushSubscribeBanner();
@@ -40,10 +67,11 @@ async function initPush() {
 async function getVapidPublicKey() {
   try {
     const result = await apiClient.request('/push/vapid-key');
-    if (result.success && result.data && result.data.publicKey) {
-      return result.data.publicKey;
+    if (result.success && result.data) {
+      return result.data.vapidPublicKey || result.data.publicKey;
     }
     if (result.publicKey) return result.publicKey;
+    if (result.vapidPublicKey) return result.vapidPublicKey;
   } catch (err) {
     console.error('[Push] VAPID 키 조회 실패:', err);
   }

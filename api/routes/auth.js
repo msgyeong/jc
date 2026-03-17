@@ -291,11 +291,23 @@ router.get('/me', authenticate, async (req, res) => {
     }
 });
 
+// ── 비밀번호 재설정 본인확인 토큰 저장소 ──
+const crypto = require('crypto');
+const resetTokens = new Map(); // token → { userId, question, answer, attempts, expiresAt }
+
+// 만료된 토큰 정리 (5분마다)
+setInterval(() => {
+    const now = Date.now();
+    for (const [token, data] of resetTokens) {
+        if (now > data.expiresAt) resetTokens.delete(token);
+    }
+}, 5 * 60 * 1000);
+
 /**
- * POST /api/auth/reset-password
- * 비밀번호 재설정 (이메일 + 이름 확인 → 임시 비밀번호 발급)
+ * POST /api/auth/reset-password/verify
+ * 1단계: 이메일+이름 확인 → 본인확인 질문 반환
  */
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password/verify', async (req, res) => {
     try {
         const { email, name } = req.body;
 
@@ -306,32 +318,27 @@ router.post('/reset-password', async (req, res) => {
             });
         }
 
-        // 정규화: 소문자, 공백 제거, 유니코드 NFC
         const normalizedEmail = email.toLowerCase().trim().normalize('NFC');
-        // 이름: 공백 제거 + NFC 정규화
         const normalizedName = name.replace(/\s+/g, '').normalize('NFC');
 
-        // 이메일+이름 동시 조회 (DB 측에서도 공백 제거 비교)
         const result = await query(
-            "SELECT id, email, name, status FROM users WHERE LOWER(TRIM(email)) = $1 AND REPLACE(TRIM(name), ' ', '') = $2",
+            `SELECT id, email, name, status, phone, company, emergency_contact_name
+             FROM users
+             WHERE LOWER(TRIM(email)) = $1 AND REPLACE(TRIM(name), ' ', '') = $2`,
             [normalizedEmail, normalizedName]
         );
 
         if (result.rows.length === 0) {
-            // 이메일만으로 재조회하여 원인 분류
             const emailCheck = await query(
                 'SELECT id, name FROM users WHERE LOWER(TRIM(email)) = $1',
                 [normalizedEmail]
             );
             if (emailCheck.rows.length === 0) {
-                console.log('Reset-password: email not found -', normalizedEmail);
                 return res.status(404).json({
                     success: false,
                     message: '등록되지 않은 이메일입니다.\n이메일을 다시 확인해주세요.'
                 });
             } else {
-                console.log('Reset-password: name mismatch - email:', normalizedEmail,
-                    'input:', normalizedName, 'db:', emailCheck.rows[0].name);
                 return res.status(404).json({
                     success: false,
                     message: '이름이 일치하지 않습니다.\n가입 시 등록한 이름을 입력해주세요.'
@@ -348,7 +355,159 @@ router.post('/reset-password', async (req, res) => {
             });
         }
 
-        const crypto = require('crypto');
+        // 랜덤 질문 선택 (값이 있는 항목 중에서)
+        const questionPool = [];
+        if (user.phone && user.phone.replace(/[^0-9]/g, '').length >= 4) {
+            const digits = user.phone.replace(/[^0-9]/g, '');
+            questionPool.push({
+                type: 'phone_last4',
+                label: '등록한 전화번호 뒷 4자리를 입력하세요',
+                answer: digits.slice(-4)
+            });
+        }
+        if (user.company && user.company.trim()) {
+            questionPool.push({
+                type: 'company',
+                label: '등록한 회사명을 입력하세요',
+                answer: user.company.replace(/\s+/g, '').normalize('NFC')
+            });
+        }
+        if (user.emergency_contact_name && user.emergency_contact_name.trim()) {
+            questionPool.push({
+                type: 'emergency_name',
+                label: '등록한 비상연락처 이름을 입력하세요',
+                answer: user.emergency_contact_name.replace(/\s+/g, '').normalize('NFC')
+            });
+        }
+
+        // 질문이 없으면 전화번호 뒷자리라도 기본으로 (가입 시 필수이므로 거의 항상 있음)
+        if (questionPool.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: '본인확인에 필요한 정보가 부족합니다. 관리자에게 문의하세요.'
+            });
+        }
+
+        const selected = questionPool[Math.floor(Math.random() * questionPool.length)];
+
+        // 토큰 생성 (5분 만료, 3회 시도 제한)
+        const token = crypto.randomBytes(32).toString('hex');
+        resetTokens.set(token, {
+            userId: user.id,
+            question: selected.type,
+            answer: selected.answer,
+            attempts: 0,
+            expiresAt: Date.now() + 5 * 60 * 1000
+        });
+
+        res.json({
+            success: true,
+            data: {
+                token,
+                question: {
+                    type: selected.type,
+                    label: selected.label
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Reset password verify error:', error);
+        res.status(500).json({
+            success: false,
+            message: '본인확인 처리 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+/**
+ * POST /api/auth/reset-password
+ * 2단계: 생년월일 + 랜덤 질문 답변 확인 → 임시 비밀번호 발급
+ */
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { token, birthDate, answer } = req.body;
+
+        if (!token || !birthDate || !answer) {
+            return res.status(400).json({
+                success: false,
+                message: '모든 항목을 입력해주세요.'
+            });
+        }
+
+        // 토큰 검증
+        const tokenData = resetTokens.get(token);
+        if (!tokenData) {
+            return res.status(400).json({
+                success: false,
+                message: '인증이 만료되었습니다. 처음부터 다시 시도해주세요.',
+                code: 'TOKEN_EXPIRED'
+            });
+        }
+
+        if (Date.now() > tokenData.expiresAt) {
+            resetTokens.delete(token);
+            return res.status(400).json({
+                success: false,
+                message: '인증이 만료되었습니다. 처음부터 다시 시도해주세요.',
+                code: 'TOKEN_EXPIRED'
+            });
+        }
+
+        // 시도 횟수 확인
+        tokenData.attempts++;
+        if (tokenData.attempts > 3) {
+            resetTokens.delete(token);
+            return res.status(400).json({
+                success: false,
+                message: '입력 횟수를 초과했습니다. 처음부터 다시 시도해주세요.',
+                code: 'TOKEN_EXPIRED'
+            });
+        }
+
+        // 생년월일 확인 (SSN 앞 6자리)
+        const userResult = await query(
+            'SELECT ssn FROM users WHERE id = $1',
+            [tokenData.userId]
+        );
+
+        if (userResult.rows.length === 0) {
+            resetTokens.delete(token);
+            return res.status(404).json({ success: false, message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        const ssn = userResult.rows[0].ssn; // "XXXXXX-X" 형식
+        const ssnFront = ssn ? ssn.split('-')[0] : null;
+        const inputBirth = birthDate.replace(/[^0-9]/g, '');
+
+        if (!ssnFront || inputBirth !== ssnFront) {
+            const remaining = 3 - tokenData.attempts;
+            return res.status(400).json({
+                success: false,
+                message: `생년월일이 일치하지 않습니다. (${remaining}회 남음)`
+            });
+        }
+
+        // 랜덤 질문 답변 확인
+        const normalizedAnswer = answer.replace(/\s+/g, '').normalize('NFC');
+        let answerMatch = false;
+
+        if (tokenData.question === 'phone_last4') {
+            answerMatch = normalizedAnswer.replace(/[^0-9]/g, '') === tokenData.answer;
+        } else {
+            answerMatch = normalizedAnswer === tokenData.answer;
+        }
+
+        if (!answerMatch) {
+            const remaining = 3 - tokenData.attempts;
+            return res.status(400).json({
+                success: false,
+                message: `답변이 일치하지 않습니다. (${remaining}회 남음)`
+            });
+        }
+
+        // 본인확인 통과 → 임시 비밀번호 발급
+        resetTokens.delete(token);
+
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
         let tempPassword = '';
         const randomBytes = crypto.randomBytes(10);
@@ -357,10 +516,9 @@ router.post('/reset-password', async (req, res) => {
         }
 
         const passwordHash = await hashPassword(tempPassword);
-
         await query(
             'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
-            [passwordHash, user.id]
+            [passwordHash, tokenData.userId]
         );
 
         res.json({

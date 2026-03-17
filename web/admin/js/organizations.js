@@ -387,9 +387,14 @@ async function loadOrgMembers(orgId, el) {
     try {
         var res = await AdminAPI.get('/api/admin/members?limit=100');
         if (!res.success) throw new Error(res.message);
-        var members = res.members || (res.data && res.data.items) || [];
+        var allMembers = res.members || (res.data && res.data.items) || [];
+        // org_id 필터 + super_admin 제외
+        var members = allMembers.filter(function(m) {
+            if (m.role === 'super_admin') return false;
+            return m.org_id === orgId || (!m.org_id && orgId === 1);
+        });
         if (members.length === 0) {
-            el.innerHTML = '<div style="color:#9CA3AF;padding:24px;text-align:center">회원이 없습니다.</div>';
+            el.innerHTML = '<div style="color:#9CA3AF;padding:24px;text-align:center">이 로컬에 소속된 회원이 없습니다.</div>';
             return;
         }
         var html = '<div class="table-wrap"><table class="data-table"><thead><tr>' +
@@ -467,8 +472,12 @@ async function loadOrgAdmins(orgId, el) {
     try {
         var res = await AdminAPI.get('/api/admin/members?limit=100');
         if (!res.success) throw new Error(res.message);
-        var members = (res.data && res.data.items) || res.data || [];
-        var admins = members.filter(function(m) {
+        var allMembers = res.members || (res.data && res.data.items) || [];
+        // org_id 필터
+        var orgMembers = allMembers.filter(function(m) {
+            return m.org_id === orgId || (!m.org_id && orgId === 1);
+        });
+        var admins = orgMembers.filter(function(m) {
             return ['admin', 'local_admin', 'super_admin'].includes(m.role);
         });
 
@@ -506,9 +515,9 @@ async function searchAndAssignAdmin(orgId) {
     if (!el) return;
     el.innerHTML = '검색 중...';
     try {
-        var res = await AdminAPI.get('/api/members/search?q=' + encodeURIComponent(q));
+        var res = await AdminAPI.get('/api/admin/members?search=' + encodeURIComponent(q) + '&limit=20');
         if (!res.success) throw new Error(res.message);
-        var members = res.data || res.members || [];
+        var members = res.members || (res.data && res.data.items) || [];
         if (members.length === 0) {
             el.innerHTML = '<div style="color:#9CA3AF">검색 결과 없음</div>';
             return;

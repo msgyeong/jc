@@ -23,6 +23,7 @@ async function loadMeetingsScreen() {
                     <option value="regular">정기회의</option>
                     <option value="board">이사회</option>
                     <option value="general_assembly">정기총회</option>
+                    <option value="extraordinary">임시총회</option>
                 </select>
                 <input type="datetime-local" id="new-meeting-date" style="padding:10px;border:1px solid var(--border-color);border-radius:8px">
                 <input type="text" id="new-meeting-location" placeholder="장소" style="padding:10px;border:1px solid var(--border-color);border-radius:8px">
@@ -43,7 +44,7 @@ async function loadMeetingsScreen() {
             const statusLabel = { scheduled: '예정', in_progress: '진행 중', completed: '완료', cancelled: '취소' }[m.status] || m.status;
             const statusClass = m.status === 'in_progress' ? 'badge-active' : m.status === 'completed' ? 'badge-done' : '';
             const dateStr = m.meeting_date ? formatDate(m.meeting_date) : '';
-            const typeLabel = { regular: '정기회의', board: '이사회', general_assembly: '정기총회' }[m.meeting_type] || m.meeting_type;
+            const typeLabel = { regular: '정기회의', board: '이사회', general_assembly: '정기총회', extraordinary: '임시총회' }[m.meeting_type] || m.meeting_type;
 
             return `<div class="meeting-card" onclick="showMeetingDetail(${m.id})">
                 <div class="meeting-card-header">
@@ -73,7 +74,7 @@ async function showMeetingDetail(meetingId) {
         if (!res.success) throw new Error(res.message);
         const m = res.data;
 
-        const typeLabel = { regular: '정기회의', board: '이사회', general_assembly: '정기총회' }[m.meeting_type] || m.meeting_type;
+        const typeLabel = { regular: '정기회의', board: '이사회', general_assembly: '정기총회', extraordinary: '임시총회' }[m.meeting_type] || m.meeting_type;
         const statusLabel = { scheduled: '예정', in_progress: '진행 중', completed: '완료', cancelled: '취소' }[m.status] || m.status;
 
         var userInfo = typeof getCurrentUser === 'function' ? getCurrentUser() : JSON.parse(localStorage.getItem('user_info') || 'null');

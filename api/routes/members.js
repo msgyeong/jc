@@ -33,7 +33,7 @@ router.get('/', authenticate, async (req, res) => {
         const offset = (page - 1) * limit;
         const industry = req.query.industry;
 
-        const conditions = ["u.status = 'active'"];
+        const conditions = ["u.status = 'active'", "u.role != 'super_admin'"];
         const params = [limit, offset, req.user.userId];
 
         if (industry && VALID_INDUSTRY_CODES.includes(industry)) {
@@ -44,7 +44,7 @@ router.get('/', authenticate, async (req, res) => {
         const whereClause = conditions.join(' AND ');
 
         const countParams = [];
-        const countConditions = ["status = 'active'"];
+        const countConditions = ["status = 'active'", "role != 'super_admin'"];
         if (industry && VALID_INDUSTRY_CODES.includes(industry)) {
             countParams.push(industry);
             countConditions.push(`industry = $${countParams.length}`);

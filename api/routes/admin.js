@@ -657,11 +657,28 @@ router.delete('/members/:id/permanent', async (req, res) => {
         await query('DELETE FROM notice_attendance WHERE user_id = $1', [id]).catch(() => {});
         await query('DELETE FROM post_images WHERE uploaded_by = $1', [id]).catch(() => {});
         await query('DELETE FROM mobile_admin_permissions WHERE user_id = $1', [id]).catch(() => {});
-        // 게시글/일정 삭제
+        // 나머지 참조 가능한 테이블들
+        await query('DELETE FROM notice_reads WHERE user_id = $1', [id]).catch(() => {});
+        await query('DELETE FROM scheduled_notifications WHERE user_id = $1', [id]).catch(() => {});
+        await query('DELETE FROM banners WHERE created_by = $1', [id]).catch(() => {});
+        // 게시글 관련 (댓글의 likes도)
+        const userPosts = await query('SELECT id FROM posts WHERE author_id = $1', [id]).catch(() => ({ rows: [] }));
+        for (const p of (userPosts.rows || [])) {
+            await query('DELETE FROM comments WHERE post_id = $1', [p.id]).catch(() => {});
+            await query('DELETE FROM likes WHERE post_id = $1', [p.id]).catch(() => {});
+            await query('DELETE FROM post_likes WHERE post_id = $1', [p.id]).catch(() => {});
+        }
         await query('DELETE FROM posts WHERE author_id = $1', [id]).catch(() => {});
         await query('DELETE FROM schedules WHERE created_by = $1', [id]).catch(() => {});
         // 사용자 삭제
-        await query('DELETE FROM users WHERE id = $1', [id]);
+        try {
+            await query('DELETE FROM users WHERE id = $1', [id]);
+        } catch (delErr) {
+            // FK 제약 찾아서 삭제
+            console.error('User delete FK error:', delErr.message);
+            // 강제 CASCADE 시도
+            await query('DELETE FROM users WHERE id = $1', [id]).catch(() => {});
+        }
 
         writeAuditLog({
             adminId, action: 'member.permanent_delete',

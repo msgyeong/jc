@@ -36,7 +36,7 @@ async function loadDashboardStats() {
                     <div class="stat-label">전체 회원</div>
                 </div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card stat-card-clickable" onclick="membersState.status='pending';membersState.page=1;navigateAdmin('members')" title="승인 대기 회원 목록 보기">
                 <div class="stat-icon yellow">
                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 </div>

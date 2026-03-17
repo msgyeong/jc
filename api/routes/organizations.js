@@ -30,6 +30,21 @@ router.get('/public', async (req, res) => {
 });
 
 /* ======================================================
+   POST /api/organizations/fix-mapping
+   기존 회원 org_id 매핑 (super_admin)
+   ====================================================== */
+router.post('/fix-mapping', authenticate, requireRole(['super_admin']), async (req, res) => {
+    try {
+        const result = await query(
+            "UPDATE users SET org_id = (SELECT id FROM organizations WHERE code = 'yeongdeungpo') WHERE org_id IS NULL"
+        );
+        return res.json({ success: true, data: { updated: result.rowCount } });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/* ======================================================
    GET /api/organizations
    전체 조직 목록 (인증 필요)
    ====================================================== */
@@ -363,7 +378,8 @@ router.post('/:id/assign-admin', authenticate, requireRole(['super_admin']), asy
         console.error('관리자 지정 오류:', error);
         return res.status(500).json({
             success: false,
-            error: '관리자 지정 중 오류가 발생했습니다.'
+            error: '관리자 지정 중 오류가 발생했습니다.',
+            detail: error.message
         });
     }
 });

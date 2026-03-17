@@ -506,32 +506,94 @@ router.post('/reset-password', async (req, res) => {
             });
         }
 
-        // 본인확인 통과 → 임시 비밀번호 발급
-        resetTokens.delete(token);
-
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-        let tempPassword = '';
-        const randomBytes = crypto.randomBytes(10);
-        for (let i = 0; i < 10; i++) {
-            tempPassword += chars.charAt(randomBytes[i] % chars.length);
-        }
-
-        const passwordHash = await hashPassword(tempPassword);
-        await query(
-            'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
-            [passwordHash, tokenData.userId]
-        );
+        // 본인확인 통과 → 토큰을 verified 상태로 전환 (새 비밀번호 입력 대기)
+        tokenData.verified = true;
+        tokenData.expiresAt = Date.now() + 5 * 60 * 1000; // 5분 연장
 
         res.json({
             success: true,
-            message: '임시 비밀번호가 발급되었습니다. 로그인 후 비밀번호를 변경해주세요.',
-            tempPassword
+            message: '본인확인이 완료되었습니다. 새 비밀번호를 입력해주세요.'
         });
     } catch (error) {
         console.error('Reset password error:', error);
         res.status(500).json({
             success: false,
             message: '비밀번호 재설정 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+/**
+ * POST /api/auth/reset-password/set
+ * 3단계: 본인확인 완료 후 새 비밀번호 설정
+ */
+router.post('/reset-password/set', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: '새 비밀번호를 입력해주세요.'
+            });
+        }
+
+        // 토큰 검증
+        const tokenData = resetTokens.get(token);
+        if (!tokenData) {
+            return res.status(400).json({
+                success: false,
+                message: '인증이 만료되었습니다. 처음부터 다시 시도해주세요.',
+                code: 'TOKEN_EXPIRED'
+            });
+        }
+
+        if (Date.now() > tokenData.expiresAt) {
+            resetTokens.delete(token);
+            return res.status(400).json({
+                success: false,
+                message: '인증이 만료되었습니다. 처음부터 다시 시도해주세요.',
+                code: 'TOKEN_EXPIRED'
+            });
+        }
+
+        if (!tokenData.verified) {
+            return res.status(400).json({
+                success: false,
+                message: '본인확인이 완료되지 않았습니다.',
+                code: 'TOKEN_EXPIRED'
+            });
+        }
+
+        // 비밀번호 유효성 검사
+        if (newPassword.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: '비밀번호는 8자 이상이어야 합니다.'
+            });
+        }
+
+        // 비밀번호 해싱 및 저장
+        const bcrypt = require('bcrypt');
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await query(
+            'UPDATE users SET password_hash = $1 WHERE id = $2',
+            [hashedPassword, tokenData.userId]
+        );
+
+        // 토큰 삭제
+        resetTokens.delete(token);
+
+        res.json({
+            success: true,
+            message: '비밀번호가 성공적으로 변경되었습니다.'
+        });
+    } catch (error) {
+        console.error('Reset password set error:', error);
+        res.status(500).json({
+            success: false,
+            message: '비밀번호 변경 중 오류가 발생했습니다.'
         });
     }
 });

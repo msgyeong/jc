@@ -172,9 +172,40 @@ app.listen(PORT, () => {
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS website VARCHAR(500)").catch(() => {});
     dbQuery("ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_banner BOOLEAN DEFAULT false").catch(() => {});
     // 회의 테이블
-    const fs = require('fs');
-    const meetingsMigration = fs.readFileSync(require('path').join(__dirname, '../database/migrations/023_meetings.sql'), 'utf8');
-    meetingsMigration.split(';').filter(s => s.trim()).forEach(stmt => dbQuery(stmt).catch(() => {}));
+    dbQuery(`CREATE TABLE IF NOT EXISTS meetings (
+        id SERIAL PRIMARY KEY, title VARCHAR(200) NOT NULL, description TEXT,
+        meeting_type VARCHAR(50) DEFAULT 'regular', meeting_date TIMESTAMP NOT NULL,
+        location VARCHAR(200), status VARCHAR(20) DEFAULT 'scheduled',
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
+    )`).catch(() => {});
+    dbQuery(`CREATE TABLE IF NOT EXISTS meeting_attendance (
+        id SERIAL PRIMARY KEY, meeting_id INTEGER REFERENCES meetings(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        status VARCHAR(20) DEFAULT 'pending', checked_in_at TIMESTAMP,
+        UNIQUE(meeting_id, user_id)
+    )`).catch(() => {});
+    dbQuery(`CREATE TABLE IF NOT EXISTS meeting_votes (
+        id SERIAL PRIMARY KEY, meeting_id INTEGER REFERENCES meetings(id) ON DELETE CASCADE,
+        title VARCHAR(200) NOT NULL, description TEXT,
+        vote_type VARCHAR(20) DEFAULT 'yesno',
+        options JSONB DEFAULT '["찬성","반대","기권"]',
+        status VARCHAR(20) DEFAULT 'open',
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW(), closed_at TIMESTAMP
+    )`).catch(() => {});
+    dbQuery(`CREATE TABLE IF NOT EXISTS meeting_vote_responses (
+        id SERIAL PRIMARY KEY, vote_id INTEGER REFERENCES meeting_votes(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        selected_option VARCHAR(100) NOT NULL, voted_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(vote_id, user_id)
+    )`).catch(() => {});
+    dbQuery(`CREATE TABLE IF NOT EXISTS meeting_minutes (
+        id SERIAL PRIMARY KEY, meeting_id INTEGER REFERENCES meetings(id) ON DELETE CASCADE,
+        title VARCHAR(200), file_data BYTEA NOT NULL, file_name VARCHAR(200),
+        file_size INTEGER, mime_type VARCHAR(100) DEFAULT 'application/pdf',
+        uploaded_by INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW()
+    )`).catch(() => {});
 
     // 리마인더 cron 시작
     startReminderCron();

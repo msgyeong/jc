@@ -324,7 +324,15 @@ async function switchTab(tab) {
                 await loadProfile();
             }
             break;
-            
+
+        case 'meetings':
+            targetScreen = document.getElementById('meetings-screen');
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+                if (typeof loadMeetingsScreen === 'function') loadMeetingsScreen();
+            }
+            break;
+
         default:
             console.error('알 수 없는 탭:', tab);
     }
@@ -500,4 +508,22 @@ function confirmExit() {
         localStorage.removeItem('user_info');
         navigateToScreen('login');
     }
+}
+
+// ── 사이드 메뉴 (햄버거) ──
+function openSideMenu() {
+    document.getElementById('side-menu').classList.add('open');
+    document.getElementById('side-menu-overlay').classList.add('open');
+    var user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    var profileEl = document.getElementById('side-menu-profile');
+    if (profileEl && user) {
+        profileEl.innerHTML = '<div style="width:36px;height:36px;border-radius:50%;background:#DBEAFE;display:flex;align-items:center;justify-content:center;font-weight:600;color:#1E3A5F">'
+            + escapeHtml((user.name || '?')[0]) + '</div>'
+            + '<div><div style="font-weight:600;font-size:14px">' + escapeHtml(user.name || '') + '</div>'
+            + '<div style="font-size:12px;color:#6B7280">' + escapeHtml(user.email || '') + '</div></div>';
+    }
+}
+function closeSideMenu() {
+    document.getElementById('side-menu').classList.remove('open');
+    document.getElementById('side-menu-overlay').classList.remove('open');
 }

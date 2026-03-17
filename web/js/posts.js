@@ -180,12 +180,14 @@ function updateCreatePostBtnVisibility() {
 // ── 이미지 유틸 ──
 // PostgreSQL TEXT[] → JS 배열 안전 파싱
 function parseImageArray(val) {
-    if (Array.isArray(val)) return val.filter(u => u && typeof u === 'string' && u.trim());
+    if (!val) return [];
+    if (Array.isArray(val)) return val.filter(u => u && typeof u === 'string' && u.trim().length > 0 && u !== 'null' && u !== 'undefined');
     if (typeof val === 'string') {
+        if (val === '{}' || val === '[]' || val === 'null') return [];
         // PostgreSQL TEXT[] 리터럴: {url1,url2,...}
         var m = val.match(/^\{(.+)\}$/);
-        if (m) return m[1].split(',').map(s => s.replace(/^"|"$/g, '').trim()).filter(Boolean);
-        try { var parsed = JSON.parse(val); if (Array.isArray(parsed)) return parsed.filter(Boolean); } catch(_) {}
+        if (m) return m[1].split(',').map(s => s.replace(/^"|"$/g, '').trim()).filter(s => s && s.length > 0);
+        try { var parsed = JSON.parse(val); if (Array.isArray(parsed)) return parsed.filter(s => s && typeof s === 'string' && s.trim()); } catch(_) {}
     }
     return [];
 }

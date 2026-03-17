@@ -21,6 +21,7 @@ const industriesRoutes = require('./routes/industries');
 const { notificationsRouter, pushRouter } = require('./routes/notifications');
 const settingsRoutes = require('./routes/settings');
 const mobileAdminRoutes = require('./routes/mobile-admin');
+const meetingsRoutes = require('./routes/meetings');
 const { startReminderCron } = require('./utils/reminderCron');
 const { startNotificationScheduler } = require('./cron/notification-scheduler');
 
@@ -115,6 +116,7 @@ app.use('/api/push', pushRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/mobile-admin', mobileAdminRoutes);
+app.use('/api/meetings', meetingsRoutes);
 app.use('/api/admin-app', mobileAdminRoutes);
 
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)
@@ -169,6 +171,10 @@ app.listen(PORT, () => {
     const { query: dbQuery } = require('./config/database');
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS website VARCHAR(500)").catch(() => {});
     dbQuery("ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_banner BOOLEAN DEFAULT false").catch(() => {});
+    // 회의 테이블
+    const fs = require('fs');
+    const meetingsMigration = fs.readFileSync(require('path').join(__dirname, '../database/migrations/023_meetings.sql'), 'utf8');
+    meetingsMigration.split(';').filter(s => s.trim()).forEach(stmt => dbQuery(stmt).catch(() => {}));
 
     // 리마인더 cron 시작
     startReminderCron();

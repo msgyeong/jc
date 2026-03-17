@@ -652,7 +652,7 @@ function renderPostDetail(post) {
         ? currentUser
         : JSON.parse(localStorage.getItem('user_info') || 'null');
     const userId = userInfo ? userInfo.id : null;
-    const isAdmin = userInfo && ['admin', 'super_admin'].includes(userInfo.role);
+    const isAdmin = userInfo && ['admin', 'super_admin', 'local_admin'].includes(userInfo.role);
     const isAuthor = userId && String(post.author_id) === String(userId);
     const canEdit = isAuthor || isAdmin;
     const hasPostManage = typeof hasMobilePermission === 'function' && hasMobilePermission('post_manage');

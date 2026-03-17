@@ -113,6 +113,9 @@ async function handleSignup(event) {
     setButtonLoading(signupButton, true);
     
     try {
+        // 소속 로컬
+        const org_id = document.getElementById('signup-org')?.value || '';
+
         // Step 1: 로그인 정보
         const email = document.getElementById('signup-email').value.trim().toLowerCase();
         const password = document.getElementById('signup-password').value;
@@ -202,6 +205,8 @@ async function handleSignup(event) {
         const join_message = document.getElementById('signup-join-message').value.trim();
         
         const userData = {
+            // 소속 로컬
+            org_id: org_id ? parseInt(org_id) : undefined,
             // Step 1
             email,
             password,
@@ -560,5 +565,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// 소속 로컬 목록 로드
+async function loadOrgList() {
+    var sel = document.getElementById('signup-org');
+    if (!sel) return;
+    try {
+        var res = await fetch('/api/organizations/public');
+        var data = await res.json();
+        if (data.success && data.data) {
+            data.data.forEach(function(org) {
+                var opt = document.createElement('option');
+                opt.value = org.id;
+                opt.textContent = org.name + (org.district ? ' (' + org.district + ')' : '');
+                sel.appendChild(opt);
+            });
+            // 로컬이 1개면 자동 선택
+            if (data.data.length === 1) {
+                sel.value = data.data[0].id;
+            }
+        }
+    } catch (e) {
+        console.error('로컬 목록 로드 실패:', e);
+    }
+}
+loadOrgList();
 
 console.log('✅ Signup 모듈 로드 완료 (Railway API)');

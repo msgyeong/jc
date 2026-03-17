@@ -22,6 +22,7 @@ const { notificationsRouter, pushRouter } = require('./routes/notifications');
 const settingsRoutes = require('./routes/settings');
 const mobileAdminRoutes = require('./routes/mobile-admin');
 const meetingsRoutes = require('./routes/meetings');
+const organizationsRoutes = require('./routes/organizations');
 const { startReminderCron } = require('./utils/reminderCron');
 const { startNotificationScheduler } = require('./cron/notification-scheduler');
 
@@ -117,6 +118,7 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/mobile-admin', mobileAdminRoutes);
 app.use('/api/meetings', meetingsRoutes);
+app.use('/api/organizations', organizationsRoutes);
 app.use('/api/admin-app', mobileAdminRoutes);
 
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)

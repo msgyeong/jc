@@ -136,6 +136,9 @@ function navigateToScreen(screenName) {
             if (typeof renderSettingsScreen === 'function') {
                 renderSettingsScreen();
             }
+        } else if (screenName === 'admin-manage') {
+            // local_admin management screen
+            if (typeof initLocalAdmin === 'function') initLocalAdmin();
         }
 
         // history.pushState for back navigation (로그인 전 화면은 제외)
@@ -472,6 +475,8 @@ window.addEventListener('popstate', function(e) {
             showPostManageScreen();
         } else if (state.screen === 'schedule-manage' && typeof showScheduleManageScreen === 'function') {
             showScheduleManageScreen();
+        } else if (state.screen === 'admin-manage' && typeof initLocalAdmin === 'function') {
+            navigateToScreen('admin-manage');
         } else {
             navigateToScreen(state.screen);
         }
@@ -522,6 +527,11 @@ function openSideMenu() {
         overlay.classList.add('open');
     });
     var user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    // 로컬 관리 메뉴 표시/숨김
+    var adminLink = document.getElementById('side-menu-admin');
+    if (adminLink) {
+        adminLink.style.display = (user && ['admin', 'super_admin', 'local_admin'].includes(user.role)) || window.__hasAnyPermission ? 'flex' : 'none';
+    }
     var profileEl = document.getElementById('side-menu-profile');
     if (profileEl && user) {
         profileEl.innerHTML = '<div style="width:36px;height:36px;border-radius:50%;background:#DBEAFE;display:flex;align-items:center;justify-content:center;font-weight:600;color:#1E3A5F">'

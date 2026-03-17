@@ -89,6 +89,48 @@ router.post('/members/:id/reject', requireMobilePermission('member_approve'), as
 });
 
 /* ======================================================
+   PUT /members/:id/role
+   회원 역할 변경 (member_approve 권한)
+   local_admin은 member/local_admin만 할당 가능
+   ====================================================== */
+router.put('/members/:id/role', requireMobilePermission('member_approve'), async (req, res) => {
+    try {
+        const memberId = parseInt(req.params.id);
+        const { role } = req.body;
+        const callerRole = req.user.role;
+
+        // 허용 역할 목록 — local_admin은 member/local_admin만, admin/super_admin은 추가로 admin 가능
+        const allowedRoles = ['member', 'local_admin'];
+        if (callerRole === 'admin' || callerRole === 'super_admin') {
+            allowedRoles.push('admin');
+        }
+
+        if (!role || !allowedRoles.includes(role)) {
+            return res.status(400).json({ success: false, message: '허용되지 않는 역할입니다.' });
+        }
+
+        // 대상 회원의 현재 역할 확인 — admin/super_admin은 변경 불가
+        const current = await query('SELECT role FROM users WHERE id = $1', [memberId]);
+        if (current.rows.length === 0) {
+            return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
+        }
+        if (['admin', 'super_admin'].includes(current.rows[0].role) && callerRole !== 'super_admin') {
+            return res.status(403).json({ success: false, message: '상위 관리자의 역할은 변경할 수 없습니다.' });
+        }
+
+        const result = await query(
+            `UPDATE users SET role = $2, updated_at = NOW() WHERE id = $1 RETURNING id, name, role`,
+            [memberId, role]
+        );
+
+        res.json({ success: true, data: result.rows[0] });
+    } catch (err) {
+        console.error('Change member role error:', err);
+        res.status(500).json({ success: false, message: '역할 변경 중 오류가 발생했습니다.' });
+    }
+});
+
+/* ======================================================
    DELETE /posts/bulk  ← bulk 라우트를 :id 라우트보다 먼저 정의
    게시글 일괄 삭제 (post_manage 권한)
    FK CASCADE로 comments, likes, post_reads, post_attendance 등 자동 삭제

@@ -6565,3 +6565,134 @@ input[type="date"]:focus {
     padding: 12px; border: 1px solid var(--border-color);
     border-radius: 8px; margin-bottom: 8px;
 }
+
+/* ══════════════════════════════════════ */
+/* 로컬 관리 화면 스타일                   */
+/* ══════════════════════════════════════ */
+
+.local-admin-section {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.local-admin-section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1E3A5F;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.local-admin-badge {
+    display: none;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #DC2626;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    line-height: 20px;
+    text-align: center;
+}
+
+.local-admin-pending-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.local-admin-pending-card:last-child {
+    border-bottom: none;
+}
+
+.local-admin-pending-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.local-admin-pending-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.local-admin-pending-meta {
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-top: 2px;
+}
+
+.local-admin-pending-actions {
+    display: flex;
+    gap: 6px;
+    margin-left: 12px;
+    flex-shrink: 0;
+}
+
+.local-admin-member-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.local-admin-member-card:last-child {
+    border-bottom: none;
+}
+
+.local-admin-member-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.local-admin-member-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.local-admin-member-meta {
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.local-admin-member-actions {
+    margin-left: 12px;
+    flex-shrink: 0;
+}
+
+.local-admin-role-select {
+    padding: 4px 8px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #374151;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+}
+
+.local-admin-role-select:focus {
+    border-color: #1F4FD8;
+    box-shadow: 0 0 0 2px rgba(31,79,216,0.15);
+}

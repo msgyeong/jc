@@ -1000,4 +1000,244 @@ function handleScheduleManageBack() {
     showAdminHub();
 }
 
-console.log('✅ Admin-App 모듈 로드 완료');
+// ══════════════════════════════════════
+// 로컬 관리 (initLocalAdmin) — 사이드 메뉴 "로컬 관리"
+// local_admin / admin / super_admin 접근 가능
+// ══════════════════════════════════════
+
+function initLocalAdmin() {
+    var container = document.getElementById('admin-manage-content');
+    if (!container) return;
+    container.innerHTML = '<div class="content-loading">로딩 중...</div>';
+    renderLocalAdminDashboard(container);
+}
+
+async function renderLocalAdminDashboard(container) {
+    var html = '<div style="padding:16px;display:flex;flex-direction:column;gap:16px">';
+
+    // 승인 대기 섹션
+    html += '<div class="local-admin-section">'
+        + '<div class="local-admin-section-title">'
+        + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>'
+        + ' 승인 대기 회원'
+        + '<span class="local-admin-badge" id="local-admin-pending-badge"></span>'
+        + '</div>'
+        + '<div id="local-admin-pending-list"><div style="padding:12px;text-align:center;color:#9CA3AF;font-size:13px">로딩 중...</div></div>'
+        + '</div>';
+
+    // 회원 목록 섹션
+    html += '<div class="local-admin-section">'
+        + '<div class="local-admin-section-title">'
+        + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
+        + ' 회원 목록'
+        + '</div>'
+        + '<div id="local-admin-member-list"><div style="padding:12px;text-align:center;color:#9CA3AF;font-size:13px">로딩 중...</div></div>'
+        + '</div>';
+
+    html += '</div>';
+    container.innerHTML = html;
+
+    // 데이터 로드
+    loadLocalAdminPending();
+    loadLocalAdminMembers();
+}
+
+async function loadLocalAdminPending() {
+    var listEl = document.getElementById('local-admin-pending-list');
+    var badgeEl = document.getElementById('local-admin-pending-badge');
+    if (!listEl) return;
+
+    try {
+        var res = await apiClient.request('/mobile-admin/pending-members');
+        if (!res.success) throw new Error(res.message || '조회 실패');
+
+        var items = (res.data && res.data.items) || [];
+
+        if (badgeEl) {
+            if (items.length > 0) {
+                badgeEl.textContent = items.length;
+                badgeEl.style.display = 'inline-flex';
+            } else {
+                badgeEl.style.display = 'none';
+            }
+        }
+
+        if (items.length === 0) {
+            listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#9CA3AF;font-size:13px">'
+                + '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5" style="margin:0 auto 8px"><circle cx="12" cy="12" r="10"/><path d="M8 15h8"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="9" r="1"/></svg>'
+                + '<div>대기 중인 회원이 없습니다.</div></div>';
+            return;
+        }
+
+        listEl.innerHTML = items.map(function(m) {
+            return '<div class="local-admin-pending-card" id="la-pending-' + m.id + '">'
+                + '<div class="local-admin-pending-info">'
+                + '<div class="local-admin-pending-name">' + escapeHtml(m.name) + '</div>'
+                + '<div class="local-admin-pending-meta">' + escapeHtml(m.email || '') + '</div>'
+                + (m.phone ? '<div class="local-admin-pending-meta">' + escapeHtml(m.phone) + '</div>' : '')
+                + '<div class="local-admin-pending-meta">신청일: ' + formatDate(m.created_at) + '</div>'
+                + '</div>'
+                + '<div class="local-admin-pending-actions">'
+                + '<button class="btn-admin-reject" onclick="localAdminReject(' + m.id + ', \'' + escapeHtml(m.name).replace(/'/g, "\\'") + '\')">거부</button>'
+                + '<button class="btn-admin-approve" onclick="localAdminApprove(' + m.id + ', \'' + escapeHtml(m.name).replace(/'/g, "\\'") + '\')">승인</button>'
+                + '</div>'
+                + '</div>';
+        }).join('');
+    } catch (err) {
+        listEl.innerHTML = '<div style="padding:12px;color:#EF4444;font-size:13px">승인 대기 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
+    }
+}
+
+async function localAdminApprove(memberId, name) {
+    if (!confirm(name + '님의 가입을 승인할까요?')) return;
+    try {
+        var res = await apiClient.request('/mobile-admin/members/' + memberId + '/approve', { method: 'POST' });
+        if (res.success) {
+            showToast(name + '님의 가입이 승인되었습니다.', 'success');
+            loadLocalAdminPending();
+            loadLocalAdminMembers();
+        } else {
+            showToast(res.message || '승인 실패', 'error');
+        }
+    } catch (err) {
+        showToast(err.message || '승인 중 오류', 'error');
+    }
+}
+
+function localAdminReject(memberId, name) {
+    var overlay = document.createElement('div');
+    overlay.className = 'admin-modal-overlay';
+    overlay.innerHTML = '<div class="admin-modal">'
+        + '<div class="admin-modal-title">가입 거부</div>'
+        + '<p style="color:#6B7280;font-size:14px;margin-bottom:12px">' + escapeHtml(name) + '님의 가입을 거부합니다.</p>'
+        + '<div class="form-group">'
+        + '<label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;display:block">거부 사유 (필수)</label>'
+        + '<textarea id="la-reject-reason" rows="3" placeholder="거부 사유를 입력하세요" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;resize:vertical"></textarea>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">'
+        + '<button class="btn btn-secondary btn-sm" onclick="this.closest(\'.admin-modal-overlay\').remove()">취소</button>'
+        + '<button class="btn-admin-reject" style="padding:8px 20px;font-size:14px" onclick="confirmLocalAdminReject(' + memberId + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\', this)">거부 확인</button>'
+        + '</div>'
+        + '</div>';
+    document.body.appendChild(overlay);
+    setTimeout(function() {
+        var input = document.getElementById('la-reject-reason');
+        if (input) input.focus();
+    }, 100);
+}
+
+async function confirmLocalAdminReject(memberId, name, btnEl) {
+    var reason = (document.getElementById('la-reject-reason') || {}).value;
+    if (!reason || !reason.trim()) {
+        showToast('거부 사유를 입력하세요.', 'error');
+        return;
+    }
+    btnEl.disabled = true;
+    btnEl.textContent = '처리 중...';
+    try {
+        var res = await apiClient.request('/mobile-admin/members/' + memberId + '/reject', {
+            method: 'POST',
+            body: JSON.stringify({ reason: reason.trim() })
+        });
+        if (res.success) {
+            showToast(name + '님의 가입이 거부되었습니다.');
+            var overlay = btnEl.closest('.admin-modal-overlay');
+            if (overlay) overlay.remove();
+            loadLocalAdminPending();
+        } else {
+            showToast(res.message || '거부 실패', 'error');
+            btnEl.disabled = false;
+            btnEl.textContent = '거부 확인';
+        }
+    } catch (err) {
+        showToast(err.message || '거부 중 오류', 'error');
+        btnEl.disabled = false;
+        btnEl.textContent = '거부 확인';
+    }
+}
+
+async function loadLocalAdminMembers() {
+    var listEl = document.getElementById('local-admin-member-list');
+    if (!listEl) return;
+
+    try {
+        var res = await apiClient.request('/members?limit=100');
+        if (!res.success) throw new Error(res.message || '조회 실패');
+
+        var items = (res.data && res.data.members) || (res.data && res.data.items) || [];
+
+        if (items.length === 0) {
+            listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#9CA3AF;font-size:13px">회원이 없습니다.</div>';
+            return;
+        }
+
+        var roleBadgeMap = {
+            'super_admin': { label: '최고관리자', bg: '#FEE2E2', color: '#DC2626' },
+            'admin': { label: '관리자', bg: '#DBEAFE', color: '#1D4ED8' },
+            'local_admin': { label: '중간관리자', bg: '#D1FAE5', color: '#059669' },
+            'member': { label: '회원', bg: '#F3F4F6', color: '#6B7280' }
+        };
+
+        listEl.innerHTML = items.map(function(m) {
+            var role = m.role || 'member';
+            var badge = roleBadgeMap[role] || roleBadgeMap['member'];
+            var canChangeRole = (role !== 'admin' && role !== 'super_admin');
+
+            return '<div class="local-admin-member-card">'
+                + '<div class="local-admin-member-info">'
+                + '<div class="local-admin-member-name">'
+                + escapeHtml(m.name)
+                + ' <span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;background:' + badge.bg + ';color:' + badge.color + '">' + badge.label + '</span>'
+                + '</div>'
+                + '<div class="local-admin-member-meta">'
+                + (m.position_name ? escapeHtml(m.position_name) + ' · ' : '')
+                + escapeHtml(m.email || '')
+                + '</div>'
+                + '</div>'
+                + (canChangeRole ? '<div class="local-admin-member-actions">'
+                    + '<select class="local-admin-role-select" onchange="localAdminChangeRole(' + m.id + ', this.value, \'' + escapeHtml(m.name).replace(/'/g, "\\'") + '\')">'
+                    + '<option value="member"' + (role === 'member' ? ' selected' : '') + '>회원</option>'
+                    + '<option value="local_admin"' + (role === 'local_admin' ? ' selected' : '') + '>중간관리자</option>'
+                    + '</select>'
+                    + '</div>' : '')
+                + '</div>';
+        }).join('');
+    } catch (err) {
+        listEl.innerHTML = '<div style="padding:12px;color:#EF4444;font-size:13px">회원 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
+    }
+}
+
+async function localAdminChangeRole(memberId, newRole, name) {
+    // local_admin은 member / local_admin만 할당 가능
+    if (newRole !== 'member' && newRole !== 'local_admin') {
+        showToast('해당 역할은 할당할 수 없습니다.', 'error');
+        loadLocalAdminMembers();
+        return;
+    }
+    if (!confirm(name + '님의 역할을 "' + (newRole === 'local_admin' ? '중간관리자' : '회원') + '"(으)로 변경할까요?')) {
+        loadLocalAdminMembers();
+        return;
+    }
+    try {
+        var res = await apiClient.request('/mobile-admin/members/' + memberId + '/role', {
+            method: 'PUT',
+            body: JSON.stringify({ role: newRole })
+        });
+        if (res.success) {
+            showToast(name + '님의 역할이 변경되었습니다.', 'success');
+            loadLocalAdminMembers();
+        } else {
+            showToast(res.message || '역할 변경 실패', 'error');
+            loadLocalAdminMembers();
+        }
+    } catch (err) {
+        showToast(err.message || '역할 변경 중 오류', 'error');
+        loadLocalAdminMembers();
+    }
+}
+
+function handleAdminManageBack() {
+    switchTab('home');
+}
+
+console.log('Admin-App module loaded');

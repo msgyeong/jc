@@ -512,8 +512,15 @@ function confirmExit() {
 
 // ── 사이드 메뉴 (햄버거) ──
 function openSideMenu() {
-    document.getElementById('side-menu').classList.add('open');
-    document.getElementById('side-menu-overlay').classList.add('open');
+    var menu = document.getElementById('side-menu');
+    var overlay = document.getElementById('side-menu-overlay');
+    menu.style.display = 'flex';
+    overlay.style.display = 'block';
+    // 한 프레임 후 transition 적용
+    requestAnimationFrame(function() {
+        menu.classList.add('open');
+        overlay.classList.add('open');
+    });
     var user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
     var profileEl = document.getElementById('side-menu-profile');
     if (profileEl && user) {
@@ -524,6 +531,12 @@ function openSideMenu() {
     }
 }
 function closeSideMenu() {
-    document.getElementById('side-menu').classList.remove('open');
-    document.getElementById('side-menu-overlay').classList.remove('open');
+    var menu = document.getElementById('side-menu');
+    var overlay = document.getElementById('side-menu-overlay');
+    menu.classList.remove('open');
+    overlay.classList.remove('open');
+    setTimeout(function() {
+        menu.style.display = 'none';
+        overlay.style.display = 'none';
+    }, 300); // transition 끝난 후 숨김
 }

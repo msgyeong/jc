@@ -246,12 +246,35 @@ router.get('/:id', authenticate, async (req, res) => {
             [meetingId]
         );
 
+        // 투표별 결과 집계
+        const votesWithResults = await Promise.all(votesResult.rows.map(async (vote) => {
+            const respResult = await query(
+                'SELECT selected_option, COUNT(*) as cnt FROM meeting_vote_responses WHERE vote_id = $1 GROUP BY selected_option',
+                [vote.id]
+            );
+            const results = {};
+            const options = vote.options || [];
+            options.forEach(opt => { results[opt] = 0; });
+            respResult.rows.forEach(r => { results[r.selected_option] = parseInt(r.cnt); });
+
+            // 현재 사용자의 투표 확인
+            const myVoteResult = await query(
+                'SELECT selected_option FROM meeting_vote_responses WHERE vote_id = $1 AND user_id = $2',
+                [vote.id, req.user.userId]
+            );
+            return {
+                ...vote,
+                results,
+                my_vote: myVoteResult.rows.length > 0 ? myVoteResult.rows[0].selected_option : null
+            };
+        }));
+
         return res.json({
             success: true,
             data: {
                 ...meeting,
                 attendance: attendanceResult.rows,
-                votes: votesResult.rows,
+                votes: votesWithResults,
                 minutes: minutesResult.rows
             }
         });

@@ -127,9 +127,10 @@ async function loadMeetingAttendance(meetingId) {
     try {
         const res = await apiClient.request('/meetings/' + meetingId + '/attendance');
         if (!res.success) { el.innerHTML = '참석 정보 없음'; return; }
-        const att = res.data || [];
-        const attending = att.filter(a => a.status === 'attending');
-        const absent = att.filter(a => a.status === 'absent');
+        const att = (res.data && res.data.items) || res.data || [];
+        const summary = (res.data && res.data.summary) || {};
+        const attending = Array.isArray(att) ? att.filter(a => a.status === 'attending') : [];
+        const absent = Array.isArray(att) ? att.filter(a => a.status === 'absent') : [];
         el.innerHTML = `<div style="font-size:14px">
             <span style="color:#16A34A;font-weight:600">참석 ${attending.length}명</span>
             <span style="color:#DC2626;margin-left:12px">불참 ${absent.length}명</span>

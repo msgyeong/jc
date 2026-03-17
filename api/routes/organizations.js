@@ -64,7 +64,7 @@ router.get('/', authenticate, requireRole(['super_admin']), async (req, res) => 
         const result = await query(
             `SELECT o.id, o.name, o.code, o.district, o.region, o.description,
                     o.is_active, o.created_at, o.updated_at,
-                    COUNT(u.id) FILTER (WHERE u.is_approved = true AND u.is_deleted = false) AS member_count
+                    COUNT(u.id) FILTER (WHERE u.status = 'active') AS member_count
              FROM organizations o
              LEFT JOIN users u ON u.org_id = o.id
              ${whereClause}
@@ -103,7 +103,7 @@ router.get('/:id', authenticate, requireRole(['super_admin']), async (req, res) 
         const result = await query(
             `SELECT o.id, o.name, o.code, o.district, o.region, o.description,
                     o.is_active, o.created_by, o.created_at, o.updated_at,
-                    COUNT(u.id) FILTER (WHERE u.is_approved = true AND u.is_deleted = false) AS member_count
+                    COUNT(u.id) FILTER (WHERE u.status = 'active') AS member_count
              FROM organizations o
              LEFT JOIN users u ON u.org_id = o.id
              WHERE o.id = $1

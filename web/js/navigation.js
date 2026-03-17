@@ -114,6 +114,8 @@ function navigateToScreen(screenName) {
             if (form) form.reset();
             const verifyForm = document.getElementById('forgot-verify-form');
             if (verifyForm) verifyForm.reset();
+            const setForm = document.getElementById('forgot-set-password-form');
+            if (setForm) setForm.reset();
             clearAllErrors();
         } else if (screenName === 'admin') {
             // 관리자 페이지 초기화
@@ -387,16 +389,10 @@ function setupSignupEvents() {
         forgotVerifyForm.addEventListener('submit', handleForgotVerify);
     }
 
-    // 임시 비밀번호 복사 버튼
-    const copyBtn = document.getElementById('copy-temp-password');
-    if (copyBtn) {
-        copyBtn.addEventListener('click', () => {
-            const pw = document.getElementById('temp-password-value').textContent;
-            navigator.clipboard.writeText(pw).then(() => {
-                copyBtn.textContent = '복사됨!';
-                setTimeout(() => { copyBtn.textContent = '복사'; }, 2000);
-            });
-        });
+    // 비밀번호 찾기 Step 3 폼
+    const forgotSetForm = document.getElementById('forgot-set-password-form');
+    if (forgotSetForm) {
+        forgotSetForm.addEventListener('submit', handleForgotSetPassword);
     }
     
     console.log('✅ 회원가입/비밀번호 찾기 이벤트 설정 완료');
@@ -499,10 +495,10 @@ async function handleForgotVerify(event) {
     try {
         const result = await apiClient.resetPassword(_forgotResetToken, birthDate, answer);
 
-        if (result.success && result.tempPassword) {
+        if (result.success) {
+            // 본인확인 통과 → Step 3 (새 비밀번호 입력) 표시
             document.getElementById('forgot-step2').style.display = 'none';
-            document.getElementById('temp-password-value').textContent = result.tempPassword;
-            document.getElementById('forgot-password-result').style.display = 'block';
+            document.getElementById('forgot-step3').style.display = 'block';
         }
     } catch (error) {
         if (error.code === 'TOKEN_EXPIRED') {
@@ -516,16 +512,72 @@ async function handleForgotVerify(event) {
     }
 }
 
+// 비밀번호 찾기 Step 3: 새 비밀번호 설정
+async function handleForgotSetPassword(event) {
+    event.preventDefault();
+    clearAllErrors();
+
+    const newPassword = document.getElementById('forgot-new-password').value;
+    const confirmPassword = document.getElementById('forgot-confirm-password').value;
+
+    let isValid = true;
+
+    if (!newPassword) {
+        showError('forgot-new-password-error', '새 비밀번호를 입력하세요.');
+        isValid = false;
+    } else if (newPassword.length < 8) {
+        showError('forgot-new-password-error', '비밀번호는 8자 이상이어야 합니다.');
+        isValid = false;
+    }
+
+    if (!confirmPassword) {
+        showError('forgot-confirm-password-error', '비밀번호 확인을 입력하세요.');
+        isValid = false;
+    } else if (newPassword !== confirmPassword) {
+        showError('forgot-confirm-password-error', '비밀번호가 일치하지 않습니다.');
+        isValid = false;
+    }
+
+    if (!isValid) return;
+
+    const submitBtn = document.querySelector('.btn-forgot-set');
+    setButtonLoading(submitBtn, true);
+
+    try {
+        const result = await apiClient.resetPasswordSet(_forgotResetToken, newPassword);
+
+        if (result.success) {
+            document.getElementById('forgot-step3').style.display = 'none';
+            document.getElementById('forgot-password-result').style.display = 'block';
+            _forgotResetToken = null;
+        }
+    } catch (error) {
+        if (error.code === 'TOKEN_EXPIRED') {
+            resetForgotPasswordToStep1();
+            showInlineError('forgot-inline-error', error.message);
+        } else {
+            showInlineError('forgot-set-error', error.message || '비밀번호 변경에 실패했습니다.');
+        }
+    } finally {
+        setButtonLoading(submitBtn, false);
+    }
+}
+
 // 비밀번호 찾기 화면을 Step 1으로 리셋
 function resetForgotPasswordToStep1() {
     _forgotResetToken = null;
     document.getElementById('forgot-step1').style.display = 'block';
     document.getElementById('forgot-step2').style.display = 'none';
+    document.getElementById('forgot-step3').style.display = 'none';
     document.getElementById('forgot-password-result').style.display = 'none';
     const birthInput = document.getElementById('forgot-birth');
     const answerInput = document.getElementById('forgot-answer');
+    const newPwInput = document.getElementById('forgot-new-password');
+    const confirmPwInput = document.getElementById('forgot-confirm-password');
     if (birthInput) birthInput.value = '';
     if (answerInput) answerInput.value = '';
+    if (newPwInput) newPwInput.value = '';
+    if (confirmPwInput) confirmPwInput.value = '';
 }
 
 // ========== 뒤로가기 (popstate) ==========

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영등포 JC - 회원관리 앱</title>
     <!-- Build: 2026-02-06 v2.1 -->
-    <link rel="stylesheet" href="styles/main.css?v=20260317e">
+    <link rel="stylesheet" href="styles/main.css?v=20260317f">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FFFFFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -180,7 +180,49 @@
                         <div class="inline-error-message" id="forgot-verify-error"></div>
 
                         <button type="submit" class="btn btn-primary btn-forgot-verify">
-                            <span class="btn-text">임시 비밀번호 발급</span>
+                            <span class="btn-text">본인확인</span>
+                            <span class="btn-loading" style="display: none;">
+                                <span class="spinner"></span>
+                            </span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Step 3: 새 비밀번호 설정 -->
+                <div id="forgot-step3" style="display: none;">
+                    <div class="info-box">
+                        본인확인이 완료되었습니다. 새 비밀번호를 설정해주세요.
+                    </div>
+
+                    <form id="forgot-set-password-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="forgot-new-password">새 비밀번호</label>
+                            <input
+                                type="password"
+                                id="forgot-new-password"
+                                placeholder="8자 이상 입력"
+                                minlength="8"
+                                required
+                            >
+                            <span class="error-message" id="forgot-new-password-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="forgot-confirm-password">비밀번호 확인</label>
+                            <input
+                                type="password"
+                                id="forgot-confirm-password"
+                                placeholder="비밀번호를 다시 입력"
+                                minlength="8"
+                                required
+                            >
+                            <span class="error-message" id="forgot-confirm-password-error"></span>
+                        </div>
+
+                        <div class="inline-error-message" id="forgot-set-error"></div>
+
+                        <button type="submit" class="btn btn-primary btn-forgot-set">
+                            <span class="btn-text">비밀번호 변경</span>
                             <span class="btn-loading" style="display: none;">
                                 <span class="spinner"></span>
                             </span>
@@ -191,14 +233,8 @@
                 <!-- 결과 표시 -->
                 <div id="forgot-password-result" class="forgot-result" style="display: none;">
                     <div class="result-box success-box">
-                        <h3>임시 비밀번호가 발급되었습니다</h3>
-                        <div class="temp-password-display">
-                            <span id="temp-password-value"></span>
-                            <button type="button" class="btn-copy" id="copy-temp-password" title="복사">
-                                복사
-                            </button>
-                        </div>
-                        <p class="result-notice">로그인 후 반드시 비밀번호를 변경해주세요.</p>
+                        <h3>비밀번호가 변경되었습니다</h3>
+                        <p class="result-notice">새 비밀번호로 로그인해주세요.</p>
                         <button type="button" class="btn btn-primary" onclick="navigateToScreen('login')">
                             로그인하러 가기
                         </button>
@@ -1392,29 +1428,29 @@
     </div>
 
     <!-- 앱 스크립트 -->
-    <script src="js/config.js?v=20260317e"></script>
-    <script src="js/api-client.js?v=20260317e"></script>
-    <script src="js/utils.js?v=20260317e"></script>
-    <script src="js/auth.js?v=20260317e"></script>
-    <script src="js/signup.js?v=20260317e"></script>
-    <script src="js/home.js?v=20260317e"></script>
-    <script src="js/posts.js?v=20260317e"></script>
-    <script src="js/notices.js?v=20260317e"></script>
-    <script src="js/schedules.js?v=20260317e"></script>
-    <script src="js/members.js?v=20260317e"></script>
-    <script src="js/profile.js?v=20260317e"></script>
-    <script src="js/admin.js?v=20260317e"></script>
-    <script src="js/push.js?v=20260317e"></script>
-    <script src="js/notifications.js?v=20260317e"></script>
-    <script src="js/notification-settings.js?v=20260317e"></script>
-    <script src="js/settings.js?v=20260317e"></script>
-    <script src="js/meetings.js?v=20260317e"></script>
-    <script src="js/portal.js?v=20260317e"></script>
-    <script src="js/admin-app.js?v=20260317e"></script>
-    <script src="js/content.js?v=20260317e"></script>
-    <script src="js/orgchart.js?v=20260317e"></script>
-    <script src="js/jc-map.js?v=20260317e"></script>
-    <script src="js/navigation.js?v=20260317e"></script>
-    <script src="js/app.js?v=20260317e"></script>
+    <script src="js/config.js?v=20260317f"></script>
+    <script src="js/api-client.js?v=20260317f"></script>
+    <script src="js/utils.js?v=20260317f"></script>
+    <script src="js/auth.js?v=20260317f"></script>
+    <script src="js/signup.js?v=20260317f"></script>
+    <script src="js/home.js?v=20260317f"></script>
+    <script src="js/posts.js?v=20260317f"></script>
+    <script src="js/notices.js?v=20260317f"></script>
+    <script src="js/schedules.js?v=20260317f"></script>
+    <script src="js/members.js?v=20260317f"></script>
+    <script src="js/profile.js?v=20260317f"></script>
+    <script src="js/admin.js?v=20260317f"></script>
+    <script src="js/push.js?v=20260317f"></script>
+    <script src="js/notifications.js?v=20260317f"></script>
+    <script src="js/notification-settings.js?v=20260317f"></script>
+    <script src="js/settings.js?v=20260317f"></script>
+    <script src="js/meetings.js?v=20260317f"></script>
+    <script src="js/portal.js?v=20260317f"></script>
+    <script src="js/admin-app.js?v=20260317f"></script>
+    <script src="js/content.js?v=20260317f"></script>
+    <script src="js/orgchart.js?v=20260317f"></script>
+    <script src="js/jc-map.js?v=20260317f"></script>
+    <script src="js/navigation.js?v=20260317f"></script>
+    <script src="js/app.js?v=20260317f"></script>
 </body>
 </html>

@@ -159,6 +159,7 @@ body {
     background-color: var(--background-color);
     position: relative;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.06);
+    overflow-x: hidden;
 }
 
 /* ==================== 화면 전환 ==================== */

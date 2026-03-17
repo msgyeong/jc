@@ -151,7 +151,7 @@ router.post('/login', async (req, res) => {
 
         // 사용자 조회
         const result = await query(
-            'SELECT id, email, password_hash, name, role, status, profile_image FROM users WHERE email = $1',
+            'SELECT id, email, password_hash, name, role, status, profile_image, org_id FROM users WHERE email = $1',
             [email.toLowerCase()]
         );
 
@@ -220,6 +220,7 @@ router.post('/login', async (req, res) => {
                 role: user.role,
                 status: user.status,
                 profile_image: user.profile_image,
+                org_id: user.org_id,
                 can_post_notice: ['super_admin', 'admin'].includes(user.role || '')
             }
         });

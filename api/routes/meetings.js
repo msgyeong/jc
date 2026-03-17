@@ -20,7 +20,7 @@ const upload = multer({
  * 관리자 여부 확인
  */
 function isAdmin(role) {
-    return role && ['admin', 'super_admin'].includes(role);
+    return role && ['admin', 'super_admin', 'local_admin'].includes(role);
 }
 
 // ============================================================

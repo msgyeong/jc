@@ -142,7 +142,12 @@ function navigateToScreen(screenName) {
             if (typeof loadPortalScreen === 'function') loadPortalScreen();
         } else if (screenName === 'org-chart') {
             if (typeof loadOrgChartScreen === 'function') loadOrgChartScreen();
-        } else if (['jc-vision','jc-roles','jc-map','jc-charter'].includes(screenName)) {
+        } else if (screenName === 'jc-map') {
+            if (typeof loadJcMapScreen === 'function') {
+                // 맵은 화면이 표시된 후 초기화해야 함
+                setTimeout(function() { loadJcMapScreen(); }, 100);
+            }
+        } else if (['jc-vision','jc-roles','jc-charter'].includes(screenName)) {
             if (typeof loadContentScreen === 'function') loadContentScreen(screenName);
         }
 

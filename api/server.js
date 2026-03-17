@@ -25,6 +25,7 @@ const meetingsRoutes = require('./routes/meetings');
 const organizationsRoutes = require('./routes/organizations');
 const contentRoutes = require('./routes/content');
 const orgchartRoutes = require('./routes/orgchart');
+const mapRoutes = require('./routes/map');
 const { startReminderCron } = require('./utils/reminderCron');
 const { startNotificationScheduler } = require('./cron/notification-scheduler');
 
@@ -123,6 +124,7 @@ app.use('/api/meetings', meetingsRoutes);
 app.use('/api/organizations', organizationsRoutes);
 app.use('/api/admin-app', mobileAdminRoutes);
 app.use('/api/orgchart', orgchartRoutes);
+app.use('/api/map', mapRoutes);
 app.use('/api/content', contentRoutes);
 
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)
@@ -226,6 +228,11 @@ app.listen(PORT, () => {
     dbQuery("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('super_admin', 'admin', 'local_admin', 'member', 'pending'))").catch(() => {});
     // 기본 조직 생성 + 기존 회원 매핑 (순차 실행)
     dbQuery("INSERT INTO organizations (name, code, district, region, description) VALUES ('영등포JC', 'yeongdeungpo', '서울지구', '서울', '영등포청년회의소') ON CONFLICT (code) DO NOTHING").catch(() => {});
+    // JC 지도 컬럼
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS map_visible BOOLEAN DEFAULT true").catch(() => {});
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lat DOUBLE PRECISION").catch(() => {});
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lng DOUBLE PRECISION").catch(() => {});
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_address VARCHAR(500)").catch(() => {});
     // 조직도 테이블
     dbQuery(`CREATE TABLE IF NOT EXISTS orgchart_groups (
         id SERIAL PRIMARY KEY, org_id INTEGER REFERENCES organizations(id),

@@ -183,10 +183,52 @@ function handleClearCache() {
     showToast('캐시가 삭제되었습니다', 'success');
 }
 
-// 비밀번호 변경 (기존 프로필 함수 활용)
+// 비밀번호 변경 (설정 화면에서)
 function showChangePasswordFromSettings() {
-    if (typeof showChangePasswordDialog === 'function') {
-        showChangePasswordDialog();
+    var container = document.getElementById('settings-screen-content');
+    if (!container) return;
+
+    container.innerHTML = ''
+        + '<div style="padding:16px 0">'
+        + '<button class="btn-back" onclick="renderSettingsScreen()" style="margin-bottom:12px;background:none;border:none;color:var(--text-primary);font-size:15px;cursor:pointer">&larr; 돌아가기</button>'
+        + '<h3 style="font-size:17px;font-weight:600;margin-bottom:16px">비밀번호 변경</h3>'
+        + '<form onsubmit="handlePwChangeFromSettings(event)">'
+        + '<div class="form-group"><label>현재 비밀번호</label><input type="password" id="settings-pw-current" required style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:8px"></div>'
+        + '<div class="form-group"><label>새 비밀번호 (6자 이상)</label><input type="password" id="settings-pw-new" required minlength="6" style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:8px"></div>'
+        + '<div class="form-group"><label>새 비밀번호 확인</label><input type="password" id="settings-pw-confirm" required minlength="6" style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:8px"></div>'
+        + '<div id="settings-pw-error" style="color:#DC2626;font-size:13px;margin-bottom:8px"></div>'
+        + '<button type="submit" class="btn btn-primary" id="settings-pw-btn">비밀번호 변경</button>'
+        + '</form></div>';
+}
+
+async function handlePwChangeFromSettings(e) {
+    e.preventDefault();
+    var current = document.getElementById('settings-pw-current')?.value;
+    var newPw = document.getElementById('settings-pw-new')?.value;
+    var confirm = document.getElementById('settings-pw-confirm')?.value;
+    var errEl = document.getElementById('settings-pw-error');
+    var btn = document.getElementById('settings-pw-btn');
+
+    if (errEl) errEl.textContent = '';
+    if (newPw !== confirm) { if (errEl) errEl.textContent = '새 비밀번호가 일치하지 않습니다.'; return; }
+    if (newPw.length < 6) { if (errEl) errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; return; }
+
+    if (btn) { btn.disabled = true; btn.textContent = '변경 중...'; }
+    try {
+        var res = await apiClient.request('/profile/password', {
+            method: 'PUT',
+            body: JSON.stringify({ current_password: current, new_password: newPw })
+        });
+        if (res.success) {
+            showToast('비밀번호가 변경되었습니다');
+            renderSettingsScreen();
+        } else {
+            if (errEl) errEl.textContent = res.message || '변경 실패';
+        }
+    } catch (err) {
+        if (errEl) errEl.textContent = err.message || '오류 발생';
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '비밀번호 변경'; }
     }
 }
 

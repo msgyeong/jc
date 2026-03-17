@@ -207,6 +207,19 @@ app.listen(PORT, () => {
         uploaded_by INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW()
     )`).catch(() => {});
 
+    // 멀티테넌트: 조직 테이블
+    dbQuery(`CREATE TABLE IF NOT EXISTS organizations (
+        id SERIAL PRIMARY KEY, name VARCHAR(100) NOT NULL, code VARCHAR(50) UNIQUE NOT NULL,
+        district VARCHAR(100), region VARCHAR(100), description TEXT,
+        logo_data BYTEA, logo_mime VARCHAR(100), is_active BOOLEAN DEFAULT true,
+        created_by INTEGER, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
+    )`).catch(() => {});
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS org_id INTEGER REFERENCES organizations(id)").catch(() => {});
+    // 기본 조직 생성 + 기존 회원 매핑
+    dbQuery("INSERT INTO organizations (name, code, district, region, description) VALUES ('영등포JC', 'yeongdeungpo', '서울지구', '서울', '영등포청년회의소') ON CONFLICT (code) DO NOTHING").then(() => {
+        dbQuery("UPDATE users SET org_id = (SELECT id FROM organizations WHERE code = 'yeongdeungpo') WHERE org_id IS NULL").catch(() => {});
+    }).catch(() => {});
+
     // 리마인더 cron 시작
     startReminderCron();
     // 예약 알림 스케줄러 시작

@@ -80,7 +80,7 @@ async function handleLogin(event) {
             }
 
             // 관리자 계정이면 관리자 페이지로 이동
-            if (['admin', 'super_admin'].includes(result.user.role)) {
+            if (['super_admin'].includes(result.user.role)) {
                 // 관리자 웹에서도 동일 토큰 사용
                 localStorage.setItem('admin_token', result.token || localStorage.getItem('auth_token'));
                 localStorage.setItem('admin_user', JSON.stringify(result.user));

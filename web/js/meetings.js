@@ -101,15 +101,23 @@ async function showMeetingDetail(meetingId) {
 
 async function markAttendance(meetingId, status) {
     try {
-        await apiClient.request('/meetings/' + meetingId + '/attend', {
+        var res = await fetch('/api/meetings/' + meetingId + '/attend', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status })
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            body: JSON.stringify({ status: status })
         });
-        showToast(status === 'attending' ? '참석으로 표시했습니다' : '불참으로 표시했습니다');
-        loadMeetingAttendance(meetingId);
+        var data = await res.json();
+        if (data.success) {
+            showToast(status === 'attending' ? '참석으로 표시했습니다' : '불참으로 표시했습니다');
+            loadMeetingAttendance(meetingId);
+        } else {
+            showToast(data.message || '참석 처리 실패', 'error');
+        }
     } catch (err) {
-        showToast('참석 처리 실패: ' + err.message, 'error');
+        showToast('참석 처리 실패: ' + (err.message || '네트워크 오류'), 'error');
     }
 }
 
@@ -164,15 +172,23 @@ async function loadMeetingVotes(meetingId) {
 
 async function castVote(meetingId, voteId, option) {
     try {
-        await apiClient.request('/meetings/' + meetingId + '/votes/' + voteId + '/cast', {
+        var res = await fetch('/api/meetings/' + meetingId + '/votes/' + voteId + '/cast', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ option })
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            body: JSON.stringify({ option: option })
         });
-        showToast(option + '에 투표했습니다');
-        loadMeetingVotes(meetingId);
+        var data = await res.json();
+        if (data.success) {
+            showToast(option + '에 투표했습니다');
+            loadMeetingVotes(meetingId);
+        } else {
+            showToast(data.message || '투표 실패', 'error');
+        }
     } catch (err) {
-        showToast('투표 실패: ' + err.message, 'error');
+        showToast('투표 실패: ' + (err.message || '네트워크 오류'), 'error');
     }
 }
 

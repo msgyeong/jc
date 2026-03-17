@@ -1,6 +1,6 @@
 // 게시판 기능 (Railway API 연동) — 서브탭 + 카드 재디자인
 
-const MAX_POST_IMAGES = 5;
+const MAX_POST_IMAGES = 8;
 
 let currentPostsPage = 0;
 let postsLoading = false;
@@ -1169,10 +1169,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 수정 화면 이벤트
-    const postEditAddUrlBtn = document.getElementById('post-edit-add-url-btn');
-    if (postEditAddUrlBtn) {
-        postEditAddUrlBtn.addEventListener('click', handlePostEditAddUrl);
-    }
     const postEditUploadBtn = document.getElementById('post-edit-upload-btn');
     const postEditFileInput = document.getElementById('post-edit-image-file');
     if (postEditUploadBtn && postEditFileInput) {

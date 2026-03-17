@@ -372,16 +372,15 @@ body {
     margin-bottom: var(--spacing-xs);
 }
 .post-form-images-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
     margin-bottom: var(--spacing-sm);
     min-height: 24px;
 }
 .post-form-image-item {
     position: relative;
-    width: 72px;
-    height: 72px;
+    aspect-ratio: 1;
     border-radius: var(--border-radius);
     overflow: hidden;
     border: 1px solid var(--border-color);
@@ -1200,25 +1199,31 @@ input::-ms-clear {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-md);
+    overflow: hidden;
 }
 
 .post-detail-header .post-author {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
+    min-width: 0;
+    flex: 1;
 }
 
 .post-detail-header .post-author-info {
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .post-detail-header .author-name {
     font-weight: 600;
     color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .post-detail-header .post-date {
@@ -2472,13 +2477,21 @@ input[type="date"]:focus {
     font-size: 15px;
     font-family: var(--font-family);
     color: var(--text-primary);
-    padding: 16px 0;
-    border: none;
-    background: none;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--background-color);
     outline: none;
     resize: vertical;
     min-height: 200px;
     line-height: 1.6;
+    transition: var(--transition);
+    margin-top: 12px;
+    box-sizing: border-box;
+}
+
+.post-create-content-input:focus {
+    border-color: var(--primary-color);
 }
 
 .post-create-content-input::placeholder {
@@ -2511,15 +2524,13 @@ input[type="date"]:focus {
 }
 
 .post-create-images-scroll {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 4px;
 }
 
 .post-create-add-image-btn {
-    width: 72px;
-    height: 72px;
+    aspect-ratio: 1;
     border-radius: 8px;
     border: 1px dashed var(--border-color);
     background: var(--background-color);
@@ -2529,7 +2540,6 @@ input[type="date"]:focus {
     align-items: center;
     justify-content: center;
     gap: 4px;
-    flex-shrink: 0;
     transition: var(--transition);
 }
 

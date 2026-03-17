@@ -319,7 +319,7 @@ router.post('/:id/assign-admin', authenticate, requireRole(['super_admin']), asy
 
         // 사용자 존재 및 소속 확인
         const user = await query(
-            `SELECT id, name, role, org_id, is_approved, is_deleted
+            `SELECT id, name, role, org_id, status
              FROM users WHERE id = $1`,
             [user_id]
         );
@@ -331,16 +331,16 @@ router.post('/:id/assign-admin', authenticate, requireRole(['super_admin']), asy
         }
 
         const targetUser = user.rows[0];
-        if (targetUser.is_deleted) {
+        if (targetUser.status === 'withdrawn' || targetUser.status === 'rejected') {
             return res.status(400).json({
                 success: false,
-                error: '탈퇴한 사용자입니다.'
+                error: '탈퇴/거절된 사용자입니다.'
             });
         }
-        if (!targetUser.is_approved) {
+        if (targetUser.status !== 'active') {
             return res.status(400).json({
                 success: false,
-                error: '승인되지 않은 사용자입니다.'
+                error: '활성 상태의 사용자만 관리자로 지정할 수 있습니다.'
             });
         }
 

@@ -217,10 +217,12 @@ app.listen(PORT, () => {
         created_by INTEGER, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
     )`).catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS org_id INTEGER REFERENCES organizations(id)").catch(() => {});
-    // 기본 조직 생성 + 기존 회원 매핑
-    dbQuery("INSERT INTO organizations (name, code, district, region, description) VALUES ('영등포JC', 'yeongdeungpo', '서울지구', '서울', '영등포청년회의소') ON CONFLICT (code) DO NOTHING").then(() => {
+    // 기본 조직 생성 + 기존 회원 매핑 (순차 실행)
+    dbQuery("INSERT INTO organizations (name, code, district, region, description) VALUES ('영등포JC', 'yeongdeungpo', '서울지구', '서울', '영등포청년회의소') ON CONFLICT (code) DO NOTHING").catch(() => {});
+    // 3초 후 매핑 (조직 생성 완료 대기)
+    setTimeout(() => {
         dbQuery("UPDATE users SET org_id = (SELECT id FROM organizations WHERE code = 'yeongdeungpo') WHERE org_id IS NULL").catch(() => {});
-    }).catch(() => {});
+    }, 3000);
 
     // 리마인더 cron 시작
     startReminderCron();

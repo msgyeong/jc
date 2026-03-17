@@ -83,7 +83,7 @@ async function loadOrganizations() {
             var memberCount = org.member_count != null ? org.member_count : (org.members_count != null ? org.members_count : '-');
 
             html += '<tr>' +
-                '<td><strong>' + escapeHtml(org.name) + '</strong></td>' +
+                '<td><strong style="cursor:pointer;color:var(--c-primary)" onclick="selectOrg(' + org.id + ',\'' + escapeHtml(org.name).replace(/'/g, "\\'") + '\')">' + escapeHtml(org.name) + '</strong></td>' +
                 '<td>' + escapeHtml(org.code || '-') + '</td>' +
                 '<td>' + escapeHtml(org.district || '-') + '</td>' +
                 '<td>' + escapeHtml(org.region || '-') + '</td>' +
@@ -321,4 +321,15 @@ async function assignLocalAdmin(orgId, userId) {
             showAdminToast('관리자 지정 실패: ' + err.message, 'error');
         }
     }
+}
+
+// 로컬 선택 → 사이드바 하위 메뉴 표시
+var selectedOrgId = null;
+function selectOrg(orgId, orgName) {
+    selectedOrgId = orgId;
+    var subNav = document.getElementById('org-sub-nav');
+    var subLabel = document.getElementById('org-sub-label');
+    if (subNav) subNav.style.display = 'block';
+    if (subLabel) subLabel.textContent = orgName;
+    showAdminToast(orgName + ' 선택됨 — 사이드바에서 회원/게시판/일정 관리 가능');
 }

@@ -406,14 +406,10 @@ function handleCreatePost() {
     const attendanceContainer = document.getElementById('post-create-attendance-section');
     if (attendanceContainer) renderAttendanceToggleSection('post-create-attendance-section');
 
-    // 일정 첨부 섹션 (공지탭일 때만)
+    // 일정 첨부 섹션 (공지 + 일반 게시판 모두)
     const schedAttachContainer = document.getElementById('post-create-schedule-attach');
     if (schedAttachContainer) {
-        if (currentBoardCategory === 'notice') {
-            renderScheduleAttachSection('post-create-schedule-attach');
-        } else {
-            schedAttachContainer.innerHTML = '';
-        }
+        renderScheduleAttachSection('post-create-schedule-attach');
     }
 
     // Push 알림 설정 (공지탭일 때만)

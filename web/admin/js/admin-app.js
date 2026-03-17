@@ -71,10 +71,19 @@ async function handleLogin(e) {
             return;
         }
 
-        const res = await AdminAPI.post('/api/admin/auth/login', { admin_id, password });
+        // 통합 로그인 API 사용 (일반 + 관리자 동일)
+        const res = await AdminAPI.post('/api/auth/login', { email: admin_id, password });
         if (res.success) {
+            // 관리자 권한 확인
+            if (!['admin', 'super_admin'].includes(res.user.role)) {
+                errEl.textContent = '관리자 권한이 없는 계정입니다.';
+                return;
+            }
             AdminAPI.setToken(res.token);
             AdminAPI.setUser(res.user);
+            // 일반 앱 토큰도 동기화
+            localStorage.setItem('auth_token', res.token);
+            localStorage.setItem('user_info', JSON.stringify(res.user));
             enterApp();
         } else {
             errEl.textContent = res.message || '로그인 실패';
@@ -88,7 +97,10 @@ async function handleLogin(e) {
 
 function adminLogout() {
     AdminAPI.clearToken();
-    showLogin();
+    // 일반 앱 토큰도 정리 후 메인 로그인으로 이동
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_info');
+    window.location.href = '/';
 }
 
 function showLogin() {
@@ -327,6 +339,18 @@ document.getElementById('admin-login-form').addEventListener('submit', handleLog
 
 // Wait for all scripts to load before initializing the app
 window.addEventListener('load', function() {
+    // 일반 앱에서 관리자로 로그인한 경우 토큰 동기화
+    if (!AdminAPI.getToken() && localStorage.getItem('auth_token')) {
+        const userInfo = localStorage.getItem('user_info');
+        try {
+            const user = JSON.parse(userInfo);
+            if (user && ['admin', 'super_admin'].includes(user.role)) {
+                AdminAPI.setToken(localStorage.getItem('auth_token'));
+                AdminAPI.setUser(user);
+            }
+        } catch (e) { /* ignore */ }
+    }
+
     if (AdminAPI.getToken()) {
         enterApp();
     } else {

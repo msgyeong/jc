@@ -69,23 +69,32 @@ async function handleLogin(event) {
         
         if (result.success) {
             console.log('✅ 로그인 성공:', result.user);
-            
+
             // 사용자 정보 저장
             currentUser = result.user;
             localStorage.setItem('user_info', JSON.stringify(result.user));
-            
+
             // 로그인 유지 옵션 저장
             if (rememberMe) {
                 localStorage.setItem(STORAGE_KEYS.REMEMBER_ME, 'true');
             }
-            
+
+            // 관리자 계정이면 관리자 페이지로 이동
+            if (['admin', 'super_admin'].includes(result.user.role)) {
+                // 관리자 웹에서도 동일 토큰 사용
+                localStorage.setItem('admin_token', result.token || localStorage.getItem('auth_token'));
+                localStorage.setItem('admin_user', JSON.stringify(result.user));
+                window.location.href = '/admin/';
+                return;
+            }
+
             // 홈 화면으로 이동 — history 스택 초기화
             currentAuthStatus = AuthStatus.AUTHENTICATED;
             history.replaceState({ screen: 'home' }, '', '#home');
             window._navPopstate = true; // 중복 pushState 방지
             navigateToScreen('home');
             window._navPopstate = false;
-            
+
             // 홈 화면 데이터 로드
             if (typeof loadHomeData === 'function') {
                 loadHomeData();

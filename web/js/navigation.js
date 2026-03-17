@@ -140,9 +140,10 @@ function navigateToScreen(screenName) {
             if (typeof initLocalAdmin === 'function') initLocalAdmin();
         } else if (screenName === 'portal') {
             if (typeof loadPortalScreen === 'function') loadPortalScreen();
-        } else if (['org-chart','jc-vision','jc-roles','jc-map','jc-charter'].includes(screenName)) {
+        } else if (screenName === 'org-chart') {
+            if (typeof loadOrgChartScreen === 'function') loadOrgChartScreen();
+        } else if (['jc-vision','jc-roles','jc-map','jc-charter'].includes(screenName)) {
             if (typeof loadContentScreen === 'function') loadContentScreen(screenName);
-            return; // loadContentScreen handles its own screen activation
         }
 
         // history.pushState for back navigation (로그인 전 화면은 제외)

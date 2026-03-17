@@ -24,6 +24,7 @@ const mobileAdminRoutes = require('./routes/mobile-admin');
 const meetingsRoutes = require('./routes/meetings');
 const organizationsRoutes = require('./routes/organizations');
 const contentRoutes = require('./routes/content');
+const orgchartRoutes = require('./routes/orgchart');
 const { startReminderCron } = require('./utils/reminderCron');
 const { startNotificationScheduler } = require('./cron/notification-scheduler');
 
@@ -121,6 +122,7 @@ app.use('/api/mobile-admin', mobileAdminRoutes);
 app.use('/api/meetings', meetingsRoutes);
 app.use('/api/organizations', organizationsRoutes);
 app.use('/api/admin-app', mobileAdminRoutes);
+app.use('/api/orgchart', orgchartRoutes);
 app.use('/api/content', contentRoutes);
 
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)
@@ -224,6 +226,18 @@ app.listen(PORT, () => {
     dbQuery("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('super_admin', 'admin', 'local_admin', 'member', 'pending'))").catch(() => {});
     // 기본 조직 생성 + 기존 회원 매핑 (순차 실행)
     dbQuery("INSERT INTO organizations (name, code, district, region, description) VALUES ('영등포JC', 'yeongdeungpo', '서울지구', '서울', '영등포청년회의소') ON CONFLICT (code) DO NOTHING").catch(() => {});
+    // 조직도 테이블
+    dbQuery(`CREATE TABLE IF NOT EXISTS orgchart_groups (
+        id SERIAL PRIMARY KEY, org_id INTEGER REFERENCES organizations(id),
+        name VARCHAR(100) NOT NULL, sort_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
+    )`).catch(() => {});
+    dbQuery(`CREATE TABLE IF NOT EXISTS orgchart_members (
+        id SERIAL PRIMARY KEY, group_id INTEGER REFERENCES orgchart_groups(id) ON DELETE CASCADE,
+        position_title VARCHAR(100) NOT NULL, user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        manual_name VARCHAR(100), sort_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+    )`).catch(() => {});
     // 3초 후 매핑 (조직 생성 완료 대기)
     setTimeout(() => {
         dbQuery("UPDATE users SET org_id = (SELECT id FROM organizations WHERE code = 'yeongdeungpo') WHERE org_id IS NULL").catch(() => {});

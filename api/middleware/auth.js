@@ -1,4 +1,8 @@
 const { verifyToken } = require('../utils/jwt');
+const { query } = require('../config/database');
+
+// org_id 캐시 (메모리, 5분)
+const orgIdCache = new Map();
 
 /**
  * JWT 인증 미들웨어
@@ -15,7 +19,7 @@ function authenticate(req, res, next) {
             });
         }
 
-        const token = authHeader.substring(7); // 'Bearer ' 제거
+        const token = authHeader.substring(7);
         const decoded = verifyToken(token);
 
         if (!decoded) {
@@ -25,14 +29,30 @@ function authenticate(req, res, next) {
             });
         }
 
-        // 요청 객체에 사용자 정보 추가
         req.user = {
             userId: decoded.userId,
             email: decoded.email,
             role: decoded.role
         };
 
-        next();
+        // org_id 비동기 로드 (캐시)
+        const cached = orgIdCache.get(decoded.userId);
+        if (cached && cached.exp > Date.now()) {
+            req.user.orgId = cached.orgId;
+            return next();
+        }
+        query('SELECT org_id FROM users WHERE id = $1', [decoded.userId])
+            .then(r => {
+                const orgId = r.rows[0]?.org_id || null;
+                orgIdCache.set(decoded.userId, { orgId, exp: Date.now() + 300000 });
+                req.user.orgId = orgId;
+                next();
+            })
+            .catch(() => {
+                req.user.orgId = null;
+                next();
+            });
+        return;
     } catch (error) {
         console.error('Authentication error:', error);
         return res.status(500).json({

@@ -54,7 +54,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // 인증 엔드포인트 레이트 리미팅
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15분
-    max: 10, // 15분당 최대 10회
+    max: 50, // 15분당 최대 50회
     message: { success: false, message: '너무 많은 요청이 발생했습니다. 15분 후 다시 시도해주세요.' },
     standardHeaders: true,
     legacyHeaders: false,

@@ -647,6 +647,16 @@ router.delete('/members/:id/permanent', async (req, res) => {
         await query('DELETE FROM meeting_votes WHERE created_by = $1', [id]).catch(() => {});
         await query('DELETE FROM meeting_minutes WHERE uploaded_by = $1', [id]).catch(() => {});
         await query('DELETE FROM meetings WHERE created_by = $1', [id]).catch(() => {});
+        // 기타 참조 테이블
+        await query('DELETE FROM audit_log WHERE admin_id = $1', [id]).catch(() => {});
+        await query('DELETE FROM push_send_log WHERE sent_by = $1', [id]).catch(() => {});
+        await query('DELETE FROM member_dossier_activities WHERE user_id = $1', [id]).catch(() => {});
+        await query('DELETE FROM member_dossier_education WHERE user_id = $1', [id]).catch(() => {});
+        await query('DELETE FROM member_dossier_notes WHERE user_id = $1', [id]).catch(() => {});
+        await query('DELETE FROM read_status WHERE user_id = $1', [id]).catch(() => {});
+        await query('DELETE FROM notice_attendance WHERE user_id = $1', [id]).catch(() => {});
+        await query('DELETE FROM post_images WHERE uploaded_by = $1', [id]).catch(() => {});
+        await query('DELETE FROM mobile_admin_permissions WHERE user_id = $1', [id]).catch(() => {});
         // 게시글/일정 삭제
         await query('DELETE FROM posts WHERE author_id = $1', [id]).catch(() => {});
         await query('DELETE FROM schedules WHERE created_by = $1', [id]).catch(() => {});

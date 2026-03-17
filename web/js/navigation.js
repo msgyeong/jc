@@ -140,6 +140,9 @@ function navigateToScreen(screenName) {
             if (typeof initLocalAdmin === 'function') initLocalAdmin();
         } else if (screenName === 'portal') {
             if (typeof loadPortalScreen === 'function') loadPortalScreen();
+        } else if (['org-chart','jc-vision','jc-roles','jc-map','jc-charter'].includes(screenName)) {
+            if (typeof loadContentScreen === 'function') loadContentScreen(screenName);
+            return; // loadContentScreen handles its own screen activation
         }
 
         // history.pushState for back navigation (로그인 전 화면은 제외)
@@ -478,6 +481,8 @@ window.addEventListener('popstate', function(e) {
             showScheduleManageScreen();
         } else if (state.screen === 'admin-manage' && typeof initLocalAdmin === 'function') {
             navigateToScreen('admin-manage');
+        } else if (['org-chart','jc-vision','jc-roles','jc-map','jc-charter'].includes(state.screen) && typeof loadContentScreen === 'function') {
+            loadContentScreen(state.screen);
         } else {
             navigateToScreen(state.screen);
         }

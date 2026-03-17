@@ -102,6 +102,10 @@ async function showMeetingDetail(meetingId) {
         // 회의록
         html += `<div class="info-section">
             <h3 class="info-section-title">회의록 (PDF)</h3>
+            ${isAdminUser ? `<div style="margin-bottom:12px">
+                <input type="file" id="minutes-file-${meetingId}" accept="application/pdf" style="display:none" onchange="uploadMinutes(${meetingId})">
+                <button class="btn btn-primary btn-sm" onclick="document.getElementById('minutes-file-${meetingId}').click()">PDF 업로드</button>
+            </div>` : ''}
             <div id="meeting-minutes-${meetingId}">로딩 중...</div>
         </div>`;
 
@@ -349,6 +353,31 @@ async function closeVote(meetingId, voteId) {
             showToast(data.error || '마감 실패', 'error');
         }
     } catch (err) { showToast('오류: ' + err.message, 'error'); }
+}
+
+async function uploadMinutes(meetingId) {
+    var fileInput = document.getElementById('minutes-file-' + meetingId);
+    if (!fileInput || !fileInput.files[0]) return;
+    var file = fileInput.files[0];
+    if (file.type !== 'application/pdf') { showToast('PDF 파일만 업로드 가능합니다', 'error'); return; }
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', file.name.replace('.pdf', ''));
+    try {
+        var res = await fetch('/api/meetings/' + meetingId + '/minutes', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            body: formData
+        });
+        var data = await res.json();
+        if (data.success) {
+            showToast('회의록이 업로드되었습니다');
+            loadMeetingMinutes(meetingId);
+        } else {
+            showToast(data.error || '업로드 실패', 'error');
+        }
+    } catch (err) { showToast('업로드 오류: ' + err.message, 'error'); }
+    fileInput.value = '';
 }
 
 async function loadMeetingMinutes(meetingId) {

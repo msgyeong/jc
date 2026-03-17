@@ -23,6 +23,7 @@ const settingsRoutes = require('./routes/settings');
 const mobileAdminRoutes = require('./routes/mobile-admin');
 const meetingsRoutes = require('./routes/meetings');
 const organizationsRoutes = require('./routes/organizations');
+const contentRoutes = require('./routes/content');
 const { startReminderCron } = require('./utils/reminderCron');
 const { startNotificationScheduler } = require('./cron/notification-scheduler');
 
@@ -120,6 +121,7 @@ app.use('/api/mobile-admin', mobileAdminRoutes);
 app.use('/api/meetings', meetingsRoutes);
 app.use('/api/organizations', organizationsRoutes);
 app.use('/api/admin-app', mobileAdminRoutes);
+app.use('/api/content', contentRoutes);
 
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -226,6 +228,23 @@ app.listen(PORT, () => {
     setTimeout(() => {
         dbQuery("UPDATE users SET org_id = (SELECT id FROM organizations WHERE code = 'yeongdeungpo') WHERE org_id IS NULL").catch(() => {});
     }, 3000);
+
+    // 사이트 콘텐츠 테이블 (조직도, 비전, 직책업무, 지도, 정관)
+    dbQuery(`CREATE TABLE IF NOT EXISTS site_content (
+        id SERIAL PRIMARY KEY,
+        org_id INTEGER REFERENCES organizations(id),
+        content_type VARCHAR(50) NOT NULL,
+        title VARCHAR(200),
+        body TEXT,
+        image_data BYTEA,
+        image_mime VARCHAR(100),
+        file_data BYTEA,
+        file_name VARCHAR(200),
+        file_mime VARCHAR(100),
+        updated_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+    )`).catch(() => {});
 
     // 리마인더 cron 시작
     startReminderCron();

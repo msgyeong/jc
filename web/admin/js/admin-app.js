@@ -138,6 +138,7 @@ const PAGE_TITLES = {
     'audit-log': '감사 로그',
     settings: '설정',
     'admin-profile': '내 프로필',
+    organizations: '로컬 관리',
 };
 
 function routeFromHash() {
@@ -157,6 +158,7 @@ function getPageRenderer(page) {
         'audit-log': typeof renderAuditLog === 'function' ? renderAuditLog : null,
         settings: typeof renderSettings === 'function' ? renderSettings : null,
         'admin-profile': typeof renderAdminProfile === 'function' ? renderAdminProfile : null,
+        organizations: typeof renderOrganizations === 'function' ? renderOrganizations : null,
     };
     return map[page] || null;
 }

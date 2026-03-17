@@ -6696,3 +6696,23 @@ input[type="date"]:focus {
     border-color: #1F4FD8;
     box-shadow: 0 0 0 2px rgba(31,79,216,0.15);
 }
+
+/* ── 포털 (타 로컬 방문) ── */
+.portal-org-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; border-radius: 12px;
+    background: var(--card-bg, #fff); margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); cursor: pointer;
+    transition: transform 0.15s;
+}
+.portal-org-card:active { transform: scale(0.98); }
+.portal-mine { border: 2px solid #DBEAFE; }
+.portal-org-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, #1E3A5F, #3D6B99);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; flex-shrink: 0;
+}
+.portal-org-info { flex: 1; }
+.portal-org-name { font-size: 15px; font-weight: 600; }
+.portal-org-district { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }

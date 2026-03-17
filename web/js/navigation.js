@@ -137,8 +137,9 @@ function navigateToScreen(screenName) {
                 renderSettingsScreen();
             }
         } else if (screenName === 'admin-manage') {
-            // local_admin management screen
             if (typeof initLocalAdmin === 'function') initLocalAdmin();
+        } else if (screenName === 'portal') {
+            if (typeof loadPortalScreen === 'function') loadPortalScreen();
         }
 
         // history.pushState for back navigation (로그인 전 화면은 제외)

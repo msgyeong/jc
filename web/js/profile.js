@@ -105,8 +105,8 @@ function renderProfile(p) {
             </div>` : ''}
 
             <div class="info-section">
-                <h3 class="info-section-title">가입 정보</h3>
-                ${profileInfoRow('가입일', formatDate(p.created_at, 'YYYY-MM-DD'), 'calendar')}
+                <h3 class="info-section-title">JC 정보</h3>
+                ${profileInfoRow('입회일', p.join_date ? formatDate(p.join_date, 'YYYY-MM-DD') : '미설정', 'calendar')}
             </div>
 
             <div id="profile-title-history-container"></div>
@@ -191,6 +191,7 @@ function showEditProfileForm() {
                             <option value="female" ${p.gender === 'female' ? 'selected' : ''}>여성</option>
                         </select>
                     </div>
+                    <div class="form-group"><label>입회일</label><input type="date" id="edit-join-date" value="${p.join_date ? formatDate(p.join_date, 'YYYY-MM-DD') : ''}"><span class="help-text">JC 입회 날짜 (과거 날짜 가능)</span></div>
                 </div>
                 <div class="info-section">
                     <h3 class="info-section-title">직장 정보</h3>
@@ -237,7 +238,8 @@ async function handleProfileEditSubmit(event) {
         work_phone: document.getElementById('edit-work-phone').value.trim() || null,
         industry: document.getElementById('edit-industry')?.value || null,
         industry_detail: document.getElementById('edit-industry-detail')?.value?.trim() || null,
-        website: document.getElementById('edit-website')?.value?.trim() || null
+        website: document.getElementById('edit-website')?.value?.trim() || null,
+        join_date: document.getElementById('edit-join-date')?.value || null
     };
 
     setButtonLoading(submitBtn, true);

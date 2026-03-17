@@ -76,7 +76,7 @@ router.put('/', authenticate, async (req, res) => {
     try {
         const userId = req.user.userId;
         const userRole = req.user.role;
-        const { name, phone, address, birth_date, gender, company, work_phone, industry, industry_detail, website, map_visible, business_address, business_lat, business_lng } = req.body;
+        const { name, phone, address, birth_date, gender, company, work_phone, industry, industry_detail, website, map_visible, business_address, business_lat, business_lng, join_date } = req.body;
 
         // 유효성 검증
         if (!name) {
@@ -136,9 +136,10 @@ router.put('/', authenticate, async (req, res) => {
                      business_address = COALESCE($12, business_address),
                      business_lat = COALESCE($13, business_lat),
                      business_lng = COALESCE($14, business_lng),
+                     join_date = COALESCE($15, join_date),
                      updated_at = NOW()
-                 WHERE id = $15`,
-                [name, phone, address, birth_date, gender, company, work_phone, industry || null, industry_detail || null, website || null, map_visible !== undefined ? map_visible : null, business_address || null, business_lat || null, business_lng || null, userId]
+                 WHERE id = $16`,
+                [name, phone, address, birth_date, gender, company, work_phone, industry || null, industry_detail || null, website || null, map_visible !== undefined ? map_visible : null, business_address || null, business_lat || null, business_lng || null, join_date || null, userId]
             );
         }
 

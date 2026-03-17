@@ -217,6 +217,9 @@ app.listen(PORT, () => {
         created_by INTEGER, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
     )`).catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS org_id INTEGER REFERENCES organizations(id)").catch(() => {});
+    // role check constraint에 local_admin 추가
+    dbQuery("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check").catch(() => {});
+    dbQuery("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('super_admin', 'admin', 'local_admin', 'member', 'pending'))").catch(() => {});
     // 기본 조직 생성 + 기존 회원 매핑 (순차 실행)
     dbQuery("INSERT INTO organizations (name, code, district, region, description) VALUES ('영등포JC', 'yeongdeungpo', '서울지구', '서울', '영등포청년회의소') ON CONFLICT (code) DO NOTHING").catch(() => {});
     // 3초 후 매핑 (조직 생성 완료 대기)

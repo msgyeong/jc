@@ -625,18 +625,26 @@ router.delete('/members/:id/permanent', async (req, res) => {
             return res.status(404).json({ success: false, message: '회원을 찾을 수 없습니다.' });
         }
 
-        // 관련 데이터 삭제 (댓글, 좋아요, 참석, 즐겨찾기 등)
-        await query('DELETE FROM comments WHERE author_id = $1', [id]);
-        await query('DELETE FROM post_likes WHERE user_id = $1', [id]);
-        await query('DELETE FROM post_attendance WHERE user_id = $1', [id]);
-        await query('DELETE FROM schedule_attendance WHERE user_id = $1', [id]);
-        await query('DELETE FROM favorites WHERE user_id = $1', [id]);
-        await query('DELETE FROM push_subscriptions WHERE user_id = $1', [id]);
-        await query('DELETE FROM notifications WHERE user_id = $1', [id]);
-        await query('DELETE FROM position_history WHERE user_id = $1', [id]);
-        await query('DELETE FROM user_settings WHERE user_id = $1', [id]);
+        // 관련 데이터 삭제 (존재하지 않는 테이블은 건너뜀)
+        const tables = [
+            ['comments', 'author_id'],
+            ['post_likes', 'user_id'],
+            ['likes', 'user_id'],
+            ['post_attendance', 'user_id'],
+            ['schedule_attendance', 'user_id'],
+            ['meeting_attendance', 'user_id'],
+            ['meeting_vote_responses', 'user_id'],
+            ['favorites', 'user_id'],
+            ['push_subscriptions', 'user_id'],
+            ['notifications', 'user_id'],
+            ['position_history', 'user_id'],
+            ['user_settings', 'user_id'],
+        ];
+        for (const [table, col] of tables) {
+            await query(`DELETE FROM ${table} WHERE ${col} = $1`, [id]).catch(() => {});
+        }
         // 게시글 삭제
-        await query('DELETE FROM posts WHERE author_id = $1', [id]);
+        await query('DELETE FROM posts WHERE author_id = $1', [id]).catch(() => {});
         // 사용자 삭제
         await query('DELETE FROM users WHERE id = $1', [id]);
 

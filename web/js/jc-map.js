@@ -9,9 +9,22 @@ async function loadJcMapScreen() {
 
     // 카카오맵 SDK 체크
     if (typeof kakao === 'undefined' || !kakao.maps) {
-        if (loadingEl) loadingEl.textContent = '카카오맵 SDK 로드 실패';
+        if (loadingEl) loadingEl.textContent = '카카오맵을 불러오는 중...';
+        // 3초 후 재시도
+        setTimeout(loadJcMapScreen, 3000);
         return;
     }
+
+    // kakao.maps.Map이 아직 로드 안 됐으면 load() 콜백 사용
+    if (typeof kakao.maps.Map !== 'function' && typeof kakao.maps.load === 'function') {
+        kakao.maps.load(function() { _initJcMap(); });
+        return;
+    }
+    _initJcMap();
+}
+
+async function _initJcMap() {
+    var loadingEl = document.getElementById('jc-map-loading');
 
     try {
         // 맵 초기화 (한 번만)

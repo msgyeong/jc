@@ -51,12 +51,7 @@ async function loadProfile() {
             container.innerHTML = renderProfile(result.profile);
             profileLoaded = true;
             if (result.profile.id) loadProfileTitleHistory(result.profile.id);
-            // 관리 권한 로드 후 관리 메뉴 표시
-            if (typeof loadMyPermissions === 'function') {
-                loadMyPermissions().then(function() {
-                    if (typeof renderAdminMenuInProfile === 'function') renderAdminMenuInProfile();
-                });
-            }
+            // 관리 기능은 사이드 메뉴 "로컬 관리"로 이동됨
         } else {
             container.innerHTML = renderErrorState('프로필을 불러올 수 없습니다', '잠시 후 다시 시도해주세요', 'loadProfile()');
         }
@@ -128,12 +123,6 @@ function renderProfile(p) {
                     <span class="settings-item-label">환경설정</span>
                     <span class="settings-item-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
                 </div>
-                ${['super_admin', 'admin'].includes(p.role) ? `
-                <div class="settings-item" onclick="location.href='/admin/'">
-                    <span class="settings-item-icon">&#128736;</span>
-                    <span class="settings-item-label">관리자 메뉴</span>
-                    <span class="settings-item-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
-                </div>` : ''}
             </div>
             <div class="settings-group">
                 <div class="settings-item settings-item--danger" onclick="handleProfileLogout()">
@@ -216,6 +205,7 @@ function showEditProfileForm() {
                     </div>
                     <div class="form-group"><label>업종 상세</label><input type="text" id="edit-industry-detail" value="${escapeHtml(p.industry_detail || '')}" placeholder="상세 업종 (예: 소프트웨어 개발)" maxlength="100"></div>
                     <div class="form-group"><label>직장 전화</label><input type="tel" id="edit-work-phone" value="${escapeHtml(p.work_phone || '')}"></div>
+                    <div class="form-group"><label>대표 사이트</label><input type="url" id="edit-website" value="${escapeHtml(p.website || '')}" placeholder="홈페이지, 인스타, 유튜브 등 URL"></div>
                 </div>
                 <div id="profile-edit-error" class="inline-error-message"></div>
                 <button type="submit" class="btn btn-primary btn-full" id="profile-edit-submit-btn">
@@ -246,7 +236,8 @@ async function handleProfileEditSubmit(event) {
         department: document.getElementById('edit-department').value.trim() || null,
         work_phone: document.getElementById('edit-work-phone').value.trim() || null,
         industry: document.getElementById('edit-industry')?.value || null,
-        industry_detail: document.getElementById('edit-industry-detail')?.value?.trim() || null
+        industry_detail: document.getElementById('edit-industry-detail')?.value?.trim() || null,
+        website: document.getElementById('edit-website')?.value?.trim() || null
     };
 
     setButtonLoading(submitBtn, true);

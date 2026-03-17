@@ -126,7 +126,7 @@ async function loadSchedules() {
                 '<td class="text-sub">' + escapeHtml(s.location || '-') + '</td>' +
                 '<td>' + scheduleCatBadge(s.category) + '</td>' +
                 '<td><div class="action-btns">' +
-                    '<button class="btn btn-ghost btn-sm" onclick="showAttendanceModal(' + s.id + ')">참석</button>' +
+                    '<button class="btn btn-ghost btn-sm" onclick="showAttendanceModal(' + s.id + ')">참석현황</button>' +
                     '<button class="btn btn-ghost btn-sm" onclick="openScheduleModal(' + s.id + ')">수정</button>' +
                     '<button class="btn btn-danger btn-sm" onclick="confirmDeleteSchedule(' + s.id + ')">삭제</button>' +
                 '</div></td>' +

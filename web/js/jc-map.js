@@ -27,6 +27,17 @@ async function loadJcMapScreen() {
 
             // 줌 컨트롤
             jcMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+
+            // 내 위치 버튼 추가
+            var myLocBtn = document.createElement('button');
+            myLocBtn.innerHTML = '📍';
+            myLocBtn.title = '내 위치';
+            myLocBtn.style.cssText = 'position:absolute;bottom:20px;right:12px;z-index:10;width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #D1D5DB;box-shadow:0 2px 6px rgba(0,0,0,0.15);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center';
+            myLocBtn.onclick = showMyLocation;
+            mapContainer.parentElement.appendChild(myLocBtn);
+
+            // 자동으로 내 위치 표시
+            showMyLocation();
         }
 
         if (loadingEl) loadingEl.style.display = 'none';
@@ -101,4 +112,55 @@ async function loadJcMapScreen() {
             loadingEl.textContent = '지도 로드 실패: ' + (err.message || '');
         }
     }
+}
+
+// 내 위치 표시
+var myLocationMarker = null;
+var myLocationOverlay = null;
+
+function showMyLocation() {
+    if (!navigator.geolocation) {
+        showToast('이 브라우저는 위치 서비스를 지원하지 않습니다', 'error');
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        function(pos) {
+            var lat = pos.coords.latitude;
+            var lng = pos.coords.longitude;
+            var myPos = new kakao.maps.LatLng(lat, lng);
+
+            // 기존 내 위치 마커 제거
+            if (myLocationMarker) myLocationMarker.setMap(null);
+            if (myLocationOverlay) myLocationOverlay.setMap(null);
+
+            // 파란 원 마커 (내 위치)
+            myLocationOverlay = new kakao.maps.CustomOverlay({
+                position: myPos,
+                content: '<div style="width:16px;height:16px;background:#2563EB;border:3px solid #fff;border-radius:50%;box-shadow:0 0 8px rgba(37,99,235,0.5)"></div>',
+                zIndex: 100
+            });
+            myLocationOverlay.setMap(jcMap);
+
+            // 반경 원 (정확도)
+            if (myLocationMarker) myLocationMarker.setMap(null);
+            myLocationMarker = new kakao.maps.Circle({
+                center: myPos,
+                radius: pos.coords.accuracy || 50,
+                strokeWeight: 1,
+                strokeColor: '#2563EB',
+                strokeOpacity: 0.3,
+                fillColor: '#2563EB',
+                fillOpacity: 0.1
+            });
+            myLocationMarker.setMap(jcMap);
+
+            // 내 위치로 이동
+            jcMap.setCenter(myPos);
+            jcMap.setLevel(4);
+        },
+        function(err) {
+            showToast('위치를 가져올 수 없습니다: ' + err.message, 'error');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
 }

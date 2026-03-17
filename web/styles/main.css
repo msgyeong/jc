@@ -6725,3 +6725,17 @@ input[type="date"]:focus {
 .portal-org-info { flex: 1; }
 .portal-org-name { font-size: 15px; font-weight: 600; }
 .portal-org-district { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+/* JC 지도 — 전체 화면 */
+#jc-map-screen {
+    max-width: 100% !important;
+}
+#jc-map-screen .app-bar {
+    max-width: 480px;
+    margin: 0 auto;
+}
+#jc-map-content {
+    max-width: 100% !important;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+}

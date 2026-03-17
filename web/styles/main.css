@@ -12,10 +12,10 @@
     --accent-color: #F59E0B;
 
     /* ── Semantic ── */
-    --error-color: #DC2626;
-    --error-hover: #B91C1C;
-    --error-bg: #FEF2F2;
-    --error-text: #991B1B;
+    --error-color: #C4532D;
+    --error-hover: #A3421F;
+    --error-bg: #FFF7F5;
+    --error-text: #7C2D12;
     --success-color: #16A34A;
     --success-bg: #F0FDF4;
     --success-text: #166534;
@@ -475,11 +475,11 @@ input::-ms-clear {
 
 .inline-error-message {
     background-color: var(--error-bg);
-    border: 1px solid var(--error-color);
+    border: 1px solid #E8C4B8;
     border-radius: var(--border-radius);
     padding: var(--spacing-sm);
     margin-bottom: var(--spacing-md);
-    color: var(--error-color);
+    color: var(--error-text);
     font-size: 14px;
     display: none;
 }
@@ -725,9 +725,13 @@ input::-ms-clear {
     background: white;
     border-top: 1px solid var(--border-color);
     padding: var(--spacing-xs) 0;
-    position: sticky;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    position: fixed;
     bottom: 0;
+    left: 0;
+    right: 0;
     min-height: 56px;
+    z-index: 100;
 }
 
 .nav-item {

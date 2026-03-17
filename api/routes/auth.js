@@ -574,8 +574,7 @@ router.post('/reset-password/set', async (req, res) => {
         }
 
         // 비밀번호 해싱 및 저장
-        const bcrypt = require('bcrypt');
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await hashPassword(newPassword);
 
         await query(
             'UPDATE users SET password_hash = $1 WHERE id = $2',

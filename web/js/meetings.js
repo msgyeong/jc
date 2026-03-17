@@ -5,17 +5,41 @@ async function loadMeetingsScreen() {
     if (!container) return;
     container.innerHTML = renderSkeleton('list');
 
+    var userInfo = typeof getCurrentUser === 'function' ? getCurrentUser() : JSON.parse(localStorage.getItem('user_info') || 'null');
+    var isAdminUser = userInfo && ['admin', 'super_admin', 'local_admin'].includes(userInfo.role);
+
     try {
         const res = await apiClient.request('/meetings');
         if (!res.success) throw new Error(res.message);
         const meetings = res.data?.items || res.data || [];
 
+        // 관리자용 회의 생성 버튼
+        var createBtn = isAdminUser ? '<div style="margin-bottom:16px"><button class="btn btn-primary" onclick="showCreateMeetingForm()">+ 새 회의 생성</button></div>' : '';
+        var createFormHtml = `<div id="create-meeting-form" style="display:none;margin-bottom:20px;padding:16px;border:1px solid var(--border-color);border-radius:12px;background:var(--card-bg,#fff)">
+            <h3 style="margin:0 0 12px;font-size:16px">새 회의 생성</h3>
+            <div style="display:flex;flex-direction:column;gap:10px">
+                <input type="text" id="new-meeting-title" placeholder="회의 제목" style="padding:10px;border:1px solid var(--border-color);border-radius:8px">
+                <select id="new-meeting-type" style="padding:10px;border:1px solid var(--border-color);border-radius:8px">
+                    <option value="regular">정기회의</option>
+                    <option value="board">이사회</option>
+                    <option value="general_assembly">정기총회</option>
+                </select>
+                <input type="datetime-local" id="new-meeting-date" style="padding:10px;border:1px solid var(--border-color);border-radius:8px">
+                <input type="text" id="new-meeting-location" placeholder="장소" style="padding:10px;border:1px solid var(--border-color);border-radius:8px">
+                <textarea id="new-meeting-desc" placeholder="설명 (선택)" rows="2" style="padding:10px;border:1px solid var(--border-color);border-radius:8px;resize:vertical"></textarea>
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-primary btn-sm" onclick="submitCreateMeeting()">등록</button>
+                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('create-meeting-form').style.display='none'">취소</button>
+                </div>
+            </div>
+        </div>`;
+
         if (meetings.length === 0) {
-            container.innerHTML = renderEmptyState('calendar', '등록된 회의가 없습니다');
+            container.innerHTML = createBtn + createFormHtml + '<div style="text-align:center;padding:40px 0;color:var(--text-secondary)">등록된 회의가 없습니다.</div>';
             return;
         }
 
-        container.innerHTML = meetings.map(m => {
+        container.innerHTML = createBtn + createFormHtml + meetings.map(m => {
             const statusLabel = { scheduled: '예정', in_progress: '진행 중', completed: '완료', cancelled: '취소' }[m.status] || m.status;
             const statusClass = m.status === 'in_progress' ? 'badge-active' : m.status === 'completed' ? 'badge-done' : '';
             const dateStr = m.meeting_date ? formatDate(m.meeting_date) : '';
@@ -223,6 +247,49 @@ async function loadMeetingVotes(meetingId) {
     } catch (_) {
         el.innerHTML = '투표 정보를 불러올 수 없습니다';
     }
+}
+
+// 회의 생성 폼
+function showCreateMeetingForm() {
+    var form = document.getElementById('create-meeting-form');
+    if (form) form.style.display = 'block';
+    var titleInput = document.getElementById('new-meeting-title');
+    if (titleInput) { titleInput.value = ''; titleInput.focus(); }
+}
+
+async function submitCreateMeeting() {
+    var title = document.getElementById('new-meeting-title')?.value?.trim();
+    var meetingType = document.getElementById('new-meeting-type')?.value || 'regular';
+    var meetingDate = document.getElementById('new-meeting-date')?.value;
+    var location = document.getElementById('new-meeting-location')?.value?.trim();
+    var description = document.getElementById('new-meeting-desc')?.value?.trim();
+
+    if (!title) { showToast('회의 제목을 입력하세요', 'error'); return; }
+    if (!meetingDate) { showToast('일시를 선택하세요', 'error'); return; }
+
+    try {
+        var res = await fetch('/api/meetings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+            },
+            body: JSON.stringify({
+                title: title,
+                meeting_type: meetingType,
+                meeting_date: meetingDate,
+                location: location || null,
+                description: description || null
+            })
+        });
+        var data = await res.json();
+        if (data.success) {
+            showToast('회의가 생성되었습니다');
+            loadMeetingsScreen();
+        } else {
+            showToast(data.error || '생성 실패', 'error');
+        }
+    } catch (err) { showToast('오류: ' + err.message, 'error'); }
 }
 
 async function castVote(meetingId, voteId, option) {

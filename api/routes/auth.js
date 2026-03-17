@@ -119,6 +119,30 @@ router.post('/signup', async (req, res) => {
 
         const user = result.rows[0];
 
+        // 주소가 있으면 자동 좌표 변환 (비동기, 실패해도 가입은 완료)
+        if (address) {
+            try {
+                const https = require('https');
+                const geoUrl = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`;
+                const kakaoRes = await new Promise((resolve, reject) => {
+                    https.get(geoUrl, {
+                        headers: { 'Authorization': 'KakaoAK bf233c9ee97fc1e97870c696f6375006' }
+                    }, (response) => {
+                        let data = '';
+                        response.on('data', chunk => data += chunk);
+                        response.on('end', () => resolve(JSON.parse(data)));
+                    }).on('error', reject);
+                });
+                const docs = kakaoRes.documents || [];
+                if (docs.length > 0) {
+                    await query(
+                        `UPDATE users SET business_address = $1, business_lat = $2, business_lng = $3 WHERE id = $4`,
+                        [address, parseFloat(docs[0].y), parseFloat(docs[0].x), user.id]
+                    );
+                }
+            } catch (_) { /* 좌표 변환 실패해도 무시 */ }
+        }
+
         res.status(201).json({
             success: true,
             message: '회원가입이 완료되었습니다. 관리자 승인을 기다려주세요.',

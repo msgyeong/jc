@@ -132,12 +132,22 @@ class ApiClient {
     }
     
     /**
-     * 비밀번호 재설정 (이메일 + 이름 확인)
+     * 비밀번호 재설정 Step 1: 이메일+이름 확인 → 본인확인 질문 반환
      */
-    async resetPassword(email, name) {
-        return this.request('/auth/reset-password', {
+    async resetPasswordVerify(email, name) {
+        return this.request('/auth/reset-password/verify', {
             method: 'POST',
             body: JSON.stringify({ email, name })
+        });
+    }
+
+    /**
+     * 비밀번호 재설정 Step 2: 본인확인 답변 → 임시 비밀번호 발급
+     */
+    async resetPassword(token, birthDate, answer) {
+        return this.request('/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify({ token, birthDate, answer })
         });
     }
     

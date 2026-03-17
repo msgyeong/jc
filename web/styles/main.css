@@ -725,9 +725,13 @@ input::-ms-clear {
     background: white;
     border-top: 1px solid var(--border-color);
     padding: var(--spacing-xs) 0;
-    position: sticky;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    position: fixed;
     bottom: 0;
+    left: 0;
+    right: 0;
     min-height: 56px;
+    z-index: 100;
 }
 
 .nav-item {

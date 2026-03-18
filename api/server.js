@@ -16,6 +16,7 @@ const adminRoutes = require('./routes/admin');
 const seedRoutes = require('./routes/seed');
 const attendanceRoutes = require('./routes/attendance');
 const favoritesRoutes = require('./routes/favorites');
+const memberGroupsRoutes = require('./routes/member-groups');
 const titlesRoutes = require('./routes/titles');
 const industriesRoutes = require('./routes/industries');
 const { notificationsRouter, pushRouter } = require('./routes/notifications');
@@ -114,6 +115,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/favorites', favoritesRoutes);
+app.use('/api/member-groups', memberGroupsRoutes);
 app.use('/api/titles', titlesRoutes);
 app.use('/api/industries', industriesRoutes);
 app.use('/api/push', pushRouter);

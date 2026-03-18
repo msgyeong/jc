@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영등포 JC - 회원관리 앱</title>
     <!-- Build: 2026-02-06 v2.1 -->
-    <link rel="stylesheet" href="styles/main.css?v=20260318b">
+    <link rel="stylesheet" href="styles/main.css?v=20260318d">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FFFFFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -978,17 +978,35 @@
         <div id="members-screen" class="screen">
             <div class="app-bar">
                 <h1 class="app-bar-title">회원</h1>
-                <span class="app-bar-badge" id="member-count-badge"></span>
+                <div class="app-bar-right">
+                    <span class="app-bar-badge" id="member-count-badge"></span>
+                    <button type="button" class="app-bar-icon-btn" id="member-search-btn" onclick="openMemberSearchOverlay()" aria-label="회원 검색">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </button>
+                </div>
             </div>
             <div class="screen-content with-bottom-nav">
-                <div class="member-search-wrap">
-                    <div class="member-search-box">
-                        <span class="search-icon-svg">&#128269;</span>
-                        <input type="search" id="member-search" placeholder="이름, 직책, 회사, 업종으로 검색..." />
-                    </div>
-                </div>
                 <div class="member-list" id="member-list">
                     <div class="content-loading">회원 목록 로딩 중...</div>
+                </div>
+            </div>
+
+            <!-- 검색 오버레이 (풀스크린, 슬라이드-인) -->
+            <div id="member-search-overlay" class="member-search-overlay">
+                <div class="search-overlay-header">
+                    <button type="button" class="search-overlay-back" onclick="closeMemberSearchOverlay()" aria-label="뒤로">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7l-7 7 7 7"/></svg>
+                    </button>
+                    <div class="search-overlay-input-wrap">
+                        <input type="search" id="member-search-global" placeholder="이름·업종·직업·조직명 검색 (초성 ㄱㅁㅇ 가능)" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="search-overlay-tabs">
+                    <button type="button" class="search-tab active" data-scope="my-org" onclick="switchSearchTab('my-org')">내 조직</button>
+                    <button type="button" class="search-tab" data-scope="all-org" onclick="switchSearchTab('all-org')">전체 조직</button>
+                </div>
+                <div class="search-overlay-results" id="search-results">
+                    <div class="search-empty-hint">이름, 초성(ㄱㅁㅇ), 업종, 조직명으로 검색하세요</div>
                 </div>
             </div>
             <nav class="bottom-nav">
@@ -1433,29 +1451,30 @@
     </div>
 
     <!-- 앱 스크립트 -->
-    <script src="js/config.js?v=20260318b"></script>
-    <script src="js/api-client.js?v=20260318b"></script>
-    <script src="js/utils.js?v=20260318b"></script>
-    <script src="js/auth.js?v=20260318b"></script>
-    <script src="js/signup.js?v=20260318b"></script>
-    <script src="js/home.js?v=20260318b"></script>
-    <script src="js/posts.js?v=20260318b"></script>
-    <script src="js/notices.js?v=20260318b"></script>
-    <script src="js/schedules.js?v=20260318b"></script>
-    <script src="js/members.js?v=20260318b"></script>
-    <script src="js/profile.js?v=20260318b"></script>
-    <script src="js/admin.js?v=20260318b"></script>
-    <script src="js/push.js?v=20260318b"></script>
-    <script src="js/notifications.js?v=20260318b"></script>
-    <script src="js/notification-settings.js?v=20260318b"></script>
-    <script src="js/settings.js?v=20260318b"></script>
-    <script src="js/meetings.js?v=20260318b"></script>
-    <script src="js/portal.js?v=20260318b"></script>
-    <script src="js/admin-app.js?v=20260318b"></script>
-    <script src="js/content.js?v=20260318b"></script>
-    <script src="js/orgchart.js?v=20260318b"></script>
-    <script src="js/jc-map.js?v=20260318b"></script>
-    <script src="js/navigation.js?v=20260318b"></script>
-    <script src="js/app.js?v=20260318b"></script>
+    <script src="js/config.js?v=20260318c"></script>
+    <script src="js/api-client.js?v=20260318c"></script>
+    <script src="js/utils.js?v=20260318c"></script>
+    <script src="js/auth.js?v=20260318c"></script>
+    <script src="js/signup.js?v=20260318c"></script>
+    <script src="js/home.js?v=20260318c"></script>
+    <script src="js/posts.js?v=20260318c"></script>
+    <script src="js/notices.js?v=20260318c"></script>
+    <script src="js/schedules.js?v=20260318c"></script>
+    <script src="js/chosung.js?v=20260318c"></script>
+    <script src="js/members.js?v=20260318c"></script>
+    <script src="js/profile.js?v=20260318c"></script>
+    <script src="js/admin.js?v=20260318c"></script>
+    <script src="js/push.js?v=20260318c"></script>
+    <script src="js/notifications.js?v=20260318c"></script>
+    <script src="js/notification-settings.js?v=20260318c"></script>
+    <script src="js/settings.js?v=20260318c"></script>
+    <script src="js/meetings.js?v=20260318c"></script>
+    <script src="js/portal.js?v=20260318c"></script>
+    <script src="js/admin-app.js?v=20260318c"></script>
+    <script src="js/content.js?v=20260318c"></script>
+    <script src="js/orgchart.js?v=20260318c"></script>
+    <script src="js/jc-map.js?v=20260318c"></script>
+    <script src="js/navigation.js?v=20260318c"></script>
+    <script src="js/app.js?v=20260318c"></script>
 </body>
 </html>

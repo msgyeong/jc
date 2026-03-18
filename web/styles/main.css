@@ -6807,3 +6807,402 @@ input[type="date"]:focus {
 /* Leaflet 지도 컨테이너 */
 #jc-map-content { position: relative !important; width: 100% !important; height: calc(100vh - 56px) !important; overflow: hidden !important; }
 #jc-kakao-map { width: 100% !important; height: 100% !important; }
+
+/* ==================== 카카오톡 스타일 회원 목록 ==================== */
+
+/* 앱바 아이콘 버튼 (검색 등) */
+.app-bar-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    -webkit-tap-highlight-color: transparent;
+    border-radius: 50%;
+    transition: background 0.15s;
+}
+.app-bar-icon-btn:active {
+    background: rgba(255,255,255,0.15);
+}
+.app-bar-icon-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* 앱바 배지 (회원 수) */
+.app-bar-badge {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-right: 4px;
+}
+
+/* ── "나" 섹션 ── */
+.me-section {
+    margin-bottom: 4px;
+}
+
+.me-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.me-card:active {
+    background: var(--bg-secondary);
+}
+
+.me-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+.me-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.me-avatar svg {
+    width: 36px;
+    height: 36px;
+}
+
+.me-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.me-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.me-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.me-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* ── 접기/펼치기 섹션 ── */
+.section-collapsible .member-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+.section-collapsible .member-section-header > span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.section-chevron {
+    font-size: 10px;
+    color: var(--text-hint);
+    transition: transform 0.25s ease;
+    display: inline-block;
+}
+
+.section-collapsible.collapsed .section-chevron {
+    transform: rotate(-90deg);
+}
+
+.section-body {
+    overflow: hidden;
+    max-height: 2000px;
+    transition: max-height 0.3s ease, opacity 0.25s ease;
+    opacity: 1;
+}
+
+.section-collapsible.collapsed .section-body {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+}
+
+.section-count {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-hint);
+    background: var(--neutral-bg);
+    padding: 1px 6px;
+    border-radius: 8px;
+}
+
+/* 그룹 액션 버튼 (편집, 삭제) */
+.group-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.group-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 50%;
+    transition: background 0.15s;
+    color: var(--text-secondary);
+    -webkit-tap-highlight-color: transparent;
+}
+.group-action-btn:hover {
+    background: var(--neutral-bg);
+}
+.group-action-btn:active {
+    background: var(--border-color);
+}
+
+/* ── 그룹 추가 버튼 ── */
+.add-group-row {
+    padding: 4px 4px 8px;
+}
+
+.add-group-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 13px;
+    padding: 10px 16px;
+    cursor: pointer;
+    width: 100%;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+}
+.add-group-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* ── 전체 회원 헤더 (업종 필터) ── */
+.all-members-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.industry-filter-inline {
+    font-size: 12px;
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--text-secondary);
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    padding-right: 22px;
+}
+.industry-filter-inline:focus {
+    border-color: var(--primary-color);
+}
+
+/* compact 멤버 카드 (즐겨찾기, 그룹 내부) */
+.member-card-v2.compact {
+    padding: 8px 14px;
+}
+.member-card-v2.compact .member-avatar-v2 {
+    width: 36px;
+    height: 36px;
+}
+.member-card-v2.compact .member-info-v2 {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 조직 태그 (타로컬 검색결과) */
+.member-org-tag {
+    font-size: 11px;
+    color: var(--primary-color);
+    background: var(--primary-light);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 2px;
+    display: inline-block;
+}
+
+/* ==================== 검색 오버레이 ==================== */
+
+.member-search-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5000;
+    background: var(--background-color);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.member-search-overlay.open {
+    transform: translateX(0);
+}
+
+/* 검색 오버레이 헤더 */
+.search-overlay-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 8px 8px 4px;
+    background: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.search-overlay-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    font-size: 20px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+.search-overlay-back:active {
+    background: rgba(255,255,255,0.15);
+}
+
+.search-overlay-input-wrap {
+    flex: 1;
+    position: relative;
+}
+
+.search-overlay-input-wrap input {
+    width: 100%;
+    height: 38px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 19px;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+.search-overlay-input-wrap input::placeholder {
+    color: rgba(255,255,255,0.6);
+}
+.search-overlay-input-wrap input:focus {
+    background: rgba(255,255,255,0.3);
+}
+
+/* 검색 탭 (내 조직 / 전체 조직) */
+.search-overlay-tabs {
+    display: flex;
+    padding: 8px 12px;
+    gap: 8px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.search-tab {
+    padding: 6px 16px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 500;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+.search-tab.active {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+.search-tab:not(.active):active {
+    background: var(--neutral-bg);
+}
+
+/* 검색 결과 영역 */
+.search-overlay-results {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 12px;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 빈 힌트 텍스트 */
+.search-empty-hint {
+    text-align: center;
+    color: var(--text-hint);
+    font-size: 14px;
+    padding: 48px 16px;
+}
+
+/* 조직별 그룹 (전체 조직 검색 결과) */
+.search-org-group {
+    margin-bottom: 12px;
+}
+
+.search-org-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 8px 4px 4px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 4px;
+}
+
+/* ── 멤버 목록 반응형 조정 ── */
+@media (max-width: 480px) {
+    .member-search-overlay {
+        /* 모바일에서 전체 화면 커버 보장 */
+        max-width: 100vw;
+    }
+    .search-overlay-header {
+        padding-top: env(safe-area-inset-top, 8px);
+    }
+}

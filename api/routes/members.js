@@ -96,52 +96,63 @@ router.get('/', authenticate, async (req, res) => {
     }
 });
 
+// 초성(자음)만으로 구성되어 있는지 판별
+function isAllChosung(str) {
+    return /^[ㄱ-ㅎ]+$/.test(str);
+}
+
 /**
  * GET /api/members/search
- * 회원 검색 (텍스트 + 업종 필터 AND 조합)
+ * 회원 검색 (텍스트/초성 + 업종 필터 AND 조합)
  */
 router.get('/search', authenticate, async (req, res) => {
     try {
-        const searchQuery = req.query.q || '';
+        const searchQuery = (req.query.q || '').trim();
         const industry = req.query.industry;
 
         if (!searchQuery && !industry) {
-            return res.json({
-                success: true,
-                members: [],
-                total: 0
-            });
+            return res.json({ success: true, members: [], total: 0 });
         }
 
-        const conditions = ["status = 'active'"];
-        const params = [];
+        const conditions = ["u.status = 'active'"];
+        const params = [req.user.userId];
 
         if (searchQuery) {
-            params.push(`%${searchQuery}%`);
-            conditions.push(`(
-                name ILIKE $${params.length}
-                OR email ILIKE $${params.length}
-                OR phone ILIKE $${params.length}
-                OR address ILIKE $${params.length}
-                OR company ILIKE $${params.length}
-            )`);
+            if (isAllChosung(searchQuery)) {
+                // 초성 검색 모드
+                params.push(`%${searchQuery}%`);
+                conditions.push(`u.name_chosung LIKE $${params.length}`);
+            } else {
+                // 일반 텍스트 검색
+                params.push(`%${searchQuery}%`);
+                conditions.push(`(
+                    u.name ILIKE $${params.length}
+                    OR u.email ILIKE $${params.length}
+                    OR u.phone ILIKE $${params.length}
+                    OR u.company ILIKE $${params.length}
+                    OR u.position ILIKE $${params.length}
+                    OR u.profession ILIKE $${params.length}
+                )`);
+            }
         }
 
         if (industry && VALID_INDUSTRY_CODES.includes(industry)) {
             params.push(industry);
-            conditions.push(`industry = $${params.length}`);
+            conditions.push(`u.industry = $${params.length}`);
         }
 
         const result = await query(
             `SELECT
-                id, email, name, phone, address,
-                profile_image, role, status,
-                company, position, department,
-                industry, industry_detail,
-                created_at
-             FROM users
+                u.id, u.email, u.name, u.phone, u.address,
+                u.profile_image, u.role, u.status,
+                u.company, u.position, u.department,
+                u.industry, u.industry_detail, u.profession,
+                u.created_at,
+                CASE WHEN f.id IS NOT NULL THEN true ELSE false END as is_favorited
+             FROM users u
+             LEFT JOIN favorites f ON f.target_member_id = u.id AND f.user_id = $1
              WHERE ${conditions.join(' AND ')}
-             ORDER BY name ASC
+             ORDER BY u.name ASC
              LIMIT 50`,
             params
         );
@@ -151,17 +162,88 @@ router.get('/search', authenticate, async (req, res) => {
             industry_name: m.industry ? (INDUSTRY_CATEGORIES.find(c => c.code === m.industry) || {}).name || null : null
         }));
 
-        res.json({
-            success: true,
-            members,
-            total: members.length
-        });
+        res.json({ success: true, members, total: members.length });
     } catch (error) {
         console.error('Search members error:', error);
-        res.status(500).json({
-            success: false,
-            message: '회원 검색 중 오류가 발생했습니다.'
-        });
+        res.status(500).json({ success: false, message: '회원 검색 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * GET /api/members/search-all
+ * 전체 조직(타로컬 포함) 회원 검색 — 초성 지원
+ * 프라이버시: 타 조직 회원은 전화번호/주소/이메일 미반환
+ */
+router.get('/search-all', authenticate, async (req, res) => {
+    try {
+        const searchQuery = (req.query.q || '').trim();
+        const industry = req.query.industry;
+        const orgId = req.query.org_id;
+
+        if (!searchQuery && !industry && !orgId) {
+            return res.json({ success: true, members: [], total: 0 });
+        }
+
+        const myOrgResult = await query('SELECT org_id FROM users WHERE id = $1', [req.user.userId]);
+        const myOrgId = myOrgResult.rows[0] ? myOrgResult.rows[0].org_id : null;
+
+        const conditions = ["u.status = 'active'", "u.role != 'super_admin'"];
+        const params = [req.user.userId];
+
+        if (searchQuery) {
+            if (isAllChosung(searchQuery)) {
+                params.push(`%${searchQuery}%`);
+                conditions.push(`u.name_chosung LIKE $${params.length}`);
+            } else {
+                params.push(`%${searchQuery}%`);
+                conditions.push(`(
+                    u.name ILIKE $${params.length}
+                    OR u.company ILIKE $${params.length}
+                    OR u.profession ILIKE $${params.length}
+                    OR o.name ILIKE $${params.length}
+                )`);
+            }
+        }
+
+        if (industry && VALID_INDUSTRY_CODES.includes(industry)) {
+            params.push(industry);
+            conditions.push(`u.industry = $${params.length}`);
+        }
+
+        if (orgId) {
+            params.push(parseInt(orgId));
+            conditions.push(`u.org_id = $${params.length}`);
+        }
+
+        const result = await query(
+            `SELECT
+                u.id, u.name, u.profile_image,
+                u.company, u.position, u.industry, u.profession,
+                u.org_id,
+                COALESCE(o.name, '소속 없음') as org_name,
+                CASE WHEN f.id IS NOT NULL THEN true ELSE false END as is_favorited,
+                CASE WHEN u.org_id = ${myOrgId ? myOrgId : 'NULL'} THEN u.phone ELSE NULL END as phone
+             FROM users u
+             LEFT JOIN organizations o ON o.id = u.org_id
+             LEFT JOIN favorites f ON f.target_member_id = u.id AND f.user_id = $1
+             WHERE ${conditions.join(' AND ')}
+             ORDER BY
+                CASE WHEN u.org_id = ${myOrgId ? myOrgId : 'NULL'} THEN 0 ELSE 1 END,
+                o.name ASC, u.name ASC
+             LIMIT 100`,
+            params
+        );
+
+        const members = result.rows.map(m => ({
+            ...m,
+            is_same_org: myOrgId && m.org_id === myOrgId,
+            industry_name: m.industry ? (INDUSTRY_CATEGORIES.find(c => c.code === m.industry) || {}).name || null : null
+        }));
+
+        res.json({ success: true, members, total: members.length });
+    } catch (error) {
+        console.error('Search all members error:', error);
+        res.status(500).json({ success: false, message: '전체 회원 검색 중 오류가 발생했습니다.' });
     }
 });
 

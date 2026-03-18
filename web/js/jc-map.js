@@ -24,12 +24,15 @@ async function loadJcMapScreen() {
             return;
         }
 
-        // 컨테이너 크기 강제 설정
-        mapContainer.style.width = '100%';
-        mapContainer.style.height = '100%';
+        // 컨테이너 크기를 #app 기준으로 강제 설정
+        var appEl = document.getElementById('app');
+        var appWidth = appEl ? appEl.offsetWidth : window.innerWidth;
+        mapContainer.style.width = appWidth + 'px';
+        mapContainer.style.height = 'calc(100vh - 56px)';
         if (mapContainer.parentElement) {
             mapContainer.parentElement.style.height = 'calc(100vh - 56px)';
             mapContainer.parentElement.style.position = 'relative';
+            mapContainer.parentElement.style.width = appWidth + 'px';
         }
 
         // 기존 맵 제거 후 새로 생성

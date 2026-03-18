@@ -161,8 +161,21 @@ function renderContentView(screen, screenName, contentType, pageTitle, data, isA
             var baseURL2 = window.location.hostname === 'localhost'
                 ? 'http://localhost:3000/api'
                 : '/api';
+            var fileUrl = baseURL2 + '/content/' + contentType + '/file';
+            var isPdf = (data.file_mime && data.file_mime === 'application/pdf') || (data.file_name && data.file_name.toLowerCase().endsWith('.pdf'));
+
+            // PDF인 경우 인라인 뷰어
+            if (isPdf) {
+                html += '<div style="margin-top:16px;">' +
+                    '<iframe src="' + fileUrl + '#toolbar=1" style="width:100%;height:70vh;border:1px solid #E5E7EB;border-radius:8px;" frameborder="0"></iframe>' +
+                    '<div style="display:flex;gap:8px;margin-top:8px;">' +
+                        '<a href="' + fileUrl + '" target="_blank" class="btn btn-outline" style="flex:1;text-align:center;font-size:13px;">새 탭에서 보기</a>' +
+                        '<a href="' + fileUrl + '" download class="btn btn-primary" style="flex:1;text-align:center;font-size:13px;">다운로드</a>' +
+                    '</div>' +
+                '</div>';
+            } else {
             html += '<div style="margin-top:16px;padding:12px;background:#F9FAFB;border-radius:8px;border:1px solid #E5E7EB;">' +
-                '<a href="' + baseURL2 + '/content/' + contentType + '/file" ' +
+                '<a href="' + fileUrl + '" ' +
                     'style="display:flex;align-items:center;gap:8px;color:#1F4FD8;text-decoration:none;font-size:13px;" download>' +
                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
                         '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>' +
@@ -172,6 +185,7 @@ function renderContentView(screen, screenName, contentType, pageTitle, data, isA
                     escapeHtml(data.file_name) +
                 '</a>' +
             '</div>';
+            }
         }
 
         // 최종 수정일

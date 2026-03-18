@@ -24,7 +24,18 @@ async function loadJcMapScreen() {
             return;
         }
 
-        // 컨테이너 크기 강제 설정
+        // 지도 화면을 fixed 오버레이로 표시
+        var screen = document.getElementById('jc-map-screen');
+        if (screen) {
+            screen.style.position = 'fixed';
+            screen.style.top = '0';
+            screen.style.left = '0';
+            screen.style.width = '100vw';
+            screen.style.height = '100vh';
+            screen.style.zIndex = '999';
+            screen.style.background = '#fff';
+            screen.style.maxWidth = '100vw';
+        }
         var contentEl = document.getElementById('jc-map-content');
         if (contentEl) {
             contentEl.style.width = '100%';

@@ -6798,39 +6798,12 @@ input[type="date"]:focus {
 .portal-org-name { font-size: 15px; font-weight: 600; }
 .portal-org-district { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 
-/* JC 지도 — 전체 화면 */
-#jc-map-screen {
-    max-width: 100% !important;
-}
-#jc-map-screen .app-bar {
-    max-width: 480px;
-    margin: 0 auto;
-}
-#jc-map-content {
-    max-width: 100% !important;
-    width: 100vw !important;
-    margin-left: calc(-50vw + 50%) !important;
-}
+/* JC 지도 — JS에서 position:fixed로 처리 */
 
 /* 회의 삭제 버튼 */
 .btn-meeting-delete { background:none;border:1px solid #DC2626;color:#DC2626;padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer;margin-left:auto }
 .btn-meeting-delete:hover { background:#DC2626;color:#fff }
 
 /* Leaflet 지도 컨테이너 */
-#jc-map-content { position: relative !important; overflow: hidden !important; }
-#jc-kakao-map { position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; height: 100% !important; }
-#jc-kakao-map .leaflet-container { width: 100% !important; height: 100% !important; }
-
-/* JC 지도: #app 제한 해제 */
-#jc-map-screen.active ~ * { display: none; }
-#jc-map-screen {
-    position: relative !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    left: 50% !important;
-    right: 50% !important;
-    margin-left: -50vw !important;
-    margin-right: -50vw !important;
-    width: 100vw !important;
-}
+#jc-map-content { position: relative !important; width: 100% !important; height: calc(100vh - 56px) !important; overflow: hidden !important; }
+#jc-kakao-map { width: 100% !important; height: 100% !important; }

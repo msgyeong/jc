@@ -2,19 +2,15 @@
 
 // 화면 이름 → content_type 매핑
 var CONTENT_TYPE_MAP = {
-    'org-chart': 'org_chart',
     'jc-vision': 'vision',
     'jc-roles': 'roles',
-    'jc-map': 'map',
     'jc-charter': 'charter'
 };
 
 // 화면 이름 → 제목 매핑
 var CONTENT_TITLE_MAP = {
-    'org-chart': '조직도',
     'jc-vision': 'JC 비전·목표',
     'jc-roles': '직책 업무',
-    'jc-map': 'JC 지도',
     'jc-charter': '정관'
 };
 

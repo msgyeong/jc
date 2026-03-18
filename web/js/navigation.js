@@ -627,7 +627,7 @@ window.addEventListener('popstate', function(e) {
             showScheduleManageScreen();
         } else if (state.screen === 'admin-manage' && typeof initLocalAdmin === 'function') {
             navigateToScreen('admin-manage');
-        } else if (['org-chart','jc-vision','jc-roles','jc-map','jc-charter'].includes(state.screen)) {
+        } else if (['org-chart','jc-vision','jc-roles','jc-charter','jc-map'].includes(state.screen)) {
             navigateToScreen(state.screen);
         } else {
             navigateToScreen(state.screen);

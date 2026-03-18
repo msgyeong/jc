@@ -696,11 +696,12 @@ function renderPostDetail(post) {
                         <span class="post-date">${formatRelativeTime(post.created_at)}</span>
                     </div>
                 </div>
-                ${actionsHtml}
+
             </div>
             <h1 class="post-detail-title">${escapeHtml(post.title || '')}</h1>
             <div class="post-detail-body">${escapeHtml(post.content || '').replace(/\n/g, '<br>')}</div>
             ${imagesHtml}
+            ${actionsHtml}
             <div class="post-detail-meta">
                 ${post.views > 0 ? `<span><svg class="icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${post.views}</span>` : ''}
                 <span class="post-detail-comments-count"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <span class="num">${post.comments_count || 0}</span></span>

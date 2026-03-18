@@ -46,10 +46,12 @@ async function loadMeetingsScreen() {
             const dateStr = m.meeting_date ? formatDate(m.meeting_date) : '';
             const typeLabel = { regular: '정기회의', board: '이사회', general_assembly: '정기총회', extraordinary: '임시총회' }[m.meeting_type] || m.meeting_type;
 
+            var deleteBtn = isAdminUser ? `<button class="btn-meeting-delete" onclick="event.stopPropagation();deleteMeeting(${m.id},'${escapeHtml(m.title).replace(/'/g,"\\'")}')">삭제</button>` : '';
             return `<div class="meeting-card" onclick="showMeetingDetail(${m.id})">
                 <div class="meeting-card-header">
                     <span class="meeting-type-badge">${escapeHtml(typeLabel)}</span>
                     <span class="meeting-status ${statusClass}">${escapeHtml(statusLabel)}</span>
+                    ${deleteBtn}
                 </div>
                 <h3 class="meeting-title">${escapeHtml(m.title)}</h3>
                 <div class="meeting-meta">
@@ -61,6 +63,21 @@ async function loadMeetingsScreen() {
         }).join('');
     } catch (err) {
         container.innerHTML = renderErrorState('회의 목록을 불러올 수 없습니다', err.message, 'loadMeetingsScreen()');
+    }
+}
+
+async function deleteMeeting(meetingId, title) {
+    if (!confirm('"' + title + '" 회의를 삭제하시겠습니까?')) return;
+    try {
+        var res = await apiClient.request('/meetings/' + meetingId, { method: 'DELETE' });
+        if (res.success) {
+            showToast('회의가 삭제되었습니다');
+            loadMeetingsScreen();
+        } else {
+            alert(res.message || '삭제 실패');
+        }
+    } catch (err) {
+        alert('삭제 실패: ' + (err.message || ''));
     }
 }
 

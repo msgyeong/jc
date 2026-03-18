@@ -15,11 +15,16 @@ async function loadJcMapScreen() {
     }
 
     try {
-        if (!jcMapLoaded) {
-            var mapContainer = document.getElementById('jc-kakao-map');
-            if (!mapContainer) return;
+        var mapContainer = document.getElementById('jc-kakao-map');
+        if (!mapContainer) return;
 
-            jcMap = L.map(mapContainer).setView([37.5175, 126.9077], 12);
+        // 매번 새로 초기화 (display:none → block 전환 시 크기 0 문제 방지)
+        if (jcMap) {
+            try { jcMap.remove(); } catch(e) {}
+            jcMap = null;
+        }
+        {
+            jcMap = L.map(mapContainer, { zoomControl: true }).setView([37.5175, 126.9077], 12);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap',
@@ -29,14 +34,22 @@ async function loadJcMapScreen() {
             jcMapLoaded = true;
 
             // 내 위치 버튼
-            var myLocBtn = document.createElement('button');
-            myLocBtn.innerHTML = '📍';
-            myLocBtn.title = '내 위치';
-            myLocBtn.style.cssText = 'position:absolute;bottom:20px;right:12px;z-index:1000;width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #D1D5DB;box-shadow:0 2px 6px rgba(0,0,0,0.15);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center';
-            myLocBtn.onclick = showMyLocation;
-            mapContainer.parentElement.appendChild(myLocBtn);
+            var existingBtn = mapContainer.parentElement.querySelector('.jc-map-loc-btn');
+            if (!existingBtn) {
+                var myLocBtn = document.createElement('button');
+                myLocBtn.className = 'jc-map-loc-btn';
+                myLocBtn.innerHTML = '📍';
+                myLocBtn.title = '내 위치';
+                myLocBtn.style.cssText = 'position:absolute;bottom:20px;right:12px;z-index:1000;width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #D1D5DB;box-shadow:0 2px 6px rgba(0,0,0,0.15);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center';
+                myLocBtn.onclick = showMyLocation;
+                mapContainer.parentElement.appendChild(myLocBtn);
+            }
 
-            showMyLocation();
+            // 사이즈 확정 후 내 위치
+            setTimeout(function() {
+                jcMap.invalidateSize();
+                showMyLocation();
+            }, 300);
         }
 
         if (loadingEl) loadingEl.style.display = 'none';

@@ -6753,3 +6753,7 @@ input[type="date"]:focus {
     width: 100vw !important;
     margin-left: calc(-50vw + 50%) !important;
 }
+
+/* 회의 삭제 버튼 */
+.btn-meeting-delete { background:none;border:1px solid #DC2626;color:#DC2626;padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer;margin-left:auto }
+.btn-meeting-delete:hover { background:#DC2626;color:#fff }

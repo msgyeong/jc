@@ -150,6 +150,8 @@ function navigateToScreen(screenName) {
             }
         } else if (['jc-vision','jc-roles','jc-charter'].includes(screenName)) {
             if (typeof loadContentScreen === 'function') loadContentScreen(screenName);
+        } else if (screenName === 'group-board') {
+            if (typeof loadGroupBoardScreen === 'function') loadGroupBoardScreen();
         }
 
         // history.pushState for back navigation (로그인 전 화면은 제외)

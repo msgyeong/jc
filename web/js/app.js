@@ -26,6 +26,7 @@ console.log('⏰ 시간:', new Date().toLocaleString('ko-KR'));
         if (id === 'profile-screen' && typeof loadProfile === 'function') return loadProfile;
         if (id === 'meetings-screen' && typeof loadMeetingsScreen === 'function') return loadMeetingsScreen;
         if (id === 'org-chart-screen' && typeof loadOrgChartScreen === 'function') return loadOrgChartScreen;
+        if (id === 'group-board-screen' && typeof loadGroupBoardScreen === 'function') return loadGroupBoardScreen;
         return null;
     }
 
@@ -73,7 +74,6 @@ console.log('⏰ 시간:', new Date().toLocaleString('ko-KR'));
             if (refresher) {
                 Promise.resolve(refresher()).then(function() {
                     hideIndicator();
-                    showToast('새로고침 완료');
                 }).catch(function() {
                     hideIndicator();
                 });

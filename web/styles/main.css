@@ -7553,6 +7553,21 @@ input[type="date"]:focus {
     margin-top: 4px;
 }
 
+.oc-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 4px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+.oc-checkbox-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-color);
+}
+
 /* 그룹 추가 버튼 (하단) */
 .oc-add-group-btn {
     display: flex;
@@ -7621,6 +7636,243 @@ input[type="date"]:focus {
     border-top-color: var(--success-color);
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+/* ========== 조직도 게시판 버튼 ========== */
+.oc-board-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    background: rgba(37,99,235,0.04);
+    color: var(--primary-color);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.15s;
+}
+.oc-board-btn:hover, .oc-board-btn:active {
+    background: rgba(37,99,235,0.1);
+}
+
+/* ========== 그룹 게시판 (Group Board) ========== */
+
+.gb-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 16px;
+    padding: 0 16px;
+}
+.gb-tab {
+    flex: 1;
+    padding: 12px 0;
+    border: none;
+    background: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.2s, border-color 0.2s;
+}
+.gb-tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.gb-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+.gb-empty p { margin-top: 12px; font-size: 14px; }
+.gb-error {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--error-color);
+}
+
+.gb-post-card {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.gb-post-card:active { background: var(--bg-secondary); }
+.gb-post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.gb-post-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.gb-post-avatar-default {
+    background: #DBEAFE;
+}
+.gb-post-meta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.gb-post-author {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.gb-post-date {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+.gb-pin-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #FEF3C7;
+    color: #92400E;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 10px;
+}
+.gb-new-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px; height: 18px;
+    background: var(--error-color);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 50%;
+    margin-left: 4px;
+}
+.gb-post-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--text-primary);
+}
+.gb-post-excerpt {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+}
+.gb-post-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+.gb-load-more {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    background: none;
+    color: var(--primary-color);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.gb-detail { padding: 16px; }
+.gb-detail-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+.gb-detail-author-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.gb-detail-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.gb-detail-position { font-size: 12px; color: var(--text-secondary); }
+.gb-detail-date { font-size: 12px; color: var(--text-secondary); }
+.gb-detail-actions { display: flex; gap: 8px; }
+.gb-action-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: white;
+    font-size: 12px;
+    cursor: pointer;
+}
+.gb-action-delete { color: var(--error-color); border-color: var(--error-color); }
+.gb-detail-title { font-size: 20px; font-weight: 700; margin: 0 0 12px 0; }
+.gb-detail-content { font-size: 15px; line-height: 1.7; margin-bottom: 16px; }
+.gb-detail-images { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.gb-detail-img { max-width: 100%; border-radius: 8px; }
+.gb-detail-stats {
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 16px;
+}
+
+.gb-comments { margin-top: 8px; }
+.gb-comments-title { font-size: 16px; font-weight: 600; margin: 0 0 12px 0; }
+.gb-comment { padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.gb-comment-reply { padding-left: 40px; }
+.gb-comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.gb-comment-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+.gb-comment-date { font-size: 11px; color: var(--text-secondary); margin-left: auto; }
+.gb-comment-body { font-size: 14px; margin: 4px 0; line-height: 1.5; }
+.gb-comment-actions { display: flex; gap: 12px; }
+.gb-reply-btn, .gb-delete-comment-btn {
+    border: none; background: none; font-size: 12px;
+    color: var(--text-secondary); cursor: pointer; padding: 2px 0;
+}
+.gb-delete-comment-btn { color: var(--error-color); }
+.gb-reply-input-wrap { margin-top: 8px; padding-left: 40px; }
+.gb-comment-input { display: flex; gap: 8px; margin-top: 16px; align-items: flex-end; }
+.gb-comment-textarea {
+    flex: 1; padding: 10px; border: 1px solid var(--border-color);
+    border-radius: 8px; font-size: 14px; resize: none; font-family: inherit;
+}
+.gb-comment-submit {
+    padding: 10px 16px; background: var(--primary-color); color: white;
+    border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+
+.gb-schedule-card {
+    padding: 14px 16px; margin: 0 16px 10px;
+    background: white; border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.gb-schedule-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.gb-schedule-badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.gb-schedule-date { font-size: 12px; color: var(--text-secondary); margin-left: auto; }
+.gb-schedule-title { font-size: 15px; font-weight: 600; margin: 0 0 4px 0; }
+.gb-schedule-loc { font-size: 13px; color: var(--text-secondary); }
+.gb-schedule-desc { font-size: 13px; color: var(--text-secondary); margin: 4px 0 0 0; line-height: 1.4; }
+
+/* 일정 탭 그룹 일정 뱃지 */
+.schedule-group-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #E0E7FF;
+    color: #3730A3;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 10px;
 }

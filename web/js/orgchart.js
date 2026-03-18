@@ -81,6 +81,11 @@ function renderOrgGroup(g, isManager) {
     }
     html += '</div>';
 
+    // 게시판 바로가기 버튼
+    html += '<button class="oc-board-btn" onclick="openGroupBoard(' + g.id + ',\'' + escapeHtml(g.name).replace(/'/g, "\\'") + '\')">'
+        + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>'
+        + ' 게시판</button>';
+
     // 인원 추가 폼 (숨김)
     if (isManager) {
         html += '<div id="add-member-form-' + g.id + '" class="oc-add-member-form" style="display:none">'
@@ -88,13 +93,8 @@ function renderOrgGroup(g, isManager) {
             + '<input type="text" id="member-search-' + g.id + '" class="oc-input" placeholder="회원 이름 검색" onkeyup="handleOcSearchKey(event,' + g.id + ')">'
             + '<button class="oc-btn oc-btn-primary" onclick="searchOrgchartMember(' + g.id + ')">검색</button>'
             + '</div>'
+            + '<label class="oc-checkbox-row"><input type="checkbox" id="member-search-all-' + g.id + '"><span>모든 조직에서 검색 (타 로컬 포함)</span></label>'
             + '<div id="member-search-results-' + g.id + '" class="oc-search-results"></div>'
-            + '<div class="oc-manual-divider"><span>또는</span></div>'
-            + '<div class="oc-manual-row">'
-            + '<input type="text" id="member-position-' + g.id + '" class="oc-input oc-input-sm" placeholder="직책">'
-            + '<input type="text" id="member-manual-name-' + g.id + '" class="oc-input" placeholder="이름 (수기 입력)">'
-            + '<button class="oc-btn oc-btn-secondary" onclick="addOrgMemberManual(' + g.id + ')">등록</button>'
-            + '</div>'
             + '<button class="oc-btn oc-btn-ghost oc-btn-cancel" onclick="document.getElementById(\'add-member-form-' + g.id + '\').style.display=\'none\'">닫기</button>'
             + '</div>';
     }
@@ -179,9 +179,13 @@ async function searchOrgchartMember(groupId) {
     if (!q) return;
     var el = document.getElementById('member-search-results-' + groupId);
     if (!el) return;
+    var searchAll = document.getElementById('member-search-all-' + groupId)?.checked || false;
     el.innerHTML = '<div class="oc-searching">검색 중...</div>';
     try {
-        var res = await apiClient.request('/members/search?q=' + encodeURIComponent(q));
+        var endpoint = searchAll
+            ? '/members/search-all?q=' + encodeURIComponent(q)
+            : '/members/search?q=' + encodeURIComponent(q);
+        var res = await apiClient.request(endpoint);
         var members = res.members || [];
         if (members.length === 0) {
             el.innerHTML = '<div class="oc-no-results">검색 결과가 없습니다</div>';
@@ -191,6 +195,7 @@ async function searchOrgchartMember(groupId) {
             var info = [];
             if (m.position) info.push(m.position);
             if (m.company) info.push(m.company);
+            if (searchAll && m.org_name) info.push(m.org_name);
             var infoText = info.length > 0 ? info.join(' · ') : '';
             return '<div class="oc-result-item">'
                 + '<div class="oc-result-avatar" style="background:#DBEAFE">'

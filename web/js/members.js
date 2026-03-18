@@ -158,11 +158,35 @@ async function searchMembers(query) {
     }
 }
 
-// 회원 목록 그리드 렌더링
+// 회원 목록 그리드 렌더링 (카카오톡 스타일 섹션 구분)
 function renderMemberGrid(members) {
-    return '<div class="member-grid">' +
-        members.map(member => createMemberCard(member)).join('') +
-    '</div>';
+    const userInfo = typeof currentUser !== 'undefined'
+        ? currentUser
+        : JSON.parse(localStorage.getItem('user_info') || 'null');
+    const myId = userInfo ? userInfo.id : null;
+
+    let meHtml = '';
+    let othersHtml = '';
+
+    members.forEach(member => {
+        if (myId && String(member.id) === String(myId)) {
+            meHtml = `<div class="member-section">
+                <div class="member-section-header">나</div>
+                <div class="member-section-list">${createMemberCard(member)}</div>
+            </div>`;
+        } else {
+            othersHtml += createMemberCard(member);
+        }
+    });
+
+    const otherSection = othersHtml
+        ? `<div class="member-section">
+            <div class="member-section-header">회원 ${members.length - (meHtml ? 1 : 0)}명</div>
+            <div class="member-section-list">${othersHtml}</div>
+           </div>`
+        : '';
+
+    return '<div class="member-grid">' + meHtml + otherSection + '</div>';
 }
 
 // ========== 즐겨찾기 ==========

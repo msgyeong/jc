@@ -217,9 +217,8 @@ async function addOrgMemberUser(groupId, userId, userName) {
             method: 'POST',
             body: JSON.stringify({ group_id: groupId, user_id: userId })
         });
-        if (res.success) { showToast(userName + ' 추가 완료'); loadOrgChartScreen(); }
-        else showToast(res.error || '추가 실패', 'error');
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        if (res.success) { loadOrgChartScreen(); }
+    } catch (err) { console.error('Add member error:', err); }
 }
 
 async function addOrgMemberManual(groupId) {

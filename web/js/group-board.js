@@ -5,6 +5,7 @@ var _currentGroupBoardName = '';
 var _groupBoardPage = 1;
 var _groupBoardLoading = false;
 var _editingGroupPostId = null;
+var _currentGBTab = 'posts';
 
 // ========== 그룹 게시판 메인 ==========
 
@@ -12,13 +13,10 @@ function openGroupBoard(groupId, groupName) {
     _currentGroupBoardId = groupId;
     _currentGroupBoardName = groupName;
     _groupBoardPage = 1;
+    _currentGBTab = 'posts';
 
     var titleEl = document.getElementById('group-board-title');
-    if (titleEl) titleEl.textContent = groupName + ' 게시판';
-
-    // FAB 표시
-    var fab = document.getElementById('create-group-post-btn');
-    if (fab) fab.style.display = '';
+    if (titleEl) titleEl.textContent = groupName;
 
     navigateToScreen('group-board');
 }
@@ -28,42 +26,68 @@ async function loadGroupBoardScreen() {
     var container = document.getElementById('group-board-content');
     if (!container) return;
 
+    // 타이틀 갱신
+    var titleEl = document.getElementById('group-board-title');
+    if (titleEl) titleEl.textContent = _currentGroupBoardName || '그룹 게시판';
+
     container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
 
     try {
-        var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts?page=' + _groupBoardPage + '&limit=20');
-        if (!res.success) throw new Error(res.error || '로드 실패');
-
-        var posts = res.posts || [];
+        var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts?page=1&limit=20');
+        _groupBoardPage = 1;
+        var posts = (res && res.posts) || [];
         var html = '';
 
-        // 그룹 일정 + 게시판 탭
-        html += '<div class="gb-tabs">';
-        html += '<button class="gb-tab active" onclick="switchGroupBoardTab(\'posts\', this)">게시글</button>';
-        html += '<button class="gb-tab" onclick="switchGroupBoardTab(\'schedules\', this)">일정</button>';
+        // 탭 바
+        html += '<div class="gb-tab-bar">';
+        html += '<button class="gb-tab-item' + (_currentGBTab === 'posts' ? ' active' : '') + '" onclick="switchGroupBoardTab(\'posts\', this)">게시글</button>';
+        html += '<button class="gb-tab-item' + (_currentGBTab === 'schedules' ? ' active' : '') + '" onclick="switchGroupBoardTab(\'schedules\', this)">일정</button>';
         html += '</div>';
 
-        html += '<div id="gb-posts-section">';
+        // 게시글 섹션
+        html += '<div id="gb-posts-section"' + (_currentGBTab !== 'posts' ? ' style="display:none"' : '') + '>';
         if (posts.length === 0) {
-            html += '<div class="gb-empty">';
-            html += '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>';
-            html += '<p>아직 게시글이 없습니다</p>';
+            html += '<div class="gb-empty-state">';
+            html += '<div class="gb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg></div>';
+            html += '<p class="gb-empty-text">아직 게시글이 없습니다</p>';
+            html += '<p class="gb-empty-sub">첫 번째 게시글을 작성해보세요</p>';
             html += '</div>';
         } else {
             posts.forEach(function(p) {
                 html += renderGroupPostCard(p);
             });
-            if (res.totalPages > _groupBoardPage) {
+            if (res.totalPages > 1) {
                 html += '<button class="gb-load-more" onclick="loadMoreGroupPosts()">더 보기</button>';
             }
         }
         html += '</div>';
 
-        html += '<div id="gb-schedules-section" style="display:none"></div>';
+        // 일정 섹션
+        html += '<div id="gb-schedules-section"' + (_currentGBTab !== 'schedules' ? ' style="display:none"' : '') + '></div>';
 
         container.innerHTML = html;
+
+        // FAB 표시 및 연결
+        updateGroupBoardFAB();
+
+        // 일정 탭 활성 상태면 일정 로드
+        if (_currentGBTab === 'schedules') {
+            loadGroupSchedules();
+        }
     } catch (err) {
-        container.innerHTML = '<div class="gb-error">' + escapeHtml(err.message) + '</div>';
+        console.error('Group board load error:', err);
+        container.innerHTML = '<div class="gb-empty-state"><div class="gb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="#D1D5DB"/></svg></div><p class="gb-empty-text">게시글을 불러올 수 없습니다</p><button class="gb-retry-btn" onclick="loadGroupBoardScreen()">다시 시도</button></div>';
+    }
+}
+
+function updateGroupBoardFAB() {
+    var fab = document.getElementById('create-group-post-btn');
+    if (!fab) return;
+    fab.style.display = '';
+    if (_currentGBTab === 'schedules') {
+        fab.onclick = function() { showGroupScheduleForm(); };
+    } else {
+        fab.onclick = function() { showGroupPostForm(); };
     }
 }
 
@@ -138,7 +162,8 @@ async function loadMoreGroupPosts() {
 // ========== 탭 전환 (게시글/일정) ==========
 
 function switchGroupBoardTab(tab, btnEl) {
-    document.querySelectorAll('.gb-tab').forEach(function(t) { t.classList.remove('active'); });
+    _currentGBTab = tab;
+    document.querySelectorAll('.gb-tab-item').forEach(function(t) { t.classList.remove('active'); });
     if (btnEl) btnEl.classList.add('active');
 
     var postsSection = document.getElementById('gb-posts-section');
@@ -147,14 +172,11 @@ function switchGroupBoardTab(tab, btnEl) {
     if (tab === 'posts') {
         if (postsSection) postsSection.style.display = '';
         if (schedulesSection) schedulesSection.style.display = 'none';
-        var fab = document.getElementById('create-group-post-btn');
-        if (fab) { fab.style.display = ''; fab.onclick = function() { showGroupPostForm(); }; }
     } else {
         if (postsSection) postsSection.style.display = 'none';
         if (schedulesSection) { schedulesSection.style.display = ''; loadGroupSchedules(); }
-        var fab = document.getElementById('create-group-post-btn');
-        if (fab) { fab.style.display = ''; fab.onclick = function() { showGroupScheduleForm(); }; }
     }
+    updateGroupBoardFAB();
 }
 
 // ========== 그룹 일정 (게시판 내 탭) ==========
@@ -342,37 +364,34 @@ function showReplyInput(commentId) {
 
 async function submitGroupComment(postId) {
     var textarea = document.getElementById('gb-comment-text');
-    if (!textarea || !textarea.value.trim()) { showToast('댓글을 입력하세요', 'error'); return; }
+    if (!textarea || !textarea.value.trim()) return;
     try {
-        var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/comments', {
+        await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/comments', {
             method: 'POST',
             body: JSON.stringify({ content: textarea.value.trim() })
         });
-        if (res.success) { openGroupPostDetail(postId); }
-        else showToast(res.error || '댓글 작성 실패', 'error');
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        openGroupPostDetail(postId);
+    } catch (err) { console.error('Comment error:', err); }
 }
 
 async function submitGroupReply(postId, parentId) {
     var textarea = document.getElementById('reply-text-' + parentId);
-    if (!textarea || !textarea.value.trim()) { showToast('답글을 입력하세요', 'error'); return; }
+    if (!textarea || !textarea.value.trim()) return;
     try {
-        var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/comments', {
+        await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/comments', {
             method: 'POST',
             body: JSON.stringify({ content: textarea.value.trim(), parent_id: parentId })
         });
-        if (res.success) { openGroupPostDetail(postId); }
-        else showToast(res.error || '답글 작성 실패', 'error');
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        openGroupPostDetail(postId);
+    } catch (err) { console.error('Reply error:', err); }
 }
 
 async function deleteGroupComment(postId, commentId) {
     if (!confirm('이 댓글을 삭제하시겠습니까?')) return;
     try {
-        var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/comments/' + commentId, { method: 'DELETE' });
-        if (res.success) { openGroupPostDetail(postId); }
-        else showToast(res.error || '삭제 실패', 'error');
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/comments/' + commentId, { method: 'DELETE' });
+        openGroupPostDetail(postId);
+    } catch (err) { console.error('Delete comment error:', err); }
 }
 
 // ========== 게시글 작성/수정 ==========
@@ -385,13 +404,42 @@ function showGroupPostForm(postId) {
     var form = document.getElementById('group-post-form');
     if (form) form.reset();
 
+    // 이미지 프리뷰 초기화
+    var preview = document.getElementById('gp-image-preview');
+    if (preview) preview.innerHTML = '';
+
     if (postId) {
-        // 수정 모드: 기존 데이터 로드
         loadGroupPostForEdit(postId);
     }
 
     navigateToScreen('group-post-form');
 }
+
+// 이미지 파일 선택 시 프리뷰 표시
+document.addEventListener('DOMContentLoaded', function() {
+    var gpImages = document.getElementById('gp-images');
+    if (gpImages) {
+        gpImages.addEventListener('change', function() {
+            var preview = document.getElementById('gp-image-preview');
+            if (!preview) return;
+            preview.innerHTML = '';
+            var files = gpImages.files;
+            for (var i = 0; i < Math.min(files.length, 5); i++) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var img = document.createElement('div');
+                    img.className = 'gb-preview-thumb';
+                    img.style.backgroundImage = 'url(' + e.target.result + ')';
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(files[i]);
+            }
+            // 파일 선택 라벨 업데이트
+            var label = document.querySelector('.gb-file-upload span');
+            if (label) label.textContent = files.length + '장 선택됨';
+        });
+    }
+});
 
 async function loadGroupPostForEdit(postId) {
     try {
@@ -415,7 +463,8 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             var title = document.getElementById('gp-title').value.trim();
             var content = document.getElementById('gp-content').value.trim();
-            if (!title) { showToast('제목을 입력하세요', 'error'); return; }
+            var submitBtn = form.querySelector('button[type="submit"]');
+            if (!title) return;
 
             // 이미지 업로드
             var imagesInput = document.getElementById('gp-images');
@@ -427,6 +476,8 @@ document.addEventListener('DOMContentLoaded', function() {
             var body = { title: title, content: content };
             if (imageUrls) body.images = JSON.stringify(imageUrls);
 
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '등록 중...'; }
+
             try {
                 var url = '/group-board/' + _currentGroupBoardId + '/posts';
                 var method = 'POST';
@@ -434,16 +485,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     url += '/' + _editingGroupPostId;
                     method = 'PUT';
                 }
-                var res = await apiClient.request(url, { method: method, body: JSON.stringify(body) });
-                if (res.success) {
-                    showToast(_editingGroupPostId ? '수정 완료' : '게시글 등록 완료');
-                    _editingGroupPostId = null;
-                    history.back();
-                    setTimeout(function() { loadGroupBoardScreen(); }, 300);
-                } else {
-                    showToast(res.error || '실패', 'error');
-                }
-            } catch (err) { showToast('오류: ' + err.message, 'error'); }
+                await apiClient.request(url, { method: method, body: JSON.stringify(body) });
+                _editingGroupPostId = null;
+                _currentGBTab = 'posts';
+                history.back();
+            } catch (err) {
+                console.error('Post submit error:', err);
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '등록'; }
+            }
         });
     }
 
@@ -458,23 +507,23 @@ document.addEventListener('DOMContentLoaded', function() {
             var startDate = document.getElementById('gs-start-date').value;
             var endDate = document.getElementById('gs-end-date').value;
             var category = document.getElementById('gs-category').value;
+            var submitBtn = schedForm.querySelector('button[type="submit"]');
 
-            if (!title) { showToast('제목을 입력하세요', 'error'); return; }
-            if (!startDate) { showToast('시작일을 선택하세요', 'error'); return; }
+            if (!title || !startDate) return;
+
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '등록 중...'; }
 
             try {
-                var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/schedules', {
+                await apiClient.request('/group-board/' + _currentGroupBoardId + '/schedules', {
                     method: 'POST',
                     body: JSON.stringify({ title: title, description: description, location: location, start_date: startDate, end_date: endDate || null, category: category })
                 });
-                if (res.success) {
-                    showToast('일정 등록 완료');
-                    history.back();
-                    setTimeout(function() { switchGroupBoardTab('schedules', document.querySelector('.gb-tab:nth-child(2)')); }, 300);
-                } else {
-                    showToast(res.error || '실패', 'error');
-                }
-            } catch (err) { showToast('오류: ' + err.message, 'error'); }
+                _currentGBTab = 'schedules';
+                history.back();
+            } catch (err) {
+                console.error('Schedule submit error:', err);
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '등록'; }
+            }
         });
     }
 });
@@ -502,13 +551,9 @@ async function uploadGroupPostImages(files) {
 async function deleteGroupPost(postId) {
     if (!confirm('이 게시글을 삭제하시겠습니까?')) return;
     try {
-        var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId, { method: 'DELETE' });
-        if (res.success) {
-            showToast('삭제 완료');
-            history.back();
-            setTimeout(function() { loadGroupBoardScreen(); }, 300);
-        } else showToast(res.error || '삭제 실패', 'error');
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId, { method: 'DELETE' });
+        history.back();
+    } catch (err) { console.error('Delete post error:', err); }
 }
 
 // ========== 그룹 일정 폼 ==========

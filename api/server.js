@@ -253,6 +253,8 @@ app.listen(PORT, () => {
         manual_name VARCHAR(100), sort_order INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT NOW()
     )`).catch(() => {});
+    // 중복 방지 인덱스 (기존 테이블에도 적용)
+    dbQuery(`CREATE UNIQUE INDEX IF NOT EXISTS idx_orgchart_members_group_user ON orgchart_members(group_id, user_id) WHERE user_id IS NOT NULL`).catch(() => {});
     // 3초 후 매핑 (조직 생성 완료 대기)
     setTimeout(() => {
         dbQuery("UPDATE users SET org_id = (SELECT id FROM organizations WHERE code = 'yeongdeungpo') WHERE org_id IS NULL").catch(() => {});

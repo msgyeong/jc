@@ -126,6 +126,17 @@ router.post('/members', authenticate, async (req, res) => {
             return res.status(400).json({ success: false, error: '수기 등록 시 직책명을 입력하세요.' });
         }
 
+        // 중복 체크 (같은 그룹에 같은 회원)
+        if (user_id) {
+            const existing = await query(
+                'SELECT id FROM orgchart_members WHERE group_id = $1 AND user_id = $2',
+                [group_id, user_id]
+            );
+            if (existing.rows.length > 0) {
+                return res.json({ success: true, data: existing.rows[0], duplicate: true });
+            }
+        }
+
         const result = await query(
             `INSERT INTO orgchart_members (group_id, position_title, user_id, manual_name, sort_order)
              VALUES ($1, $2, $3, $4, $5) RETURNING *`,

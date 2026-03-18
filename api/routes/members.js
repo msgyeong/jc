@@ -113,7 +113,7 @@ router.get('/search', authenticate, async (req, res) => {
             });
         }
 
-        const conditions = ["status = 'active'"];
+        const conditions = ["status = 'active'", "role != 'super_admin'"];
         const params = [];
 
         if (searchQuery) {

@@ -150,6 +150,11 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    overscroll-behavior-y: contain; /* 네이티브 pull-to-refresh 방지 */
+}
+
+html {
+    overscroll-behavior-y: contain;
 }
 
 #app {
@@ -7580,3 +7585,42 @@ input[type="date"]:focus {
 }
 .oc-add-group-form .oc-input { margin-bottom: 10px; }
 .oc-form-actions { display: flex; gap: 8px; }
+
+/* ==================== Pull-to-refresh 인디케이터 ==================== */
+#pull-refresh-indicator {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-40px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.pull-refresh-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2.5px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+}
+
+.pull-refresh-spinner.spinning {
+    animation: spin 0.6s linear infinite;
+}
+
+#pull-refresh-indicator.ready .pull-refresh-spinner {
+    border-top-color: var(--success-color);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

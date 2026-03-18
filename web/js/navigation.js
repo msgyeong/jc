@@ -600,8 +600,15 @@ function _isLoggedIn() {
 }
 
 window.addEventListener('popstate', function(e) {
-    // 로그인 전 화면이면 popstate 무시
+    // 로그인 전 화면이면 popstate 무시 + 스택 복원
     if (_isOnAuthScreen() || !_isLoggedIn()) {
+        return;
+    }
+
+    // 검색 오버레이가 열려있으면 닫기만
+    var memberOverlay = document.getElementById('member-search-overlay');
+    if (memberOverlay && memberOverlay.classList.contains('open')) {
+        memberOverlay.classList.remove('open');
         return;
     }
 
@@ -634,12 +641,18 @@ window.addEventListener('popstate', function(e) {
         }
         window._navPopstate = false;
     } else {
-        // history 스택 바닥 (홈에서 더 뒤로 갈 곳 없음) → exit 모달
+        // history 스택 바닥 → 홈이면 종료 확인, 아니면 홈으로
         var homeScreen = document.getElementById('home-screen');
         if (homeScreen && homeScreen.classList.contains('active')) {
-            // 스택 복원해서 다시 뒤로가기 가능하게
+            // 홈에서 더 뒤로 갈 곳 없음 → 종료 확인 팝업
             history.pushState({ screen: 'home' }, '', '#home');
             showExitDialog();
+        } else {
+            // 홈이 아닌 다른 화면 → 홈으로 돌아가기
+            history.pushState({ screen: 'home', tab: 'home' }, '', '#home');
+            window._navPopstate = true;
+            switchTab('home');
+            window._navPopstate = false;
         }
     }
 });
@@ -656,15 +669,16 @@ function closeExitDialog() {
 
 function confirmExit() {
     closeExitDialog();
-    // 로그아웃 후 로그인 화면으로 이동
-    if (typeof handleLogout === 'function') {
-        handleLogout();
-    } else {
-        // fallback
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_info');
-        navigateToScreen('login');
-    }
+    // PWA 앱 종료 시도 (window.close → 안 되면 about:blank → 최종 fallback)
+    try {
+        window.close();
+    } catch (e) {}
+    // window.close()가 안 먹히는 경우 (standalone PWA에서는 동작)
+    // 약간의 딜레이 후 최소한 빈 페이지로 이동
+    setTimeout(function() {
+        // Android PWA: 빈 페이지로 이동하면 앱이 닫힘
+        window.location.href = 'about:blank';
+    }, 200);
 }
 
 // ── 사이드 메뉴 (햄버거) ──

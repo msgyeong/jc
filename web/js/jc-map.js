@@ -24,16 +24,26 @@ async function loadJcMapScreen() {
             return;
         }
 
-        // 컨테이너 크기를 #app 기준으로 강제 설정
-        var appEl = document.getElementById('app');
-        var appWidth = appEl ? appEl.offsetWidth : window.innerWidth;
-        mapContainer.style.width = appWidth + 'px';
-        mapContainer.style.height = 'calc(100vh - 56px)';
-        if (mapContainer.parentElement) {
-            mapContainer.parentElement.style.height = 'calc(100vh - 56px)';
-            mapContainer.parentElement.style.position = 'relative';
-            mapContainer.parentElement.style.width = appWidth + 'px';
+        // jc-map-screen 자체에 position relative 설정
+        var screen = document.getElementById('jc-map-screen');
+        if (screen) {
+            screen.style.position = 'relative';
+            screen.style.overflow = 'hidden';
         }
+
+        // 컨테이너 크기 설정
+        var contentEl = document.getElementById('jc-map-content');
+        if (contentEl) {
+            contentEl.style.position = 'relative';
+            contentEl.style.width = '100%';
+            contentEl.style.height = 'calc(100vh - 56px)';
+            contentEl.style.overflow = 'hidden';
+        }
+        mapContainer.style.position = 'absolute';
+        mapContainer.style.top = '0';
+        mapContainer.style.left = '0';
+        mapContainer.style.width = '100%';
+        mapContainer.style.height = '100%';
 
         // 기존 맵 제거 후 새로 생성
         if (jcMap) {

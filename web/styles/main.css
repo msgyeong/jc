@@ -7637,25 +7637,36 @@ input[type="date"]:focus {
 }
 
 /* ========== 조직도 게시판 버튼 ========== */
+/* 게시판 버튼 감싸개 — 패딩으로 잘림 방지 */
+.oc-board-btn-wrap {
+    padding: 8px 16px 12px;
+}
 .oc-board-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     width: 100%;
-    padding: 10px;
-    border: 1px solid var(--primary-color);
-    border-radius: 8px;
-    background: rgba(37,99,235,0.04);
-    color: var(--primary-color);
+    padding: 11px 16px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
     font-size: 14px;
     font-weight: 600;
+    font-family: var(--font-family);
     cursor: pointer;
-    margin-top: 8px;
-    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    box-sizing: border-box;
 }
 .oc-board-btn:hover, .oc-board-btn:active {
-    background: rgba(37,99,235,0.1);
+    background: var(--primary-light, #EFF6FF);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+.oc-board-btn svg {
+    flex-shrink: 0;
 }
 
 /* ========== 그룹 게시판 (Group Board) ========== */
@@ -7745,7 +7756,15 @@ input[type="date"]:focus {
     cursor: pointer;
 }
 
-/* 게시글 카드 */
+/* 게시글 리스트 (pc-card 재사용) */
+.gb-post-list {
+    padding: 12px 16px;
+}
+.gb-schedule-list {
+    padding: 12px 16px;
+}
+
+/* 게시글 카드 (레거시 — pc-card로 대체됨) */
 .gb-post-card {
     padding: 16px;
     border-bottom: 1px solid #F3F4F6;

@@ -683,19 +683,13 @@ function renderScheduleForm(data = {}) {
 
                     <div class="schedule-form-field">
                         <label class="schedule-form-label">시작 날짜/시간 <span class="required">*</span></label>
-                        <div class="date-time-row ${isAllDay ? 'all-day-active' : ''}" id="sf-start-row">
-                            <input type="date" class="schedule-form-input date-input" id="sf-start-date" value="${startDate}">
-                            <input type="time" class="schedule-form-input time-input" id="sf-start-time" value="${startTime}">
-                        </div>
+                        <input type="datetime-local" class="schedule-form-input" id="sf-start-datetime" value="${startDate ? startDate + (startTime ? 'T' + startTime : '') : ''}">
                         <div class="schedule-form-error" id="sf-start-error" style="display:none"></div>
                     </div>
 
                     <div class="schedule-form-field">
                         <label class="schedule-form-label">종료 날짜/시간</label>
-                        <div class="date-time-row ${isAllDay ? 'all-day-active' : ''}" id="sf-end-row">
-                            <input type="date" class="schedule-form-input date-input" id="sf-end-date" value="${endDate}">
-                            <input type="time" class="schedule-form-input time-input" id="sf-end-time" value="${endTime}">
-                        </div>
+                        <input type="datetime-local" class="schedule-form-input" id="sf-end-datetime" value="${endDate ? endDate + (endTime ? 'T' + endTime : '') : ''}">
                         <div class="schedule-form-error" id="sf-end-error" style="display:none"></div>
                     </div>
 
@@ -754,14 +748,8 @@ function renderScheduleForm(data = {}) {
         </div>
     `;
 
-    // 종일 이벤트 토글
-    document.getElementById('sf-allday')?.addEventListener('change', (e) => {
-        const rows = [document.getElementById('sf-start-row'), document.getElementById('sf-end-row')];
-        rows.forEach(r => r && r.classList.toggle('all-day-active', e.target.checked));
-    });
-
     // 인라인 에러 실시간 해제
-    ['sf-title', 'sf-category', 'sf-start-date', 'sf-end-date', 'sf-location', 'sf-description'].forEach(id => {
+    ['sf-title', 'sf-category', 'sf-start-datetime', 'sf-end-datetime', 'sf-location', 'sf-description'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', () => {
             const errEl = document.getElementById(id + '-error') || document.getElementById(id.replace('sf-', 'sf-') + '-error');
             // 간단한 매핑으로 해당 에러 숨기기
@@ -774,8 +762,8 @@ function hideScheduleFormError(fieldId) {
     const map = {
         'sf-title': 'sf-title-error',
         'sf-category': 'sf-category-error',
-        'sf-start-date': 'sf-start-error',
-        'sf-end-date': 'sf-end-error',
+        'sf-start-datetime': 'sf-start-error',
+        'sf-end-datetime': 'sf-end-error',
         'sf-location': 'sf-location-error',
         'sf-description': 'sf-desc-error'
     };
@@ -818,10 +806,8 @@ function validateScheduleForm() {
     let firstError = null;
     const title = document.getElementById('sf-title')?.value?.trim();
     const category = document.getElementById('sf-category')?.value;
-    const startDate = document.getElementById('sf-start-date')?.value;
-    const endDate = document.getElementById('sf-end-date')?.value;
-    const startTime = document.getElementById('sf-start-time')?.value;
-    const endTime = document.getElementById('sf-end-time')?.value;
+    const startDatetime = document.getElementById('sf-start-datetime')?.value;
+    const endDatetime = document.getElementById('sf-end-datetime')?.value;
     const location = document.getElementById('sf-location')?.value?.trim();
     const description = document.getElementById('sf-description')?.value?.trim();
 
@@ -845,21 +831,15 @@ function validateScheduleForm() {
         valid = false;
     }
 
-    if (!startDate) {
-        showScheduleFormError('sf-start-date', 'sf-start-error', '시작 날짜를 선택해주세요');
-        if (!firstError) firstError = 'sf-start-date';
+    if (!startDatetime) {
+        showScheduleFormError('sf-start-datetime', 'sf-start-error', '시작 날짜를 선택해주세요');
+        if (!firstError) firstError = 'sf-start-datetime';
         valid = false;
     }
 
-    if (startDate && endDate && endDate < startDate) {
-        showScheduleFormError('sf-end-date', 'sf-end-error', '종료 날짜는 시작 날짜 이후여야 합니다');
-        if (!firstError) firstError = 'sf-end-date';
-        valid = false;
-    }
-
-    if (startDate && endDate && startDate === endDate && startTime && endTime && endTime <= startTime) {
-        showScheduleFormError('sf-end-date', 'sf-end-error', '종료 시간은 시작 시간 이후여야 합니다');
-        if (!firstError) firstError = 'sf-end-date';
+    if (startDatetime && endDatetime && endDatetime < startDatetime) {
+        showScheduleFormError('sf-end-datetime', 'sf-end-error', '종료 시간은 시작 시간 이후여야 합니다');
+        if (!firstError) firstError = 'sf-end-datetime';
         valid = false;
     }
 
@@ -886,18 +866,15 @@ async function handleScheduleFormSubmit(e) {
     e.preventDefault();
     if (!validateScheduleForm()) return;
 
-    const isAllDay = document.getElementById('sf-allday')?.checked;
     const title = document.getElementById('sf-title').value.trim();
     const category = document.getElementById('sf-category').value;
-    const startDate = document.getElementById('sf-start-date').value;
-    const startTime = isAllDay ? '' : (document.getElementById('sf-start-time')?.value || '');
-    const endDate = document.getElementById('sf-end-date')?.value || '';
-    const endTime = isAllDay ? '' : (document.getElementById('sf-end-time')?.value || '');
+    const startDatetime = document.getElementById('sf-start-datetime').value;
+    const endDatetime = document.getElementById('sf-end-datetime')?.value || '';
     const location = document.getElementById('sf-location')?.value?.trim();
     const description = document.getElementById('sf-description')?.value?.trim();
 
-    const start_date = startTime ? `${startDate}T${startTime}:00` : `${startDate}T00:00:00`;
-    const end_date = endDate ? (endTime ? `${endDate}T${endTime}:00` : `${endDate}T00:00:00`) : null;
+    const start_date = startDatetime ? startDatetime + ':00' : '';
+    const end_date = endDatetime ? endDatetime + ':00' : null;
     const payload = { title, start_date, end_date, location, description, category };
 
     const btn = document.getElementById('sf-submit-btn');

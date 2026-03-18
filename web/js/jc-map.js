@@ -2,7 +2,6 @@
 
 var jcMap = null;
 var jcMapMarkers = [];
-var jcMapLoaded = false;
 var myLocationMarker = null;
 var myLocationCircle = null;
 
@@ -18,44 +17,58 @@ async function loadJcMapScreen() {
         var mapContainer = document.getElementById('jc-kakao-map');
         if (!mapContainer) return;
 
-        // 매번 새로 초기화 (display:none → block 전환 시 크기 0 문제 방지)
+        // 화면이 active 아니면 대기
+        var screen = document.getElementById('jc-map-screen');
+        if (screen && !screen.classList.contains('active')) {
+            setTimeout(loadJcMapScreen, 200);
+            return;
+        }
+
+        // 컨테이너 크기 강제 설정
+        mapContainer.style.width = '100%';
+        mapContainer.style.height = '100%';
+        if (mapContainer.parentElement) {
+            mapContainer.parentElement.style.height = 'calc(100vh - 56px)';
+            mapContainer.parentElement.style.position = 'relative';
+        }
+
+        // 기존 맵 제거 후 새로 생성
         if (jcMap) {
-            try { jcMap.remove(); } catch(e) {}
+            try { jcMap.remove(); } catch (e) {}
             jcMap = null;
         }
-        {
-            jcMap = L.map(mapContainer, { zoomControl: true }).setView([37.5175, 126.9077], 12);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap',
-                maxZoom: 19
-            }).addTo(jcMap);
+        jcMap = L.map(mapContainer, { zoomControl: true }).setView([37.5175, 126.9077], 12);
 
-            jcMapLoaded = true;
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+            maxZoom: 19
+        }).addTo(jcMap);
 
-            // 내 위치 버튼
-            var existingBtn = mapContainer.parentElement.querySelector('.jc-map-loc-btn');
-            if (!existingBtn) {
-                var myLocBtn = document.createElement('button');
-                myLocBtn.className = 'jc-map-loc-btn';
-                myLocBtn.innerHTML = '📍';
-                myLocBtn.title = '내 위치';
-                myLocBtn.style.cssText = 'position:absolute;bottom:20px;right:12px;z-index:1000;width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #D1D5DB;box-shadow:0 2px 6px rgba(0,0,0,0.15);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center';
-                myLocBtn.onclick = showMyLocation;
-                mapContainer.parentElement.appendChild(myLocBtn);
-            }
+        // 내 위치 버튼
+        var existingBtn = mapContainer.parentElement.querySelector('.jc-map-loc-btn');
+        if (!existingBtn) {
+            var myLocBtn = document.createElement('button');
+            myLocBtn.className = 'jc-map-loc-btn';
+            myLocBtn.innerHTML = '📍';
+            myLocBtn.title = '내 위치';
+            myLocBtn.style.cssText = 'position:absolute;bottom:20px;right:12px;z-index:1000;width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #D1D5DB;box-shadow:0 2px 6px rgba(0,0,0,0.15);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center';
+            myLocBtn.onclick = showMyLocation;
+            mapContainer.parentElement.appendChild(myLocBtn);
+        }
 
-            // 사이즈 확정 후 내 위치
-            setTimeout(function() {
+        // 사이즈 확정
+        setTimeout(function () {
+            if (jcMap) {
                 jcMap.invalidateSize();
                 showMyLocation();
-            }, 300);
-        }
+            }
+        }, 300);
 
         if (loadingEl) loadingEl.style.display = 'none';
 
         // 기존 마커 제거
-        jcMapMarkers.forEach(function(m) { jcMap.removeLayer(m); });
+        jcMapMarkers.forEach(function (m) { jcMap.removeLayer(m); });
         jcMapMarkers = [];
 
         // 회원 데이터 로드
@@ -73,12 +86,12 @@ async function loadJcMapScreen() {
 
         var bounds = L.latLngBounds();
 
-        members.forEach(function(m) {
+        members.forEach(function (m) {
             var marker = L.marker([m.business_lat, m.business_lng]).addTo(jcMap);
 
             var industry = '';
             if (m.industry) {
-                var industryMap = {law:'법률',finance:'금융',medical:'의료',construction:'건설/부동산',it:'IT/기술',manufacturing:'제조',food:'요식',retail:'유통',service:'서비스',realestate:'부동산',culture:'문화',public:'공공',other:'기타'};
+                var industryMap = { law: '법률', finance: '금융', medical: '의료', construction: '건설/부동산', it: 'IT/기술', manufacturing: '제조', food: '요식', retail: '유통', service: '서비스', realestate: '부동산', culture: '문화', public: '공공', other: '기타' };
                 industry = industryMap[m.industry] || m.industry;
                 if (m.industry_detail) industry += ' · ' + m.industry_detail;
             }
@@ -112,7 +125,7 @@ async function loadJcMapScreen() {
 function showMyLocation() {
     if (!navigator.geolocation || !jcMap) return;
     navigator.geolocation.getCurrentPosition(
-        function(pos) {
+        function (pos) {
             var lat = pos.coords.latitude;
             var lng = pos.coords.longitude;
 
@@ -132,7 +145,7 @@ function showMyLocation() {
 
             jcMap.setView([lat, lng], 14);
         },
-        function() {},
+        function () {},
         { enableHighAccuracy: true, timeout: 10000 }
     );
 }

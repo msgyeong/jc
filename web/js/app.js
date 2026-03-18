@@ -4,6 +4,100 @@ console.log('🚀 영등포 JC 웹 앱 시작...');
 console.log('📅 버전: 2.0');
 console.log('⏰ 시간:', new Date().toLocaleString('ko-KR'));
 
+// 네이티브 pull-to-refresh 방지 + 커스텀 새로고침
+(function setupOverscrollRefresh() {
+    // CSS로도 방지하지만, JS에서도 보강
+    document.body.style.overscrollBehaviorY = 'contain';
+
+    var _touchStartY = 0;
+    var _isPulling = false;
+    var _pullThreshold = 100;
+    var _pullIndicator = null;
+
+    function getCurrentScreenRefresher() {
+        // 현재 활성 화면에 맞는 데이터 새로고침 함수 반환
+        var activeScreen = document.querySelector('.screen.active');
+        if (!activeScreen) return null;
+        var id = activeScreen.id;
+        if (id === 'home-screen' && typeof loadHomeData === 'function') return loadHomeData;
+        if (id === 'posts-screen' && typeof loadPostsScreen === 'function') return loadPostsScreen;
+        if (id === 'members-screen' && typeof loadMembersScreen === 'function') return loadMembersScreen;
+        if (id === 'schedules-screen' && typeof loadSchedulesScreen === 'function') return loadSchedulesScreen;
+        if (id === 'profile-screen' && typeof loadProfile === 'function') return loadProfile;
+        if (id === 'meetings-screen' && typeof loadMeetingsScreen === 'function') return loadMeetingsScreen;
+        if (id === 'org-chart-screen' && typeof loadOrgChartScreen === 'function') return loadOrgChartScreen;
+        if (id === 'group-board-screen' && typeof loadGroupBoardScreen === 'function') return loadGroupBoardScreen;
+        return null;
+    }
+
+    function getOrCreateIndicator() {
+        if (_pullIndicator) return _pullIndicator;
+        _pullIndicator = document.createElement('div');
+        _pullIndicator.id = 'pull-refresh-indicator';
+        _pullIndicator.innerHTML = '<div class="pull-refresh-spinner"></div>';
+        document.body.appendChild(_pullIndicator);
+        return _pullIndicator;
+    }
+
+    document.addEventListener('touchstart', function(e) {
+        var scrollable = e.target.closest('.screen-content, .search-overlay-results');
+        if (scrollable && scrollable.scrollTop > 0) return;
+        // 페이지 맨 위에서만 pull-to-refresh 활성화
+        if (window.scrollY > 0) return;
+        _touchStartY = e.touches[0].clientY;
+        _isPulling = true;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function(e) {
+        if (!_isPulling) return;
+        var dy = e.touches[0].clientY - _touchStartY;
+        if (dy < 0) { _isPulling = false; return; }
+        if (dy > 20) {
+            var indicator = getOrCreateIndicator();
+            var progress = Math.min(dy / _pullThreshold, 1);
+            indicator.style.transform = 'translateY(' + Math.min(dy * 0.4, 60) + 'px)';
+            indicator.style.opacity = progress;
+            indicator.classList.toggle('ready', dy >= _pullThreshold);
+            indicator.style.display = 'flex';
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+        if (!_isPulling) return;
+        _isPulling = false;
+        var indicator = document.getElementById('pull-refresh-indicator');
+        if (indicator && indicator.classList.contains('ready')) {
+            // 새로고침 실행
+            indicator.style.transform = 'translateY(50px)';
+            indicator.innerHTML = '<div class="pull-refresh-spinner spinning"></div>';
+            var refresher = getCurrentScreenRefresher();
+            if (refresher) {
+                Promise.resolve(refresher()).then(function() {
+                    hideIndicator();
+                }).catch(function() {
+                    hideIndicator();
+                });
+            } else {
+                hideIndicator();
+            }
+        } else {
+            hideIndicator();
+        }
+    }, { passive: true });
+
+    function hideIndicator() {
+        var indicator = document.getElementById('pull-refresh-indicator');
+        if (indicator) {
+            indicator.style.transform = 'translateY(-40px)';
+            indicator.style.opacity = '0';
+            setTimeout(function() {
+                indicator.style.display = 'none';
+                indicator.innerHTML = '<div class="pull-refresh-spinner"></div>';
+            }, 200);
+        }
+    }
+})();
+
 // 앱 초기화
 async function initApp() {
     console.log('\n=== 앱 초기화 시작 ===\n');

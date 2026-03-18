@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영등포 JC - 회원관리 앱</title>
     <!-- Build: 2026-02-06 v2.1 -->
-    <link rel="stylesheet" href="styles/main.css?v=20260318b">
+    <link rel="stylesheet" href="styles/main.css?v=20260319b">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FFFFFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -978,17 +978,35 @@
         <div id="members-screen" class="screen">
             <div class="app-bar">
                 <h1 class="app-bar-title">회원</h1>
-                <span class="app-bar-badge" id="member-count-badge"></span>
+                <div class="app-bar-right">
+                    <span class="app-bar-badge" id="member-count-badge"></span>
+                    <button type="button" class="app-bar-icon-btn" id="member-search-btn" onclick="openMemberSearchOverlay()" aria-label="회원 검색">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </button>
+                </div>
             </div>
             <div class="screen-content with-bottom-nav">
-                <div class="member-search-wrap">
-                    <div class="member-search-box">
-                        <span class="search-icon-svg">&#128269;</span>
-                        <input type="search" id="member-search" placeholder="이름, 직책, 회사, 업종으로 검색..." />
-                    </div>
-                </div>
                 <div class="member-list" id="member-list">
                     <div class="content-loading">회원 목록 로딩 중...</div>
+                </div>
+            </div>
+
+            <!-- 검색 오버레이 (풀스크린, 슬라이드-인) -->
+            <div id="member-search-overlay" class="member-search-overlay">
+                <div class="search-overlay-header">
+                    <button type="button" class="search-overlay-back" onclick="closeMemberSearchOverlay()" aria-label="뒤로">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7l-7 7 7 7"/></svg>
+                    </button>
+                    <div class="search-overlay-input-wrap">
+                        <input type="search" id="member-search-global" placeholder="이름·업종·직업·조직명 검색 (초성 ㄱㅁㅇ 가능)" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="search-overlay-tabs">
+                    <button type="button" class="search-tab active" data-scope="my-org" onclick="switchSearchTab('my-org')">내 조직</button>
+                    <button type="button" class="search-tab" data-scope="all-org" onclick="switchSearchTab('all-org')">전체 조직</button>
+                </div>
+                <div class="search-overlay-results" id="search-results">
+                    <div class="search-empty-hint">이름, 초성(ㄱㅁㅇ), 업종, 조직명으로 검색하세요</div>
                 </div>
             </div>
             <nav class="bottom-nav">
@@ -1060,6 +1078,105 @@
                 <div class="content-placeholder">관리자가 조직도 이미지를 업로드하면 여기에 표시됩니다.</div>
             </div>
         </div>
+
+        <!-- 그룹 게시판 화면 -->
+        <div id="group-board-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title" id="group-board-title">그룹 게시판</h1>
+                <button class="gb-fab" id="create-group-post-btn" style="display:none;" onclick="showGroupPostForm()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+            </div>
+            <div class="screen-content" id="group-board-content">
+                <div class="content-placeholder">로딩 중...</div>
+            </div>
+        </div>
+
+        <!-- 그룹 게시글 상세 화면 -->
+        <div id="group-post-detail-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title">게시글</h1>
+            </div>
+            <div class="screen-content" id="group-post-detail-content">
+            </div>
+        </div>
+
+        <!-- 그룹 게시글 작성/수정 화면 -->
+        <div id="group-post-form-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title" id="group-post-form-title">게시글 작성</h1>
+            </div>
+            <div class="screen-content">
+                <form id="group-post-form" class="gb-form">
+                    <div class="form-group">
+                        <label for="gp-title">제목</label>
+                        <input type="text" id="gp-title" placeholder="제목을 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gp-content">내용</label>
+                        <textarea id="gp-content" class="form-textarea" rows="10" placeholder="내용을 입력하세요"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>이미지 첨부</label>
+                        <label class="gb-file-upload" for="gp-images">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            <span>사진 선택 (최대 5장)</span>
+                        </label>
+                        <input type="file" id="gp-images" accept="image/*" multiple style="display:none">
+                        <div id="gp-image-preview" class="gb-image-preview"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">등록</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 그룹 일정 작성 화면 -->
+        <div id="group-schedule-form-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title">일정 추가</h1>
+            </div>
+            <div class="screen-content">
+                <form id="group-schedule-form" class="gb-form">
+                    <div class="form-group">
+                        <label for="gs-title">제목</label>
+                        <input type="text" id="gs-title" placeholder="일정 제목" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gs-description">설명</label>
+                        <textarea id="gs-description" class="form-textarea" rows="4" placeholder="일정에 대한 설명을 입력하세요"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="gs-location">장소</label>
+                        <input type="text" id="gs-location" placeholder="장소를 입력하세요">
+                    </div>
+                    <div class="gb-form-row">
+                        <div class="form-group gb-form-half">
+                            <label for="gs-start-date">시작</label>
+                            <input type="datetime-local" id="gs-start-date" required>
+                        </div>
+                        <div class="form-group gb-form-half">
+                            <label for="gs-end-date">종료</label>
+                            <input type="datetime-local" id="gs-end-date">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="gs-category">분류</label>
+                        <select id="gs-category">
+                            <option value="meeting">회의</option>
+                            <option value="event">행사</option>
+                            <option value="training">교육</option>
+                            <option value="other">기타</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">등록</button>
+                </form>
+            </div>
+        </div>
+
         <div id="jc-vision-screen" class="screen">
             <div class="app-bar">
                 <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
@@ -1318,11 +1435,11 @@
         <!-- 뒤로가기 확인 모달 (이슈 #10) -->
         <div id="exit-confirm-dialog" class="dialog-overlay" onclick="closeExitDialog()">
             <div class="dialog" onclick="event.stopPropagation()">
-                <div class="dialog-title">앱을 나가시겠습니까?</div>
-                <div class="dialog-body">뒤로 버튼을 한 번 더 누르면 앱을 종료합니다.</div>
+                <div class="dialog-title">앱을 종료하시겠습니까?</div>
+                <div class="dialog-body"></div>
                 <div class="dialog-actions">
                     <button class="btn btn-ghost" onclick="closeExitDialog()">취소</button>
-                    <button class="btn btn-danger" onclick="confirmExit()">나가기</button>
+                    <button class="btn btn-danger" onclick="confirmExit()">종료</button>
                 </div>
             </div>
         </div>
@@ -1433,29 +1550,31 @@
     </div>
 
     <!-- 앱 스크립트 -->
-    <script src="js/config.js?v=20260318b"></script>
-    <script src="js/api-client.js?v=20260318b"></script>
-    <script src="js/utils.js?v=20260318b"></script>
-    <script src="js/auth.js?v=20260318b"></script>
-    <script src="js/signup.js?v=20260318b"></script>
-    <script src="js/home.js?v=20260318b"></script>
-    <script src="js/posts.js?v=20260318b"></script>
-    <script src="js/notices.js?v=20260318b"></script>
-    <script src="js/schedules.js?v=20260318b"></script>
-    <script src="js/members.js?v=20260318b"></script>
-    <script src="js/profile.js?v=20260318b"></script>
-    <script src="js/admin.js?v=20260318b"></script>
-    <script src="js/push.js?v=20260318b"></script>
-    <script src="js/notifications.js?v=20260318b"></script>
-    <script src="js/notification-settings.js?v=20260318b"></script>
-    <script src="js/settings.js?v=20260318b"></script>
-    <script src="js/meetings.js?v=20260318b"></script>
-    <script src="js/portal.js?v=20260318b"></script>
-    <script src="js/admin-app.js?v=20260318b"></script>
-    <script src="js/content.js?v=20260318b"></script>
-    <script src="js/orgchart.js?v=20260318b"></script>
-    <script src="js/jc-map.js?v=20260318b"></script>
-    <script src="js/navigation.js?v=20260318b"></script>
-    <script src="js/app.js?v=20260318b"></script>
+    <script src="js/config.js?v=20260318c"></script>
+    <script src="js/api-client.js?v=20260318c"></script>
+    <script src="js/utils.js?v=20260318c"></script>
+    <script src="js/auth.js?v=20260318c"></script>
+    <script src="js/signup.js?v=20260318c"></script>
+    <script src="js/home.js?v=20260318c"></script>
+    <script src="js/posts.js?v=20260318c"></script>
+    <script src="js/notices.js?v=20260318c"></script>
+    <script src="js/schedules.js?v=20260318g"></script>
+    <script src="js/chosung.js?v=20260318c"></script>
+    <script src="js/members.js?v=20260318e"></script>
+    <script src="js/profile.js?v=20260318e"></script>
+    <script src="js/admin.js?v=20260318c"></script>
+    <script src="js/push.js?v=20260318c"></script>
+    <script src="js/notifications.js?v=20260318c"></script>
+    <script src="js/notification-settings.js?v=20260318c"></script>
+    <script src="js/settings.js?v=20260318c"></script>
+    <script src="js/meetings.js?v=20260318c"></script>
+    <script src="js/portal.js?v=20260318c"></script>
+    <script src="js/admin-app.js?v=20260318c"></script>
+    <script src="js/content.js?v=20260318c"></script>
+    <script src="js/orgchart.js?v=20260319b"></script>
+    <script src="js/group-board.js?v=20260319b"></script>
+    <script src="js/jc-map.js?v=20260318c"></script>
+    <script src="js/navigation.js?v=20260319a"></script>
+    <script src="js/app.js?v=20260318g"></script>
 </body>
 </html>

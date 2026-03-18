@@ -16,6 +16,7 @@ const adminRoutes = require('./routes/admin');
 const seedRoutes = require('./routes/seed');
 const attendanceRoutes = require('./routes/attendance');
 const favoritesRoutes = require('./routes/favorites');
+const memberGroupsRoutes = require('./routes/member-groups');
 const titlesRoutes = require('./routes/titles');
 const industriesRoutes = require('./routes/industries');
 const { notificationsRouter, pushRouter } = require('./routes/notifications');
@@ -26,6 +27,7 @@ const organizationsRoutes = require('./routes/organizations');
 const contentRoutes = require('./routes/content');
 const orgchartRoutes = require('./routes/orgchart');
 const mapRoutes = require('./routes/map');
+const groupBoardRoutes = require('./routes/group-board');
 const { startReminderCron } = require('./utils/reminderCron');
 const { startNotificationScheduler } = require('./cron/notification-scheduler');
 
@@ -114,6 +116,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/favorites', favoritesRoutes);
+app.use('/api/member-groups', memberGroupsRoutes);
 app.use('/api/titles', titlesRoutes);
 app.use('/api/industries', industriesRoutes);
 app.use('/api/push', pushRouter);
@@ -125,6 +128,7 @@ app.use('/api/organizations', organizationsRoutes);
 app.use('/api/admin-app', mobileAdminRoutes);
 app.use('/api/orgchart', orgchartRoutes);
 app.use('/api/map', mapRoutes);
+app.use('/api/group-board', groupBoardRoutes);
 app.use('/api/content', contentRoutes);
 
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)
@@ -232,6 +236,8 @@ app.listen(PORT, () => {
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS join_date DATE").catch(() => {});
     // JC 지도 컬럼
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS map_visible BOOLEAN DEFAULT true").catch(() => {});
+    // 전화번호 공개 범위
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_visibility VARCHAR(20) DEFAULT 'local'").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lat DOUBLE PRECISION").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lng DOUBLE PRECISION").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_address VARCHAR(500)").catch(() => {});
@@ -247,10 +253,41 @@ app.listen(PORT, () => {
         manual_name VARCHAR(100), sort_order INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT NOW()
     )`).catch(() => {});
+    // 중복 방지 인덱스 (기존 테이블에도 적용)
+    dbQuery(`CREATE UNIQUE INDEX IF NOT EXISTS idx_orgchart_members_group_user ON orgchart_members(group_id, user_id) WHERE user_id IS NOT NULL`).catch(() => {});
     // 3초 후 매핑 (조직 생성 완료 대기)
     setTimeout(() => {
         dbQuery("UPDATE users SET org_id = (SELECT id FROM organizations WHERE code = 'yeongdeungpo') WHERE org_id IS NULL").catch(() => {});
     }, 3000);
+
+    // 그룹 게시판 테이블
+    dbQuery(`CREATE TABLE IF NOT EXISTS group_posts (
+        id SERIAL PRIMARY KEY, group_id INTEGER NOT NULL REFERENCES orgchart_groups(id) ON DELETE CASCADE,
+        author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(200) NOT NULL, content TEXT, images TEXT,
+        is_pinned BOOLEAN DEFAULT false, views INTEGER DEFAULT 0,
+        likes_count INTEGER DEFAULT 0, comments_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
+    )`).catch(() => {});
+    dbQuery(`CREATE TABLE IF NOT EXISTS group_post_comments (
+        id SERIAL PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES group_posts(id) ON DELETE CASCADE,
+        author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        content TEXT NOT NULL, parent_id INTEGER REFERENCES group_post_comments(id) ON DELETE CASCADE,
+        is_deleted BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT NOW()
+    )`).catch(() => {});
+    dbQuery(`CREATE TABLE IF NOT EXISTS group_post_reads (
+        id SERIAL PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES group_posts(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        read_at TIMESTAMP DEFAULT NOW(), UNIQUE(post_id, user_id)
+    )`).catch(() => {});
+    dbQuery(`CREATE TABLE IF NOT EXISTS group_schedules (
+        id SERIAL PRIMARY KEY, group_id INTEGER NOT NULL REFERENCES orgchart_groups(id) ON DELETE CASCADE,
+        created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(200) NOT NULL, description TEXT, location VARCHAR(200),
+        start_date TIMESTAMP NOT NULL, end_date TIMESTAMP,
+        category VARCHAR(50) DEFAULT 'meeting',
+        created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
+    )`).catch(() => {});
 
     // 사이트 콘텐츠 테이블 (조직도, 비전, 직책업무, 지도, 정관)
     dbQuery(`CREATE TABLE IF NOT EXISTS site_content (

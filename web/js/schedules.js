@@ -51,9 +51,24 @@ async function loadMonthSchedules() {
     if (schedulesLoading) return;
     schedulesLoading = true;
     try {
+        // 공통 일정 로드
         const result = await apiClient.getSchedulesByMonth(calYear, calMonth + 1);
         const schedules = result.schedules || (result.data && (result.data.schedules || result.data.items)) || [];
         calSchedules = (result.success && Array.isArray(schedules)) ? schedules : [];
+
+        // 내가 속한 그룹 일정 병합 (그룹 멤버만 볼 수 있음)
+        try {
+            const groupResult = await apiClient.request('/group-board/my-schedules/all?year=' + calYear + '&month=' + (calMonth + 1));
+            if (groupResult.success && Array.isArray(groupResult.schedules)) {
+                groupResult.schedules.forEach(function(gs) {
+                    gs._isGroupSchedule = true;
+                    gs._groupName = gs.group_name || '';
+                    calSchedules.push(gs);
+                });
+            }
+        } catch (ge) {
+            console.log('그룹 일정 로드 건너뜀:', ge.message);
+        }
     } catch (e) {
         console.error('월별 일정 로드 실패:', e);
         calSchedules = [];
@@ -150,6 +165,8 @@ function createScheduleCard(schedule) {
     const categoryColor = CATEGORY_COLORS[category] || '#6B7280';
     const startRaw = schedule.start_date || '';
     const endRaw = schedule.end_date || '';
+    const isGroup = schedule._isGroupSchedule;
+    const groupName = schedule._groupName || '';
 
     let timeStr = '';
     if (startRaw.includes('T')) {
@@ -163,10 +180,13 @@ function createScheduleCard(schedule) {
         }
     }
 
+    const clickHandler = isGroup ? '' : `onclick="navigateTo('/schedules/${schedule.id}')"`;
+
     return `
-        <div class="schedule-card-v2" onclick="navigateTo('/schedules/${schedule.id}')" style="border-left: 4px solid ${categoryColor}">
+        <div class="schedule-card-v2" ${clickHandler} style="border-left: 4px solid ${categoryColor}">
             <div class="schedule-card-top">
                 <span class="schedule-cat-badge" style="background:${categoryColor}15;color:${categoryColor}">${categoryLabel}</span>
+                ${isGroup ? `<span class="schedule-group-badge">${escapeHtml(groupName)}</span>` : ''}
                 ${timeStr ? `<span class="schedule-time-badge">${timeStr}</span>` : ''}
             </div>
             <h3 class="schedule-card-title">${escapeHtml(schedule.title)}</h3>

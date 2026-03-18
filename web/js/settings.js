@@ -180,7 +180,6 @@ function handleClearCache() {
             names.forEach(function(name) { caches.delete(name); });
         });
     }
-    showToast('캐시가 삭제되었습니다', 'success');
 }
 
 // 비밀번호 변경 (설정 화면에서)
@@ -220,7 +219,6 @@ async function handlePwChangeFromSettings(e) {
             body: JSON.stringify({ current_password: current, new_password: newPw })
         });
         if (res.success) {
-            showToast('비밀번호가 변경되었습니다');
             renderSettingsScreen();
         } else {
             if (errEl) errEl.textContent = res.message || '변경 실패';
@@ -284,7 +282,6 @@ async function handleWithdraw() {
         if (result.success) {
             apiClient.clearToken();
             navigateToScreen('login');
-            showToast('회원 탈퇴가 완료되었습니다', 'success');
         } else {
             if (errorEl) { errorEl.textContent = result.message || '탈퇴 처리에 실패했습니다.'; errorEl.classList.add('show'); }
         }

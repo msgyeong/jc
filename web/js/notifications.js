@@ -77,10 +77,8 @@ async function markAllNotificationsRead() {
       readAllBtn.style.pointerEvents = 'none';
     }
 
-    showToast('모든 알림을 읽음 처리했습니다', 'success');
   } catch (err) {
     console.error('[Notifications] 전체 읽음 실패:', err);
-    showToast('읽음 처리에 실패했습니다', 'error');
   }
 }
 

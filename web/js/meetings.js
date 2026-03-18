@@ -70,15 +70,8 @@ async function deleteMeeting(meetingId, title) {
     if (!confirm('"' + title + '" 회의를 삭제하시겠습니까?')) return;
     try {
         var res = await apiClient.request('/meetings/' + meetingId, { method: 'DELETE' });
-        if (res.success) {
-            showToast('회의가 삭제되었습니다');
-            loadMeetingsScreen();
-        } else {
-            alert(res.message || '삭제 실패');
-        }
-    } catch (err) {
-        alert('삭제 실패: ' + (err.message || ''));
-    }
+        if (res.success) { loadMeetingsScreen(); }
+    } catch (err) { console.error('Delete meeting error:', err); }
 }
 
 async function showMeetingDetail(meetingId) {
@@ -125,7 +118,7 @@ async function showMeetingDetail(meetingId) {
             </div>` : ''}
         </div>`;
 
-        // 투표 (진행 중/완료 시 표시)
+        // 투표
         html += `<div class="info-section">
             <h3 class="info-section-title">투표 <span style="font-size:12px;color:var(--text-secondary)">(익명 투표)</span></h3>
             ${isAdminUser && m.status === 'in_progress' ? `<div style="margin-bottom:12px">
@@ -154,7 +147,6 @@ async function showMeetingDetail(meetingId) {
         html += '</div>';
         container.innerHTML = html;
 
-        // 비동기 로드
         loadMeetingAttendance(meetingId);
         loadMeetingVotes(meetingId);
         loadMeetingMinutes(meetingId);
@@ -167,22 +159,12 @@ async function markAttendance(meetingId, status) {
     try {
         var res = await fetch('/api/meetings/' + meetingId + '/attend', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
             body: JSON.stringify({ status: status })
         });
         var data = await res.json();
-        if (data.success) {
-            showToast(status === 'attending' ? '참석으로 표시했습니다' : '불참으로 표시했습니다');
-            loadMeetingAttendance(meetingId);
-        } else {
-            showToast(data.message || '참석 처리 실패', 'error');
-        }
-    } catch (err) {
-        showToast('참석 처리 실패: ' + (err.message || '네트워크 오류'), 'error');
-    }
+        if (data.success) { loadMeetingAttendance(meetingId); }
+    } catch (err) { console.error('Attendance error:', err); }
 }
 
 async function loadMeetingAttendance(meetingId) {
@@ -211,7 +193,6 @@ async function loadMeetingAttendance(meetingId) {
         ${attending.length > 0 ? '<div style="margin-top:4px;font-size:13px"><span style="color:#3B82F6">참석예정:</span> ' + attending.map(a => escapeHtml(a.user_name)).join(', ') + '</div>' : ''}
         ${isAdmin3 ? '<div style="margin-top:12px;font-size:12px;color:var(--text-secondary)">관리자: 참석 예정자를 "실제참석" 또는 "옵서버"로 변경할 수 있습니다</div><div id="admin-attendance-controls-' + meetingId + '" style="margin-top:8px"></div>' : ''}`
 
-        // 관리자용 참석 상태 변경 컨트롤
         if (isAdmin3) {
             var ctrlEl = document.getElementById('admin-attendance-controls-' + meetingId);
             if (ctrlEl && attending.length > 0) {
@@ -267,7 +248,6 @@ async function loadMeetingVotes(meetingId) {
     }
 }
 
-// 회의 생성 폼
 function showCreateMeetingForm() {
     var form = document.getElementById('create-meeting-form');
     if (form) form.style.display = 'block';
@@ -281,80 +261,43 @@ async function submitCreateMeeting() {
     var meetingDate = document.getElementById('new-meeting-date')?.value;
     var location = document.getElementById('new-meeting-location')?.value?.trim();
     var description = document.getElementById('new-meeting-desc')?.value?.trim();
-
-    if (!title) { showToast('회의 제목을 입력하세요', 'error'); return; }
-    if (!meetingDate) { showToast('일시를 선택하세요', 'error'); return; }
+    if (!title || !meetingDate) return;
 
     try {
         var res = await fetch('/api/meetings', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            },
-            body: JSON.stringify({
-                title: title,
-                meeting_type: meetingType,
-                meeting_date: meetingDate,
-                location: location || null,
-                description: description || null
-            })
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
+            body: JSON.stringify({ title: title, meeting_type: meetingType, meeting_date: meetingDate, location: location || null, description: description || null })
         });
         var data = await res.json();
-        if (data.success) {
-            showToast('회의가 생성되었습니다');
-            loadMeetingsScreen();
-        } else {
-            showToast(data.error || '생성 실패', 'error');
-        }
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        if (data.success) { loadMeetingsScreen(); }
+    } catch (err) { console.error('Create meeting error:', err); }
 }
 
 async function castVote(meetingId, voteId, option) {
     try {
         var res = await fetch('/api/meetings/' + meetingId + '/votes/' + voteId + '/cast', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
             body: JSON.stringify({ option: option })
         });
         var data = await res.json();
-        if (data.success) {
-            showToast(option + '에 투표했습니다');
-            loadMeetingVotes(meetingId);
-        } else {
-            showToast(data.message || '투표 실패', 'error');
-        }
-    } catch (err) {
-        showToast('투표 실패: ' + (err.message || '네트워크 오류'), 'error');
-    }
+        if (data.success) { loadMeetingVotes(meetingId); }
+    } catch (err) { console.error('Vote error:', err); }
 }
 
-// 관리자가 회원의 참석 상태 변경 (confirmed/observer)
 async function setAttendanceStatus(meetingId, userId, status) {
     try {
         var res = await fetch('/api/meetings/' + meetingId + '/attend', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
             body: JSON.stringify({ status: status, user_id: userId })
         });
         var data = await res.json();
-        if (data.success) {
-            var label = status === 'confirmed' ? '실제참석' : '옵서버';
-            showToast(label + '으로 변경했습니다');
-            loadMeetingAttendance(meetingId);
-        } else {
-            showToast(data.error || '변경 실패', 'error');
-        }
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        if (data.success) { loadMeetingAttendance(meetingId); }
+    } catch (err) { console.error('Set attendance error:', err); }
 }
 
-// 회의 시작
 async function startMeeting(meetingId) {
     if (!confirm('회의를 시작하시겠습니까?')) return;
     try {
@@ -363,16 +306,10 @@ async function startMeeting(meetingId) {
             headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') }
         });
         var data = await res.json();
-        if (data.success) {
-            showToast('회의가 시작되었습니다');
-            showMeetingDetail(meetingId);
-        } else {
-            showToast(data.error || '회의 시작 실패', 'error');
-        }
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        if (data.success) { showMeetingDetail(meetingId); }
+    } catch (err) { console.error('Start meeting error:', err); }
 }
 
-// 회의 종료
 async function endMeeting(meetingId) {
     if (!confirm('회의를 종료하시겠습니까?\n진행 중인 모든 투표가 마감됩니다.')) return;
     try {
@@ -381,16 +318,10 @@ async function endMeeting(meetingId) {
             headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') }
         });
         var data = await res.json();
-        if (data.success) {
-            showToast('회의가 종료되었습니다');
-            showMeetingDetail(meetingId);
-        } else {
-            showToast(data.error || '회의 종료 실패', 'error');
-        }
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        if (data.success) { showMeetingDetail(meetingId); }
+    } catch (err) { console.error('End meeting error:', err); }
 }
 
-// 투표 추가 폼 표시
 function showCreateVoteForm(meetingId) {
     var form = document.getElementById('create-vote-form-' + meetingId);
     if (form) form.style.display = 'block';
@@ -398,31 +329,23 @@ function showCreateVoteForm(meetingId) {
     if (input) { input.value = ''; input.focus(); }
 }
 
-// 투표 생성
 async function createVote(meetingId) {
     var title = document.getElementById('new-vote-title-' + meetingId)?.value?.trim();
-    if (!title) { showToast('투표 제목을 입력하세요', 'error'); return; }
+    if (!title) return;
     try {
         var res = await fetch('/api/meetings/' + meetingId + '/votes', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') },
             body: JSON.stringify({ title: title, options: ['찬성', '반대', '기권'] })
         });
         var data = await res.json();
         if (data.success) {
-            showToast('투표가 추가되었습니다');
             document.getElementById('create-vote-form-' + meetingId).style.display = 'none';
             loadMeetingVotes(meetingId);
-        } else {
-            showToast(data.error || '투표 생성 실패', 'error');
         }
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+    } catch (err) { console.error('Create vote error:', err); }
 }
 
-// 투표 마감 (관리자)
 async function closeVote(meetingId, voteId) {
     if (!confirm('이 투표를 마감하시겠습니까?')) return;
     try {
@@ -431,20 +354,15 @@ async function closeVote(meetingId, voteId) {
             headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token') }
         });
         var data = await res.json();
-        if (data.success) {
-            showToast('투표가 마감되었습니다');
-            loadMeetingVotes(meetingId);
-        } else {
-            showToast(data.error || '마감 실패', 'error');
-        }
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        if (data.success) { loadMeetingVotes(meetingId); }
+    } catch (err) { console.error('Close vote error:', err); }
 }
 
 async function uploadMinutes(meetingId) {
     var fileInput = document.getElementById('minutes-file-' + meetingId);
     if (!fileInput || !fileInput.files[0]) return;
     var file = fileInput.files[0];
-    if (file.type !== 'application/pdf') { showToast('PDF 파일만 업로드 가능합니다', 'error'); return; }
+    if (file.type !== 'application/pdf') return;
     var formData = new FormData();
     formData.append('file', file);
     formData.append('title', file.name.replace('.pdf', ''));
@@ -455,13 +373,8 @@ async function uploadMinutes(meetingId) {
             body: formData
         });
         var data = await res.json();
-        if (data.success) {
-            showToast('회의록이 업로드되었습니다');
-            loadMeetingMinutes(meetingId);
-        } else {
-            showToast(data.error || '업로드 실패', 'error');
-        }
-    } catch (err) { showToast('업로드 오류: ' + err.message, 'error'); }
+        if (data.success) { loadMeetingMinutes(meetingId); }
+    } catch (err) { console.error('Upload minutes error:', err); }
     fileInput.value = '';
 }
 

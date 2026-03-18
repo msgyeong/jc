@@ -532,11 +532,9 @@ async function submitScheduleComment(scheduleId) {
             body: JSON.stringify({ content })
         });
         if (res.success) {
-            showToast('댓글이 등록되었습니다');
             loadScheduleComments(scheduleId);
         }
     } catch (e) {
-        showToast(e.message || '댓글 작성에 실패했습니다', 'error');
         if (sendBtn) sendBtn.disabled = false;
     }
 }
@@ -600,12 +598,10 @@ async function submitAttendance(status, scheduleId) {
             body: JSON.stringify({ status: status })
         });
         if (res.success) {
-            showToast(status === 'attending' ? '참석으로 표시했습니다' : '불참으로 표시했습니다', 'info');
             loadAttendanceVote(sid);
             loadAttendeeList(sid);
         }
     } catch (e) {
-        showToast(e.message || '참석 등록에 실패했습니다', 'error');
     }
 }
 
@@ -913,17 +909,14 @@ async function handleScheduleFormSubmit(e) {
             ? await apiClient.updateSchedule(editId, payload)
             : await apiClient.createSchedule(payload);
         if (!res.success) {
-            showToast(res.message || '저장에 실패했습니다', 'error');
             return;
         }
-        showToast(editId ? '일정이 수정되었습니다' : '일정이 등록되었습니다');
         calSelectedDate = startDate;
         calYear = new Date(startDate).getFullYear();
         calMonth = new Date(startDate).getMonth();
         await loadMonthSchedules();
         backToScheduleList();
     } catch (err) {
-        showToast(err.message || '저장 중 오류가 발생했습니다', 'error');
     } finally {
         if (btn) { btn.disabled = false; btn.textContent = e.target.dataset.editId ? '수정 완료' : '일정 등록'; }
     }
@@ -932,7 +925,6 @@ async function handleScheduleFormSubmit(e) {
 async function handleEditSchedule(scheduleId) {
     try {
         const res = await apiClient.getSchedule(scheduleId);
-        if (!res.success || !res.schedule) { showToast('일정을 불러오지 못했습니다', 'error'); return; }
         const calContainer = document.getElementById('calendar-container');
         const dayHeader = document.getElementById('schedule-day-header');
         if (calContainer) calContainer.style.display = 'none';
@@ -941,7 +933,6 @@ async function handleEditSchedule(scheduleId) {
         if (createBtn) createBtn.style.display = 'none';
         renderScheduleForm(res.schedule);
     } catch (_) {
-        showToast('일정을 불러오지 못했습니다', 'error');
     }
 }
 
@@ -949,12 +940,9 @@ async function handleDeleteSchedule(scheduleId) {
     if (!confirm('일정을 삭제하시겠습니까?\n삭제 시 투표 기록도 함께 삭제됩니다.')) return;
     try {
         const res = await apiClient.deleteSchedule(scheduleId);
-        if (!res.success) { showToast(res.message || '삭제에 실패했습니다', 'error'); return; }
-        showToast('일정이 삭제되었습니다');
         await loadMonthSchedules();
         backToScheduleList();
     } catch (e) {
-        showToast(e.message || '삭제 중 오류가 발생했습니다', 'error');
     }
 }
 

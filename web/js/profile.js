@@ -10,7 +10,6 @@ async function uploadProfilePhoto(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
     if (file.size > 5 * 1024 * 1024) {
-        showToast('파일 크기는 5MB 이하여야 합니다.', 'error');
         input.value = '';
         return;
     }
@@ -26,14 +25,11 @@ async function uploadProfilePhoto(input) {
         });
         const data = await res.json();
         if (data.success) {
-            showToast('프로필 사진이 변경되었습니다.');
             loadProfile();
         } else {
-            showToast(data.message || '업로드 실패', 'error');
         }
     } catch (err) {
         console.error('Upload profile photo error:', err);
-        showToast('프로필 사진 업로드 중 오류가 발생했습니다.', 'error');
     }
     input.value = '';
 }
@@ -308,7 +304,6 @@ async function handlePasswordChange(event) {
     try {
         const result = await apiClient.changePassword(current, newPw);
         if (result.success) {
-            showToast('비밀번호가 변경되었습니다.', 'success');
             await loadProfile();
         } else {
             showInlineError('pw-change-error', result.message || '비밀번호 변경에 실패했습니다.');

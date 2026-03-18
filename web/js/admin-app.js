@@ -202,17 +202,14 @@ async function approvePendingMember(memberId, name) {
     try {
         var res = await apiClient.request('/mobile-admin/members/' + memberId + '/approve', { method: 'POST' });
         if (res.success) {
-            showToast(name + '님의 가입이 승인되었습니다.', 'success');
             var card = document.getElementById('pending-member-' + memberId);
             if (card) card.style.display = 'none';
             var remaining = document.querySelectorAll('.pending-member-card[style*="display: none"]');
             var total = document.querySelectorAll('.pending-member-card');
             if (remaining.length >= total.length) loadPendingMembers();
         } else {
-            showToast(res.message || '승인 실패', 'error');
         }
     } catch (err) {
-        showToast(err.message || '승인 중 오류', 'error');
     }
 }
 
@@ -241,7 +238,6 @@ function rejectPendingMember(memberId, name) {
 async function confirmRejectMember(memberId, name, btnEl) {
     var reason = (document.getElementById('reject-reason-input') || {}).value;
     if (!reason || !reason.trim()) {
-        showToast('거부 사유를 입력하세요.', 'error');
         return;
     }
     btnEl.disabled = true;
@@ -252,7 +248,6 @@ async function confirmRejectMember(memberId, name, btnEl) {
             body: JSON.stringify({ reason: reason.trim() })
         });
         if (res.success) {
-            showToast(name + '님의 가입이 거부되었습니다.');
             var overlay = btnEl.closest('.admin-modal-overlay');
             if (overlay) overlay.remove();
             var card = document.getElementById('pending-member-' + memberId);
@@ -261,12 +256,10 @@ async function confirmRejectMember(memberId, name, btnEl) {
             var total = document.querySelectorAll('.pending-member-card');
             if (remaining.length >= total.length) loadPendingMembers();
         } else {
-            showToast(res.message || '거부 실패', 'error');
             btnEl.disabled = false;
             btnEl.textContent = '거부 확인';
         }
     } catch (err) {
-        showToast(err.message || '거부 중 오류', 'error');
         btnEl.disabled = false;
         btnEl.textContent = '거부 확인';
     }
@@ -363,15 +356,12 @@ async function bulkDeleteNotices() {
             body: JSON.stringify({ ids: ids })
         });
         if (res.success) {
-            showToast(res.deletedCount + '개 공지가 삭제되었습니다.', 'success');
             _noticeSelectedIds.clear();
             removeFloatingDeleteBar();
             loadNoticeManageList();
         } else {
-            showToast(res.message || '삭제 실패', 'error');
         }
     } catch (err) {
-        showToast(err.message || '삭제 중 오류', 'error');
     }
 }
 
@@ -441,8 +431,6 @@ async function saveNotice() {
     var content = (document.getElementById('notice-edit-input-content') || {}).value.trim();
     var is_pinned = !!(document.getElementById('notice-edit-pinned') || {}).checked;
 
-    if (!title) { showToast('제목을 입력하세요.', 'error'); return; }
-    if (!content) { showToast('내용을 입력하세요.', 'error'); return; }
 
     try {
         var endpoint = _editingNoticeId
@@ -455,13 +443,10 @@ async function saveNotice() {
             body: JSON.stringify({ title: title, content: content, is_pinned: is_pinned })
         });
         if (res.success) {
-            showToast(_editingNoticeId ? '공지가 수정되었습니다.' : '공지가 등록되었습니다.', 'success');
             showNoticeManageScreen();
         } else {
-            showToast(res.message || '저장 실패', 'error');
         }
     } catch (err) {
-        showToast(err.message || '저장 중 오류', 'error');
     }
 }
 
@@ -470,13 +455,10 @@ async function deleteSingleNotice(noticeId) {
     try {
         var res = await apiClient.request('/admin-app/notices/' + noticeId, { method: 'DELETE' });
         if (res.success) {
-            showToast('공지가 삭제되었습니다.', 'success');
             showNoticeManageScreen();
         } else {
-            showToast(res.message || '삭제 실패', 'error');
         }
     } catch (err) {
-        showToast(err.message || '삭제 중 오류', 'error');
     }
 }
 
@@ -562,15 +544,12 @@ async function bulkDeletePosts() {
             body: JSON.stringify({ ids: ids })
         });
         if (res.success) {
-            showToast((res.deletedCount || ids.length) + '개 게시글이 삭제되었습니다.', 'success');
             _postSelectedIds.clear();
             removeFloatingDeleteBar();
             loadPostManageList();
         } else {
-            showToast(res.message || '삭제 실패', 'error');
         }
     } catch (err) {
-        showToast(err.message || '삭제 중 오류', 'error');
     }
 }
 
@@ -656,15 +635,12 @@ async function bulkDeleteSchedules() {
             body: JSON.stringify({ ids: ids })
         });
         if (res.success) {
-            showToast((res.deletedCount || ids.length) + '개 일정이 삭제되었습니다.', 'success');
             _scheduleSelectedIds.clear();
             removeFloatingDeleteBar();
             loadScheduleManageList();
         } else {
-            showToast(res.message || '삭제 실패', 'error');
         }
     } catch (err) {
-        showToast(err.message || '삭제 중 오류', 'error');
     }
 }
 
@@ -856,11 +832,8 @@ async function handlePushSend() {
     var body = (document.getElementById('push-body') || {}).value.trim();
     var target = (document.querySelector('input[name="push-target"]:checked') || {}).value || 'all';
 
-    if (!title) { showToast('제목을 입력하세요.', 'error'); return; }
-    if (!body) { showToast('내용을 입력하세요.', 'error'); return; }
 
     if (target === 'selected' && _pushSelectedUserIds.size === 0) {
-        showToast('발송 대상 회원을 선택하세요.', 'error');
         return;
     }
 
@@ -882,17 +855,14 @@ async function handlePushSend() {
         });
         if (res.success) {
             var data = res.data || {};
-            showToast('발송 완료 (성공: ' + (data.sent_count || 0) + '건, 실패: ' + (data.failed_count || 0) + '건)', 'success');
             // 폼 초기화
             if (document.getElementById('push-title')) document.getElementById('push-title').value = '';
             if (document.getElementById('push-body')) document.getElementById('push-body').value = '';
             _pushSelectedUserIds.clear();
             loadPushLog();
         } else {
-            showToast(res.message || '발송 실패', 'error');
         }
     } catch (err) {
-        showToast(err.message || '발송 중 오류', 'error');
     } finally {
         if (btn) { btn.disabled = false; btn.textContent = '발송하기'; }
     }
@@ -939,13 +909,10 @@ async function adminDeletePost(postId) {
     try {
         var res = await apiClient.request('/mobile-admin/posts/' + postId, { method: 'DELETE' });
         if (res.success) {
-            showToast('게시글이 삭제되었습니다.', 'success');
             if (typeof handlePostDetailBack === 'function') handlePostDetailBack();
         } else {
-            showToast(res.message || '삭제 실패', 'error');
         }
     } catch (err) {
-        showToast(err.message || '삭제 중 오류', 'error');
     }
 }
 
@@ -954,13 +921,10 @@ async function adminDeleteSchedule(scheduleId) {
     try {
         var res = await apiClient.request('/mobile-admin/schedules/' + scheduleId, { method: 'DELETE' });
         if (res.success) {
-            showToast('일정이 삭제되었습니다.', 'success');
             if (typeof loadSchedulesScreen === 'function') loadSchedulesScreen();
         } else {
-            showToast(res.message || '삭제 실패', 'error');
         }
     } catch (err) {
-        showToast(err.message || '삭제 중 오류', 'error');
     }
 }
 
@@ -1093,14 +1057,11 @@ async function localAdminApprove(memberId, name) {
     try {
         var res = await apiClient.request('/mobile-admin/members/' + memberId + '/approve', { method: 'POST' });
         if (res.success) {
-            showToast(name + '님의 가입이 승인되었습니다.', 'success');
             loadLocalAdminPending();
             loadLocalAdminMembers();
         } else {
-            showToast(res.message || '승인 실패', 'error');
         }
     } catch (err) {
-        showToast(err.message || '승인 중 오류', 'error');
     }
 }
 
@@ -1129,7 +1090,6 @@ function localAdminReject(memberId, name) {
 async function confirmLocalAdminReject(memberId, name, btnEl) {
     var reason = (document.getElementById('la-reject-reason') || {}).value;
     if (!reason || !reason.trim()) {
-        showToast('거부 사유를 입력하세요.', 'error');
         return;
     }
     btnEl.disabled = true;
@@ -1140,17 +1100,14 @@ async function confirmLocalAdminReject(memberId, name, btnEl) {
             body: JSON.stringify({ reason: reason.trim() })
         });
         if (res.success) {
-            showToast(name + '님의 가입이 거부되었습니다.');
             var overlay = btnEl.closest('.admin-modal-overlay');
             if (overlay) overlay.remove();
             loadLocalAdminPending();
         } else {
-            showToast(res.message || '거부 실패', 'error');
             btnEl.disabled = false;
             btnEl.textContent = '거부 확인';
         }
     } catch (err) {
-        showToast(err.message || '거부 중 오류', 'error');
         btnEl.disabled = false;
         btnEl.textContent = '거부 확인';
     }
@@ -1210,7 +1167,6 @@ async function loadLocalAdminMembers() {
 async function localAdminChangeRole(memberId, newRole, name) {
     // local_admin은 member / local_admin만 할당 가능
     if (newRole !== 'member' && newRole !== 'local_admin') {
-        showToast('해당 역할은 할당할 수 없습니다.', 'error');
         loadLocalAdminMembers();
         return;
     }
@@ -1224,14 +1180,11 @@ async function localAdminChangeRole(memberId, newRole, name) {
             body: JSON.stringify({ role: newRole })
         });
         if (res.success) {
-            showToast(name + '님의 역할이 변경되었습니다.', 'success');
             loadLocalAdminMembers();
         } else {
-            showToast(res.message || '역할 변경 실패', 'error');
             loadLocalAdminMembers();
         }
     } catch (err) {
-        showToast(err.message || '역할 변경 중 오류', 'error');
         loadLocalAdminMembers();
     }
 }

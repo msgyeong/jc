@@ -297,7 +297,6 @@ async function toggleFavorite(memberId, currentState, btnEl) {
             btnEl.onclick = function(e) { e.stopPropagation(); toggleFavorite(memberId, true, btnEl); };
         }
     } catch (e) {
-        showToast(e.message || '즐겨찾기 변경에 실패했습니다.', 'error');
     }
 }
 
@@ -353,10 +352,7 @@ function showCreateGroupDialog() {
     if (!name || !name.trim()) return;
     apiClient.request('/member-groups', { method: 'POST', body: JSON.stringify({ name: name.trim() }) })
         .then(res => {
-            if (res.success) { showToast('그룹이 생성되었습니다.'); loadMembersScreen(); }
-            else showToast(res.message || '그룹 생성 실패', 'error');
         })
-        .catch(e => showToast(e.message || '그룹 생성 실패', 'error'));
 }
 
 function showEditGroupDialog(groupId, currentName) {
@@ -364,29 +360,21 @@ function showEditGroupDialog(groupId, currentName) {
     if (!name || !name.trim() || name.trim() === currentName) return;
     apiClient.request('/member-groups/' + groupId, { method: 'PUT', body: JSON.stringify({ name: name.trim() }) })
         .then(res => {
-            if (res.success) { showToast('그룹 이름이 변경되었습니다.'); loadMembersScreen(); }
-            else showToast(res.message || '변경 실패', 'error');
         })
-        .catch(e => showToast(e.message || '변경 실패', 'error'));
 }
 
 function deleteGroup(groupId) {
     if (!confirm('이 그룹을 삭제할까요?')) return;
     apiClient.request('/member-groups/' + groupId, { method: 'DELETE' })
         .then(res => {
-            if (res.success) { showToast('그룹이 삭제되었습니다.'); loadMembersScreen(); }
-            else showToast(res.message || '삭제 실패', 'error');
         })
-        .catch(e => showToast(e.message || '삭제 실패', 'error'));
 }
 
 function removeFromGroup(groupId, memberId) {
     apiClient.request('/member-groups/' + groupId + '/members/' + memberId, { method: 'DELETE' })
         .then(res => {
             if (res.success) { loadGroupMembers(groupId); }
-            else showToast(res.message || '제거 실패', 'error');
         })
-        .catch(e => showToast(e.message || '제거 실패', 'error'));
 }
 
 // ========== 검색 오버레이 ==========
@@ -581,11 +569,12 @@ function infoRow(label, value, isPhone = false) {
 }
 
 function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => showToast(text + ' 복사됨'))
-    .catch(() => {
-        const ta = document.createElement('textarea'); ta.value = text;
+    navigator.clipboard.writeText(text).then(function() {
+        // copied
+    }).catch(function() {
+        var ta = document.createElement('textarea'); ta.value = text;
         document.body.appendChild(ta); ta.select(); document.execCommand('copy');
-        document.body.removeChild(ta); showToast(text + ' 복사됨');
+        document.body.removeChild(ta);
     });
 }
 

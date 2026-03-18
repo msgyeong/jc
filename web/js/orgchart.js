@@ -144,23 +144,21 @@ function showAddGroupForm() {
 
 async function addOrgGroup() {
     var name = document.getElementById('new-group-name')?.value?.trim();
-    if (!name) { showToast('그룹명을 입력하세요', 'error'); return; }
+    if (!name) return;
     try {
         var res = await apiClient.request('/orgchart/groups', {
             method: 'POST', body: JSON.stringify({ name: name })
         });
-        if (res.success) { showToast('그룹이 추가되었습니다'); loadOrgChartScreen(); }
-        else showToast(res.error || '추가 실패', 'error');
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        if (res.success) { loadOrgChartScreen(); }
+    } catch (err) { console.error('addOrgGroup error:', err); }
 }
 
 async function deleteOrgGroup(groupId) {
     if (!confirm('이 그룹을 삭제하시겠습니까?\n소속 인원도 함께 삭제됩니다.')) return;
     try {
         var res = await apiClient.request('/orgchart/groups/' + groupId, { method: 'DELETE' });
-        if (res.success) { showToast('삭제 완료'); loadOrgChartScreen(); }
-        else showToast(res.error || '삭제 실패', 'error');
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        if (res.success) { loadOrgChartScreen(); }
+    } catch (err) { console.error('deleteOrgGroup error:', err); }
 }
 
 function showAddMemberForm(groupId) {
@@ -224,25 +222,21 @@ async function addOrgMemberUser(groupId, userId, userName) {
 async function addOrgMemberManual(groupId) {
     var position = document.getElementById('member-position-' + groupId)?.value?.trim();
     var name = document.getElementById('member-manual-name-' + groupId)?.value?.trim();
-    if (!position) { showToast('직책을 입력하세요', 'error'); return; }
-    if (!name) { showToast('이름을 입력하세요', 'error'); return; }
     try {
         var res = await apiClient.request('/orgchart/members', {
             method: 'POST',
             body: JSON.stringify({ group_id: groupId, position_title: position, manual_name: name })
         });
-        if (res.success) { showToast(name + ' 추가 완료'); loadOrgChartScreen(); }
-        else showToast(res.error || '추가 실패', 'error');
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        if (res.success) { loadOrgChartScreen(); }
+    } catch (err) { console.error('addOrgMemberManual error:', err); }
 }
 
 async function deleteOrgMember(memberId) {
     if (!confirm('이 인원을 삭제하시겠습니까?')) return;
     try {
         var res = await apiClient.request('/orgchart/members/' + memberId, { method: 'DELETE' });
-        if (res.success) { showToast('삭제 완료'); loadOrgChartScreen(); }
-        else showToast(res.error || '삭제 실패', 'error');
-    } catch (err) { showToast('오류: ' + err.message, 'error'); }
+        if (res.success) { loadOrgChartScreen(); }
+    } catch (err) { console.error('deleteOrgMember error:', err); }
 }
 
 console.log('✅ OrgChart 모듈 로드 완료 (리뉴얼)');

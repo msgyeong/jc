@@ -646,7 +646,6 @@ async function handlePostCommentSubmit(postId, content) {
             if (form) form.reset();
         }
     } catch (err) {
-        showToast(err.message || '댓글 등록에 실패했습니다.', 'error');
     }
 }
 
@@ -903,11 +902,9 @@ function handlePostDelete(postId) {
             if (result && result.success) {
                 handlePostDetailBack();
             } else {
-                showToast(result.message || '삭제에 실패했습니다.', 'error');
             }
         })
         .catch((err) => {
-            showToast(err.message || '삭제 중 오류가 발생했습니다.', 'error');
         });
 }
 
@@ -994,13 +991,11 @@ async function submitPostAttendance(status, postId) {
             body: JSON.stringify({ status: status })
         });
         if (res.success) {
-            showToast(status === 'attending' ? '참석으로 표시했습니다' : '불참으로 표시했습니다', 'info');
             // 다시 로드
             const postRes = await apiClient.getPost(postId);
             if (postRes.success && postRes.post) loadPostAttendance(postRes.post);
         }
     } catch (e) {
-        showToast(e.message || '참석 등록에 실패했습니다', 'error');
     }
 }
 

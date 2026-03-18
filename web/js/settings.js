@@ -128,7 +128,7 @@ function showFontSizePicker() {
 
     container.innerHTML = ''
         + '<div style="padding:16px 0">'
-        + '<button class="btn-back" onclick="renderSettingsScreen()" style="margin-bottom:12px;background:none;border:none;color:var(--text-primary);font-size:15px;cursor:pointer">&larr; 돌아가기</button>'
+        + '<button class="settings-back-btn" onclick="renderSettingsScreen()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 돌아가기</button>'
         + '<h3 style="font-size:17px;font-weight:600;margin-bottom:16px">글꼴 크기</h3>'
         + '<div class="settings-group">'
         + Object.keys(FONT_SIZES).map(function(key) {
@@ -155,7 +155,7 @@ function showFontSizePicker() {
 // 글꼴 크기 변경
 function changeFontSize(size) {
     localStorage.setItem('font_size', size);
-    document.documentElement.style.fontSize = FONT_SIZES[size] || '16px';
+    document.documentElement.setAttribute('data-font-size', size);
     // 라벨 업데이트
     var label = document.getElementById('settings-font-label');
     if (label) label.textContent = FONT_SIZE_LABELS[size] || '보통';
@@ -189,7 +189,7 @@ function showChangePasswordFromSettings() {
 
     container.innerHTML = ''
         + '<div style="padding:16px 0">'
-        + '<button class="btn-back" onclick="renderSettingsScreen()" style="margin-bottom:12px;background:none;border:none;color:var(--text-primary);font-size:15px;cursor:pointer">&larr; 돌아가기</button>'
+        + '<button class="settings-back-btn" onclick="renderSettingsScreen()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 돌아가기</button>'
         + '<h3 style="font-size:17px;font-weight:600;margin-bottom:16px">비밀번호 변경</h3>'
         + '<form onsubmit="handlePwChangeFromSettings(event)">'
         + '<div class="form-group"><label>현재 비밀번호</label><input type="password" id="settings-pw-current" required style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:8px"></div>'
@@ -244,7 +244,7 @@ function showWithdrawScreen() {
 
     container.innerHTML = ''
         + '<div style="padding:16px 0">'
-        + '<button class="btn-back" onclick="renderSettingsScreen()" style="margin-bottom:12px;background:none;border:none;color:var(--text-primary);font-size:15px;cursor:pointer">&larr; 돌아가기</button>'
+        + '<button class="settings-back-btn" onclick="renderSettingsScreen()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 돌아가기</button>'
         + '<h3 style="font-size:17px;font-weight:600;margin-bottom:16px;color:var(--error-color)">회원 탈퇴</h3>'
         + '<div style="padding:16px;background:var(--error-bg);border-radius:12px;margin-bottom:16px;font-size:14px;color:var(--error-text)">'
         + '회원 탈퇴 시 아래 데이터가 삭제되며, 복구할 수 없습니다.<br><br>'
@@ -299,7 +299,7 @@ function showTermsPage() {
 
     container.innerHTML = ''
         + '<div style="padding:16px 0">'
-        + '<button class="btn-back" onclick="renderSettingsScreen()" style="margin-bottom:12px;background:none;border:none;color:var(--text-primary);font-size:15px;cursor:pointer">&larr; 돌아가기</button>'
+        + '<button class="settings-back-btn" onclick="renderSettingsScreen()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 돌아가기</button>'
         + '<h3 style="font-size:17px;font-weight:600;margin-bottom:16px">이용약관</h3>'
         + '<div class="legal-content">'
         + '<h4>영등포 JC 회원관리 앱 이용약관</h4>'
@@ -321,7 +321,7 @@ function showPrivacyPage() {
 
     container.innerHTML = ''
         + '<div style="padding:16px 0">'
-        + '<button class="btn-back" onclick="renderSettingsScreen()" style="margin-bottom:12px;background:none;border:none;color:var(--text-primary);font-size:15px;cursor:pointer">&larr; 돌아가기</button>'
+        + '<button class="settings-back-btn" onclick="renderSettingsScreen()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 돌아가기</button>'
         + '<h3 style="font-size:17px;font-weight:600;margin-bottom:16px">개인정보 처리방침</h3>'
         + '<div class="legal-content">'
         + '<h4>영등포 JC 개인정보 처리방침</h4>'

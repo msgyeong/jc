@@ -4164,7 +4164,7 @@ input[type="date"]:focus {
 
 /* ==================== 일정 상세 (개선) ==================== */
 .schedule-detail {
-    padding: 0;
+    padding: 16px 16px 0;
 }
 .schedule-detail-section {
     background: #FFFFFF;
@@ -4433,12 +4433,12 @@ input[type="date"]:focus {
 
 /* ==================== 일정 폼 (개선) ==================== */
 .schedule-form-wrapper {
-    background: #F9FAFB;
-    min-height: 100vh;
+    background: #FFFFFF;
+    padding: 16px;
 }
 .schedule-form-inner {
     background: #FFFFFF;
-    padding: 20px 16px;
+    padding: 0;
 }
 .schedule-form-field { margin-bottom: 20px; }
 .schedule-form-label {
@@ -5648,6 +5648,24 @@ input[type="date"]:focus {
     margin-bottom: 16px;
 }
 
+/* 설정 서브화면 뒤로가기 버튼 */
+.settings-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--font-family);
+    cursor: pointer;
+    padding: 8px 0;
+    margin-bottom: 12px;
+    -webkit-tap-highlight-color: transparent;
+}
+.settings-back-btn:active { opacity: 0.6; }
+
 .settings-group-title {
     font-size: 12px;
     font-weight: 600;
@@ -5947,10 +5965,15 @@ input[type="date"]:focus {
 .btn-danger:hover:not(:disabled) { background: var(--error-hover); }
 
 /* ==================== 글꼴 크기 설정 ==================== */
-[data-font-size="small"] { font-size: 14px; }
-[data-font-size="medium"] { font-size: 16px; }
-[data-font-size="large"] { font-size: 18px; }
-[data-font-size="xlarge"] { font-size: 20px; }
+[data-font-size="small"] body { font-size: 14px; }
+[data-font-size="medium"] body { font-size: 16px; }
+[data-font-size="large"] body { font-size: 18px; }
+[data-font-size="xlarge"] body { font-size: 20px; }
+
+/* 글꼴 크기 변경 시 주요 텍스트에 반영 */
+[data-font-size="small"] .screen-content { font-size: 13px; }
+[data-font-size="large"] .screen-content { font-size: 17px; }
+[data-font-size="xlarge"] .screen-content { font-size: 19px; }
 
 /* ==================== 일정 첨부 토글 섹션 v2.0 ==================== */
 .schedule-attach-section {
@@ -7008,6 +7031,11 @@ input[type="date"]:focus {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    white-space: nowrap;
+    gap: 8px;
+}
+.all-members-header > span {
+    flex-shrink: 0;
 }
 
 .industry-filter-inline {

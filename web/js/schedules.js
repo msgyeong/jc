@@ -656,7 +656,7 @@ function renderScheduleForm(data = {}) {
 
     container.innerHTML = `
         <div class="schedule-form-wrapper">
-            <button class="btn-back" data-action="schedule-back-list" style="margin:16px">
+            <button class="btn-back" data-action="schedule-back-list" style="margin:0 0 8px 0">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
                 취소
             </button>

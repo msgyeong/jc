@@ -553,6 +553,14 @@ function handlePostCreateCancel() {
 function showPostDetailScreen(postId) {
     const detailScreen = document.getElementById('post-detail-screen');
     if (!detailScreen) return;
+
+    // N배지 제거: 해당 카드의 N뱃지를 즉시 제거 (읽음 처리)
+    const card = document.querySelector(`.pc-card[onclick*="posts/${postId}"]`);
+    if (card) {
+        const nBadge = card.querySelector('.pc-badge-n');
+        if (nBadge) nBadge.remove();
+    }
+
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     detailScreen.classList.add('active');
     loadPostDetail(postId);

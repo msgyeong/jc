@@ -19,7 +19,8 @@ router.get('/', authenticate, async (req, res) => {
                     'id', om.id, 'position_title', om.position_title,
                     'user_id', om.user_id, 'user_name', COALESCE(u.name, om.manual_name),
                     'manual_name', om.manual_name, 'sort_order', om.sort_order,
-                    'profile_image', u.profile_image
+                    'profile_image', u.profile_image,
+                    'user_position', u.position, 'user_company', u.company
                 ) ORDER BY om.sort_order)
                 FROM orgchart_members om
                 LEFT JOIN users u ON om.user_id = u.id
@@ -113,13 +114,22 @@ router.post('/members', authenticate, async (req, res) => {
         }
         const { group_id, position_title, user_id, manual_name, sort_order } = req.body;
         if (!group_id) return res.status(400).json({ success: false, error: '그룹을 선택하세요.' });
-        if (!position_title) return res.status(400).json({ success: false, error: '직책명을 입력하세요.' });
         if (!user_id && !manual_name) return res.status(400).json({ success: false, error: '회원을 선택하거나 이름을 입력하세요.' });
+
+        // position_title: 입력값 우선, 없으면 회원 프로필의 position 사용
+        let finalPosition = position_title;
+        if (!finalPosition && user_id) {
+            const userRow = await query('SELECT position FROM users WHERE id = $1', [user_id]);
+            finalPosition = (userRow.rows[0] && userRow.rows[0].position) || '회원';
+        }
+        if (!finalPosition && manual_name) {
+            return res.status(400).json({ success: false, error: '수기 등록 시 직책명을 입력하세요.' });
+        }
 
         const result = await query(
             `INSERT INTO orgchart_members (group_id, position_title, user_id, manual_name, sort_order)
              VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-            [group_id, position_title, user_id || null, manual_name || null, sort_order || 0]
+            [group_id, finalPosition, user_id || null, manual_name || null, sort_order || 0]
         );
         res.json({ success: true, data: result.rows[0] });
     } catch (error) {

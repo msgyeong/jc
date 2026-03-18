@@ -7195,3 +7195,388 @@ input[type="date"]:focus {
         padding-top: env(safe-area-inset-top, 8px);
     }
 }
+
+/* ==================== 조직도 리뉴얼 ==================== */
+
+.oc-loading, .oc-empty, .oc-error {
+    text-align: center;
+    padding: 48px 16px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+.oc-error { color: var(--error-color); }
+
+/* 그룹 카드 */
+.oc-group {
+    margin-bottom: 16px;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    overflow: hidden;
+}
+
+.oc-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--primary-color);
+    color: #fff;
+    gap: 12px;
+}
+
+.oc-group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.oc-group-name {
+    font-size: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.oc-group-count {
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(255,255,255,0.25);
+    padding: 2px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.oc-group-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.oc-header-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s;
+}
+.oc-header-btn:active { opacity: 0.7; }
+
+.oc-header-btn-add {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+}
+
+.oc-header-btn-delete {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+    padding: 6px 8px;
+}
+.oc-header-btn-delete:hover { color: #FCA5A5; }
+
+/* 멤버 리스트 */
+.oc-member-list {
+    padding: 4px 0;
+}
+
+.oc-member-empty {
+    padding: 20px 16px;
+    text-align: center;
+    color: var(--text-hint);
+    font-size: 13px;
+}
+
+.oc-member {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    gap: 12px;
+    transition: background 0.1s;
+}
+.oc-member:not(:last-child) {
+    border-bottom: 1px solid var(--border-light);
+}
+
+.oc-member-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+}
+
+.oc-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    overflow: hidden;
+    object-fit: cover;
+}
+.oc-avatar-default {
+    background: #DBEAFE;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.oc-avatar-default svg { width: 28px; height: 28px; }
+.oc-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.oc-member-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.oc-member-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.oc-member-pos {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary-color);
+    background: var(--primary-light);
+    padding: 1px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.oc-member-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.oc-member-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.oc-member-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-hint);
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: color 0.15s, background 0.15s;
+}
+.oc-member-delete:hover { color: var(--error-color); background: var(--error-bg); }
+
+/* 인원 추가 폼 */
+.oc-add-member-form {
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+}
+
+.oc-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    background: #fff;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+}
+.oc-input:focus { border-color: var(--primary-color); }
+.oc-input-sm { max-width: 100px; flex-shrink: 0; }
+
+.oc-search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.oc-search-row .oc-input { flex: 1; }
+
+/* 검색 결과 */
+.oc-search-results {
+    margin-bottom: 8px;
+}
+
+.oc-searching, .oc-no-results {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 12px;
+}
+
+.oc-result-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-md);
+    transition: background 0.1s;
+}
+.oc-result-item:not(:last-child) {
+    margin-bottom: 4px;
+}
+.oc-result-item:hover { background: #fff; }
+
+.oc-result-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.oc-result-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.oc-result-avatar svg { width: 24px; height: 24px; }
+
+.oc-result-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.oc-result-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.oc-result-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 수기 입력 구분선 */
+.oc-manual-divider {
+    text-align: center;
+    padding: 8px 0;
+    font-size: 12px;
+    color: var(--text-hint);
+    position: relative;
+}
+.oc-manual-divider::before,
+.oc-manual-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: calc(50% - 20px);
+    height: 1px;
+    background: var(--border-color);
+}
+.oc-manual-divider::before { left: 0; }
+.oc-manual-divider::after { right: 0; }
+
+.oc-manual-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.oc-manual-row .oc-input { flex: 1; }
+
+/* 버튼 */
+.oc-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s, background 0.15s;
+    flex-shrink: 0;
+}
+.oc-btn:active { opacity: 0.7; }
+
+.oc-btn-primary {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.oc-btn-secondary {
+    background: var(--neutral-bg);
+    color: var(--text-primary);
+}
+.oc-btn-secondary:hover { background: var(--border-color); }
+
+.oc-btn-ghost {
+    background: none;
+    color: var(--text-secondary);
+    padding: 8px 12px;
+}
+.oc-btn-ghost:hover { color: var(--text-primary); }
+
+.oc-btn-select {
+    background: var(--primary-color);
+    color: #fff;
+    padding: 6px 14px;
+    font-size: 13px;
+    border-radius: 16px;
+}
+
+.oc-btn-cancel {
+    width: 100%;
+    text-align: center;
+    margin-top: 4px;
+}
+
+/* 그룹 추가 버튼 (하단) */
+.oc-add-group-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 14px;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    background: none;
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+}
+.oc-add-group-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* 그룹 추가 폼 (상단) */
+.oc-add-group-form {
+    padding: 16px;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+}
+.oc-add-group-form .oc-input { margin-bottom: 10px; }
+.oc-form-actions { display: flex; gap: 8px; }

@@ -67,7 +67,7 @@ router.get('/:type', authenticate, async (req, res) => {
  * GET /api/content/:type/image
  * 콘텐츠 이미지 바이너리 반환
  */
-router.get('/:type/image', authenticate, async (req, res) => {
+router.get('/:type/image', async (req, res) => {
     try {
         const { type } = req.params;
 
@@ -100,7 +100,7 @@ router.get('/:type/image', authenticate, async (req, res) => {
  * GET /api/content/:type/file
  * 콘텐츠 첨부파일 다운로드
  */
-router.get('/:type/file', authenticate, async (req, res) => {
+router.get('/:type/file', async (req, res) => {
     try {
         const { type } = req.params;
 
@@ -121,7 +121,12 @@ router.get('/:type/file', authenticate, async (req, res) => {
 
         const { file_data, file_name, file_mime } = result.rows[0];
         res.set('Content-Type', file_mime || 'application/octet-stream');
-        res.set('Content-Disposition', `attachment; filename="${encodeURIComponent(file_name || 'file')}"`);
+        // PDF는 인라인, 나머지는 다운로드
+        if (file_mime === 'application/pdf') {
+            res.set('Content-Disposition', `inline; filename="${encodeURIComponent(file_name || 'file')}"`);
+        } else {
+            res.set('Content-Disposition', `attachment; filename="${encodeURIComponent(file_name || 'file')}"`);
+        }
         res.send(file_data);
     } catch (error) {
         console.error('콘텐츠 파일 다운로드 오류:', error);

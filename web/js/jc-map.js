@@ -24,24 +24,12 @@ async function loadJcMapScreen() {
             return;
         }
 
-        // jc-map-screen 자체에 position relative 설정
-        var screen = document.getElementById('jc-map-screen');
-        if (screen) {
-            screen.style.position = 'relative';
-            screen.style.overflow = 'hidden';
-        }
-
-        // 컨테이너 크기 설정
+        // 컨테이너 크기 강제 설정
         var contentEl = document.getElementById('jc-map-content');
         if (contentEl) {
-            contentEl.style.position = 'relative';
             contentEl.style.width = '100%';
             contentEl.style.height = 'calc(100vh - 56px)';
-            contentEl.style.overflow = 'hidden';
         }
-        mapContainer.style.position = 'absolute';
-        mapContainer.style.top = '0';
-        mapContainer.style.left = '0';
         mapContainer.style.width = '100%';
         mapContainer.style.height = '100%';
 

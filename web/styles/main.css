@@ -6820,3 +6820,17 @@ input[type="date"]:focus {
 #jc-map-content { position: relative !important; overflow: hidden !important; }
 #jc-kakao-map { position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; height: 100% !important; }
 #jc-kakao-map .leaflet-container { width: 100% !important; height: 100% !important; }
+
+/* JC 지도: #app 제한 해제 */
+#jc-map-screen.active ~ * { display: none; }
+#jc-map-screen {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    left: 50% !important;
+    right: 50% !important;
+    margin-left: -50vw !important;
+    margin-right: -50vw !important;
+    width: 100vw !important;
+}

@@ -234,6 +234,8 @@ app.listen(PORT, () => {
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS join_date DATE").catch(() => {});
     // JC 지도 컬럼
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS map_visible BOOLEAN DEFAULT true").catch(() => {});
+    // 전화번호 공개 범위
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS phone_visibility VARCHAR(20) DEFAULT 'local'").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lat DOUBLE PRECISION").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lng DOUBLE PRECISION").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_address VARCHAR(500)").catch(() => {});

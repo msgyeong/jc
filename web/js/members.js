@@ -173,7 +173,6 @@ function renderFavoritesSection(favorites) {
         <div class="member-section section-collapsible" id="section-favorites">
             <div class="member-section-header clickable" onclick="toggleSectionCollapse('section-favorites')">
                 <span>${starSvgFilled} 즐겨찾기 <span class="section-count">${favorites.length}</span></span>
-                <span class="section-chevron">▼</span>
             </div>
             <div class="section-body">${cards}</div>
         </div>`;
@@ -187,7 +186,6 @@ function renderGroupsSections(groups) {
                 <div class="group-actions">
                     <button class="group-action-btn" onclick="event.stopPropagation();showEditGroupDialog(${g.id},'${escapeHtml(g.name)}')" aria-label="이름 변경">✎</button>
                     <button class="group-action-btn" onclick="event.stopPropagation();deleteGroup(${g.id})" aria-label="삭제">🗑</button>
-                    <span class="section-chevron">▼</span>
                 </div>
             </div>
             <div class="section-body" id="group-body-${g.id}">

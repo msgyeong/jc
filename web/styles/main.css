@@ -6922,17 +6922,6 @@ input[type="date"]:focus {
     gap: 6px;
 }
 
-.section-chevron {
-    font-size: 10px;
-    color: var(--text-hint);
-    transition: transform 0.25s ease;
-    display: inline-block;
-}
-
-.section-collapsible.collapsed .section-chevron {
-    transform: rotate(-90deg);
-}
-
 .section-body {
     overflow: hidden;
     max-height: 2000px;

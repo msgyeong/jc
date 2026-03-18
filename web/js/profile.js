@@ -182,6 +182,14 @@ function showEditProfileForm() {
                     <h3 class="info-section-title">기본 정보</h3>
                     <div class="form-group"><label>이름 *</label><input type="text" id="edit-name" value="${escapeHtml(p.name || '')}" required></div>
                     <div class="form-group"><label>연락처</label><input type="tel" id="edit-phone" value="${escapeHtml(p.phone || '')}" placeholder="010-0000-0000"></div>
+                    <div class="form-group"><label>전화번호 공개 범위</label>
+                        <select id="edit-phone-visibility">
+                            <option value="local" ${(p.phone_visibility || 'local') === 'local' ? 'selected' : ''}>로컬 공개 (같은 JC만)</option>
+                            <option value="district" ${p.phone_visibility === 'district' ? 'selected' : ''}>지구 공개 (같은 지구)</option>
+                            <option value="all" ${p.phone_visibility === 'all' ? 'selected' : ''}>전체 공개</option>
+                        </select>
+                        <span class="help-text">타 로컬 회원에게 전화번호 공개 여부</span>
+                    </div>
                     <div class="form-group"><label>주소</label><input type="text" id="edit-address" value="${escapeHtml(p.address || '')}"></div>
                     <div class="form-group"><label>생년월일</label><input type="date" id="edit-birth-date" value="${birthVal}"></div>
                     <div class="form-group"><label>성별</label>
@@ -239,7 +247,8 @@ async function handleProfileEditSubmit(event) {
         industry: document.getElementById('edit-industry')?.value || null,
         industry_detail: document.getElementById('edit-industry-detail')?.value?.trim() || null,
         website: document.getElementById('edit-website')?.value?.trim() || null,
-        join_date: document.getElementById('edit-join-date')?.value || null
+        join_date: document.getElementById('edit-join-date')?.value || null,
+        phone_visibility: document.getElementById('edit-phone-visibility')?.value || 'local'
     };
 
     setButtonLoading(submitBtn, true);

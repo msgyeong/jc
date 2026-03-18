@@ -184,8 +184,12 @@ router.get('/search-all', authenticate, async (req, res) => {
             return res.json({ success: true, members: [], total: 0 });
         }
 
-        const myOrgResult = await query('SELECT org_id FROM users WHERE id = $1', [req.user.userId]);
+        const myOrgResult = await query(
+            `SELECT u.org_id, o.district FROM users u LEFT JOIN organizations o ON o.id = u.org_id WHERE u.id = $1`,
+            [req.user.userId]
+        );
         const myOrgId = myOrgResult.rows[0] ? myOrgResult.rows[0].org_id : null;
+        const myDistrict = myOrgResult.rows[0] ? myOrgResult.rows[0].district : null;
 
         const conditions = ["u.status = 'active'", "u.role != 'super_admin'"];
         const params = [req.user.userId];
@@ -219,10 +223,17 @@ router.get('/search-all', authenticate, async (req, res) => {
             `SELECT
                 u.id, u.name, u.profile_image,
                 u.company, u.position, u.industry, u.profession,
-                u.org_id,
+                u.org_id, u.phone_visibility,
                 COALESCE(o.name, '소속 없음') as org_name,
+                o.district as org_district,
                 CASE WHEN f.id IS NOT NULL THEN true ELSE false END as is_favorited,
-                CASE WHEN u.org_id = ${myOrgId ? myOrgId : 'NULL'} THEN u.phone ELSE NULL END as phone
+                CASE
+                    WHEN u.org_id = ${myOrgId ? myOrgId : 'NULL'} THEN u.phone
+                    WHEN COALESCE(u.phone_visibility, 'local') = 'all' THEN u.phone
+                    WHEN COALESCE(u.phone_visibility, 'local') = 'district'
+                         AND o.district = ${myDistrict ? "'" + myDistrict.replace(/'/g, "''") + "'" : 'NULL'} THEN u.phone
+                    ELSE NULL
+                END as phone
              FROM users u
              LEFT JOIN organizations o ON o.id = u.org_id
              LEFT JOIN favorites f ON f.target_member_id = u.id AND f.user_id = $1
@@ -257,15 +268,17 @@ router.get('/:id', authenticate, async (req, res) => {
 
         const result = await query(
             `SELECT
-                id, email, name, phone, address,
-                profile_image, role, status,
-                birth_date, gender,
-                company, position, department, work_phone,
-                industry, industry_detail, profession,
-                position_id, website,
-                created_at, updated_at
-             FROM users
-             WHERE id = $1 AND status NOT IN ('withdrawn', 'rejected')`,
+                u.id, u.email, u.name, u.phone, u.address,
+                u.profile_image, u.role, u.status,
+                u.birth_date, u.gender,
+                u.company, u.position, u.department, u.work_phone,
+                u.industry, u.industry_detail, u.profession,
+                u.position_id, u.website, u.phone_visibility,
+                u.org_id, u.created_at, u.updated_at,
+                o.district as org_district
+             FROM users u
+             LEFT JOIN organizations o ON o.id = u.org_id
+             WHERE u.id = $1 AND u.status NOT IN ('withdrawn', 'rejected')`,
             [id]
         );
 
@@ -280,6 +293,31 @@ router.get('/:id', authenticate, async (req, res) => {
         member.industry_name = member.industry
             ? (INDUSTRY_CATEGORIES.find(c => c.code === member.industry) || {}).name || null
             : null;
+
+        // 타 조직 회원 전화번호 공개 범위 적용
+        const myOrgResult = await query('SELECT u.org_id, o.district FROM users u LEFT JOIN organizations o ON o.id = u.org_id WHERE u.id = $1', [req.user.userId]);
+        const myOrgId = myOrgResult.rows[0] ? myOrgResult.rows[0].org_id : null;
+        const myDistrict = myOrgResult.rows[0] ? myOrgResult.rows[0].district : null;
+        const isSameOrg = myOrgId && member.org_id === myOrgId;
+        const isSelf = String(id) === String(req.user.userId);
+
+        if (!isSelf && !isSameOrg) {
+            const vis = member.phone_visibility || 'local';
+            if (vis === 'local') {
+                member.phone = null;
+                member.work_phone = null;
+            } else if (vis === 'district') {
+                if (member.org_district !== myDistrict) {
+                    member.phone = null;
+                    member.work_phone = null;
+                }
+            }
+            // vis === 'all': 전화번호 공개
+        }
+
+        // 내부 필드 제거
+        delete member.org_district;
+        delete member.phone_visibility;
 
         res.json({
             success: true,

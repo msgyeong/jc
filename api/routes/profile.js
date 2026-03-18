@@ -30,7 +30,7 @@ router.get('/', authenticate, async (req, res) => {
                 birth_date, gender,
                 company, position, department, work_phone,
                 industry, industry_detail,
-                position_id,
+                position_id, phone_visibility,
                 created_at, updated_at
              FROM users
              WHERE id = $1`,
@@ -76,7 +76,13 @@ router.put('/', authenticate, async (req, res) => {
     try {
         const userId = req.user.userId;
         const userRole = req.user.role;
-        const { name, phone, address, birth_date, gender, company, work_phone, industry, industry_detail, website, map_visible, business_address, business_lat, business_lng, join_date } = req.body;
+        const { name, phone, address, birth_date, gender, company, work_phone, industry, industry_detail, website, map_visible, business_address, business_lat, business_lng, join_date, phone_visibility } = req.body;
+
+        // phone_visibility 유효성 검증
+        const VALID_PHONE_VISIBILITY = ['local', 'district', 'all'];
+        if (phone_visibility && !VALID_PHONE_VISIBILITY.includes(phone_visibility)) {
+            return res.status(400).json({ success: false, message: '유효하지 않은 전화번호 공개 범위입니다.' });
+        }
 
         // 유효성 검증
         if (!name) {
@@ -137,9 +143,10 @@ router.put('/', authenticate, async (req, res) => {
                      business_lat = COALESCE($13, business_lat),
                      business_lng = COALESCE($14, business_lng),
                      join_date = COALESCE($15, join_date),
+                     phone_visibility = COALESCE($16, phone_visibility),
                      updated_at = NOW()
-                 WHERE id = $16`,
-                [name, phone, address, birth_date, gender, company, work_phone, industry || null, industry_detail || null, website || null, map_visible !== undefined ? map_visible : null, business_address || null, business_lat || null, business_lng || null, join_date || null, userId]
+                 WHERE id = $17`,
+                [name, phone, address, birth_date, gender, company, work_phone, industry || null, industry_detail || null, website || null, map_visible !== undefined ? map_visible : null, business_address || null, business_lat || null, business_lng || null, join_date || null, phone_visibility || null, userId]
             );
         }
 

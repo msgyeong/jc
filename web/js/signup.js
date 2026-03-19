@@ -328,34 +328,21 @@ function addEducationField() {
     educationItem.innerHTML = `
         <div class="education-fields">
             <div class="form-group" style="flex: 2;">
-                <input 
-                    type="text" 
-                    class="education-school" 
-                    placeholder="학교명 (예: 서울대학교 경영학과)"
-                    required
-                >
+                <input type="text" class="education-school" placeholder="학교명" required>
             </div>
             <div class="form-group" style="flex: 1;">
-                <input 
-                    type="month" 
-                    class="education-graduation" 
-                    placeholder="졸업년월"
-                    required
-                >
+                <input type="number" class="education-graduation" placeholder="연도" min="1950" max="2030" required>
             </div>
             <div class="form-group" style="flex: 1;">
                 <select class="education-status" required>
-                    <option value="">상태 선택</option>
+                    <option value="">구분</option>
                     <option value="졸업">졸업</option>
                     <option value="수료">수료</option>
                     <option value="재학">재학</option>
                     <option value="휴학">휴학</option>
-                    <option value="중퇴">중퇴</option>
+                    <option value="기타">기타</option>
                 </select>
             </div>
-            <button type="button" class="btn-remove ${educationCount === 1 ? 'disabled' : ''}" onclick="removeEducationField(${educationCount})" title="삭제" ${educationCount === 1 ? 'disabled' : ''}>
-                ✕
-            </button>
         </div>
     `;
     educationList.appendChild(educationItem);
@@ -428,23 +415,10 @@ function addChildField() {
     childItem.className = 'child-item';
     childItem.id = `child-item-${childCount}`;
     childItem.innerHTML = `
-        <div class="child-fields">
-            <div class="form-group" style="flex: 1;">
-                <input 
-                    type="text" 
-                    class="child-name" 
-                    placeholder="자녀 이름"
-                >
-            </div>
-            <div class="form-group" style="flex: 1;">
-                <input 
-                    type="date" 
-                    class="child-birth"
-                >
-            </div>
-            <button type="button" class="btn-remove" onclick="removeChildField(${childCount})" title="삭제">
-                ✕
-            </button>
+        <label class="form-sub-label">자녀 이름 / 생년월일</label>
+        <div class="family-row-2col">
+            <input type="text" class="child-name" placeholder="이름">
+            <input type="date" class="child-birth">
         </div>
     `;
     childrenList.appendChild(childItem);

@@ -558,8 +558,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (signupForm) {
         signupForm.addEventListener('submit', handleSignup);
         
-        // 초기 학력 필드 1개 추가 (필수)
+        // 초기 학력/경력 필드 1개씩 추가
         addEducationField();
+        addCareerField();
     }
     
     // 휴대폰 번호 입력 필드

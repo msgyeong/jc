@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../config/database');
 const { authenticate } = require('../middleware/auth');
+const { sendPushToUser } = require('../utils/pushSender');
 
 /**
  * 그룹 멤버십 확인 미들웨어
@@ -157,6 +158,23 @@ router.post('/:groupId/posts', authenticate, async (req, res) => {
         );
 
         res.json({ success: true, post: result.rows[0] });
+
+        // 그룹 멤버들에게 푸시 알림 발송 (작성자 제외)
+        try {
+            const groupInfo = await query('SELECT name FROM orgchart_groups WHERE id = $1', [groupId]);
+            const groupName = groupInfo.rows.length > 0 ? groupInfo.rows[0].name : '그룹';
+            const members = await query('SELECT user_id FROM orgchart_members WHERE group_id = $1 AND user_id != $2', [groupId, userId]);
+            for (const m of members.rows) {
+                sendPushToUser(m.user_id, {
+                    title: groupName + ' 새 게시글',
+                    body: title.trim(),
+                    type: 'N-01',
+                    data: { screen: 'group-board', groupId: groupId }
+                }).catch(function() {});
+            }
+        } catch (pushErr) {
+            console.error('Group post push error:', pushErr.message);
+        }
     } catch (error) {
         console.error('Group post create error:', error);
         res.status(500).json({ success: false, error: '게시글 작성에 실패했습니다.' });
@@ -371,6 +389,23 @@ router.post('/:groupId/schedules', authenticate, async (req, res) => {
         );
 
         res.json({ success: true, schedule: result.rows[0] });
+
+        // 그룹 멤버들에게 일정 푸시 알림 발송 (작성자 제외)
+        try {
+            const groupInfo = await query('SELECT name FROM orgchart_groups WHERE id = $1', [groupId]);
+            const groupName = groupInfo.rows.length > 0 ? groupInfo.rows[0].name : '그룹';
+            const members = await query('SELECT user_id FROM orgchart_members WHERE group_id = $1 AND user_id != $2', [groupId, userId]);
+            for (const m of members.rows) {
+                sendPushToUser(m.user_id, {
+                    title: groupName + ' 새 일정',
+                    body: title.trim() + (location ? ' · ' + location : ''),
+                    type: 'N-02',
+                    data: { screen: 'schedules', scheduleId: result.rows[0].id }
+                }).catch(function() {});
+            }
+        } catch (pushErr) {
+            console.error('Group schedule push error:', pushErr.message);
+        }
     } catch (error) {
         console.error('Group schedule create error:', error);
         res.status(500).json({ success: false, error: '일정 생성에 실패했습니다.' });

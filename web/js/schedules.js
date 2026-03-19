@@ -180,10 +180,12 @@ function createScheduleCard(schedule) {
         }
     }
 
-    const clickHandler = isGroup ? '' : `onclick="navigateTo('/schedules/${schedule.id}')"`;
+    const clickHandler = isGroup
+        ? `onclick="showGroupScheduleDetail(${schedule.id}, ${schedule.group_id})"`
+        : `onclick="navigateTo('/schedules/${schedule.id}')"`;
 
     return `
-        <div class="schedule-card-v2" ${clickHandler} style="border-left: 4px solid ${categoryColor}">
+        <div class="schedule-card-v2" ${clickHandler} style="cursor:pointer;border-left: 4px solid ${categoryColor}">
             <div class="schedule-card-top">
                 <span class="schedule-cat-badge" style="background:${categoryColor}15;color:${categoryColor}">${categoryLabel}</span>
                 ${isGroup ? `<span class="schedule-group-badge">${escapeHtml(groupName)}</span>` : ''}
@@ -350,6 +352,118 @@ async function showScheduleDetailScreen(scheduleId) {
 
     } catch (_) {
         container.innerHTML = renderErrorState('일정 정보를 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'showScheduleDetailScreen(' + scheduleId + ')');
+    }
+}
+
+// ========== 그룹 일정 상세 ==========
+
+async function showGroupScheduleDetail(scheduleId, groupId) {
+    const screen = document.getElementById('schedules-screen');
+    const container = document.getElementById('schedule-list');
+    const calContainer = document.getElementById('calendar-container');
+    const dayHeader = document.getElementById('schedule-day-header');
+    if (!screen || !container) return;
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    screen.classList.add('active');
+    if (calContainer) calContainer.style.display = 'none';
+    if (dayHeader) dayHeader.style.display = 'none';
+    container.innerHTML = renderSkeleton('schedule-detail');
+
+    const createBtn = document.getElementById('create-schedule-btn');
+    if (createBtn) createBtn.style.display = 'none';
+
+    try {
+        const res = await apiClient.request('/group-board/' + groupId + '/schedules');
+        if (!res.success || !res.schedules) {
+            container.innerHTML = renderErrorState('일정 정보를 불러올 수 없습니다', '', 'showGroupScheduleDetail(' + scheduleId + ',' + groupId + ')');
+            return;
+        }
+        const s = res.schedules.find(function(item) { return item.id === scheduleId; });
+        if (!s) {
+            container.innerHTML = renderErrorState('일정을 찾을 수 없습니다', '', 'showGroupScheduleDetail(' + scheduleId + ',' + groupId + ')');
+            return;
+        }
+
+        const category = s.category || 'other';
+        const categoryLabel = CATEGORY_LABELS[category] || category;
+        const badgeClass = CATEGORY_BADGE_CLASS[category] || 'badge-other';
+        const weekdays = ['일','월','화','수','목','금','토'];
+
+        const startRaw = s.start_date || '';
+        const endRaw = s.end_date || '';
+        let dateDisplay = '', timeDisplay = '', isAllDay = false;
+
+        if (startRaw) {
+            const sd = new Date(startRaw);
+            dateDisplay = `${sd.getFullYear()}.${String(sd.getMonth()+1).padStart(2,'0')}.${String(sd.getDate()).padStart(2,'0')} (${weekdays[sd.getDay()]})`;
+            const sh = sd.getHours(), sm = sd.getMinutes();
+            if (sh === 0 && sm === 0) {
+                isAllDay = true;
+            } else {
+                timeDisplay = `${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}`;
+            }
+            if (endRaw) {
+                const ed = new Date(endRaw);
+                if (ed.toDateString() !== sd.toDateString()) {
+                    dateDisplay += ` ~ ${ed.getFullYear()}.${String(ed.getMonth()+1).padStart(2,'0')}.${String(ed.getDate()).padStart(2,'0')} (${weekdays[ed.getDay()]})`;
+                }
+                const eh = ed.getHours(), em = ed.getMinutes();
+                if (eh !== 0 || em !== 0) {
+                    const endT = `${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}`;
+                    timeDisplay = timeDisplay ? `${timeDisplay} ~ ${endT}` : endT;
+                    isAllDay = false;
+                }
+            }
+        }
+
+        const groupName = s.group_name || '';
+        const creatorName = s.creator_name || '';
+
+        container.innerHTML = `
+            <div class="detail-view schedule-detail">
+                <button class="btn-back" data-action="schedule-back-list">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    목록으로
+                </button>
+
+                <div class="schedule-detail-section">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <span class="schedule-category-badge ${badgeClass}">${categoryLabel}</span>
+                        ${groupName ? `<span class="schedule-group-badge">${escapeHtml(groupName)}</span>` : ''}
+                    </div>
+                    <h2 style="font-size:20px;font-weight:700;color:#111827;line-height:1.4;margin-top:8px">${escapeHtml(s.title || '')}</h2>
+
+                    <div class="schedule-info-row" style="margin-top:16px">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span class="schedule-info-text date">${dateDisplay}${isAllDay ? '<span class="schedule-allday-badge">종일</span>' : ''}</span>
+                    </div>
+                    ${timeDisplay ? `<div class="schedule-info-row">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span class="schedule-info-text">${timeDisplay}</span>
+                    </div>` : ''}
+                    ${s.location ? `<div class="schedule-info-row">
+                        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        <span class="schedule-info-text" style="flex:1">${escapeHtml(s.location)}</span>
+                        <span class="schedule-map-icon" onclick="window.open('https://map.naver.com/v5/search/'+encodeURIComponent('${escapeHtml(s.location)}'),'_blank')" title="지도에서 보기">
+                            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        </span>
+                    </div>` : ''}
+                    ${creatorName ? `<div class="schedule-info-row">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span class="schedule-info-text sub">${escapeHtml(creatorName)}</span>
+                    </div>` : ''}
+                </div>
+
+                ${s.description ? `<div class="schedule-detail-section">
+                    <div class="schedule-detail-section-title">설명</div>
+                    <div class="schedule-detail-divider"></div>
+                    <div style="font-size:15px;color:#374151;line-height:1.7;white-space:pre-wrap">${escapeHtml(s.description)}</div>
+                </div>` : ''}
+            </div>
+        `;
+    } catch (_) {
+        container.innerHTML = renderErrorState('일정 정보를 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'showGroupScheduleDetail(' + scheduleId + ',' + groupId + ')');
     }
 }
 

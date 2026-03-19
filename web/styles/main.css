@@ -2561,8 +2561,8 @@ input[type="date"]:focus {
 }
 
 .post-create-images-scroll {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
 }
 
@@ -2571,7 +2571,8 @@ input[type="date"]:focus {
 }
 
 .post-create-add-image-btn {
-    aspect-ratio: 1;
+    width: 68px;
+    height: 68px;
     border-radius: 8px;
     border: 1px dashed var(--border-color);
     background: var(--background-color);
@@ -2582,7 +2583,7 @@ input[type="date"]:focus {
     justify-content: center;
     gap: 4px;
     transition: var(--transition);
-    order: -1;
+    flex-shrink: 0;
 }
 
 .post-create-add-image-btn:hover {
@@ -4805,7 +4806,7 @@ input[type="date"]:focus {
     padding: 12px 16px 16px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
     border-top: 1px solid var(--border-color);
 }
 .schedule-attach-fields .form-group { margin-bottom: 0; }
@@ -4814,7 +4815,7 @@ input[type="date"]:focus {
     font-size: 13px;
     font-weight: 500;
     color: var(--text-secondary);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 .schedule-attach-fields input,
 .schedule-attach-fields select {
@@ -6002,7 +6003,21 @@ input[type="date"]:focus {
     color: var(--text-primary);
 }
 
-.schedule-attach-fields { padding: 0 16px 16px; }
+.schedule-attach-fields {
+    padding: 12px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-top: 1px solid var(--border-color);
+}
+.schedule-attach-fields .form-group { margin-bottom: 0; }
+.schedule-attach-fields .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
 
 .date-time-row { display: flex; gap: 8px; }
 .date-time-row input { flex: 1; }

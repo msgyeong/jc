@@ -509,7 +509,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 _editingGroupPostId = null;
-                history.back();
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '등록'; }
+                // 게시글 목록으로 이동 (history.back() 대신 직접 이동하여 목록 갱신 보장)
+                navigateToScreen('group-board');
             } catch (err) {
                 alert('게시글 등록에 실패했습니다.');
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '등록'; }

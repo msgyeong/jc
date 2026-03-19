@@ -475,24 +475,12 @@ function addCareerField() {
     careerItem.className = 'career-item';
     careerItem.id = `career-item-${careerCount}`;
     careerItem.innerHTML = `
-        <div class="career-fields">
-            <div class="form-group" style="flex: 1;">
-                <input 
-                    type="month" 
-                    class="career-period" 
-                    placeholder="년월"
-                >
-            </div>
-            <div class="form-group" style="flex: 2;">
-                <input 
-                    type="text" 
-                    class="career-company" 
-                    placeholder="직장명 (예: ABC기업 영업부)"
-                >
-            </div>
-            <button type="button" class="btn-remove" onclick="removeCareerField(${careerCount})" title="삭제">
-                ✕
-            </button>
+        <div class="education-fields-row">
+            <input type="text" class="career-company edu-input" placeholder="직장명">
+        </div>
+        <div class="education-fields-row2">
+            <input type="text" class="career-period edu-input" placeholder="년도" inputmode="numeric" maxlength="4">
+            <input type="text" class="career-position edu-input" placeholder="직책/부서">
         </div>
     `;
     careerList.appendChild(careerItem);
@@ -517,7 +505,6 @@ function addChildField() {
     childItem.className = 'child-item';
     childItem.id = `child-item-${childCount}`;
     childItem.innerHTML = `
-        <label class="form-sub-label">자녀 이름 / 생년월일</label>
         <div class="family-row-2col">
             <input type="text" class="child-name" placeholder="이름">
             <input type="date" class="child-birth">

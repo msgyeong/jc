@@ -540,12 +540,11 @@
                     </div>
 
                     <div id="children-info" style="display: none;">
-                        <div id="children-list">
-                            <!-- 자녀 항목들이 동적으로 추가됩니다 -->
+                        <div class="form-label-row">
+                            <label class="form-sub-label" style="margin:0">자녀 이름 / 생년월일</label>
+                            <button type="button" class="form-add-btn" onclick="addChildField()">+ 추가</button>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-add-child" onclick="addChildField()">
-                            + 자녀 추가
-                        </button>
+                        <div id="children-list"></div>
                     </div>
 
                     <!-- Step 6: 기타 정보 (선택) -->

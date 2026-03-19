@@ -306,41 +306,9 @@ function initBannerCarousel(total) {
     });
 }
 
-// 새 콘텐츠 여부 확인 (3일 이내)
-function isNewContent(createdAt) {
-    if (!createdAt) return false;
-    
-    const created = new Date(createdAt);
-    const now = new Date();
-    const diffDays = Math.floor((now - created) / (1000 * 60 * 60 * 24));
-    
-    return diffDays <= 3;
-}
-
-// 상대 시간 포맷 (예: "2시간 전", "3일 전")
-function formatRelativeTime(dateString) {
-    if (!dateString) return '';
-    
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffSec = Math.floor(diffMs / 1000);
-    const diffMin = Math.floor(diffSec / 60);
-    const diffHour = Math.floor(diffMin / 60);
-    const diffDay = Math.floor(diffHour / 24);
-    
-    if (diffSec < 60) {
-        return '방금 전';
-    } else if (diffMin < 60) {
-        return `${diffMin}분 전`;
-    } else if (diffHour < 24) {
-        return `${diffHour}시간 전`;
-    } else if (diffDay < 7) {
-        return `${diffDay}일 전`;
-    } else {
-        return formatDate(dateString, 'YYYY-MM-DD');
-    }
-}
+// isNewContent → utils.js의 isNew()로 통합됨
+function isNewContent(createdAt) { return isNew(createdAt); }
+// formatRelativeTime → utils.js로 통합됨
 
 // formatDate, escapeHtml → utils.js로 통합됨
 

@@ -14,13 +14,7 @@ const CATEGORY_BADGE_CLASS = {
     event: 'badge-event', meeting: 'badge-meeting', training: 'badge-training', holiday: 'badge-holiday', other: 'badge-other'
 };
 
-function getCurrentUserSafe() {
-    try {
-        return typeof getCurrentUser === 'function'
-            ? getCurrentUser()
-            : JSON.parse(localStorage.getItem('user_info') || 'null');
-    } catch (_) { return null; }
-}
+// getCurrentUserSafe → utils.js로 통합됨
 
 function canCreateSchedule() {
     const user = getCurrentUserSafe();

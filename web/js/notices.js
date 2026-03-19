@@ -3,15 +3,7 @@
 let currentNoticesPage = 1;
 let noticesLoading = false;
 
-function getCurrentUserSafe() {
-    try {
-        return typeof getCurrentUser === 'function'
-            ? getCurrentUser()
-            : JSON.parse(localStorage.getItem('user_info') || 'null');
-    } catch (_) {
-        return null;
-    }
-}
+// getCurrentUserSafe → utils.js로 통합됨
 
 function isNoticeAuthorOrAdmin(notice) {
     const user = getCurrentUserSafe();

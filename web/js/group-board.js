@@ -137,23 +137,10 @@ function renderGroupPostCard(p) {
         + '</div>';
 }
 
-function isWithin3Days(dateStr) {
-    if (!dateStr) return false;
-    return (new Date() - new Date(dateStr)) < 3 * 24 * 60 * 60 * 1000;
-}
-
-function formatRelativeDate(dateStr) {
-    if (!dateStr) return '';
-    var d = new Date(dateStr);
-    var diffMin = Math.floor((new Date() - d) / 60000);
-    if (diffMin < 1) return '방금 전';
-    if (diffMin < 60) return diffMin + '분 전';
-    var diffHr = Math.floor(diffMin / 60);
-    if (diffHr < 24) return diffHr + '시간 전';
-    var diffDay = Math.floor(diffHr / 24);
-    if (diffDay < 7) return diffDay + '일 전';
-    return (d.getMonth() + 1) + '/' + d.getDate();
-}
+// isWithin3Days → utils.js의 isNew()로 통합됨
+function isWithin3Days(dateStr) { return isNew(dateStr); }
+// formatRelativeDate → utils.js의 formatDate()로 통합됨
+function formatRelativeDate(dateStr) { return formatDate(dateStr); }
 
 async function loadMoreGroupPosts() {
     if (_groupBoardLoading) return;
@@ -490,13 +477,7 @@ async function deleteGroupPost(postId) {
     } catch (err) { alert('게시글 삭제에 실패했습니다.'); }
 }
 
-function getCurrentUserSafe() {
-    try {
-        return typeof getCurrentUser === 'function'
-            ? getCurrentUser()
-            : JSON.parse(localStorage.getItem('user_info') || 'null');
-    } catch (_) { return null; }
-}
+// getCurrentUserSafe → utils.js로 통합됨
 
 // ========== 참석 확인 ==========
 

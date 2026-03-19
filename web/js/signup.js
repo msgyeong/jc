@@ -432,23 +432,19 @@ function addEducationField() {
     educationItem.className = 'education-item';
     educationItem.id = `education-item-${educationCount}`;
     educationItem.innerHTML = `
-        <div class="education-fields">
-            <div class="form-group" style="flex: 2;">
-                <input type="text" class="education-school" placeholder="학교명" required>
-            </div>
-            <div class="form-group" style="flex: 1;">
-                <input type="number" class="education-graduation" placeholder="연도" min="1950" max="2030" required>
-            </div>
-            <div class="form-group" style="flex: 1;">
-                <select class="education-status" required>
-                    <option value="">구분</option>
-                    <option value="졸업">졸업</option>
-                    <option value="수료">수료</option>
-                    <option value="재학">재학</option>
-                    <option value="휴학">휴학</option>
-                    <option value="기타">기타</option>
-                </select>
-            </div>
+        <div class="education-fields-row">
+            <input type="text" class="education-school edu-input" placeholder="학교명" required>
+        </div>
+        <div class="education-fields-row2">
+            <input type="text" class="education-graduation edu-input" placeholder="년도" inputmode="numeric" maxlength="4" required>
+            <select class="education-status edu-input" required>
+                <option value="">구분</option>
+                <option value="졸업">졸업</option>
+                <option value="수료">수료</option>
+                <option value="재학">재학</option>
+                <option value="휴학">휴학</option>
+                <option value="기타">기타</option>
+            </select>
         </div>
     `;
     educationList.appendChild(educationItem);

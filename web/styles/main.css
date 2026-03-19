@@ -485,11 +485,35 @@ html {
     min-height: var(--input-height);
     box-sizing: border-box;
 }
-/* 학력/경력 상태 select 크기 보장 */
-.education-fields select,
+/* 학력 2행 레이아웃 */
+.education-fields-row {
+    margin-bottom: 8px;
+}
+.education-fields-row2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.edu-input {
+    width: 100%;
+    min-height: var(--input-height);
+    padding: 10px 12px;
+    border: 1px solid var(--input-border);
+    border-radius: var(--input-radius);
+    font-size: 15px;
+    font-family: var(--font-family);
+    color: var(--text-primary);
+    background: var(--input-bg);
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+}
+.edu-input:focus { border-color: var(--input-border-focus); box-shadow: 0 0 0 2px rgba(30,58,95,0.08); }
+/* 경력 select */
 .career-fields select {
     min-height: var(--input-height);
-    min-width: 80px;
     font-size: 14px;
 }
 

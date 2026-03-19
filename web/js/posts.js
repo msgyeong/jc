@@ -146,6 +146,12 @@ async function loadPostsScreen() {
     currentPostsPage = 0;
     hasMorePosts = true;
     postsLoading = false; // 이전 호출에서 고착된 플래그 초기화
+
+    // 탭 UI를 현재 카테고리에 맞게 갱신
+    document.querySelectorAll('.board-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.category === currentBoardCategory);
+    });
+
     await loadPosts(1);
     setupPostsInfiniteScroll();
     updateCreatePostBtnVisibility();

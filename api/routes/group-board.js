@@ -252,16 +252,31 @@ router.post('/:groupId/posts', authenticate, async (req, res) => {
             return res.status(403).json({ success: false, error: '이 그룹의 멤버만 게시글을 작성할 수 있습니다.' });
         }
 
-        const { title, content, images, is_pinned, push_setting } = req.body;
+        const { title, content, images, is_pinned, push_setting, attendance_enabled } = req.body;
         if (!title || !title.trim()) {
             return res.status(400).json({ success: false, error: '제목을 입력하세요.' });
         }
 
-        const result = await query(
-            `INSERT INTO group_posts (group_id, author_id, title, content, images, is_pinned)
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [groupId, userId, title.trim(), content || '', images || null, is_pinned || false]
-        );
+        // attendance_enabled 컬럼이 없을 수 있으므로 안전하게 처리
+        let result;
+        try {
+            result = await query(
+                `INSERT INTO group_posts (group_id, author_id, title, content, images, is_pinned, attendance_enabled)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+                [groupId, userId, title.trim(), content || '', images || null, is_pinned || false, attendance_enabled || false]
+            );
+        } catch (e) {
+            if (e.message && e.message.includes('attendance_enabled')) {
+                await query('ALTER TABLE group_posts ADD COLUMN IF NOT EXISTS attendance_enabled BOOLEAN DEFAULT false').catch(function(){});
+                result = await query(
+                    `INSERT INTO group_posts (group_id, author_id, title, content, images, is_pinned, attendance_enabled)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+                    [groupId, userId, title.trim(), content || '', images || null, is_pinned || false, attendance_enabled || false]
+                );
+            } else {
+                throw e;
+            }
+        }
 
         res.json({ success: true, post: result.rows[0] });
 
@@ -424,6 +439,65 @@ router.delete('/:groupId/posts/:postId/comments/:commentId', authenticate, async
     } catch (error) {
         console.error('Group comment delete error:', error);
         res.status(500).json({ success: false, error: '댓글 삭제에 실패했습니다.' });
+    }
+});
+
+// ========== 그룹 게시글 참석 ==========
+
+/**
+ * POST /api/group-board/:groupId/posts/:postId/attendance
+ */
+router.post('/:groupId/posts/:postId/attendance', authenticate, async (req, res) => {
+    try {
+        const postId = parseInt(req.params.postId);
+        const userId = req.user.userId;
+        const { status } = req.body;
+        if (!status || !['attending', 'not_attending'].includes(status)) {
+            return res.status(400).json({ success: false, error: 'status는 attending 또는 not_attending이어야 합니다.' });
+        }
+        try {
+            await query(
+                `INSERT INTO group_post_attendance (post_id, user_id, status, responded_at)
+                 VALUES ($1, $2, $3, NOW()) ON CONFLICT (post_id, user_id) DO UPDATE SET status = $3, responded_at = NOW()`,
+                [postId, userId, status]
+            );
+        } catch (e) {
+            if (e.message && e.message.includes('group_post_attendance')) {
+                await query(`CREATE TABLE IF NOT EXISTS group_post_attendance (
+                    id SERIAL PRIMARY KEY, post_id INTEGER NOT NULL, user_id INTEGER NOT NULL,
+                    status VARCHAR(20) NOT NULL, responded_at TIMESTAMP DEFAULT NOW(), UNIQUE(post_id, user_id)
+                )`);
+                await query(
+                    `INSERT INTO group_post_attendance (post_id, user_id, status, responded_at)
+                     VALUES ($1, $2, $3, NOW()) ON CONFLICT (post_id, user_id) DO UPDATE SET status = $3, responded_at = NOW()`,
+                    [postId, userId, status]
+                );
+            } else { throw e; }
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Group post attendance error:', error);
+        res.status(500).json({ success: false, error: '참석 처리에 실패했습니다.' });
+    }
+});
+
+/**
+ * GET /api/group-board/:groupId/posts/:postId/attendance
+ */
+router.get('/:groupId/posts/:postId/attendance', authenticate, async (req, res) => {
+    try {
+        const postId = parseInt(req.params.postId);
+        const userId = req.user.userId;
+        let attending = 0, not_attending = 0, my_status = null;
+        try {
+            const countRes = await query(`SELECT status, COUNT(*) as cnt FROM group_post_attendance WHERE post_id = $1 GROUP BY status`, [postId]);
+            countRes.rows.forEach(r => { if (r.status === 'attending') attending = parseInt(r.cnt); else not_attending = parseInt(r.cnt); });
+            const myRes = await query(`SELECT status FROM group_post_attendance WHERE post_id = $1 AND user_id = $2`, [postId, userId]);
+            if (myRes.rows.length > 0) my_status = myRes.rows[0].status;
+        } catch (_) {}
+        res.json({ success: true, data: { attending, not_attending, my_status } });
+    } catch (error) {
+        res.status(500).json({ success: false, error: '참석 현황을 불러올 수 없습니다.' });
     }
 });
 

@@ -12,18 +12,29 @@ var _gpAttendanceEnabled = false;
 // ========== 그룹 게시판 메인 ==========
 
 function openGroupBoard(groupId, groupName) {
+    // 모든 상태 초기화
     _currentGroupBoardId = groupId;
     _currentGroupBoardName = groupName;
     _groupBoardPage = 1;
     _groupBoardLoading = false;
+    _editingGroupPostId = null;
+    _gpScheduleAttached = false;
+    _gpAttendanceEnabled = false;
 
     var titleEl = document.getElementById('group-board-title');
     if (titleEl) titleEl.textContent = groupName;
 
+    // FAB 초기화
+    var fab = document.getElementById('create-group-post-btn');
+    if (fab) fab.style.display = '';
+
     // 화면 전환 + 데이터 로드
     document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
     var screen = document.getElementById('group-board-screen');
-    if (screen) screen.classList.add('active');
+    if (screen) {
+        screen.classList.add('active');
+        screen.scrollTop = 0;
+    }
     if (!window._navPopstate) {
         history.pushState({ screen: 'group-board', groupId: groupId, groupName: groupName }, '', '#group-board');
     }
@@ -234,6 +245,11 @@ async function openGroupPostDetail(postId) {
                 + '</div></div>';
         }
 
+        // 참석 확인 (attendance_enabled인 경우)
+        if (post.attendance_enabled) {
+            html += '<div id="gp-attendance-container" data-post-id="' + post.id + '"></div>';
+        }
+
         // 좋아요 + 통계
         var liked = post.user_has_liked;
         html += '<div class="gb-detail-stats-row">'
@@ -264,6 +280,11 @@ async function openGroupPostDetail(postId) {
 
         html += '</div></article>';
         container.innerHTML = html;
+
+        // 참석 확인 로드
+        if (post.attendance_enabled) {
+            loadGpAttendance(post.id);
+        }
     } catch (err) {
         container.innerHTML = '<div class="gb-empty-state"><p class="gb-empty-text">' + escapeHtml(err.message) + '</p></div>';
     }
@@ -466,6 +487,38 @@ function getCurrentUserSafe() {
 
 // ========== 참석 확인 ==========
 
+async function loadGpAttendance(postId) {
+    var el = document.getElementById('gp-attendance-container');
+    if (!el) return;
+    try {
+        var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/attendance');
+        if (!res.success) return;
+        var d = res.data;
+        el.innerHTML = ''
+            + '<div class="attendance-section">'
+            + '<div class="attendance-section-title">참석 여부</div>'
+            + '<div class="attendance-summary-row">'
+            + '<span class="attendance-count-badge attend">참석 ' + d.attending + '</span>'
+            + '<span class="attendance-count-badge absent">불참 ' + d.not_attending + '</span>'
+            + '</div>'
+            + '<div class="attendance-buttons">'
+            + '<button type="button" class="attendance-btn' + (d.my_status === 'attending' ? ' active-attending' : '') + '" onclick="submitGpAttendance(\'attending\',' + postId + ')">'
+            + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 참석</button>'
+            + '<button type="button" class="attendance-btn' + (d.my_status === 'not_attending' ? ' active-not-attending' : '') + '" onclick="submitGpAttendance(\'not_attending\',' + postId + ')">'
+            + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> 불참</button>'
+            + '</div></div>';
+    } catch (_) {}
+}
+
+async function submitGpAttendance(status, postId) {
+    try {
+        await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/attendance', {
+            method: 'POST', body: JSON.stringify({ status: status })
+        });
+        loadGpAttendance(postId);
+    } catch (_) { alert('참석 처리에 실패했습니다.'); }
+}
+
 function renderGpAttendanceToggle() {
     var el = document.getElementById('gp-attendance-section');
     if (!el) return;
@@ -633,7 +686,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 imageUrls = await uploadGroupPostImages(imagesInput.files);
             }
 
-            var body = { title: title, content: content, push_setting: _gpPushSetting || 'immediate' };
+            var body = { title: title, content: content, push_setting: _gpPushSetting || 'immediate', attendance_enabled: _gpAttendanceEnabled || false };
             if (imageUrls) body.images = JSON.stringify(imageUrls);
 
             if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '등록 중...'; }

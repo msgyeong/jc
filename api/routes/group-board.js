@@ -20,6 +20,74 @@ function isManagerRole(role) {
     return ['super_admin', 'admin', 'local_admin'].includes(role);
 }
 
+// ========== 정적 라우트 (/:groupId 패턴보다 먼저 매칭되어야 함) ==========
+
+/**
+ * GET /api/group-board/my-schedules/all
+ * 내가 속한 모든 그룹의 일정 조회 (일정 탭 통합용)
+ */
+router.get('/my-schedules/all', authenticate, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { year, month } = req.query;
+
+        let dateFilter = '';
+        const params = [userId];
+
+        if (year && month) {
+            dateFilter = 'AND EXTRACT(YEAR FROM gs.start_date) = $2 AND EXTRACT(MONTH FROM gs.start_date) = $3';
+            params.push(parseInt(year), parseInt(month));
+        }
+
+        const result = await query(
+            `SELECT gs.*, og.name as group_name, u.name as creator_name
+             FROM group_schedules gs
+             JOIN orgchart_groups og ON gs.group_id = og.id
+             JOIN users u ON gs.created_by = u.id
+             WHERE gs.group_id IN (
+                 SELECT om.group_id FROM orgchart_members om WHERE om.user_id = $1
+             )
+             ${dateFilter}
+             ORDER BY gs.start_date ASC`,
+            params
+        );
+
+        res.json({ success: true, schedules: result.rows });
+    } catch (error) {
+        console.error('My group schedules error:', error);
+        res.status(500).json({ success: false, error: '그룹 일정을 불러올 수 없습니다.' });
+    }
+});
+
+/**
+ * GET /api/group-board/my-groups/list
+ * 내가 속한 조직도 그룹 목록 (게시판 접근용)
+ */
+router.get('/my-groups/list', authenticate, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const result = await query(
+            `SELECT og.id, og.name, og.sort_order,
+                    (SELECT COUNT(*) FROM orgchart_members WHERE group_id = og.id) as member_count,
+                    (SELECT COUNT(*) FROM group_posts WHERE group_id = og.id) as post_count,
+                    (SELECT COUNT(*) FROM group_posts gp
+                     WHERE gp.group_id = og.id
+                     AND NOT EXISTS (SELECT 1 FROM group_post_reads gpr WHERE gpr.post_id = gp.id AND gpr.user_id = $1)
+                    ) as unread_count
+             FROM orgchart_groups og
+             WHERE og.id IN (SELECT om.group_id FROM orgchart_members om WHERE om.user_id = $1)
+             ORDER BY og.sort_order, og.name`,
+            [userId]
+        );
+
+        res.json({ success: true, groups: result.rows });
+    } catch (error) {
+        console.error('My groups list error:', error);
+        res.status(500).json({ success: false, error: '그룹 목록을 불러올 수 없습니다.' });
+    }
+});
+
 // ========== 그룹 게시글 ==========
 
 /**
@@ -121,10 +189,25 @@ router.get('/:groupId/posts/:postId', authenticate, async (req, res) => {
             [postId]
         );
 
+        // 연결된 그룹 일정 조회 (같은 그룹, 같은 제목으로 매칭)
+        let linkedSchedule = null;
+        try {
+            const schedResult = await query(
+                `SELECT * FROM group_schedules
+                 WHERE group_id = $1 AND title = $2
+                 ORDER BY created_at DESC LIMIT 1`,
+                [groupId, result.rows[0].title]
+            );
+            if (schedResult.rows.length > 0) {
+                linkedSchedule = schedResult.rows[0];
+            }
+        } catch (_) {}
+
         res.json({
             success: true,
             post: result.rows[0],
-            comments: comments.rows
+            comments: comments.rows,
+            schedule: linkedSchedule
         });
     } catch (error) {
         console.error('Group post detail error:', error);
@@ -471,73 +554,6 @@ router.delete('/:groupId/schedules/:scheduleId', authenticate, async (req, res) 
     } catch (error) {
         console.error('Group schedule delete error:', error);
         res.status(500).json({ success: false, error: '일정 삭제에 실패했습니다.' });
-    }
-});
-
-/**
- * GET /api/group-board/my-schedules
- * 내가 속한 모든 그룹의 일정 조회 (일정 탭 통합용)
- * 핵심: 오직 내가 속한 그룹의 일정만 반환
- */
-router.get('/my-schedules/all', authenticate, async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        const { year, month } = req.query;
-
-        let dateFilter = '';
-        const params = [userId];
-
-        if (year && month) {
-            dateFilter = 'AND EXTRACT(YEAR FROM gs.start_date) = $2 AND EXTRACT(MONTH FROM gs.start_date) = $3';
-            params.push(parseInt(year), parseInt(month));
-        }
-
-        const result = await query(
-            `SELECT gs.*, og.name as group_name, u.name as creator_name
-             FROM group_schedules gs
-             JOIN orgchart_groups og ON gs.group_id = og.id
-             JOIN users u ON gs.created_by = u.id
-             WHERE gs.group_id IN (
-                 SELECT om.group_id FROM orgchart_members om WHERE om.user_id = $1
-             )
-             ${dateFilter}
-             ORDER BY gs.start_date ASC`,
-            params
-        );
-
-        res.json({ success: true, schedules: result.rows });
-    } catch (error) {
-        console.error('My group schedules error:', error);
-        res.status(500).json({ success: false, error: '그룹 일정을 불러올 수 없습니다.' });
-    }
-});
-
-/**
- * GET /api/group-board/my-groups
- * 내가 속한 조직도 그룹 목록 (게시판 접근용)
- */
-router.get('/my-groups/list', authenticate, async (req, res) => {
-    try {
-        const userId = req.user.userId;
-
-        const result = await query(
-            `SELECT og.id, og.name, og.sort_order,
-                    (SELECT COUNT(*) FROM orgchart_members WHERE group_id = og.id) as member_count,
-                    (SELECT COUNT(*) FROM group_posts WHERE group_id = og.id) as post_count,
-                    (SELECT COUNT(*) FROM group_posts gp
-                     WHERE gp.group_id = og.id
-                     AND NOT EXISTS (SELECT 1 FROM group_post_reads gpr WHERE gpr.post_id = gp.id AND gpr.user_id = $1)
-                    ) as unread_count
-             FROM orgchart_groups og
-             WHERE og.id IN (SELECT om.group_id FROM orgchart_members om WHERE om.user_id = $1)
-             ORDER BY og.sort_order, og.name`,
-            [userId]
-        );
-
-        res.json({ success: true, groups: result.rows });
-    } catch (error) {
-        console.error('My groups list error:', error);
-        res.status(500).json({ success: false, error: '그룹 목록을 불러올 수 없습니다.' });
     }
 });
 

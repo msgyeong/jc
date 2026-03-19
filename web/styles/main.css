@@ -7958,6 +7958,41 @@ input[type="date"]:focus {
 .gb-detail-content { font-size: 15px; line-height: 1.8; margin-bottom: 20px; color: var(--text-primary); }
 .gb-detail-images { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 .gb-detail-img { max-width: 100%; border-radius: 10px; }
+.gb-detail-schedule {
+    background: #F8FAFC;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+}
+.gb-detail-schedule-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+.gb-detail-schedule-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.gb-sched-cat {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+.gb-sched-date {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+.gb-sched-loc {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
 .gb-detail-stats {
     font-size: 13px;
     color: #9CA3AF;

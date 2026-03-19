@@ -199,6 +199,31 @@ async function openGroupPostDetail(postId) {
             } catch (_) {}
         }
 
+        // 연결된 일정 표시
+        var schedule = res.schedule;
+        if (schedule) {
+            var sd = new Date(schedule.start_date);
+            var schedDateStr = sd.getFullYear() + '.' + String(sd.getMonth()+1).padStart(2,'0') + '.' + String(sd.getDate()).padStart(2,'0');
+            var schedTimeStr = String(sd.getHours()).padStart(2,'0') + ':' + String(sd.getMinutes()).padStart(2,'0');
+            var schedEndStr = '';
+            if (schedule.end_date) {
+                var ed = new Date(schedule.end_date);
+                var endDatePart = ed.getFullYear() + '.' + String(ed.getMonth()+1).padStart(2,'0') + '.' + String(ed.getDate()).padStart(2,'0');
+                var endTimePart = String(ed.getHours()).padStart(2,'0') + ':' + String(ed.getMinutes()).padStart(2,'0');
+                schedEndStr = (endDatePart !== schedDateStr ? ' ~ ' + endDatePart + ' ' : ' ~ ') + endTimePart;
+            }
+            var catLabels = { event: '행사', meeting: '회의', training: '교육', other: '기타' };
+            html += '<div class="gb-detail-schedule">'
+                + '<div class="gb-detail-schedule-title">'
+                + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+                + ' 첨부 일정</div>'
+                + '<div class="gb-detail-schedule-info">'
+                + '<span class="gb-sched-cat">' + (catLabels[schedule.category] || schedule.category) + '</span>'
+                + '<span class="gb-sched-date">' + schedDateStr + ' ' + schedTimeStr + schedEndStr + '</span>'
+                + (schedule.location ? '<span class="gb-sched-loc">📍 ' + escapeHtml(schedule.location) + '</span>' : '')
+                + '</div></div>';
+        }
+
         html += '<div class="gb-detail-stats">조회 ' + (post.views || 0) + ' · 댓글 ' + (post.comments_count || 0) + '</div>';
 
         // 댓글
@@ -550,11 +575,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         var startTime = document.getElementById('gp-sched-start-time');
                         var endDate = document.getElementById('gp-sched-end-date');
                         var endTime = document.getElementById('gp-sched-end-time');
+                        var startVal = startDate.value + 'T' + (startTime ? startTime.value : '09:00') + ':00';
+                        var endVal = (endDate && endDate.value ? endDate.value : startDate.value) + 'T' + (endTime ? endTime.value : '18:00') + ':00';
+
+                        // 시작일 > 종료일 검증
+                        if (new Date(endVal) < new Date(startVal)) {
+                            alert('종료 날짜/시간이 시작보다 빠릅니다. 일정을 확인해주세요.');
+                            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '등록'; }
+                            return;
+                        }
+
                         var schedBody = {
                             title: title,
                             category: document.getElementById('gp-sched-category').value || 'event',
-                            start_date: startDate.value + 'T' + (startTime ? startTime.value : '09:00') + ':00',
-                            end_date: (endDate && endDate.value ? endDate.value : startDate.value) + 'T' + (endTime ? endTime.value : '18:00') + ':00',
+                            start_date: startVal,
+                            end_date: endVal,
                             location: (document.getElementById('gp-sched-location') || {}).value || ''
                         };
                         await apiClient.request('/group-board/' + _currentGroupBoardId + '/schedules', {
@@ -565,7 +600,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 _editingGroupPostId = null;
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '등록'; }
-                // 게시글 목록으로 이동 (history.back() 대신 직접 이동하여 목록 갱신 보장)
+                // 게시글 목록으로 이동 — form 히스토리를 대체하여 뒤로가기 시 form으로 안 감
+                history.replaceState({ screen: 'group-board' }, '', '#group-board');
                 navigateToScreen('group-board');
             } catch (err) {
                 alert('게시글 등록에 실패했습니다.');

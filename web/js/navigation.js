@@ -216,7 +216,14 @@ function initNavBadges() {
     updateNavBadges();
 }
 
-async function updateNavBadges() {
+var _navBadgeTimer = null;
+function updateNavBadges() {
+    // 디바운스 — 500ms 이내 중복 호출 방지
+    if (_navBadgeTimer) clearTimeout(_navBadgeTimer);
+    _navBadgeTimer = setTimeout(_updateNavBadgesNow, 500);
+}
+async function _updateNavBadgesNow() {
+    _navBadgeTimer = null;
     // 로그인 전에는 API 호출하지 않음
     if (!localStorage.getItem('auth_token')) return;
     try {

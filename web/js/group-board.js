@@ -685,7 +685,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 _editingGroupPostId = null;
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '등록'; }
                 // 게시글 목록으로 이동 — form 히스토리를 대체하여 뒤로가기 시 form으로 안 감
-                history.replaceState({ screen: 'group-board' }, '', '#group-board');
+                history.replaceState({ screen: 'group-board', groupId: _currentGroupBoardId, groupName: _currentGroupBoardName }, '', '#group-board');
                 navigateToScreen('group-board');
             } catch (err) {
                 alert('게시글 등록에 실패했습니다.');

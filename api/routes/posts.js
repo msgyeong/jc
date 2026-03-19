@@ -426,11 +426,11 @@ router.get('/:id', authenticate, async (req, res) => {
                 await query(`
                     CREATE UNIQUE INDEX IF NOT EXISTS read_status_user_post_idx ON read_status (user_id, post_id) WHERE post_id IS NOT NULL
                 `);
-                // 재시도
+                // 재시도 (UNIQUE 인덱스 기반)
                 await query(
                     `INSERT INTO read_status (user_id, post_id, read_at)
                      VALUES ($1, $2, NOW())
-                     ON CONFLICT DO NOTHING`,
+                     ON CONFLICT (user_id, post_id) WHERE post_id IS NOT NULL DO UPDATE SET read_at = NOW()`,
                     [userId, id]
                 );
             } catch (retryErr) {

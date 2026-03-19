@@ -230,6 +230,7 @@ async function showScheduleDetailScreen(scheduleId) {
     try {
         const res = await apiClient.getSchedule(scheduleId);
         if (!res.success || !res.schedule) {
+            _scheduleDetailActive = false;
             container.innerHTML = renderErrorState('일정 정보를 불러올 수 없습니다', '', 'showScheduleDetailScreen(' + scheduleId + ')');
             return;
         }
@@ -359,6 +360,7 @@ async function showScheduleDetailScreen(scheduleId) {
         loadScheduleComments(scheduleId);
 
     } catch (_) {
+        _scheduleDetailActive = false;
         container.innerHTML = renderErrorState('일정 정보를 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'showScheduleDetailScreen(' + scheduleId + ')');
     }
 }
@@ -474,6 +476,7 @@ async function showGroupScheduleDetail(scheduleId, groupId) {
             </div>
         `;
     } catch (_) {
+        _scheduleDetailActive = false;
         container.innerHTML = renderErrorState('일정 정보를 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'showGroupScheduleDetail(' + scheduleId + ',' + groupId + ')');
     }
 }

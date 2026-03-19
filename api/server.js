@@ -155,21 +155,45 @@ app.use(notFoundHandler);
 // 에러 핸들러
 app.use(errorHandler);
 
-// read_status 테이블 UNIQUE 인덱스 보장 (N뱃지 읽음 처리용)
+// ========== DB 스키마 자동 보정 (서버 시작 시) ==========
 const { query: dbQuery } = require('./config/database');
-(async function ensureReadStatus() {
-    try {
-        await dbQuery(`CREATE TABLE IF NOT EXISTS read_status (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL,
-            post_id INTEGER,
-            notice_id INTEGER,
-            schedule_id INTEGER,
+(async function ensureDbSchema() {
+    var fixes = [
+        // 누락 컬럼 추가
+        "ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT false",
+        "ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_banner BOOLEAN DEFAULT false",
+        "ALTER TABLE posts ADD COLUMN IF NOT EXISTS attendance_enabled BOOLEAN DEFAULT false",
+        "ALTER TABLE posts ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0",
+        "ALTER TABLE posts ADD COLUMN IF NOT EXISTS comments_count INTEGER DEFAULT 0",
+        "ALTER TABLE schedules ADD COLUMN IF NOT EXISTS views INTEGER DEFAULT 0",
+        "ALTER TABLE group_posts ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0",
+        "ALTER TABLE group_posts ADD COLUMN IF NOT EXISTS attendance_enabled BOOLEAN DEFAULT false",
+        // read_status 테이블 + 인덱스
+        `CREATE TABLE IF NOT EXISTS read_status (
+            id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL,
+            post_id INTEGER, notice_id INTEGER, schedule_id INTEGER,
             read_at TIMESTAMP DEFAULT NOW()
-        )`);
-        await dbQuery(`CREATE UNIQUE INDEX IF NOT EXISTS read_status_user_post_idx ON read_status (user_id, post_id) WHERE post_id IS NOT NULL`);
-        console.log('✅ read_status 테이블 준비 완료');
-    } catch (e) { console.error('read_status 테이블 확인 실패:', e.message); }
+        )`,
+        "CREATE UNIQUE INDEX IF NOT EXISTS read_status_user_post_idx ON read_status (user_id, post_id) WHERE post_id IS NOT NULL",
+        // 그룹 좋아요/참석 테이블
+        `CREATE TABLE IF NOT EXISTS group_post_likes (
+            id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, post_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW(), UNIQUE(user_id, post_id)
+        )`,
+        `CREATE TABLE IF NOT EXISTS group_comment_likes (
+            id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, comment_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW(), UNIQUE(user_id, comment_id)
+        )`,
+        `CREATE TABLE IF NOT EXISTS group_post_attendance (
+            id SERIAL PRIMARY KEY, post_id INTEGER NOT NULL, user_id INTEGER NOT NULL,
+            status VARCHAR(20) NOT NULL, responded_at TIMESTAMP DEFAULT NOW(), UNIQUE(post_id, user_id)
+        )`
+    ];
+    var ok = 0, fail = 0;
+    for (var sql of fixes) {
+        try { await dbQuery(sql); ok++; } catch (e) { fail++; }
+    }
+    console.log('✅ DB 스키마 보정 완료 (' + ok + ' 성공, ' + fail + ' 스킵)');
 })();
 
 // 서버 시작

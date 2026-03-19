@@ -28,11 +28,13 @@ async function loadOrgChartScreen() {
                 + '</div></div>';
         }
 
+        var currentUserId = userInfo ? userInfo.id : null;
+
         if (groups.length === 0) {
             html += '<div class="oc-empty">조직도가 아직 등록되지 않았습니다.</div>';
         } else {
             groups.forEach(function(g) {
-                html += renderOrgGroup(g, isManager);
+                html += renderOrgGroup(g, isManager, currentUserId);
             });
         }
 
@@ -49,7 +51,7 @@ async function loadOrgChartScreen() {
     }
 }
 
-function renderOrgGroup(g, isManager) {
+function renderOrgGroup(g, isManager, currentUserId) {
     var html = '<div class="oc-group" data-group-id="' + g.id + '">';
 
     // 그룹 헤더
@@ -81,12 +83,15 @@ function renderOrgGroup(g, isManager) {
     }
     html += '</div>';
 
-    // 게시판 바로가기 버튼
-    html += '<div class="oc-board-btn-wrap">'
-        + '<button class="oc-board-btn" data-action="open-board" data-group-id="' + g.id + '" data-group-name="' + escapeHtml(g.name) + '">'
-        + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>'
-        + ' 게시판</button>'
-        + '</div>';
+    // 게시판 바로가기 버튼 (관리자 또는 해당 그룹 멤버만 표시)
+    var isMemberOfGroup = isManager || (g.members && g.members.some(function(m) { return m.user_id === currentUserId || m.id === currentUserId; }));
+    if (isMemberOfGroup) {
+        html += '<div class="oc-board-btn-wrap">'
+            + '<button class="oc-board-btn" data-action="open-board" data-group-id="' + g.id + '" data-group-name="' + escapeHtml(g.name) + '">'
+            + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>'
+            + ' 게시판</button>'
+            + '</div>';
+    }
 
     // 인원 추가 폼 (숨김)
     if (isManager) {

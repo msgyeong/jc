@@ -155,6 +155,23 @@ app.use(notFoundHandler);
 // 에러 핸들러
 app.use(errorHandler);
 
+// read_status 테이블 UNIQUE 인덱스 보장 (N뱃지 읽음 처리용)
+const { query: dbQuery } = require('./config/database');
+(async function ensureReadStatus() {
+    try {
+        await dbQuery(`CREATE TABLE IF NOT EXISTS read_status (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            post_id INTEGER,
+            notice_id INTEGER,
+            schedule_id INTEGER,
+            read_at TIMESTAMP DEFAULT NOW()
+        )`);
+        await dbQuery(`CREATE UNIQUE INDEX IF NOT EXISTS read_status_user_post_idx ON read_status (user_id, post_id) WHERE post_id IS NOT NULL`);
+        console.log('✅ read_status 테이블 준비 완료');
+    } catch (e) { console.error('read_status 테이블 확인 실패:', e.message); }
+})();
+
 // 서버 시작
 app.listen(PORT, () => {
     console.log('='.repeat(50));

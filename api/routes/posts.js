@@ -400,6 +400,7 @@ router.get('/:id', authenticate, async (req, res) => {
         }
         post.user_has_liked = user_has_liked;
 
+        // 읽음 처리 (read_status)
         try {
             await query(
                 `INSERT INTO read_status (user_id, post_id, read_at)
@@ -407,7 +408,35 @@ router.get('/:id', authenticate, async (req, res) => {
                  ON CONFLICT (user_id, post_id) DO UPDATE SET read_at = NOW()`,
                 [userId, id]
             );
-        } catch (_) { /* read_status 미적용 시 무시 */ }
+        } catch (readErr) {
+            console.error('[read_status] INSERT 실패:', readErr.message);
+            // UNIQUE 제약조건 없으면 테이블 재생성 시도
+            try {
+                await query(`
+                    CREATE TABLE IF NOT EXISTS read_status (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
+                        post_id INTEGER,
+                        notice_id INTEGER,
+                        schedule_id INTEGER,
+                        read_at TIMESTAMP DEFAULT NOW()
+                    )
+                `);
+                // UNIQUE 제약조건 추가 (없으면)
+                await query(`
+                    CREATE UNIQUE INDEX IF NOT EXISTS read_status_user_post_idx ON read_status (user_id, post_id) WHERE post_id IS NOT NULL
+                `);
+                // 재시도
+                await query(
+                    `INSERT INTO read_status (user_id, post_id, read_at)
+                     VALUES ($1, $2, NOW())
+                     ON CONFLICT DO NOTHING`,
+                    [userId, id]
+                );
+            } catch (retryErr) {
+                console.error('[read_status] 재시도 실패:', retryErr.message);
+            }
+        }
 
         res.json({
             success: true,

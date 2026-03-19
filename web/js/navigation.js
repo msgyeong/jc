@@ -76,13 +76,22 @@ function navigateTo(path) {
 }
 
 // 화면 전환
+// 하단 네비바 표시 탭 목록
+var _mainTabScreens = ['home', 'posts', 'schedules', 'members', 'meetings', 'profile'];
+
 function navigateToScreen(screenName) {
     console.log('📱 화면 전환:', screenName);
-    
+
     // 모든 화면 숨기기
     document.querySelectorAll('.screen').forEach(screen => {
         screen.classList.remove('active');
     });
+
+    // 공유 하단 네비바 표시/숨김
+    var sharedNav = document.getElementById('shared-bottom-nav');
+    if (sharedNav) {
+        sharedNav.style.display = _mainTabScreens.indexOf(screenName) !== -1 ? '' : 'none';
+    }
 
     // 선택한 화면 표시
     const targetScreen = document.getElementById(`${screenName}-screen`);
@@ -292,7 +301,11 @@ async function updateNavBadges() {
 // 탭 전환 함수
 async function switchTab(tab) {
     console.log('📱 탭 전환:', tab);
-    
+
+    // 공유 하단 네비바 표시
+    var sharedNav = document.getElementById('shared-bottom-nav');
+    if (sharedNav) sharedNav.style.display = '';
+
     // 모든 네비게이션 업데이트
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');

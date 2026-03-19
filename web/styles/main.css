@@ -2481,6 +2481,25 @@ input[type="date"]:focus {
     cursor: not-allowed;
 }
 
+.app-bar-home-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    -webkit-tap-highlight-color: transparent;
+}
+.app-bar-home-btn:hover,
+.app-bar-home-btn:active {
+    color: var(--primary-color);
+    background: var(--bg-secondary);
+}
+
 .post-create-form {
     max-width: 100%;
 }

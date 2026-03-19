@@ -146,7 +146,7 @@ router.post('/:groupId/posts', authenticate, async (req, res) => {
             return res.status(403).json({ success: false, error: '이 그룹의 멤버만 게시글을 작성할 수 있습니다.' });
         }
 
-        const { title, content, images, is_pinned } = req.body;
+        const { title, content, images, is_pinned, push_setting } = req.body;
         if (!title || !title.trim()) {
             return res.status(400).json({ success: false, error: '제목을 입력하세요.' });
         }
@@ -159,21 +159,23 @@ router.post('/:groupId/posts', authenticate, async (req, res) => {
 
         res.json({ success: true, post: result.rows[0] });
 
-        // 그룹 멤버들에게 푸시 알림 발송 (작성자 제외)
-        try {
-            const groupInfo = await query('SELECT name FROM orgchart_groups WHERE id = $1', [groupId]);
-            const groupName = groupInfo.rows.length > 0 ? groupInfo.rows[0].name : '그룹';
-            const members = await query('SELECT user_id FROM orgchart_members WHERE group_id = $1 AND user_id != $2', [groupId, userId]);
-            for (const m of members.rows) {
-                sendPushToUser(m.user_id, {
-                    title: groupName + ' 새 게시글',
-                    body: title.trim(),
-                    type: 'N-01',
-                    data: { screen: 'group-board', groupId: groupId }
-                }).catch(function() {});
+        // 그룹 멤버들에게 푸시 알림 발송 (push_setting이 'none'이 아닐 때만)
+        if (push_setting !== 'none') {
+            try {
+                const groupInfo = await query('SELECT name FROM orgchart_groups WHERE id = $1', [groupId]);
+                const groupName = groupInfo.rows.length > 0 ? groupInfo.rows[0].name : '그룹';
+                const members = await query('SELECT user_id FROM orgchart_members WHERE group_id = $1 AND user_id != $2', [groupId, userId]);
+                for (const m of members.rows) {
+                    sendPushToUser(m.user_id, {
+                        title: groupName + ' 새 게시글',
+                        body: title.trim(),
+                        type: 'N-01',
+                        data: { screen: 'group-board', groupId: groupId }
+                    }).catch(function() {});
+                }
+            } catch (pushErr) {
+                console.error('Group post push error:', pushErr.message);
             }
-        } catch (pushErr) {
-            console.error('Group post push error:', pushErr.message);
         }
     } catch (error) {
         console.error('Group post create error:', error);

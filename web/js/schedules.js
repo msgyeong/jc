@@ -202,6 +202,8 @@ function createScheduleCard(schedule) {
 
 let scheduleDropdownOpen = false;
 
+var _scheduleDetailActive = false;
+
 async function showScheduleDetailScreen(scheduleId) {
     const screen = document.getElementById('schedules-screen');
     const container = document.getElementById('schedule-list');
@@ -209,11 +211,15 @@ async function showScheduleDetailScreen(scheduleId) {
     const dayHeader = document.getElementById('schedule-day-header');
     if (!screen || !container) return;
 
+    _scheduleDetailActive = true;
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     screen.classList.add('active');
     if (calContainer) calContainer.style.display = 'none';
     if (dayHeader) dayHeader.style.display = 'none';
     container.innerHTML = renderSkeleton('schedule-detail');
+
+    // history state 기록 — popstate에서 일정 목록으로 돌아가기 위함
+    history.pushState({ screen: 'schedule-detail', scheduleId: scheduleId }, '', '#schedule-detail');
 
     // FAB 숨김
     const createBtn = document.getElementById('create-schedule-btn');
@@ -364,11 +370,14 @@ async function showGroupScheduleDetail(scheduleId, groupId) {
     const dayHeader = document.getElementById('schedule-day-header');
     if (!screen || !container) return;
 
+    _scheduleDetailActive = true;
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     screen.classList.add('active');
     if (calContainer) calContainer.style.display = 'none';
     if (dayHeader) dayHeader.style.display = 'none';
     container.innerHTML = renderSkeleton('schedule-detail');
+
+    history.pushState({ screen: 'schedule-detail', scheduleId: scheduleId, groupId: groupId }, '', '#schedule-detail');
 
     const createBtn = document.getElementById('create-schedule-btn');
     if (createBtn) createBtn.style.display = 'none';
@@ -722,6 +731,7 @@ async function submitAttendance(status, scheduleId) {
 // ========== 목록 복귀 ==========
 
 function backToScheduleList() {
+    _scheduleDetailActive = false;
     const calContainer = document.getElementById('calendar-container');
     const dayHeader = document.getElementById('schedule-day-header');
     if (calContainer) calContainer.style.display = '';

@@ -618,7 +618,14 @@ window.addEventListener('popstate', function(e) {
     if (state && state.screen) {
         // 이전 화면으로 돌아가기
         window._navPopstate = true;
-        if (state.tab) {
+        if (state.screen === 'schedule-detail') {
+            // 일정 상세에서 뒤로가기 → 일정 목록으로 복귀
+            if (typeof backToScheduleList === 'function') backToScheduleList();
+            navigateToScreen('schedules');
+        } else if (state.screen === 'post-detail' && state.postId) {
+            // 게시글 상세에서 뒤로가기 → 게시판 목록으로 복귀
+            navigateToScreen('posts');
+        } else if (state.tab) {
             switchTab(state.tab);
         } else if (state.screen === 'admin-hub' && typeof showAdminHub === 'function') {
             showAdminHub();

@@ -6,6 +6,7 @@ var _groupBoardPage = 1;
 var _groupBoardLoading = false;
 var _editingGroupPostId = null;
 var _gpScheduleAttached = false;
+var _gpPushSetting = 'immediate';
 
 // ========== 그룹 게시판 메인 ==========
 
@@ -309,6 +310,9 @@ function showGroupPostForm(postId) {
     // 일정 첨부 섹션 렌더링 (공지 게시판과 동일)
     renderGpScheduleAttach();
 
+    // Push 알림 설정 렌더링
+    renderGpPushSetting();
+
     if (postId) {
         loadGroupPostForEdit(postId);
     }
@@ -373,6 +377,32 @@ function getCurrentUserSafe() {
             ? getCurrentUser()
             : JSON.parse(localStorage.getItem('user_info') || 'null');
     } catch (_) { return null; }
+}
+
+// ========== Push 알림 설정 ==========
+
+function renderGpPushSetting() {
+    var el = document.getElementById('gp-push-setting');
+    if (!el) return;
+    var hasSchedule = _gpScheduleAttached;
+    el.innerHTML = ''
+        + '<div class="post-create-divider"></div>'
+        + '<span class="post-create-section-label">Push 알림 설정</span>'
+        + '<div class="push-setting-options">'
+        + '<label class="push-setting-option">'
+        + '<input type="radio" name="gp_push_setting" value="immediate" checked onchange="handleGpPushChange(this.value)">'
+        + '<div class="push-setting-text"><span class="push-setting-title">즉시 발송</span>'
+        + '<span class="push-setting-desc">게시 즉시 그룹 멤버에게 알림</span></div></label>'
+        + '<label class="push-setting-option">'
+        + '<input type="radio" name="gp_push_setting" value="none" onchange="handleGpPushChange(this.value)">'
+        + '<div class="push-setting-text"><span class="push-setting-title">알림 없음</span>'
+        + '<span class="push-setting-desc">Push 알림을 보내지 않음</span></div></label>'
+        + '</div>';
+    _gpPushSetting = 'immediate';
+}
+
+function handleGpPushChange(value) {
+    _gpPushSetting = value;
 }
 
 // ========== 이벤트 위임 ==========
@@ -477,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 imageUrls = await uploadGroupPostImages(imagesInput.files);
             }
 
-            var body = { title: title, content: content };
+            var body = { title: title, content: content, push_setting: _gpPushSetting || 'immediate' };
             if (imageUrls) body.images = JSON.stringify(imageUrls);
 
             if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '등록 중...'; }

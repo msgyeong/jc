@@ -563,6 +563,10 @@ function showPostDetailScreen(postId) {
 
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     detailScreen.classList.add('active');
+
+    // history state 기록 — 뒤로가기 시 게시판 목록으로 복귀
+    history.pushState({ screen: 'post-detail', postId: postId }, '', '#post-detail');
+
     loadPostDetail(postId);
 }
 

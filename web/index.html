@@ -1072,6 +1072,7 @@
             <div class="app-bar">
                 <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">조직도</h1>
+                <button class="app-bar-home-btn" onclick="navigateToScreen('home');updateNavigation('home')" title="홈"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
             </div>
             <div class="screen-content" id="org-chart-content">
                 <div class="content-placeholder">관리자가 조직도 이미지를 업로드하면 여기에 표시됩니다.</div>
@@ -1083,6 +1084,7 @@
             <div class="app-bar">
                 <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
                 <h1 class="app-bar-title" id="group-board-title">그룹 게시판</h1>
+                <button class="app-bar-home-btn" onclick="navigateToScreen('home');updateNavigation('home')" title="홈"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
                 <button class="gb-fab" id="create-group-post-btn" style="display:none;" onclick="showGroupPostForm()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
@@ -1097,6 +1099,7 @@
             <div class="app-bar">
                 <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">게시글</h1>
+                <button class="app-bar-home-btn" onclick="navigateToScreen('home');updateNavigation('home')" title="홈"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
             </div>
             <div class="screen-content" id="group-post-detail-content">
             </div>
@@ -1107,6 +1110,7 @@
             <div class="app-bar">
                 <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
                 <h1 class="app-bar-title" id="group-post-form-title">글쓰기</h1>
+                <button class="app-bar-home-btn" onclick="navigateToScreen('home');updateNavigation('home')" title="홈" style="margin-right:8px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
                 <button type="submit" form="group-post-form" class="app-bar-action" id="gp-submit-btn">등록</button>
             </div>
             <div class="screen-content">
@@ -1132,6 +1136,9 @@
 
                     <!-- 일정 첨부 (공지 게시판과 동일) -->
                     <div id="gp-schedule-attach"></div>
+
+                    <!-- Push 알림 설정 -->
+                    <div id="gp-push-setting"></div>
                 </form>
             </div>
         </div>
@@ -1515,7 +1522,7 @@
     <script src="js/auth.js?v=20260318c"></script>
     <script src="js/signup.js?v=20260318c"></script>
     <script src="js/home.js?v=20260318c"></script>
-    <script src="js/posts.js?v=20260318c"></script>
+    <script src="js/posts.js?v=20260319f"></script>
     <script src="js/notices.js?v=20260318c"></script>
     <script src="js/schedules.js?v=20260319f"></script>
     <script src="js/chosung.js?v=20260318c"></script>
@@ -1533,7 +1540,7 @@
     <script src="js/orgchart.js?v=20260319e"></script>
     <script src="js/group-board.js?v=20260319f"></script>
     <script src="js/jc-map.js?v=20260318c"></script>
-    <script src="js/navigation.js?v=20260319a"></script>
+    <script src="js/navigation.js?v=20260319f"></script>
     <script src="js/app.js?v=20260318g"></script>
 </body>
 </html>

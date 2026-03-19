@@ -281,6 +281,32 @@ html {
     max-width: 400px;
     margin: 0 auto;
 }
+/* 회원가입 프로필 사진 */
+.signup-avatar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.signup-avatar-preview {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #F3F4F6;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.signup-avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.signup-avatar-preview svg {
+    width: 48px;
+    height: 48px;
+}
 
 .section-title {
     font-size: 18px;
@@ -333,7 +359,8 @@ html {
 .form-group input[type="email"],
 .form-group input[type="password"],
 .form-group input[type="text"],
-.form-group input[type="tel"] {
+.form-group input[type="tel"],
+.form-group input[type="url"] {
     width: 100%;
     min-height: var(--input-height);
     padding: 10px 12px;
@@ -366,9 +393,17 @@ html {
 .screen-content input[type="number"],
 .screen-content input[type="date"],
 .screen-content input[type="time"],
+.screen-content input[type="url"],
 .screen-content select {
     min-height: var(--input-height);
     box-sizing: border-box;
+}
+/* 학력/경력 상태 select 크기 보장 */
+.education-fields select,
+.career-fields select {
+    min-height: var(--input-height);
+    min-width: 80px;
+    font-size: 14px;
 }
 
 /* 게시글 작성/수정 이미지 (최대 5개) */

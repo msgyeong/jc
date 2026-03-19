@@ -1,5 +1,30 @@
 // 회원가입 관련 기능 (Railway API 연동)
 
+var _signupPhotoBase64 = null;
+
+// 프로필 사진 미리보기
+document.addEventListener('DOMContentLoaded', function() {
+    var photoInput = document.getElementById('signup-photo-input');
+    if (photoInput) {
+        photoInput.addEventListener('change', function() {
+            var file = this.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                alert('사진 크기는 2MB 이하여야 합니다.');
+                this.value = '';
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                _signupPhotoBase64 = e.target.result;
+                var preview = document.getElementById('signup-avatar-preview');
+                if (preview) preview.innerHTML = '<img src="' + e.target.result + '" alt="프로필">';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+});
+
 // 회원가입 폼 유효성 검사
 function validateSignupForm() {
     clearAllErrors();
@@ -238,7 +263,8 @@ async function handleSignup(event) {
             emergency_contact_name,
             emergency_contact,
             emergency_relationship,
-            special_notes: join_message  // 가입 소감문을 special_notes에 저장
+            special_notes: join_message,  // 가입 소감문을 special_notes에 저장
+            profile_image: _signupPhotoBase64 || undefined
         };
         
         console.log('📝 회원가입 시도:', email);
@@ -253,6 +279,7 @@ async function handleSignup(event) {
             navigateToScreen('pending-approval');
             
             // 폼 초기화
+            _signupPhotoBase64 = null;
             document.getElementById('signup-form').reset();
             
             // 동적 필드 초기화
@@ -576,15 +603,17 @@ async function loadOrgList() {
         var res = await fetch('/api/organizations/public');
         var data = await res.json();
         if (data.success && data.data) {
-            data.data.forEach(function(org) {
+            // API 응답 구조: { data: { items: [...] } } 또는 { data: [...] }
+            var orgs = Array.isArray(data.data) ? data.data : (data.data.items || []);
+            orgs.forEach(function(org) {
                 var opt = document.createElement('option');
                 opt.value = org.id;
                 opt.textContent = org.name + (org.district ? ' (' + org.district + ')' : '');
                 sel.appendChild(opt);
             });
             // 로컬이 1개면 자동 선택
-            if (data.data.length === 1) {
-                sel.value = data.data[0].id;
+            if (orgs.length === 1) {
+                sel.value = orgs[0].id;
             }
         }
     } catch (e) {

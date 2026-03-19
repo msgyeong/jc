@@ -252,11 +252,19 @@
                 <h1 class="app-bar-title">회원가입</h1>
             </div>
             <div class="screen-content">
-                <div class="info-box">
-                    ⚠️ 회원가입 후 관리자 승인이 필요합니다.
-                </div>
-                
                 <form id="signup-form" class="auth-form">
+                    <!-- 프로필 사진 -->
+                    <div class="form-group signup-photo-group">
+                        <label>프로필 사진 <span class="badge-optional">선택</span></label>
+                        <div class="signup-avatar-wrap">
+                            <div class="signup-avatar-preview" id="signup-avatar-preview">
+                                <svg viewBox="0 0 80 80" fill="none"><circle cx="40" cy="30" r="14" fill="#D1D5DB"/><ellipse cx="40" cy="68" rx="24" ry="16" fill="#D1D5DB"/></svg>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('signup-photo-input').click()">사진 선택</button>
+                            <input type="file" id="signup-photo-input" accept="image/*" style="display:none">
+                        </div>
+                    </div>
+
                     <!-- 소속 로컬 선택 -->
                     <div class="form-group">
                         <label for="signup-org">
@@ -607,6 +615,10 @@
                     </div>
 
                     <div class="inline-error-message" id="signup-inline-error"></div>
+
+                    <div class="info-box" style="margin-bottom:16px">
+                        ⚠️ 회원가입 후 관리자 승인이 필요합니다.
+                    </div>
 
                     <div class="button-group">
                         <button type="button" class="btn btn-secondary" onclick="navigateToScreen('login')">
@@ -1532,7 +1544,7 @@
     <script src="js/api-client.js?v=20260318c"></script>
     <script src="js/utils.js?v=20260318c"></script>
     <script src="js/auth.js?v=20260318c"></script>
-    <script src="js/signup.js?v=20260318c"></script>
+    <script src="js/signup.js?v=20260319q"></script>
     <script src="js/home.js?v=20260318c"></script>
     <script src="js/posts.js?v=20260319q"></script>
     <script src="js/notices.js?v=20260318c"></script>

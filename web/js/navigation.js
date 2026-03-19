@@ -641,6 +641,15 @@ window.addEventListener('popstate', function(e) {
         } else if (state.screen === 'post-detail' && state.postId) {
             // 게시글 상세에서 뒤로가기 → 게시판 목록으로 복귀
             navigateToScreen('posts');
+        } else if (state.screen === 'group-board' && state.groupId) {
+            // 그룹 게시판 복원 (groupId 포함)
+            if (typeof openGroupBoard === 'function') {
+                window._navPopstate = true;
+                openGroupBoard(state.groupId, state.groupName || '');
+                window._navPopstate = false;
+            } else {
+                navigateToScreen('group-board');
+            }
         } else if (state.tab) {
             switchTab(state.tab);
         } else if (state.screen === 'admin-hub' && typeof showAdminHub === 'function') {

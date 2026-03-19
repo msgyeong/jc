@@ -14,11 +14,19 @@ function openGroupBoard(groupId, groupName) {
     _currentGroupBoardId = groupId;
     _currentGroupBoardName = groupName;
     _groupBoardPage = 1;
+    _groupBoardLoading = false;
 
     var titleEl = document.getElementById('group-board-title');
     if (titleEl) titleEl.textContent = groupName;
 
-    navigateToScreen('group-board');
+    // 화면 전환 + 데이터 로드
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    var screen = document.getElementById('group-board-screen');
+    if (screen) screen.classList.add('active');
+    if (!window._navPopstate) {
+        history.pushState({ screen: 'group-board', groupId: groupId, groupName: groupName }, '', '#group-board');
+    }
+    loadGroupBoardScreen();
 }
 
 async function loadGroupBoardScreen() {

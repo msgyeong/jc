@@ -310,14 +310,14 @@ function showGroupPostForm(postId) {
     // 일정 첨부 섹션 렌더링 (공지 게시판과 동일)
     renderGpScheduleAttach();
 
-    // Push 알림 설정 렌더링
-    renderGpPushSetting();
-
     if (postId) {
         loadGroupPostForEdit(postId);
     }
 
     navigateToScreen('group-post-form');
+
+    // Push 알림 설정 렌더링 (화면 전환 후 DOM 확보)
+    setTimeout(function() { renderGpPushSetting(); }, 0);
 }
 
 function renderGpScheduleAttach() {
@@ -351,6 +351,8 @@ function toggleGpSchedule() {
     if (!toggle || !fields) return;
     _gpScheduleAttached = toggle.checked;
     fields.style.display = _gpScheduleAttached ? '' : 'none';
+    // 일정 첨부 상태 변경 시 Push 설정도 갱신 (일정 연동 알림 활성화/비활성화)
+    renderGpPushSetting();
 }
 
 async function loadGroupPostForEdit(postId) {
@@ -394,6 +396,25 @@ function renderGpPushSetting() {
         + '<div class="push-setting-text"><span class="push-setting-title">즉시 발송</span>'
         + '<span class="push-setting-desc">게시 즉시 그룹 멤버에게 알림</span></div></label>'
         + '<label class="push-setting-option">'
+        + '<input type="radio" name="gp_push_setting" value="scheduled" onchange="handleGpPushChange(this.value)">'
+        + '<div class="push-setting-text"><span class="push-setting-title">예약 발송</span>'
+        + '<span class="push-setting-desc">특정 날짜/시간에 알림</span></div></label>'
+        + '<div class="push-scheduled-fields" id="gp-push-scheduled-fields" style="display:none">'
+        + '<div class="date-time-row">'
+        + '<input type="date" id="gp-push-scheduled-date">'
+        + '<input type="time" id="gp-push-scheduled-time" value="09:00">'
+        + '</div></div>'
+        + '<label class="push-setting-option' + (hasSchedule ? '' : ' disabled') + '">'
+        + '<input type="radio" name="gp_push_setting" value="d_day" ' + (hasSchedule ? '' : 'disabled') + ' onchange="handleGpPushChange(this.value)">'
+        + '<div class="push-setting-text"><span class="push-setting-title">일정 연동 알림</span>'
+        + '<span class="push-setting-desc">' + (hasSchedule ? 'D-day 기준 알림' : '일정 첨부 시 활성화') + '</span></div></label>'
+        + '<div class="push-dday-fields" id="gp-push-dday-fields" style="display:none">'
+        + '<label class="checkbox-label"><input type="checkbox" value="7" class="gp-push-dday-check" checked> D-7 (7일 전)</label>'
+        + '<label class="checkbox-label"><input type="checkbox" value="3" class="gp-push-dday-check" checked> D-3 (3일 전)</label>'
+        + '<label class="checkbox-label"><input type="checkbox" value="1" class="gp-push-dday-check" checked> D-1 (1일 전)</label>'
+        + '<label class="checkbox-label"><input type="checkbox" value="0" class="gp-push-dday-check" checked> 당일 오전 9시</label>'
+        + '</div>'
+        + '<label class="push-setting-option">'
         + '<input type="radio" name="gp_push_setting" value="none" onchange="handleGpPushChange(this.value)">'
         + '<div class="push-setting-text"><span class="push-setting-title">알림 없음</span>'
         + '<span class="push-setting-desc">Push 알림을 보내지 않음</span></div></label>'
@@ -403,6 +424,10 @@ function renderGpPushSetting() {
 
 function handleGpPushChange(value) {
     _gpPushSetting = value;
+    var schedFields = document.getElementById('gp-push-scheduled-fields');
+    var ddayFields = document.getElementById('gp-push-dday-fields');
+    if (schedFields) schedFields.style.display = value === 'scheduled' ? '' : 'none';
+    if (ddayFields) ddayFields.style.display = value === 'd_day' ? '' : 'none';
 }
 
 // ========== 이벤트 위임 ==========

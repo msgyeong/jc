@@ -574,7 +574,7 @@ function showPostDetailScreen(postId) {
         detailScreen.classList.add('active');
 
         // history state 기록 — 뒤로가기 시 게시판 목록으로 복귀
-        history.pushState({ screen: 'post-detail', postId: postId }, '', '#post-detail');
+        if (typeof pushRoute === 'function') pushRoute('post-detail', { postId: postId });
 
         loadPostDetail(postId);
 

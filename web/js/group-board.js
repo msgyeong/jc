@@ -43,7 +43,7 @@ function openGroupBoard(groupId, groupName) {
         }
 
         if (!window._navPopstate) {
-            history.pushState({ screen: 'group-board', groupId: groupId, groupName: groupName }, '', '#group-board');
+            if (typeof pushRoute === 'function') pushRoute('group-board', { groupId: groupId, groupName: groupName });
         }
         loadGroupBoardScreen();
     } catch (err) {

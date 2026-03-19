@@ -58,9 +58,7 @@ async function loadContentScreen(screenName) {
         '</div>';
 
     // history
-    if (!window._navPopstate) {
-        history.pushState({ screen: screenName }, '', '#' + screenName);
-    }
+    if (typeof pushRoute === 'function') pushRoute(screenName);
 
     // 사용자 정보
     var user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;

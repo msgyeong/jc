@@ -387,7 +387,7 @@ function openMemberSearchOverlay() {
     if (input) { input.value = ''; input.focus(); }
     document.getElementById('search-results').innerHTML =
         '<div class="search-empty-hint">이름, 초성(ㄱㅁㅇ), 업종, 조직명으로 검색하세요</div>';
-    history.pushState({ screen: 'member-search' }, '', '#member-search');
+    if (typeof pushRoute === 'function') pushRoute('member-search');
 }
 
 function closeMemberSearchOverlay() {

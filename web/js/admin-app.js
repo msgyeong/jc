@@ -65,7 +65,7 @@ function showAdminHub() {
     screen.classList.add('active');
     removeFloatingDeleteBar();
     renderAdminHubContent();
-    history.pushState({ screen: 'admin-hub' }, '', '#admin-hub');
+    pushRoute('admin-hub');
 }
 
 function renderAdminHubContent() {
@@ -161,7 +161,7 @@ function showPendingMembersScreen() {
     document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
     screen.classList.add('active');
     loadPendingMembers();
-    history.pushState({ screen: 'pending-members' }, '', '#pending-members');
+    pushRoute('pending-members');
 }
 
 async function loadPendingMembers() {
@@ -278,7 +278,7 @@ function showNoticeManageScreen() {
     screen.classList.add('active');
     _noticeSelectedIds.clear();
     loadNoticeManageList();
-    history.pushState({ screen: 'notice-manage' }, '', '#notice-manage');
+    pushRoute('notice-manage');
 }
 
 async function loadNoticeManageList() {
@@ -389,7 +389,7 @@ function showNoticeEditor(noticeId) {
         renderNoticeEditForm(container, { title: '', content: '', is_pinned: false });
     }
 
-    history.pushState({ screen: 'notice-edit' }, '', '#notice-edit');
+    pushRoute('notice-edit');
 }
 
 async function loadNoticeForEdit(noticeId, container) {
@@ -475,7 +475,7 @@ function showPostManageScreen() {
     screen.classList.add('active');
     _postSelectedIds.clear();
     loadPostManageList();
-    history.pushState({ screen: 'post-manage' }, '', '#post-manage');
+    pushRoute('post-manage');
 }
 
 async function loadPostManageList() {
@@ -566,7 +566,7 @@ function showScheduleManageScreen() {
     screen.classList.add('active');
     _scheduleSelectedIds.clear();
     loadScheduleManageList();
-    history.pushState({ screen: 'schedule-manage' }, '', '#schedule-manage');
+    pushRoute('schedule-manage');
 }
 
 async function loadScheduleManageList() {
@@ -692,7 +692,7 @@ function showPushSendScreen() {
     screen.classList.add('active');
     removeFloatingDeleteBar();
     _pushSelectedUserIds.clear();
-    history.pushState({ screen: 'push-send' }, '', '#push-send');
+    pushRoute('push-send');
 
     var container = document.getElementById('push-send-content');
     if (!container) return;

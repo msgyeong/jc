@@ -221,7 +221,7 @@ async function showScheduleDetailScreen(scheduleId) {
     container.innerHTML = renderSkeleton('schedule-detail');
 
     // history state 기록 — popstate에서 일정 목록으로 돌아가기 위함
-    history.pushState({ screen: 'schedule-detail', scheduleId: scheduleId }, '', '#schedule-detail');
+    if (typeof pushRoute === 'function') pushRoute('schedule-detail', { scheduleId: scheduleId });
 
     // FAB 숨김
     const createBtn = document.getElementById('create-schedule-btn');
@@ -379,7 +379,7 @@ async function showGroupScheduleDetail(scheduleId, groupId) {
     if (dayHeader) dayHeader.style.display = 'none';
     container.innerHTML = renderSkeleton('schedule-detail');
 
-    history.pushState({ screen: 'schedule-detail', scheduleId: scheduleId, groupId: groupId }, '', '#schedule-detail');
+    if (typeof pushRoute === 'function') pushRoute('schedule-detail', { scheduleId: scheduleId, groupId: groupId });
 
     const createBtn = document.getElementById('create-schedule-btn');
     if (createBtn) createBtn.style.display = 'none';

@@ -337,6 +337,9 @@ async function switchTab(tab) {
             targetScreen = document.getElementById('schedules-screen');
             if (targetScreen) {
                 targetScreen.classList.add('active');
+                // 하단 탭으로 일정 진입 시 상세 플래그 해제
+                if (typeof _scheduleDetailActive !== 'undefined') _scheduleDetailActive = false;
+                if (typeof backToScheduleList === 'function') backToScheduleList();
                 await loadSchedulesScreen();
             }
             break;
@@ -636,7 +639,7 @@ window.addEventListener('popstate', function(e) {
         window._navPopstate = true;
         if (state.screen === 'schedule-detail') {
             // 일정 상세에서 뒤로가기 → 일정 목록으로 복귀
-            if (typeof backToScheduleList === 'function') backToScheduleList();
+            if (typeof backToScheduleList === 'function') backToScheduleList(); // _scheduleDetailActive = false 처리됨
             navigateToScreen('schedules');
         } else if (state.screen === 'post-detail' && state.postId) {
             // 게시글 상세에서 뒤로가기 → 게시판 목록으로 복귀

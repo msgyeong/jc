@@ -30,6 +30,9 @@ function canCreateSchedule() {
 // ========== 캘린더 로직 ==========
 
 async function loadSchedulesScreen() {
+    // 상세 화면이 활성화 중이면 목록 로드 스킵 (상세가 덮어쓰여지는 것 방지)
+    if (_scheduleDetailActive) return;
+
     const now = new Date();
     if (calYear == null) calYear = now.getFullYear();
     if (calMonth == null) calMonth = now.getMonth();

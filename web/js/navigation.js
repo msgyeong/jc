@@ -239,23 +239,36 @@ async function updateNavBadges() {
     // 로그인 전에는 API 호출하지 않음
     if (!localStorage.getItem('auth_token')) return;
     try {
-        // 새 공지 개수 (3일 이내 + 미읽음)
-        const postsRes = await apiClient.getPosts(1, 50, 'notice');
-        const posts = postsRes.posts || (postsRes.data && (postsRes.data.posts || postsRes.data.items)) || [];
-        const newNoticeCount = posts.filter(p => {
+        // 새 공지 개수 (3일 이내 + 미읽음) — 공지 + 일반 모두 확인
+        let newPostCount = 0;
+        const noticeRes = await apiClient.getPosts(1, 50, 'notice');
+        const notices = noticeRes.posts || (noticeRes.data && (noticeRes.data.posts || noticeRes.data.items)) || [];
+        newPostCount += notices.filter(p => {
+            const created = new Date(p.created_at);
+            return (Date.now() - created) <= 3 * 24 * 60 * 60 * 1000 && !p.read_by_current_user;
+        }).length;
+        const generalRes = await apiClient.getPosts(1, 50, 'general');
+        const generals = generalRes.posts || (generalRes.data && (generalRes.data.posts || generalRes.data.items)) || [];
+        newPostCount += generals.filter(p => {
             const created = new Date(p.created_at);
             return (Date.now() - created) <= 3 * 24 * 60 * 60 * 1000 && !p.read_by_current_user;
         }).length;
         document.querySelectorAll('.nav-badge[data-badge-tab="posts"]').forEach(d => {
-            if (newNoticeCount > 0) {
-                d.textContent = newNoticeCount > 99 ? '99+' : String(newNoticeCount);
+            if (newPostCount > 0) {
+                d.textContent = newPostCount > 99 ? '99+' : String(newPostCount);
                 d.classList.add('visible');
             } else {
                 d.textContent = '';
                 d.classList.remove('visible');
             }
         });
-    } catch (_) {}
+    } catch (_) {
+        // API 실패 시 뱃지 제거
+        document.querySelectorAll('.nav-badge[data-badge-tab="posts"]').forEach(d => {
+            d.textContent = '';
+            d.classList.remove('visible');
+        });
+    }
     try {
         // 다가오는 일정 개수 (7일 이내)
         const schedRes = await apiClient.getSchedules(true);

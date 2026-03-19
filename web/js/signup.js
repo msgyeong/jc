@@ -2,25 +2,131 @@
 
 var _signupPhotoBase64 = null;
 
-// 프로필 사진 미리보기
+// ========== 이미지 크롭 모달 ==========
+
+function openImageCropper(imageSrc, onCrop) {
+    // 모달 생성
+    var overlay = document.createElement('div');
+    overlay.className = 'crop-overlay';
+    overlay.innerHTML = ''
+        + '<div class="crop-modal">'
+        + '<div class="crop-header">사진 자르기</div>'
+        + '<div class="crop-container" id="crop-container">'
+        + '<canvas id="crop-canvas"></canvas>'
+        + '<div class="crop-frame" id="crop-frame"></div>'
+        + '</div>'
+        + '<div class="crop-controls">'
+        + '<button type="button" class="crop-btn crop-btn-cancel" id="crop-cancel">취소</button>'
+        + '<input type="range" id="crop-zoom" min="100" max="300" value="100" class="crop-zoom-slider">'
+        + '<button type="button" class="crop-btn crop-btn-confirm" id="crop-confirm">완료</button>'
+        + '</div>'
+        + '</div>';
+    document.body.appendChild(overlay);
+
+    var canvas = document.getElementById('crop-canvas');
+    var ctx = canvas.getContext('2d');
+    var container = document.getElementById('crop-container');
+    var img = new Image();
+    var scale = 1, offsetX = 0, offsetY = 0;
+    var dragging = false, startX = 0, startY = 0;
+    var imgW = 0, imgH = 0;
+    var FRAME_SIZE = Math.min(window.innerWidth - 48, 280);
+
+    canvas.width = FRAME_SIZE;
+    canvas.height = FRAME_SIZE;
+    container.style.width = FRAME_SIZE + 'px';
+    container.style.height = FRAME_SIZE + 'px';
+
+    img.onload = function() {
+        imgW = img.width;
+        imgH = img.height;
+        // 초기 스케일: 이미지가 프레임에 꽉 차도록
+        var fitScale = FRAME_SIZE / Math.min(imgW, imgH);
+        scale = fitScale;
+        document.getElementById('crop-zoom').value = 100;
+        offsetX = (FRAME_SIZE - imgW * scale) / 2;
+        offsetY = (FRAME_SIZE - imgH * scale) / 2;
+        drawCrop();
+    };
+    img.src = imageSrc;
+
+    function drawCrop() {
+        ctx.clearRect(0, 0, FRAME_SIZE, FRAME_SIZE);
+        ctx.drawImage(img, offsetX, offsetY, imgW * scale, imgH * scale);
+    }
+
+    // 줌
+    document.getElementById('crop-zoom').addEventListener('input', function() {
+        var baseScale = FRAME_SIZE / Math.min(imgW, imgH);
+        var newScale = baseScale * (this.value / 100);
+        // 줌 중심을 프레임 중앙으로
+        var cx = FRAME_SIZE / 2;
+        var cy = FRAME_SIZE / 2;
+        offsetX = cx - (cx - offsetX) * (newScale / scale);
+        offsetY = cy - (cy - offsetY) * (newScale / scale);
+        scale = newScale;
+        drawCrop();
+    });
+
+    // 드래그 (마우스)
+    canvas.addEventListener('mousedown', function(e) { dragging = true; startX = e.clientX - offsetX; startY = e.clientY - offsetY; });
+    window.addEventListener('mousemove', function handler(e) {
+        if (!dragging) return;
+        offsetX = e.clientX - startX; offsetY = e.clientY - startY; drawCrop();
+    });
+    window.addEventListener('mouseup', function() { dragging = false; });
+
+    // 드래그 (터치)
+    canvas.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1) { dragging = true; startX = e.touches[0].clientX - offsetX; startY = e.touches[0].clientY - offsetY; e.preventDefault(); }
+    }, { passive: false });
+    canvas.addEventListener('touchmove', function(e) {
+        if (dragging && e.touches.length === 1) { offsetX = e.touches[0].clientX - startX; offsetY = e.touches[0].clientY - startY; drawCrop(); e.preventDefault(); }
+    }, { passive: false });
+    canvas.addEventListener('touchend', function() { dragging = false; });
+
+    // 취소
+    document.getElementById('crop-cancel').addEventListener('click', function() {
+        overlay.remove();
+    });
+
+    // 완료
+    document.getElementById('crop-confirm').addEventListener('click', function() {
+        // 최종 크롭 결과를 정사각 캔버스에서 추출
+        var resultCanvas = document.createElement('canvas');
+        resultCanvas.width = 400;
+        resultCanvas.height = 400;
+        var rctx = resultCanvas.getContext('2d');
+        var ratio = 400 / FRAME_SIZE;
+        rctx.drawImage(img, offsetX * ratio, offsetY * ratio, imgW * scale * ratio, imgH * scale * ratio);
+        var croppedBase64 = resultCanvas.toDataURL('image/jpeg', 0.85);
+        onCrop(croppedBase64);
+        overlay.remove();
+    });
+}
+
+// 프로필 사진 선택 → 크롭 모달
 document.addEventListener('DOMContentLoaded', function() {
     var photoInput = document.getElementById('signup-photo-input');
     if (photoInput) {
         photoInput.addEventListener('change', function() {
             var file = this.files[0];
             if (!file) return;
-            if (file.size > 2 * 1024 * 1024) {
-                alert('사진 크기는 2MB 이하여야 합니다.');
+            if (file.size > 5 * 1024 * 1024) {
+                alert('사진 크기는 5MB 이하여야 합니다.');
                 this.value = '';
                 return;
             }
             var reader = new FileReader();
             reader.onload = function(e) {
-                _signupPhotoBase64 = e.target.result;
-                var preview = document.getElementById('signup-avatar-preview');
-                if (preview) preview.innerHTML = '<img src="' + e.target.result + '" alt="프로필">';
+                openImageCropper(e.target.result, function(croppedBase64) {
+                    _signupPhotoBase64 = croppedBase64;
+                    var preview = document.getElementById('signup-avatar-preview');
+                    if (preview) preview.innerHTML = '<img src="' + croppedBase64 + '" alt="프로필">';
+                });
             };
             reader.readAsDataURL(file);
+            this.value = ''; // 같은 파일 재선택 허용
         });
     }
 });

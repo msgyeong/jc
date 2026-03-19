@@ -103,7 +103,7 @@ function setupPostsInfiniteScroll() {
 async function loadPostsScreen() {
     currentPostsPage = 0;
     hasMorePosts = true;
-    postsLoading = false; // 이전 호출에서 고착된 플래그 초기화
+    postsLoading = false;
 
     // 탭 UI를 현재 카테고리에 맞게 갱신
     document.querySelectorAll('.board-tab').forEach(tab => {
@@ -113,6 +113,9 @@ async function loadPostsScreen() {
     await loadPosts(1);
     setupPostsInfiniteScroll();
     updateCreatePostBtnVisibility();
+
+    // 목록 로드 완료 후 하단 탭 뱃지 갱신 (read_status 반영)
+    if (typeof updateNavBadges === 'function') updateNavBadges();
 }
 
 // ── 서브탭 전환 ──
@@ -517,29 +520,30 @@ function handlePostCreateCancel() {
 // ── 게시글 상세 화면 표시 ──
 function showPostDetailScreen(postId) {
     try {
-        const detailScreen = document.getElementById('post-detail-screen');
+        var detailScreen = document.getElementById('post-detail-screen');
         if (!detailScreen) { console.error('post-detail-screen not found'); return; }
 
-        // N배지 제거: 해당 카드의 N뱃지를 즉시 제거 (읽음 처리)
+        // N배지 즉시 제거 (DOM)
         document.querySelectorAll('.pc-card .pc-badge-n').forEach(function(badge) {
             var card = badge.closest('.pc-card');
-            if (card && card.getAttribute('onclick') && card.getAttribute('onclick').indexOf('posts/' + postId) !== -1) {
-                badge.remove();
+            if (card) {
+                var onclick = card.getAttribute('onclick') || '';
+                var action = card.getAttribute('data-action') || '';
+                if (onclick.indexOf('posts/' + postId) !== -1 || (action === 'open-post' && card.getAttribute('data-post-id') == postId)) {
+                    badge.remove();
+                }
             }
         });
 
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
         detailScreen.classList.add('active');
 
-        // history state 기록 — 뒤로가기 시 게시판 목록으로 복귀
         if (typeof pushRoute === 'function') pushRoute('post-detail', { postId: postId });
 
-        loadPostDetail(postId);
-
-        // 읽은 후 하단 탭 뱃지 갱신
-        setTimeout(function() {
+        // 상세 로드 (API 호출 → read_status INSERT) → 완료 후 뱃지 갱신
+        loadPostDetail(postId).then(function() {
             if (typeof updateNavBadges === 'function') updateNavBadges();
-        }, 1000);
+        });
     } catch (err) {
         console.error('showPostDetailScreen error:', err);
     }
@@ -710,15 +714,14 @@ function renderPostDetail(post) {
 }
 
 // ── 상세 뒤로가기 ──
-function handlePostDetailBack() {
+async function handlePostDetailBack() {
+    // 목록 화면으로 전환 (loadPostsScreen이 호출되어 목록 재조회)
     navigateToScreen('posts');
-    if (typeof updateNavigation === 'function') {
-        updateNavigation('posts');
-    }
-    // 읽음 처리 후 하단 탭 뱃지 갱신
-    if (typeof updateNavBadges === 'function') {
-        updateNavBadges();
-    }
+    if (typeof updateNavigation === 'function') updateNavigation('posts');
+
+    // loadPostsScreen 완료 후 뱃지 갱신 (읽음 상태 반영된 데이터 기반)
+    await new Promise(function(r) { setTimeout(r, 500); });
+    if (typeof updateNavBadges === 'function') updateNavBadges();
 }
 
 // ── 수정 화면 ──

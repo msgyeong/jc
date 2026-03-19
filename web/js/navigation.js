@@ -152,6 +152,9 @@ function navigateToScreen(screenName) {
             if (typeof loadContentScreen === 'function') loadContentScreen(screenName);
         } else if (screenName === 'group-board') {
             if (typeof loadGroupBoardScreen === 'function') loadGroupBoardScreen();
+        } else if (screenName === 'schedules') {
+            updateNavigation('schedules');
+            if (typeof loadSchedulesScreen === 'function') loadSchedulesScreen();
         }
 
         // history.pushState for back navigation (로그인 전 화면은 제외)
@@ -236,12 +239,12 @@ async function updateNavBadges() {
     // 로그인 전에는 API 호출하지 않음
     if (!localStorage.getItem('auth_token')) return;
     try {
-        // 새 공지 개수 (3일 이내)
-        const postsRes = await apiClient.getPosts(1, 20, 'notice');
+        // 새 공지 개수 (3일 이내 + 미읽음)
+        const postsRes = await apiClient.getPosts(1, 50, 'notice');
         const posts = postsRes.posts || (postsRes.data && (postsRes.data.posts || postsRes.data.items)) || [];
         const newNoticeCount = posts.filter(p => {
             const created = new Date(p.created_at);
-            return (Date.now() - created) <= 3 * 24 * 60 * 60 * 1000;
+            return (Date.now() - created) <= 3 * 24 * 60 * 60 * 1000 && !p.read_by_current_user;
         }).length;
         document.querySelectorAll('.nav-badge[data-badge-tab="posts"]').forEach(d => {
             if (newNoticeCount > 0) {

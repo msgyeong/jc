@@ -169,13 +169,18 @@ function createScheduleCard(schedule) {
     const groupName = schedule._groupName || '';
 
     let timeStr = '';
-    if (startRaw.includes('T')) {
-        const st = startRaw.split('T')[1]?.substring(0, 5);
-        if (st && st !== '00:00') {
+    if (startRaw) {
+        const sd = new Date(startRaw);
+        const sh = sd.getHours(), sm = sd.getMinutes();
+        if (sh !== 0 || sm !== 0) {
+            const st = `${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}`;
             timeStr = st;
-            if (endRaw.includes('T')) {
-                const et = endRaw.split('T')[1]?.substring(0, 5);
-                if (et && et !== '00:00') timeStr += ` ~ ${et}`;
+            if (endRaw) {
+                const ed = new Date(endRaw);
+                const eh = ed.getHours(), em = ed.getMinutes();
+                if (eh !== 0 || em !== 0) {
+                    timeStr += ` ~ ${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}`;
+                }
             }
         }
     }

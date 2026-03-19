@@ -145,6 +145,7 @@ function setupPostsInfiniteScroll() {
 async function loadPostsScreen() {
     currentPostsPage = 0;
     hasMorePosts = true;
+    postsLoading = false; // 이전 호출에서 고착된 플래그 초기화
     await loadPosts(1);
     setupPostsInfiniteScroll();
     updateCreatePostBtnVisibility();
@@ -739,6 +740,10 @@ function handlePostDetailBack() {
     navigateToScreen('posts');
     if (typeof updateNavigation === 'function') {
         updateNavigation('posts');
+    }
+    // 읽음 처리 후 하단 탭 뱃지 갱신
+    if (typeof updateNavBadges === 'function') {
+        updateNavBadges();
     }
 }
 

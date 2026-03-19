@@ -73,55 +73,13 @@ async function loadPosts(page = 1) {
 }
 
 // ── 게시글 카드 생성 (재디자인) ──
+// createPostCard → card-components.js의 renderPostCard 위임
 function createPostCard(post) {
-    const isNew = isNewContent(post.created_at);
-    const unread = isNew && (post.read_by_current_user !== true);
-    const parsedImages = parseImageArray(post.images);
-    const hasImages = parsedImages.length > 0;
-    const firstImage = hasImages ? parsedImages[0] : null;
-    const isPinned = post.is_pinned === true;
-
-    const avatarHtml = post.author_image
-        ? `<img src="${post.author_image}" alt="" class="pc-avatar-img">`
-        : `<span class="pc-avatar-text">${post.author_name ? escapeHtml(post.author_name[0]) : '?'}</span>`;
-
-    const pinnedHtml = isPinned
-        ? `<span class="pc-pinned">[고정]</span>`
-        : '';
-
-    const thumbnailHtml = firstImage
-        ? `<div class="pc-thumb"><img src="${firstImage}" alt="" onerror="this.parentElement.style.display='none'"></div>`
-        : '';
-
-    const nBadgeHtml = unread
-        ? `<span class="pc-badge-n">N</span>`
-        : '';
-
-    return `
-        <div class="pc-card" onclick="navigateTo('/posts/${post.id}')">
-            <div class="pc-top">
-                <div class="pc-avatar">${avatarHtml}</div>
-                <span class="pc-author">${escapeHtml(post.author_name || '알 수 없음')}</span>
-                <span class="pc-dot">·</span>
-                <span class="pc-time">${formatRelativeTime(post.created_at)}</span>
-                <span class="pc-top-spacer"></span>
-                ${nBadgeHtml}
-            </div>
-            <div class="pc-body">
-                <div class="pc-text">
-                    ${pinnedHtml}
-                    <h3 class="pc-title">${escapeHtml(post.title)}</h3>
-                    ${post.content ? `<p class="pc-preview">${escapeHtml(post.content.substring(0, 120))}${post.content.length > 120 ? '...' : ''}</p>` : ''}
-                </div>
-                ${thumbnailHtml}
-            </div>
-            <div class="pc-stats">
-                <span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${post.comments_count || 0}</span>
-                <span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg> ${post.likes_count || 0}</span>
-                <span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${post.views || 0}</span>
-            </div>
-        </div>
-    `;
+    return renderPostCard(post, {
+        clickAttr: 'onclick="navigateTo(\'/posts/' + post.id + '\')"',
+        showThumb: true,
+        readField: 'read_by_current_user'
+    });
 }
 
 // ── 무한 스크롤 ──

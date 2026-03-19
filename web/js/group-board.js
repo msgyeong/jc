@@ -103,38 +103,13 @@ async function loadGroupBoardScreen() {
     }
 }
 
-// 공지 게시판과 동일한 카드 (pc-card 패턴)
+// renderGroupPostCard → card-components.js의 renderPostCard 위임
 function renderGroupPostCard(p) {
-    var date = formatRelativeDate(p.created_at);
-    var isNew = isWithin3Days(p.created_at) && !p.is_read;
-
-    var avatarHtml = p.author_image
-        ? '<img src="' + escapeHtml(p.author_image) + '" alt="" class="pc-avatar-img">'
-        : '<span class="pc-avatar-text">' + escapeHtml((p.author_name || '?')[0]) + '</span>';
-
-    var pinnedHtml = p.is_pinned ? '<span class="pc-pinned">[고정]</span>' : '';
-    var nBadgeHtml = isNew ? '<span class="pc-badge-n">N</span>' : '';
-
-    return '<div class="pc-card" data-action="open-post" data-post-id="' + p.id + '">'
-        + '<div class="pc-top">'
-        + '<div class="pc-avatar">' + avatarHtml + '</div>'
-        + '<span class="pc-author">' + escapeHtml(p.author_name || '알 수 없음') + '</span>'
-        + '<span class="pc-dot">&middot;</span>'
-        + '<span class="pc-time">' + date + '</span>'
-        + '<span class="pc-top-spacer"></span>'
-        + nBadgeHtml
-        + '</div>'
-        + '<div class="pc-body"><div class="pc-text">'
-        + pinnedHtml
-        + '<h3 class="pc-title">' + escapeHtml(p.title) + '</h3>'
-        + (p.content ? '<p class="pc-preview">' + escapeHtml((p.content || '').substring(0, 120)) + (p.content.length > 120 ? '...' : '') + '</p>' : '')
-        + '</div></div>'
-        + '<div class="pc-stats">'
-        + '<span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ' + (p.comments_count || 0) + '</span>'
-        + '<span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg> ' + (p.likes_count || 0) + '</span>'
-        + '<span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ' + (p.views || 0) + '</span>'
-        + '</div>'
-        + '</div>';
+    return renderPostCard(p, {
+        clickAttr: 'data-action="open-post" data-post-id="' + p.id + '"',
+        showThumb: false,
+        readField: 'is_read'
+    });
 }
 
 // isWithin3Days → utils.js의 isNew()로 통합됨
@@ -289,31 +264,17 @@ async function openGroupPostDetail(postId) {
     }
 }
 
+// renderGroupComment → card-components.js의 renderComment 위임
 function renderGroupComment(c, userInfo, isReply) {
     var isAuthor = userInfo && c.author_id === userInfo.id;
     var isAdmin = userInfo && ['admin', 'super_admin'].includes(userInfo.role);
-    var indent = isReply ? ' gb-comment-reply' : '';
-
-    return '<div class="gb-comment' + indent + '">'
-        + '<div class="gb-comment-header">'
-        + (c.author_image ? '<img src="' + escapeHtml(c.author_image) + '" class="gb-comment-avatar" alt="">' : '<div class="gb-comment-avatar gb-post-avatar-default"></div>')
-        + '<strong>' + escapeHtml(c.author_name) + '</strong>'
-        + '<span class="gb-comment-date">' + formatRelativeDate(c.created_at) + '</span>'
-        + '</div>'
-        + '<p class="gb-comment-body">' + escapeHtml(c.content).replace(/\n/g, '<br>') + '</p>'
-        + '<div class="gb-comment-actions">'
-        + '<button class="gb-comment-like-btn" data-action="like-comment" data-comment-id="' + c.id + '" data-post-id="' + c.post_id + '">'
-        + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>'
-        + ' <span class="gb-comment-likes-num">' + (c.likes_count || 0) + '</span></button>'
-        + (!isReply ? '<button class="gb-reply-btn" data-action="show-reply" data-comment-id="' + c.id + '">답글</button>' : '')
-        + ((isAuthor || isAdmin) ? '<button class="gb-delete-comment-btn" data-action="delete-comment" data-post-id="' + c.post_id + '" data-comment-id="' + c.id + '">삭제</button>' : '')
-        + '</div>'
-        + '<div id="reply-input-' + c.id + '" class="gb-reply-input-wrap" style="display:none">'
-        + '<div class="gb-comment-input">'
-        + '<input type="text" class="gb-comment-input-field" id="reply-text-' + c.id + '" placeholder="댓글 입력">'
-        + '<button class="gb-comment-submit-btn" data-action="submit-reply" data-post-id="' + c.post_id + '" data-parent-id="' + c.id + '">등록</button>'
-        + '</div></div>'
-        + '</div>';
+    return renderComment(c, {
+        isReply: isReply,
+        canDelete: isAuthor || isAdmin,
+        showLike: true,
+        replyAction: 'show-reply',
+        deleteAction: 'delete-comment'
+    });
 }
 
 // ========== 좋아요 ==========

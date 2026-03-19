@@ -484,24 +484,20 @@
                     <h3 class="section-title">Step 4: 학력/경력 정보</h3>
 
                     <div class="form-group">
-                        <label>최종 학력 <span class="required-badge">필수</span></label>
-                        <div id="education-list">
-                            <!-- 학력 항목들이 동적으로 추가됩니다 -->
+                        <div class="form-label-row">
+                            <label>최종 학력 <span class="required-badge">필수</span></label>
+                            <button type="button" class="form-add-btn" onclick="addEducationField()">+ 추가</button>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-add-education" onclick="addEducationField()">
-                            + 학력 추가
-                        </button>
+                        <div id="education-list"></div>
                         <span class="error-message" id="education-error"></span>
                     </div>
 
                     <div class="form-group">
-                        <label>경력 <span class="optional-badge">선택</span></label>
-                        <div id="career-list">
-                            <!-- 경력 항목들이 동적으로 추가됩니다 -->
+                        <div class="form-label-row">
+                            <label>경력 <span class="optional-badge">선택</span></label>
+                            <button type="button" class="form-add-btn" onclick="addCareerField()">+ 추가</button>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-add-career" onclick="addCareerField()">
-                            + 경력 추가
-                        </button>
+                        <div id="career-list"></div>
                     </div>
 
                     <!-- Step 5: 가족 정보 (선택) -->

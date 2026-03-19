@@ -511,6 +511,27 @@ html {
     -webkit-appearance: none;
 }
 .edu-input:focus { border-color: var(--input-border-focus); box-shadow: 0 0 0 2px rgba(30,58,95,0.08); }
+/* 라벨 + 추가 버튼 한 줄 */
+.form-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-xs);
+}
+.form-label-row label { margin-bottom: 0; }
+.form-add-btn {
+    background: none;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    transition: background 0.15s;
+}
+.form-add-btn:active { background: var(--secondary-color); }
 /* 경력 select */
 .career-fields select {
     min-height: var(--input-height);

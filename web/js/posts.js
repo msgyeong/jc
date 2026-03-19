@@ -552,23 +552,33 @@ function handlePostCreateCancel() {
 
 // ── 게시글 상세 화면 표시 ──
 function showPostDetailScreen(postId) {
-    const detailScreen = document.getElementById('post-detail-screen');
-    if (!detailScreen) return;
+    try {
+        const detailScreen = document.getElementById('post-detail-screen');
+        if (!detailScreen) { console.error('post-detail-screen not found'); return; }
 
-    // N배지 제거: 해당 카드의 N뱃지를 즉시 제거 (읽음 처리)
-    const card = document.querySelector(`.pc-card[onclick*="posts/${postId}"]`);
-    if (card) {
-        const nBadge = card.querySelector('.pc-badge-n');
-        if (nBadge) nBadge.remove();
+        // N배지 제거: 해당 카드의 N뱃지를 즉시 제거 (읽음 처리)
+        document.querySelectorAll('.pc-card .pc-badge-n').forEach(function(badge) {
+            var card = badge.closest('.pc-card');
+            if (card && card.getAttribute('onclick') && card.getAttribute('onclick').indexOf('posts/' + postId) !== -1) {
+                badge.remove();
+            }
+        });
+
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        detailScreen.classList.add('active');
+
+        // history state 기록 — 뒤로가기 시 게시판 목록으로 복귀
+        history.pushState({ screen: 'post-detail', postId: postId }, '', '#post-detail');
+
+        loadPostDetail(postId);
+
+        // 읽은 후 하단 탭 뱃지 갱신
+        setTimeout(function() {
+            if (typeof updateNavBadges === 'function') updateNavBadges();
+        }, 1000);
+    } catch (err) {
+        console.error('showPostDetailScreen error:', err);
     }
-
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    detailScreen.classList.add('active');
-
-    // history state 기록 — 뒤로가기 시 게시판 목록으로 복귀
-    history.pushState({ screen: 'post-detail', postId: postId }, '', '#post-detail');
-
-    loadPostDetail(postId);
 }
 
 // ── 게시글 상세 로드 ──

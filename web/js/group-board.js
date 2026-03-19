@@ -7,6 +7,7 @@ var _groupBoardLoading = false;
 var _editingGroupPostId = null;
 var _gpScheduleAttached = false;
 var _gpPushSetting = 'immediate';
+var _gpAttendanceEnabled = false;
 
 // ========== 그룹 게시판 메인 ==========
 
@@ -107,6 +108,7 @@ function renderGroupPostCard(p) {
         + '</div></div>'
         + '<div class="pc-stats">'
         + '<span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ' + (p.comments_count || 0) + '</span>'
+        + '<span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg> ' + (p.likes_count || 0) + '</span>'
         + '<span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ' + (p.views || 0) + '</span>'
         + '</div>'
         + '</div>';
@@ -232,7 +234,14 @@ async function openGroupPostDetail(postId) {
                 + '</div></div>';
         }
 
-        html += '<div class="gb-detail-stats">조회 ' + (post.views || 0) + ' · 댓글 ' + (post.comments_count || 0) + '</div>';
+        // 좋아요 + 통계
+        var liked = post.user_has_liked;
+        html += '<div class="gb-detail-stats-row">'
+            + '<button class="gb-like-btn' + (liked ? ' liked' : '') + '" data-action="toggle-like" data-post-id="' + post.id + '">'
+            + '<svg width="18" height="18" viewBox="0 0 24 24"' + (liked ? ' fill="#DC2626" stroke="#DC2626"' : ' fill="none" stroke="currentColor"') + ' stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>'
+            + ' <span class="gb-likes-count">' + (post.likes_count || 0) + '</span></button>'
+            + '<span class="gb-stat-text">조회 ' + (post.views || 0) + ' · 댓글 ' + (post.comments_count || 0) + '</span>'
+            + '</div>';
 
         // 댓글
         html += '<div class="gb-comments">';
@@ -273,6 +282,9 @@ function renderGroupComment(c, userInfo, isReply) {
         + '</div>'
         + '<p class="gb-comment-body">' + escapeHtml(c.content).replace(/\n/g, '<br>') + '</p>'
         + '<div class="gb-comment-actions">'
+        + '<button class="gb-comment-like-btn" data-action="like-comment" data-comment-id="' + c.id + '" data-post-id="' + c.post_id + '">'
+        + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>'
+        + ' <span class="gb-comment-likes-num">' + (c.likes_count || 0) + '</span></button>'
         + (!isReply ? '<button class="gb-reply-btn" data-action="show-reply" data-comment-id="' + c.id + '">답글</button>' : '')
         + ((isAuthor || isAdmin) ? '<button class="gb-delete-comment-btn" data-action="delete-comment" data-post-id="' + c.post_id + '" data-comment-id="' + c.id + '">삭제</button>' : '')
         + '</div>'
@@ -281,6 +293,40 @@ function renderGroupComment(c, userInfo, isReply) {
         + '<button class="gb-comment-submit" data-action="submit-reply" data-post-id="' + c.post_id + '" data-parent-id="' + c.id + '">등록</button>'
         + '</div>'
         + '</div>';
+}
+
+// ========== 좋아요 ==========
+
+async function toggleGroupPostLike(postId, btn) {
+    if (!_currentGroupBoardId || btn.disabled) return;
+    btn.disabled = true;
+    try {
+        var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/like', { method: 'POST' });
+        if (res.success) {
+            var countEl = btn.querySelector('.gb-likes-count');
+            if (countEl) countEl.textContent = res.likes_count || 0;
+            var svg = btn.querySelector('svg');
+            if (svg) {
+                svg.setAttribute('fill', res.liked ? '#DC2626' : 'none');
+                svg.setAttribute('stroke', res.liked ? '#DC2626' : 'currentColor');
+            }
+            btn.classList.toggle('liked', res.liked);
+        }
+    } catch (_) {}
+    btn.disabled = false;
+}
+
+async function toggleGroupCommentLike(commentId, btn) {
+    if (!_currentGroupBoardId || btn.disabled) return;
+    btn.disabled = true;
+    try {
+        var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/comments/' + commentId + '/like', { method: 'POST' });
+        if (res.success) {
+            var countEl = btn.querySelector('.gb-comment-likes-num');
+            if (countEl) countEl.textContent = res.likes_count || 0;
+        }
+    } catch (_) {}
+    btn.disabled = false;
 }
 
 function formatFullDate(dateStr) {
@@ -339,6 +385,10 @@ function showGroupPostForm(postId) {
 
     var countEl = document.getElementById('gp-images-count');
     if (countEl) countEl.textContent = '(0/5)';
+
+    // 참석 확인 섹션
+    _gpAttendanceEnabled = false;
+    renderGpAttendanceToggle();
 
     // 일정 첨부 섹션 렌더링 (공지 게시판과 동일)
     renderGpScheduleAttach();
@@ -412,6 +462,22 @@ function getCurrentUserSafe() {
             ? getCurrentUser()
             : JSON.parse(localStorage.getItem('user_info') || 'null');
     } catch (_) { return null; }
+}
+
+// ========== 참석 확인 ==========
+
+function renderGpAttendanceToggle() {
+    var el = document.getElementById('gp-attendance-section');
+    if (!el) return;
+    el.innerHTML = ''
+        + '<div class="post-create-divider"></div>'
+        + '<div class="schedule-attach-header" style="cursor:default">'
+        + '<span class="schedule-attach-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 참석 확인</span>'
+        + '<label class="toggle-switch" onclick="event.stopPropagation()">'
+        + '<input type="checkbox" id="gp-attendance-toggle" onchange="_gpAttendanceEnabled=this.checked">'
+        + '<span class="toggle-slider"></span>'
+        + '</label>'
+        + '</div>';
 }
 
 // ========== Push 알림 설정 ==========
@@ -502,6 +568,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (el) { el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
                     break;
                 case 'delete-comment': deleteGroupComment(parseInt(postId), parseInt(commentId)); break;
+                case 'toggle-like': toggleGroupPostLike(parseInt(postId), btn); break;
+                case 'like-comment': toggleGroupCommentLike(parseInt(commentId), btn); break;
             }
         });
     }

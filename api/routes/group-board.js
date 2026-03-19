@@ -179,15 +179,35 @@ router.get('/:groupId/posts/:postId', authenticate, async (req, res) => {
             return res.status(404).json({ success: false, error: '게시글을 찾을 수 없습니다.' });
         }
 
-        // 댓글 조회
-        const comments = await query(
-            `SELECT gc.*, u.name as author_name, u.profile_image as author_image
-             FROM group_post_comments gc
-             JOIN users u ON gc.author_id = u.id
-             WHERE gc.post_id = $1 AND gc.is_deleted = false
-             ORDER BY gc.created_at ASC`,
-            [postId]
-        );
+        // 댓글 조회 (좋아요 수 포함)
+        let comments;
+        try {
+            comments = await query(
+                `SELECT gc.*, u.name as author_name, u.profile_image as author_image,
+                        COALESCE((SELECT COUNT(*) FROM group_comment_likes WHERE comment_id = gc.id), 0) as likes_count
+                 FROM group_post_comments gc
+                 JOIN users u ON gc.author_id = u.id
+                 WHERE gc.post_id = $1 AND gc.is_deleted = false
+                 ORDER BY gc.created_at ASC`,
+                [postId]
+            );
+        } catch (_) {
+            comments = await query(
+                `SELECT gc.*, u.name as author_name, u.profile_image as author_image
+                 FROM group_post_comments gc
+                 JOIN users u ON gc.author_id = u.id
+                 WHERE gc.post_id = $1 AND gc.is_deleted = false
+                 ORDER BY gc.created_at ASC`,
+                [postId]
+            );
+        }
+
+        // 좋아요 상태 확인
+        let user_has_liked = false;
+        try {
+            const likeCheck = await query('SELECT id FROM group_post_likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
+            user_has_liked = likeCheck.rows.length > 0;
+        } catch (_) {}
 
         // 연결된 그룹 일정 조회 (같은 그룹, 같은 제목으로 매칭)
         let linkedSchedule = null;
@@ -203,9 +223,12 @@ router.get('/:groupId/posts/:postId', authenticate, async (req, res) => {
             }
         } catch (_) {}
 
+        const postData = result.rows[0];
+        postData.user_has_liked = user_has_liked;
+
         res.json({
             success: true,
-            post: result.rows[0],
+            post: postData,
             comments: comments.rows,
             schedule: linkedSchedule
         });
@@ -401,6 +424,103 @@ router.delete('/:groupId/posts/:postId/comments/:commentId', authenticate, async
     } catch (error) {
         console.error('Group comment delete error:', error);
         res.status(500).json({ success: false, error: '댓글 삭제에 실패했습니다.' });
+    }
+});
+
+// ========== 그룹 게시글 좋아요 ==========
+
+/**
+ * POST /api/group-board/:groupId/posts/:postId/like
+ * 좋아요 토글
+ */
+router.post('/:groupId/posts/:postId/like', authenticate, async (req, res) => {
+    try {
+        const groupId = parseInt(req.params.groupId);
+        const postId = parseInt(req.params.postId);
+        const userId = req.user.userId;
+
+        const isMember = await verifyGroupMember(userId, groupId);
+        if (!isMember && !isManagerRole(req.user.role)) {
+            return res.status(403).json({ success: false, error: '권한이 없습니다.' });
+        }
+
+        // likes 테이블에서 group_post_id 컬럼이 없을 수 있으므로 별도 테이블 사용
+        let existing;
+        try {
+            existing = await query('SELECT id FROM group_post_likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
+        } catch (_) {
+            // 테이블 없으면 생성
+            await query(`CREATE TABLE IF NOT EXISTS group_post_likes (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                post_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(user_id, post_id)
+            )`);
+            existing = { rows: [] };
+        }
+
+        let liked;
+        if (existing.rows.length > 0) {
+            await query('DELETE FROM group_post_likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
+            liked = false;
+        } else {
+            await query('INSERT INTO group_post_likes (user_id, post_id) VALUES ($1, $2)', [userId, postId]);
+            liked = true;
+        }
+
+        const countRes = await query('SELECT COUNT(*) FROM group_post_likes WHERE post_id = $1', [postId]);
+        const likes_count = parseInt(countRes.rows[0].count);
+        await query('UPDATE group_posts SET likes_count = $1 WHERE id = $2', [likes_count, postId]);
+
+        res.json({ success: true, liked, likes_count });
+    } catch (error) {
+        console.error('Group post like error:', error);
+        res.status(500).json({ success: false, error: '좋아요 처리에 실패했습니다.' });
+    }
+});
+
+// ========== 그룹 댓글 좋아요 ==========
+
+/**
+ * POST /api/group-board/:groupId/comments/:commentId/like
+ * 댓글 좋아요 토글
+ */
+router.post('/:groupId/comments/:commentId/like', authenticate, async (req, res) => {
+    try {
+        const commentId = parseInt(req.params.commentId);
+        const userId = req.user.userId;
+
+        let existing;
+        try {
+            existing = await query('SELECT id FROM group_comment_likes WHERE user_id = $1 AND comment_id = $2', [userId, commentId]);
+        } catch (_) {
+            await query(`CREATE TABLE IF NOT EXISTS group_comment_likes (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                comment_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(user_id, comment_id)
+            )`);
+            existing = { rows: [] };
+        }
+
+        let liked;
+        if (existing.rows.length > 0) {
+            await query('DELETE FROM group_comment_likes WHERE user_id = $1 AND comment_id = $2', [userId, commentId]);
+            liked = false;
+        } else {
+            await query('INSERT INTO group_comment_likes (user_id, comment_id) VALUES ($1, $2)', [userId, commentId]);
+            liked = true;
+        }
+
+        const countRes = await query('SELECT COUNT(*) FROM group_comment_likes WHERE comment_id = $1', [commentId]);
+        const likes_count = parseInt(countRes.rows[0].count);
+
+        res.json({ success: true, liked, likes_count });
+    } catch (error) {
+        console.error('Group comment like error:', error);
+        res.status(500).json({ success: false, error: '좋아요 처리에 실패했습니다.' });
     }
 });
 

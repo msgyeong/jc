@@ -189,8 +189,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 deleteOrgMember(parseInt(memberId));
                 break;
             case 'open-board':
+                e.preventDefault();
+                e.stopPropagation();
                 var groupName = btn.getAttribute('data-group-name');
-                openGroupBoard(parseInt(groupId), groupName);
+                if (typeof openGroupBoard === 'function') {
+                    openGroupBoard(parseInt(groupId), groupName);
+                } else {
+                    console.error('openGroupBoard is not defined');
+                }
                 break;
         }
     });

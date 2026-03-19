@@ -12,37 +12,49 @@ var _gpAttendanceEnabled = false;
 // ========== 그룹 게시판 메인 ==========
 
 function openGroupBoard(groupId, groupName) {
-    // 모든 상태 초기화
-    _currentGroupBoardId = groupId;
-    _currentGroupBoardName = groupName;
-    _groupBoardPage = 1;
-    _groupBoardLoading = false;
-    _editingGroupPostId = null;
-    _gpScheduleAttached = false;
-    _gpAttendanceEnabled = false;
+    try {
+        console.log('📋 openGroupBoard:', groupId, groupName);
+        // 모든 상태 초기화
+        _currentGroupBoardId = groupId;
+        _currentGroupBoardName = groupName;
+        _groupBoardPage = 1;
+        _groupBoardLoading = false;
+        _editingGroupPostId = null;
+        _gpScheduleAttached = false;
+        _gpAttendanceEnabled = false;
+        _gpPushSetting = 'immediate';
 
-    var titleEl = document.getElementById('group-board-title');
-    if (titleEl) titleEl.textContent = groupName;
+        var titleEl = document.getElementById('group-board-title');
+        if (titleEl) titleEl.textContent = groupName || '게시판';
 
-    // FAB 초기화
-    var fab = document.getElementById('create-group-post-btn');
-    if (fab) fab.style.display = '';
+        // FAB 초기화
+        var fab = document.getElementById('create-group-post-btn');
+        if (fab) fab.style.display = '';
 
-    // 화면 전환 + 데이터 로드
-    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
-    var screen = document.getElementById('group-board-screen');
-    if (screen) {
-        screen.classList.add('active');
-        screen.scrollTop = 0;
+        // 화면 전환
+        document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+        var screen = document.getElementById('group-board-screen');
+        if (screen) {
+            screen.classList.add('active');
+            screen.scrollTop = 0;
+        } else {
+            console.error('group-board-screen not found');
+            return;
+        }
+
+        if (!window._navPopstate) {
+            history.pushState({ screen: 'group-board', groupId: groupId, groupName: groupName }, '', '#group-board');
+        }
+        loadGroupBoardScreen();
+    } catch (err) {
+        console.error('openGroupBoard error:', err);
+        alert('게시판을 열 수 없습니다: ' + (err.message || ''));
     }
-    if (!window._navPopstate) {
-        history.pushState({ screen: 'group-board', groupId: groupId, groupName: groupName }, '', '#group-board');
-    }
-    loadGroupBoardScreen();
 }
 
 async function loadGroupBoardScreen() {
-    if (!_currentGroupBoardId) return;
+    console.log('📋 loadGroupBoardScreen, groupId:', _currentGroupBoardId);
+    if (!_currentGroupBoardId) { console.warn('loadGroupBoardScreen: no groupId'); return; }
     var container = document.getElementById('group-board-content');
     if (!container) return;
 
@@ -274,8 +286,8 @@ async function openGroupPostDetail(postId) {
 
         // 댓글 입력
         html += '<div class="gb-comment-input">';
-        html += '<textarea id="gb-comment-text" class="gb-comment-textarea" placeholder="댓글을 입력하세요" rows="2"></textarea>';
-        html += '<button class="gb-comment-submit" data-action="submit-comment" data-post-id="' + post.id + '">등록</button>';
+        html += '<input type="text" id="gb-comment-text" class="gb-comment-input-field" placeholder="댓글 입력">';
+        html += '<button class="gb-comment-submit-btn" data-action="submit-comment" data-post-id="' + post.id + '">등록</button>';
         html += '</div>';
 
         html += '</div></article>';
@@ -310,9 +322,10 @@ function renderGroupComment(c, userInfo, isReply) {
         + ((isAuthor || isAdmin) ? '<button class="gb-delete-comment-btn" data-action="delete-comment" data-post-id="' + c.post_id + '" data-comment-id="' + c.id + '">삭제</button>' : '')
         + '</div>'
         + '<div id="reply-input-' + c.id + '" class="gb-reply-input-wrap" style="display:none">'
-        + '<textarea class="gb-comment-textarea" id="reply-text-' + c.id + '" placeholder="답글 입력" rows="2"></textarea>'
-        + '<button class="gb-comment-submit" data-action="submit-reply" data-post-id="' + c.post_id + '" data-parent-id="' + c.id + '">등록</button>'
-        + '</div>'
+        + '<div class="gb-comment-input">'
+        + '<input type="text" class="gb-comment-input-field" id="reply-text-' + c.id + '" placeholder="댓글 입력">'
+        + '<button class="gb-comment-submit-btn" data-action="submit-reply" data-post-id="' + c.post_id + '" data-parent-id="' + c.id + '">등록</button>'
+        + '</div></div>'
         + '</div>';
 }
 

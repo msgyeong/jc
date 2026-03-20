@@ -478,8 +478,8 @@ router.post('/', authenticate, async (req, res) => {
             });
         }
 
-        // schedule 객체가 있으면 트랜잭션으로 공지+일정 동시 생성
-        if (schedule && cat === 'notice') {
+        // schedule 객체가 있으면 트랜잭션으로 게시글+일정 동시 생성 (공지/일반 모두)
+        if (schedule) {
             const result = await transaction(async (client) => {
                 // 1. 공지 생성
                 const attendance_enabled = req.body.attendance_enabled || false;

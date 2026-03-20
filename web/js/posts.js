@@ -478,19 +478,16 @@ async function handlePostCreateSubmit(e) {
         }
         const result = await apiClient.createPost(payload);
         if (result.success) {
-            if (typeof loadPostsScreen === 'function') {
-                await loadPostsScreen();
-            }
-            navigateToScreen('posts');
-            if (typeof updateNavigation === 'function') {
-                updateNavigation('posts');
-            }
+            // 폼 초기화
             titleEl.value = '';
             contentEl.value = '';
             postCreatePreviewUrls.forEach(u => { if (u) URL.revokeObjectURL(u); });
             postCreateImageUrls = [];
             postCreatePreviewUrls = [];
             renderPostFormImages('post-create-images-list', [], removePostCreateImage);
+
+            // 게시판 목록으로 이동 (navigateToScreen이 loadPostsScreen 호출)
+            navigateToScreen('posts');
         } else {
             if (errorEl) {
                 errorEl.textContent = result.message || '게시글 작성에 실패했습니다.';

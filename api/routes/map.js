@@ -165,7 +165,7 @@ router.post('/auto-geocode-all', authenticate, async (req, res) => {
                     );
                     updated++;
                 }
-            } catch (_) {}
+            } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
         }
         res.json({ success: true, data: { total: members.rows.length, updated } });
     } catch (error) {

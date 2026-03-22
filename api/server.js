@@ -159,15 +159,22 @@ app.use(errorHandler);
 const { query: dbQuery } = require('./config/database');
 (async function ensureDbSchema() {
     var fixes = [
-        // 누락 컬럼 추가
+        // posts 테이블 누락 컬럼
         "ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT false",
         "ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_banner BOOLEAN DEFAULT false",
         "ALTER TABLE posts ADD COLUMN IF NOT EXISTS attendance_enabled BOOLEAN DEFAULT false",
         "ALTER TABLE posts ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0",
         "ALTER TABLE posts ADD COLUMN IF NOT EXISTS comments_count INTEGER DEFAULT 0",
+        "ALTER TABLE posts ADD COLUMN IF NOT EXISTS linked_schedule_id INTEGER",
+        // schedules 테이블 누락 컬럼
         "ALTER TABLE schedules ADD COLUMN IF NOT EXISTS views INTEGER DEFAULT 0",
+        "ALTER TABLE schedules ADD COLUMN IF NOT EXISTS linked_post_id INTEGER",
+        // group_posts 테이블 누락 컬럼
         "ALTER TABLE group_posts ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0",
         "ALTER TABLE group_posts ADD COLUMN IF NOT EXISTS attendance_enabled BOOLEAN DEFAULT false",
+        // posts.category CHECK 제약조건 업데이트 (notice 포함)
+        "ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_category_check",
+        "ALTER TABLE posts ADD CONSTRAINT posts_category_check CHECK (category IN ('general', 'notice', 'question', 'announcement', 'event'))",
         // read_status 테이블 + 인덱스
         `CREATE TABLE IF NOT EXISTS read_status (
             id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL,

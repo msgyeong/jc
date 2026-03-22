@@ -219,7 +219,7 @@ router.post('/:id/comments', authenticate, async (req, res) => {
                     }).catch(e => console.error('[Push] N-05 발송 에러:', e.message));
                 }
             }
-        } catch (_) { /* 푸시 실패해도 무시 */ }
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
 
         return res.json({ success: true, message: '댓글이 등록되었습니다.', comments_count });
     } catch (err) {
@@ -376,9 +376,7 @@ router.get('/:id', authenticate, async (req, res) => {
                     [post.linked_schedule_id]
                 );
                 post.linked_schedule = schedResult.rows[0] || null;
-            } catch (_) {
-                post.linked_schedule = null;
-            }
+            } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
         }
 
         let user_has_liked = false;
@@ -388,7 +386,7 @@ router.get('/:id', authenticate, async (req, res) => {
                 [userId, id]
             );
             user_has_liked = (likeRow.rows && likeRow.rows.length > 0);
-        } catch (_) { }
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
         if (!user_has_liked) {
             try {
                 const pl = await query(
@@ -396,7 +394,7 @@ router.get('/:id', authenticate, async (req, res) => {
                     [userId, id]
                 );
                 user_has_liked = (pl.rows && pl.rows.length > 0);
-            } catch (_) { }
+            } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
         }
         post.user_has_liked = user_has_liked;
 

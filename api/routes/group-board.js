@@ -191,23 +191,14 @@ router.get('/:groupId/posts/:postId', authenticate, async (req, res) => {
                  ORDER BY gc.created_at ASC`,
                 [postId]
             );
-        } catch (_) {
-            comments = await query(
-                `SELECT gc.*, u.name as author_name, u.profile_image as author_image
-                 FROM group_post_comments gc
-                 JOIN users u ON gc.author_id = u.id
-                 WHERE gc.post_id = $1 AND gc.is_deleted = false
-                 ORDER BY gc.created_at ASC`,
-                [postId]
-            );
-        }
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
 
         // 좋아요 상태 확인
         let user_has_liked = false;
         try {
             const likeCheck = await query('SELECT id FROM group_post_likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
             user_has_liked = likeCheck.rows.length > 0;
-        } catch (_) {}
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
 
         // 연결된 그룹 일정 조회 (같은 그룹, 같은 제목으로 매칭)
         let linkedSchedule = null;
@@ -221,7 +212,7 @@ router.get('/:groupId/posts/:postId', authenticate, async (req, res) => {
             if (schedResult.rows.length > 0) {
                 linkedSchedule = schedResult.rows[0];
             }
-        } catch (_) {}
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
 
         const postData = result.rows[0];
         postData.user_has_liked = user_has_liked;
@@ -494,7 +485,7 @@ router.get('/:groupId/posts/:postId/attendance', authenticate, async (req, res) 
             countRes.rows.forEach(r => { if (r.status === 'attending') attending = parseInt(r.cnt); else not_attending = parseInt(r.cnt); });
             const myRes = await query(`SELECT status FROM group_post_attendance WHERE post_id = $1 AND user_id = $2`, [postId, userId]);
             if (myRes.rows.length > 0) my_status = myRes.rows[0].status;
-        } catch (_) {}
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
         res.json({ success: true, data: { attending, not_attending, my_status } });
     } catch (error) {
         res.status(500).json({ success: false, error: '참석 현황을 불러올 수 없습니다.' });
@@ -522,15 +513,8 @@ router.post('/:groupId/posts/:postId/like', authenticate, async (req, res) => {
         let existing;
         try {
             existing = await query('SELECT id FROM group_post_likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
-        } catch (_) {
-            // 테이블 없으면 생성
-            await query(`CREATE TABLE IF NOT EXISTS group_post_likes (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL,
-                post_id INTEGER NOT NULL,
-                created_at TIMESTAMP DEFAULT NOW(),
-                UNIQUE(user_id, post_id)
-            )`);
+        } catch (catchErr) {
+            console.error("[group_post_likes]", catchErr.message);
             existing = { rows: [] };
         }
 
@@ -568,14 +552,8 @@ router.post('/:groupId/comments/:commentId/like', authenticate, async (req, res)
         let existing;
         try {
             existing = await query('SELECT id FROM group_comment_likes WHERE user_id = $1 AND comment_id = $2', [userId, commentId]);
-        } catch (_) {
-            await query(`CREATE TABLE IF NOT EXISTS group_comment_likes (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL,
-                comment_id INTEGER NOT NULL,
-                created_at TIMESTAMP DEFAULT NOW(),
-                UNIQUE(user_id, comment_id)
-            )`);
+        } catch (catchErr) {
+            console.error("[group_comment_likes]", catchErr.message);
             existing = { rows: [] };
         }
 

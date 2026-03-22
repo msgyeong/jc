@@ -141,7 +141,7 @@ router.post('/signup', async (req, res) => {
                         [address, parseFloat(docs[0].y), parseFloat(docs[0].x), user.id]
                     );
                 }
-            } catch (_) { /* 좌표 변환 실패해도 무시 */ }
+            } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
         }
 
         res.status(201).json({
@@ -654,7 +654,7 @@ router.post('/withdraw', authenticate, async (req, res) => {
         // Push 구독 삭제
         try {
             await query('DELETE FROM push_subscriptions WHERE user_id = $1', [userId]);
-        } catch (_) { /* 테이블 없어도 무시 */ }
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
 
         res.json({
             success: true,

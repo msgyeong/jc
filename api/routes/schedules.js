@@ -103,9 +103,7 @@ router.get('/:id', authenticate, async (req, res) => {
                     [schedule.linked_post_id]
                 );
                 schedule.linked_post = postResult.rows[0] || null;
-            } catch (_) {
-                schedule.linked_post = null;
-            }
+            } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
         }
 
         res.json({
@@ -441,7 +439,7 @@ router.post('/:id/comments', authenticate, async (req, res) => {
                     }).catch(e => console.error('[Push] N-05 발송 에러:', e.message));
                 }
             }
-        } catch (_) { /* 푸시 실패해도 무시 */ }
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
 
         res.status(201).json({
             success: true,

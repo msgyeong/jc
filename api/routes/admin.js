@@ -3087,4 +3087,31 @@ router.get('/mobile-admin-log', async (req, res) => {
     }
 });
 
+/**
+ * POST /api/admin/cleanup-all-data
+ * 모든 목업 데이터 삭제 (super_admin만)
+ */
+router.post('/cleanup-all-data', authenticate, requireRole('super_admin'), async (req, res) => {
+    try {
+        var tables = [
+            'notification_log', 'push_subscriptions',
+            'read_status', 'likes', 'post_likes',
+            'group_post_likes', 'group_comment_likes', 'group_post_attendance',
+            'post_attendance', 'schedule_attendance',
+            'group_post_reads', 'group_post_comments', 'group_posts', 'group_schedules',
+            'comments', 'posts', 'schedules'
+        ];
+        var results = {};
+        for (var t of tables) {
+            try {
+                var r = await query('DELETE FROM ' + t);
+                results[t] = r.rowCount + ' rows';
+            } catch (e) { results[t] = 'skip: ' + e.message.substring(0, 50); }
+        }
+        res.json({ success: true, results });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 module.exports = router;

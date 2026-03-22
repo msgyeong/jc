@@ -76,12 +76,17 @@ function navigateTo(path) {
 }
 
 // 화면 전환
-// ========== 라우트 레지스트리 (Phase 2) ==========
-// nav: 하단 탭 활성화 이름, init: 화면 로드 함수, showNav: 하단 네비바 표시 여부
+// ========== 라우터 (기초 교체 2단계) ==========
+// nav: 탭 활성화, showNav: 네비바 표시, init: 진입, leave: 이탈 정리, noHistory: pushState 안함
+var _currentScreen = null; // 현재 활성 화면 이름
+
 var _routes = {
     'home':         { nav: 'home',      showNav: true,  init: function() { if (typeof updateUserDisplay === 'function') updateUserDisplay(); loadHomeData(); } },
     'posts':        { nav: 'posts',     showNav: true,  init: function() { if (typeof loadPostsScreen === 'function') loadPostsScreen(); } },
-    'schedules':    { nav: 'schedules', showNav: true,  init: function() { if (typeof loadSchedulesScreen === 'function') loadSchedulesScreen(); } },
+    'schedules':    { nav: 'schedules', showNav: true,
+        init: function() { if (typeof loadSchedulesScreen === 'function') loadSchedulesScreen(); },
+        leave: function() { if (typeof _scheduleDetailActive !== 'undefined') _scheduleDetailActive = false; if (typeof backToScheduleList === 'function') backToScheduleList(); }
+    },
     'members':      { nav: 'members',   showNav: true,  init: function() { if (typeof loadMembersScreen === 'function') loadMembersScreen(); } },
     'meetings':     { nav: 'meetings',  showNav: true,  init: function() { if (typeof loadMeetingsScreen === 'function') loadMeetingsScreen(); } },
     'profile':      { nav: 'profile',   showNav: true,  init: function() { if (typeof loadProfile === 'function') loadProfile(); } },
@@ -100,7 +105,10 @@ var _routes = {
     'jc-vision':    { init: function() { if (typeof loadContentScreen === 'function') loadContentScreen('jc-vision'); } },
     'jc-roles':     { init: function() { if (typeof loadContentScreen === 'function') loadContentScreen('jc-roles'); } },
     'jc-charter':   { init: function() { if (typeof loadContentScreen === 'function') loadContentScreen('jc-charter'); } },
-    'group-board':  { init: function() { if (typeof loadGroupBoardScreen === 'function') loadGroupBoardScreen(); } },
+    'group-board':  {
+        init: function() { if (typeof loadGroupBoardScreen === 'function') loadGroupBoardScreen(); },
+        leave: function() { if (typeof _currentGroupBoardId !== 'undefined') { _groupBoardLoading = false; } }
+    },
     'meeting-records': { init: function() { if (typeof loadMeetingRecordsScreen === 'function') loadMeetingRecordsScreen(); } }
 };
 
@@ -116,6 +124,15 @@ function pushRoute(screenName, extraState) {
 
 function navigateToScreen(screenName) {
     console.log('📱 화면 전환:', screenName);
+
+    // 이전 화면 leave 콜백 호출 (상태 정리)
+    if (_currentScreen && _currentScreen !== screenName) {
+        var prevRoute = _routes[_currentScreen];
+        if (prevRoute && prevRoute.leave) {
+            try { prevRoute.leave(); } catch (e) { console.error('Screen leave error:', _currentScreen, e); }
+        }
+    }
+    _currentScreen = screenName;
 
     // 모든 화면 숨기기
     document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
@@ -280,6 +297,15 @@ async function _updateNavBadgesNow() {
 // 탭 전환 함수
 async function switchTab(tab) {
     console.log('📱 탭 전환:', tab);
+
+    // 이전 화면 leave 콜백 호출
+    if (_currentScreen && _currentScreen !== tab) {
+        var prevRoute = _routes[_currentScreen];
+        if (prevRoute && prevRoute.leave) {
+            try { prevRoute.leave(); } catch (e) { console.error('Tab leave error:', _currentScreen, e); }
+        }
+    }
+    _currentScreen = tab;
 
     // 공유 하단 네비바 표시
     var sharedNav = document.getElementById('shared-bottom-nav');

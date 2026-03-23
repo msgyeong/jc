@@ -4,7 +4,8 @@
       "Bash(*)",
       "Read(*)",
       "Write(*)",
-      "WebFetch(*)"
+      "WebFetch(*)",
+      "WebSearch"
     ]
   }
 }

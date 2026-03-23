@@ -152,6 +152,14 @@ router.post('/', authenticate, async (req, res) => {
             });
         }
 
+        // 종료일이 시작일보다 빠른 경우 차단
+        if (end_date && new Date(end_date) < new Date(start_date)) {
+            return res.status(400).json({
+                success: false,
+                message: '종료일은 시작일보다 빠를 수 없습니다.'
+            });
+        }
+
         // 일정 생성
         const result = await query(
             `INSERT INTO schedules (created_by, title, start_date, end_date, location, description, category, created_at, updated_at)
@@ -219,6 +227,14 @@ router.put('/:id', authenticate, async (req, res) => {
             return res.status(403).json({
                 success: false,
                 message: '일정 수정 권한이 없습니다.'
+            });
+        }
+
+        // 종료일이 시작일보다 빠른 경우 차단
+        if (end_date && start_date && new Date(end_date) < new Date(start_date)) {
+            return res.status(400).json({
+                success: false,
+                message: '종료일은 시작일보다 빠를 수 없습니다.'
             });
         }
 

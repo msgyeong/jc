@@ -125,8 +125,8 @@ function pushRoute(screenName, extraState) {
 function navigateToScreen(screenName) {
     console.log('📱 화면 전환:', screenName);
 
-    // 이전 화면 leave 콜백 호출 (상태 정리)
-    if (_currentScreen && _currentScreen !== screenName) {
+    // 이전 화면 leave 콜백 호출 (상태 정리 — 동일 화면 재진입도 포함)
+    if (_currentScreen) {
         var prevRoute = _routes[_currentScreen];
         if (prevRoute && prevRoute.leave) {
             try { prevRoute.leave(); } catch (e) { console.error('Screen leave error:', _currentScreen, e); }
@@ -307,16 +307,10 @@ async function switchTab(tab) {
     }
     _currentScreen = tab;
 
-    // 공유 하단 네비바 표시
+    // 공유 하단 네비바 표시 + 네비게이션 활성화 업데이트
     var sharedNav = document.getElementById('shared-bottom-nav');
     if (sharedNav) sharedNav.style.display = '';
-
-    // 네비게이션 활성화 업데이트
     updateNavigation(tab);
-
-    // 하단 네비바 표시
-    var sharedNav = document.getElementById('shared-bottom-nav');
-    if (sharedNav) sharedNav.style.display = '';
 
     // 화면 전환
     document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
@@ -324,10 +318,9 @@ async function switchTab(tab) {
     if (targetScreen) {
         targetScreen.classList.add('active');
 
-        // 일정 탭: 상세 플래그 해제
+        // 일정 탭: 상세 플래그 해제 (loadSchedulesScreen의 init에서 목록 복원)
         if (tab === 'schedules') {
             if (typeof _scheduleDetailActive !== 'undefined') _scheduleDetailActive = false;
-            if (typeof backToScheduleList === 'function') backToScheduleList();
         }
 
         // 라우트 초기화 함수 실행
@@ -607,15 +600,23 @@ window.addEventListener('popstate', function(e) {
         // 특수 화면 (상세 뷰에서 부모로 복귀)
         var _popstateSpecial = {
             'schedule-detail': function() {
-                if (typeof backToScheduleList === 'function') backToScheduleList();
+                // backToScheduleList는 loadSchedulesScreen 내부에서 처리
+                if (typeof _scheduleDetailActive !== 'undefined') _scheduleDetailActive = false;
                 navigateToScreen('schedules');
             },
             'post-detail': function() { navigateToScreen('posts'); },
             'group-board': function() {
-                if (state.groupId && typeof openGroupBoard === 'function') {
-                    openGroupBoard(state.groupId, state.groupName || '');
+                // 항상 openGroupBoard로 상태 초기화 보장
+                if (typeof openGroupBoard === 'function') {
+                    var gId = state.groupId || (typeof _currentGroupBoardId !== 'undefined' ? _currentGroupBoardId : null);
+                    var gName = state.groupName || (typeof _currentGroupBoardName !== 'undefined' ? _currentGroupBoardName : '');
+                    if (gId) {
+                        openGroupBoard(gId, gName);
+                    } else {
+                        navigateToScreen('orgchart');
+                    }
                 } else {
-                    navigateToScreen('group-board');
+                    navigateToScreen('orgchart');
                 }
             },
             'admin-hub': function() { if (typeof showAdminHub === 'function') showAdminHub(); },

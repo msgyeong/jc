@@ -35,3 +35,4 @@ node_modules/
 
 # Agent logs (contains DB credentials and sensitive info)
 Docs/agent-logs/
+image/mov/

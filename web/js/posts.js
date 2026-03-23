@@ -711,14 +711,9 @@ function renderPostDetail(post) {
 }
 
 // ── 상세 뒤로가기 ──
-async function handlePostDetailBack() {
-    // 목록 화면으로 전환 (loadPostsScreen이 호출되어 목록 재조회)
+function handlePostDetailBack() {
+    // 목록 화면으로 전환 (loadPostsScreen이 호출되어 목록 재조회 + 뱃지 갱신)
     navigateToScreen('posts');
-    if (typeof updateNavigation === 'function') updateNavigation('posts');
-
-    // loadPostsScreen 완료 후 뱃지 갱신 (읽음 상태 반영된 데이터 기반)
-    await new Promise(function(r) { setTimeout(r, 500); });
-    if (typeof updateNavBadges === 'function') updateNavBadges();
 }
 
 // ── 수정 화면 ──

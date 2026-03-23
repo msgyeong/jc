@@ -27,9 +27,16 @@
 - **작업 완료 시 확인 질문 없이 바로 commit & push**
 - 사장님은 비개발자 — 기술적 확인 질문 하지 말 것, 자율 진행
 
+## MCP 서버 활용 (필수)
+- **Postgres MCP**: DB 스키마/데이터를 직접 쿼리 — 추측 금지, 확인 후 코딩
+- **Playwright MCP**: 배포된 앱을 브라우저로 직접 열어서 버그 확인/검증
+- **Sequential Thinking**: 복잡한 버그 분석, 기능 설계 시 구조화 사고
+- 코드만 보고 추측하지 말고, MCP로 실제 상태를 확인한 후 작업할 것
+
 ## 팀 에이전트 규칙
 - 문서 기준 작업 (문서 vs 코드 충돌 시 문서 우선)
 - 같은 버그 2번 이상 지적받지 않도록 한 사이클에 끝내기
+- MCP 도구를 적극 활용하여 검증 (상세: 아래 문서)
 - 상세: [`Docs/claude-reference/team-agent-rules.md`](Docs/claude-reference/team-agent-rules.md)
 
 ## 참고 문서

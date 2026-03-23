@@ -21,6 +21,7 @@
 # is commented out by default.
 #.vscode/
 .vscode/mcp.json
+.mcp.json
 
 # Node.js
 node_modules/

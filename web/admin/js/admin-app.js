@@ -159,6 +159,7 @@ function getPageRenderer(page) {
         settings: typeof renderSettings === 'function' ? renderSettings : null,
         'admin-profile': typeof renderAdminProfile === 'function' ? renderAdminProfile : null,
         organizations: typeof renderOrganizations === 'function' ? renderOrganizations : null,
+        banners: typeof renderBannerManagement === 'function' ? renderBannerManagement : null,
     };
     return map[page] || null;
 }

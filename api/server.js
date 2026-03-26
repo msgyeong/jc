@@ -289,6 +289,10 @@ app.listen(PORT, () => {
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lat DOUBLE PRECISION").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lng DOUBLE PRECISION").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_address VARCHAR(500)").catch(() => {});
+    // S-09: 배너 광고
+    dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS created_by INTEGER").catch(() => {});
+    dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS member_id INTEGER").catch(() => {});
+    dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS description TEXT").catch(() => {});
     // S-07: 사업 PR 섹션
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_headline VARCHAR(100)").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_description TEXT").catch(() => {});

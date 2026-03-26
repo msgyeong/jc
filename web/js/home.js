@@ -208,8 +208,23 @@ async function loadBannerSummary() {
                 action: "switchTab('posts')"
             });
         }
+        // DB 배너 광고 (관리자가 등록한 회원 사업장 배너)
+        try {
+            const bannerRes = await apiClient.request('/admin/banners/active');
+            if (bannerRes.success && bannerRes.data && bannerRes.data.length > 0) {
+                bannerRes.data.forEach(b => {
+                    banners.push({
+                        gradient: b.image_url ? '' : 'linear-gradient(135deg, #1D4ED8 0%, #60A5FA 100%)',
+                        image: b.image_url || null,
+                        title: escapeHtml(b.title),
+                        subtitle: b.description ? escapeHtml(b.description) : '',
+                        cta: b.link_url ? '자세히 보기' : '',
+                        action: b.link_url ? "window.open('" + b.link_url + "','_blank')" : ''
+                    });
+                });
+            }
+        } catch (_b) { /* 배너 로드 실패 무시 */ }
     } catch (_) {
-        // API 실패 시 기본 배너 추가
         banners.push(
             { gradient: 'linear-gradient(135deg, #162D4A 0%, #2D5F8A 100%)', title: '일정 확인', subtitle: '다가오는 모임과 행사 일정을 확인하세요', cta: '일정 보기', action: "switchTab('schedules')" },
             { gradient: 'linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)', title: '회원 소통', subtitle: '공지사항과 게시판을 통해 소식을 나누세요', cta: '게시판 가기', action: "switchTab('posts')" }
@@ -220,7 +235,7 @@ async function loadBannerSummary() {
         <div class="banner-carousel" role="region" aria-label="홈 배너" aria-roledescription="carousel">
             <div class="banner-track" id="banner-track">
                 ${banners.map((b, i) => `
-                    <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="배너 ${i+1}/${banners.length}" style="background:${b.gradient}${b.action ? ';cursor:pointer' : ''}" ${b.action ? 'onclick="' + b.action + '"' : ''}>
+                    <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="배너 ${i+1}/${banners.length}" style="${b.image ? 'background:url(' + b.image + ') center/cover no-repeat' : 'background:' + b.gradient}${b.action ? ';cursor:pointer' : ''}" ${b.action ? 'onclick="' + b.action + '"' : ''}>
                         <div class="banner-title">${b.title}</div>
                         <div class="banner-subtitle">${b.subtitle}</div>
                         ${b.cta ? `<span class="banner-cta"${b.action ? ' onclick="' + b.action + '"' : ''}>${b.cta}</span>` : ''}

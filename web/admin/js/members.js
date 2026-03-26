@@ -27,6 +27,7 @@ function renderMembers(container) {
         <div class="page-toolbar">
             <h2 class="page-title">회원 관리</h2>
             <span class="page-count" id="members-count">-</span>
+            <button class="btn btn-outline btn-sm" onclick="exportMembersCSV()" style="margin-left:auto;font-size:12px">CSV 다운로드</button>
             <div class="search-box">
                 <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" class="search-input" id="members-search" placeholder="이름, 이메일, 전화번호 검색…" value="${escapeHtml(membersState.search)}">
@@ -324,4 +325,35 @@ function startInlineEditProfession(td, memberId, currentValue) {
         await AdminAPI.put('/api/admin/members/' + memberId, { profession: val || null });
         showAdminToast('직업이 저장되었습니다.');
     });
+}
+
+// ═══ CSV 다운로드 ═══
+async function exportMembersCSV() {
+    try {
+        var res = await AdminAPI.get('/api/admin/members?page=1&limit=9999');
+        var members = res.members || res.data || [];
+        if (members.length === 0) { showAdminToast('다운로드할 회원이 없습니다.', 'error'); return; }
+
+        var headers = ['이름','이메일','연락처','상태','역할','회사','직업','업종','주소','가입일'];
+        var rows = members.map(function(m) {
+            return [
+                m.name || '', m.email || '', m.phone || '',
+                {active:'활동',pending:'대기',suspended:'정지',withdrawn:'탈퇴'}[m.status]||m.status,
+                {super_admin:'총관리자',admin:'관리자',member:'회원'}[m.role]||m.role,
+                m.company || '', m.profession || '', m.industry || '',
+                m.address || '', m.created_at ? m.created_at.substring(0,10) : ''
+            ].map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+        });
+
+        var csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '회원목록_' + new Date().toISOString().substring(0,10) + '.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+        showAdminToast(members.length + '명 회원 데이터를 다운로드했습니다.');
+    } catch (err) {
+        showAdminToast('CSV 다운로드 실패: ' + err.message, 'error');
+    }
 }

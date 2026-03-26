@@ -197,6 +197,7 @@ function renderDossierPage(container) {
         + '<div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
         + '<div>' + statusBadge(m.status) + ' ' + roleBadge(m.role) + '</div>'
         + '<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="openMemberQuickModal(' + m.id + ')">빠른편집</button>'
+        + '<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="printDossier()">인쇄</button>'
         + '</div>'
         + '</div>'
         + '<div class="dossier-tabs">'
@@ -943,4 +944,34 @@ async function saveSinglePermission(permKey, value) {
     } finally {
         if (card) card.classList.remove('perm-saving');
     }
+}
+
+// ═══ 인쇄 기능 ═══
+function printDossier() {
+    if (!dossierData) return;
+    var m = dossierData;
+    var w = window.open('', '_blank', 'width=800,height=600');
+    w.document.write('<!DOCTYPE html><html><head><title>' + escapeHtml(m.name) + ' - 회원관리카드</title>');
+    w.document.write('<style>body{font-family:"Noto Sans KR",sans-serif;padding:40px;color:#333;max-width:700px;margin:0 auto}');
+    w.document.write('h1{font-size:22px;border-bottom:2px solid #2563EB;padding-bottom:8px;margin-bottom:20px}');
+    w.document.write('h2{font-size:16px;color:#2563EB;margin:20px 0 10px;border-bottom:1px solid #E5E7EB;padding-bottom:6px}');
+    w.document.write('.row{display:flex;padding:6px 0;border-bottom:1px solid #F3F4F6}.label{width:120px;color:#6B7280;font-size:13px}.value{flex:1;font-size:13px}');
+    w.document.write('.header{display:flex;align-items:center;gap:20px;margin-bottom:20px}');
+    w.document.write('.avatar{width:80px;height:80px;border-radius:50%;background:#DBEAFE;display:flex;align-items:center;justify-content:center;font-size:32px;color:#2563EB}');
+    w.document.write('@media print{body{padding:20px}}</style></head><body>');
+    w.document.write('<div class="header"><div class="avatar">' + escapeHtml((m.name||'?')[0]) + '</div><div><h1 style="margin:0;border:none;padding:0">' + escapeHtml(m.name) + '</h1>');
+    w.document.write('<div style="color:#6B7280;font-size:14px">' + (m.position_name||'회원') + ' | ' + escapeHtml(m.email||'') + '</div></div></div>');
+    w.document.write('<h2>기본 정보</h2>');
+    var fields = [['이메일',m.email],['연락처',m.phone],['주소',m.address],['생년월일',m.birth_date],['성별',m.gender==='male'?'남성':m.gender==='female'?'여성':m.gender]];
+    fields.forEach(function(f){if(f[1])w.document.write('<div class="row"><span class="label">'+f[0]+'</span><span class="value">'+escapeHtml(f[1])+'</span></div>');});
+    w.document.write('<h2>JC 정보</h2>');
+    var jcFields = [['직책',m.position_name],['인준번호',m.join_number],['가입일',m.created_at?m.created_at.substring(0,10):'']];
+    jcFields.forEach(function(f){if(f[1])w.document.write('<div class="row"><span class="label">'+f[0]+'</span><span class="value">'+escapeHtml(f[1])+'</span></div>');});
+    w.document.write('<h2>직장 정보</h2>');
+    var workFields = [['회사',m.company],['직업',m.profession],['업종',m.industry],['직장전화',m.work_phone]];
+    workFields.forEach(function(f){if(f[1])w.document.write('<div class="row"><span class="label">'+f[0]+'</span><span class="value">'+escapeHtml(f[1])+'</span></div>');});
+    w.document.write('<div style="margin-top:40px;text-align:center;color:#9CA3AF;font-size:11px">영등포 JC 회원관리카드 | 출력일: ' + new Date().toLocaleDateString('ko-KR') + '</div>');
+    w.document.write('</body></html>');
+    w.document.close();
+    setTimeout(function(){ w.print(); }, 300);
 }

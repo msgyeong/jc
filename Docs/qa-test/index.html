@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JC 앱 QA 테스트</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', -apple-system, sans-serif; background: #F3F4F6; color: #1F2937; line-height: 1.6; }
+.header { background: #2563EB; color: #fff; padding: 20px 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.header h1 { font-size: 20px; font-weight: 700; }
+.header p { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+.stats-bar { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.stat { background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.stat.pass { background: #16A34A; }
+.stat.fail { background: #DC2626; }
+.stat.pending { background: rgba(255,255,255,0.2); }
+.controls { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.controls button { padding: 6px 14px; border: 1px solid rgba(255,255,255,0.4); background: transparent; color: #fff; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.controls button:hover { background: rgba(255,255,255,0.15); }
+.controls button.active { background: rgba(255,255,255,0.3); border-color: #fff; }
+
+.container { max-width: 900px; margin: 0 auto; padding: 16px; }
+
+.category { margin-bottom: 24px; }
+.category-header { background: #fff; padding: 14px 18px; border-radius: 12px 12px 0 0; border-bottom: 2px solid #2563EB; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.category-header h2 { font-size: 16px; color: #1F2937; display: flex; align-items: center; gap: 8px; }
+.category-header .cat-icon { font-size: 20px; }
+.category-header .cat-stats { font-size: 12px; color: #6B7280; }
+.category-header .toggle { font-size: 18px; color: #9CA3AF; transition: transform 0.2s; }
+.category.collapsed .toggle { transform: rotate(-90deg); }
+.category.collapsed .category-body { display: none; }
+
+.scenario { background: #fff; border-bottom: 1px solid #F3F4F6; }
+.scenario-header { padding: 12px 18px; background: #F9FAFB; border-bottom: 1px solid #E5E7EB; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+.scenario-header h3 { font-size: 14px; color: #374151; }
+.scenario-header .scenario-desc { font-size: 12px; color: #9CA3AF; margin-top: 2px; }
+.scenario.collapsed .scenario-body { display: none; }
+
+.step { display: flex; align-items: flex-start; padding: 10px 18px; border-bottom: 1px solid #F9FAFB; gap: 10px; transition: background 0.15s; }
+.step:hover { background: #FAFBFC; }
+.step.pass { background: #F0FDF4; }
+.step.fail { background: #FEF2F2; }
+
+.step-num { min-width: 28px; height: 28px; border-radius: 50%; background: #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #6B7280; flex-shrink: 0; }
+.step.pass .step-num { background: #16A34A; color: #fff; }
+.step.fail .step-num { background: #DC2626; color: #fff; }
+
+.step-content { flex: 1; }
+.step-text { font-size: 13px; color: #374151; }
+
+.step-actions { display: flex; gap: 4px; flex-shrink: 0; align-items: center; }
+.btn-pass, .btn-fail { width: 36px; height: 36px; border: 2px solid #D1D5DB; border-radius: 8px; background: #fff; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.btn-pass:hover { border-color: #16A34A; background: #F0FDF4; }
+.btn-fail:hover { border-color: #DC2626; background: #FEF2F2; }
+.step.pass .btn-pass { background: #16A34A; border-color: #16A34A; color: #fff; }
+.step.fail .btn-fail { background: #DC2626; border-color: #DC2626; color: #fff; }
+
+.issue-input { width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid #FCA5A5; border-radius: 6px; font-size: 12px; background: #FFF7F7; resize: vertical; min-height: 36px; display: none; }
+.step.fail .issue-input { display: block; }
+
+.last-item { border-radius: 0 0 12px 12px; overflow: hidden; }
+
+.summary-section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+.summary-section h2 { font-size: 16px; margin-bottom: 12px; color: #1F2937; }
+.issue-list { list-style: none; }
+.issue-list li { padding: 10px 12px; background: #FEF2F2; border-left: 3px solid #DC2626; margin-bottom: 8px; border-radius: 0 8px 8px 0; font-size: 13px; }
+.issue-list li .issue-location { font-weight: 600; color: #991B1B; }
+.issue-list li .issue-text { color: #7F1D1D; margin-top: 2px; }
+.no-issues { text-align: center; padding: 20px; color: #16A34A; font-size: 14px; }
+
+.export-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #E5E7EB; padding: 12px 24px; display: flex; gap: 8px; justify-content: center; z-index: 100; box-shadow: 0 -2px 8px rgba(0,0,0,0.08); }
+.export-bar button { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.btn-export { background: #2563EB; color: #fff; }
+.btn-export:hover { background: #1D4ED8; }
+.btn-reset { background: #F3F4F6; color: #6B7280; }
+.btn-reset:hover { background: #E5E7EB; }
+.btn-copy { background: #F59E0B; color: #fff; }
+.btn-copy:hover { background: #D97706; }
+
+.spacer { height: 80px; }
+
+@media (max-width: 600px) {
+  .container { padding: 8px; }
+  .step { padding: 8px 12px; }
+  .step-text { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>JC 앱 QA 테스트</h1>
+  <p>앱: jc-production-7db6.up.railway.app | 관리자: /admin/ | 계정: admin@jc.com / admin1234</p>
+  <div class="stats-bar">
+    <span class="stat pass" id="stat-pass">통과: 0</span>
+    <span class="stat fail" id="stat-fail">실패: 0</span>
+    <span class="stat pending" id="stat-pending">미완: 0</span>
+    <span class="stat" id="stat-progress">진행률: 0%</span>
+  </div>
+  <div class="controls">
+    <button onclick="filterSteps('all')" class="active" data-filter="all">전체</button>
+    <button onclick="filterSteps('pending')" data-filter="pending">미완만</button>
+    <button onclick="filterSteps('fail')" data-filter="fail">실패만</button>
+    <button onclick="toggleAll()" id="btn-toggle">모두 접기</button>
+  </div>
+</div>
+
+<div class="container" id="test-container"></div>
+
+<div id="issue-summary"></div>
+
+<div class="spacer"></div>
+
+<div class="export-bar">
+  <button class="btn-copy" onclick="copyResults()">결과 복사</button>
+  <button class="btn-export" onclick="saveToFile()">파일 저장</button>
+  <button class="btn-reset" onclick="resetAll()">초기화</button>
+</div>
+
+<script>
+const DATA = [
+  {
+    id: 'auth', icon: '🔐', title: '회원가입 / 로그인',
+    scenarios: [
+      {
+        title: '신규 회원가입 전체 플로우',
+        desc: '가입 신청 → 관리자 승인 → 로그인까지',
+        steps: [
+          '앱 URL 접속 → 로그인 화면에서 "회원가입" 클릭',
+          '회원가입 화면이 나오고, 1단계(이메일/비밀번호)가 보이는가?',
+          '이메일: test999@test.com, 비밀번호: test1234 입력 후 "다음"',
+          '2단계(이름/연락처/생년월일)가 나오는가?',
+          '이름: 테스트회원, 연락처: 01099990000, 생년월일: 900101 입력 후 "다음"',
+          '3~6단계를 넘기고 최종 "가입 신청" 버튼 클릭',
+          '"승인 대기" 화면이 나오는가?',
+          '관리자 웹 → 영등포JC → 회원 관리에서 "테스트회원"이 대기 상태로 보이는가?',
+          '"승인" 클릭 → 상태가 "활동"으로 변하는가?',
+          '앱에서 test999@test.com / test1234로 로그인이 되는가?'
+        ]
+      },
+      {
+        title: '로그인 실패 케이스',
+        desc: '잘못된 정보 입력 시 에러 메시지 확인',
+        steps: [
+          '잘못된 이메일/비밀번호로 로그인 시도 → 에러 메시지가 빨간색으로 표시되는가?',
+          '이메일은 맞고 비밀번호만 틀리게 입력 → 에러가 나오는가?',
+          '이메일을 비우고 로그인 버튼 클릭 → 유효성 검증이 동작하는가?'
+        ]
+      },
+      {
+        title: '비밀번호 찾기',
+        desc: '3단계 비밀번호 재설정 플로우',
+        steps: [
+          '로그인 화면에서 "비밀번호 찾기" 클릭 → 1단계 화면이 나오는가?',
+          '이메일: admin@jc.com, 이름: 총관리자 입력 후 확인 → 2단계로 넘어가는가?',
+          '존재하지 않는 이메일을 넣으면 에러가 나오는가?'
+        ]
+      },
+      {
+        title: '로그아웃 → 보안 확인',
+        desc: '로그아웃 후 접근 차단 확인',
+        steps: [
+          'admin@jc.com으로 로그인 후 프로필 → "로그아웃" 클릭',
+          '"로그아웃 하시겠습니까?" 확인창이 나오는가?',
+          '확인 후 로그인 화면으로 돌아가는가?',
+          '브라우저 뒤로가기(←)를 눌러도 홈 화면에 접근 불가능한가?',
+          '다시 로그인이 정상적으로 되는가?'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'home', icon: '🏠', title: '홈 화면',
+    scenarios: [
+      {
+        title: '배너 슬라이드 + 네비게이션',
+        desc: '배너 동작과 각 섹션 링크 확인',
+        steps: [
+          '홈 화면에 배너가 보이고, 좌우 스와이프로 넘어가는가?',
+          '배너 하단 점(인디케이터)이 현재 배너에 맞게 바뀌는가?',
+          '일정 배너 클릭 → 일정 상세로 이동하는가?',
+          '공지 배너 클릭 → 공지 상세로 이동하는가?',
+          '공지사항 "전체 보기 →" 클릭 → 게시판으로 이동하는가?',
+          '다가오는 일정 "전체 보기 →" 클릭 → 일정으로 이동하는가?',
+          '화면을 아래로 당기면 새로고침(Pull-to-Refresh)이 되는가?',
+          'N배지가 새 공지/일정에 표시되는가?'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'posts', icon: '📋', title: '게시판',
+    scenarios: [
+      {
+        title: '게시글 작성 → 댓글 → 좋아요',
+        desc: 'CRUD 전체 플로우',
+        steps: [
+          '게시판 탭 → "일반 게시판" 선택',
+          '우측 하단 + 버튼 클릭 → 작성 화면이 나오는가?',
+          '제목: "테스트 게시글 001", 내용 입력 후 등록',
+          '목록에 방금 쓴 글이 최상단에 보이는가?',
+          '게시글 클릭 → 상세 화면에 제목/내용이 정확한가?',
+          '댓글 "댓글 테스트입니다" 입력 후 전송 → 댓글이 표시되는가?',
+          '댓글을 하나 더 작성 → 댓글 수가 2로 표시되는가?',
+          '좋아요(하트) 클릭 → 숫자 0→1 변하는가?',
+          '좋아요 다시 클릭 → 숫자 1→0 (토글 동작)?',
+          '뒤로가기 → 목록에서 댓글/좋아요 수가 반영되어 있는가?'
+        ]
+      },
+      {
+        title: '게시글 수정 → 삭제',
+        desc: '작성자 본인 수정/삭제 권한 확인',
+        steps: [
+          '내가 쓴 게시글 상세 → 더보기(···) 또는 수정 버튼이 보이는가?',
+          '수정 클릭 → 기존 제목/내용이 채워진 수정 폼이 나오는가?',
+          '제목 수정 후 저장 → 변경 내용이 반영되었는가?',
+          '삭제 클릭 → 확인 후 게시글이 삭제되고 목록으로 돌아가는가?'
+        ]
+      },
+      {
+        title: '이미지 첨부 게시글',
+        desc: '이미지 업로드 + 표시 확인',
+        steps: [
+          '게시글 작성 화면에서 이미지 첨부 버튼이 보이는가?',
+          '이미지 선택 → 미리보기가 표시되는가?',
+          '등록 후 상세 화면에서 이미지가 보이는가?'
+        ]
+      },
+      {
+        title: '공지/일반 탭 전환',
+        desc: '탭 전환 시 데이터 정확성',
+        steps: [
+          '"공지 게시판" 탭 → 공지만 표시되는가?',
+          '"일반 게시판" 탭 → 일반 글만 표시되는가?',
+          '빠르게 탭을 왔다갔다 해도 에러 없이 동작하는가?'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'schedule', icon: '📅', title: '일정',
+    scenarios: [
+      {
+        title: '일정 생성 → 참석 투표',
+        desc: '생성부터 참석 등록까지',
+        steps: [
+          '일정 탭 → 캘린더가 현재 월을 표시하는가?',
+          '오늘 날짜가 강조 표시되는가?',
+          '+ 버튼 → 일정 생성 폼이 나오는가?',
+          '제목: "테스트 모임", 날짜: 내일, 시간: 14:00~16:00, 장소: "JC 사무실" 입력 후 등록',
+          '캘린더에서 내일에 점(dot)이 표시되는가?',
+          '내일 클릭 → "테스트 모임" 카드가 보이는가?',
+          '카드 클릭 → 상세에서 참석/불참 버튼이 보이는가?',
+          '"참석" 클릭 → 참석 수 0→1 변하는가?',
+          '참석 현황에 내 이름이 참석 목록에 보이는가?',
+          '"불참"으로 변경 → 불참으로 바뀌는가?',
+          '댓글을 작성할 수 있는가?'
+        ]
+      },
+      {
+        title: '캘린더 월 이동',
+        desc: '이전/다음 달 네비게이션',
+        steps: [
+          '> 버튼으로 다음 달 이동 → 월 표시가 바뀌는가?',
+          '< 버튼으로 이전 달 이동하는가?',
+          '"오늘" 버튼으로 오늘 날짜로 돌아오는가?',
+          '일정이 있는 날짜를 클릭하면 해당 일정이 표시되는가?'
+        ]
+      },
+      {
+        title: '일정 수정 → 삭제',
+        desc: 'CRUD 완성도',
+        steps: [
+          '일정 상세 → 더보기에서 "수정" 클릭 → 수정 폼이 나오는가?',
+          '기존 정보(제목, 날짜, 장소)가 미리 채워져 있는가?',
+          '제목 수정 후 저장 → 반영되는가?',
+          '삭제 → 캘린더에서 해당 점(dot)이 사라지는가?'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'members', icon: '👥', title: '회원',
+    scenarios: [
+      {
+        title: '검색 + 필터',
+        desc: '다양한 검색/필터 조합 테스트',
+        steps: [
+          '회원 탭 → 회원 목록이 표시되는가?',
+          '돋보기 아이콘 → 검색창 → 이름으로 검색이 되는가?',
+          '초성(ㄱ, ㅁ 등)으로 검색이 되는가?',
+          '검색어 지우면 전체 목록이 다시 나오는가?',
+          '업종 필터 선택 → 해당 업종만 표시되는가?',
+          '직책 필터 선택 → 해당 직책만 표시되는가?',
+          '필터를 "전체"로 되돌리면 모든 회원이 보이는가?'
+        ]
+      },
+      {
+        title: '전화걸기 + 즐겨찾기',
+        desc: '핵심 소통 기능',
+        steps: [
+          '전화 아이콘(📞) 클릭 → 전화 앱이 열리려 하는가?',
+          '(핸드폰) 실제로 전화가 걸리는가?',
+          '별표(☆) 클릭 → 별이 채워지는가(★)?',
+          '새로고침 후에도 즐겨찾기가 유지되는가?',
+          '채워진 별 다시 클릭 → 해제되는가?'
+        ]
+      },
+      {
+        title: '회원 상세 프로필',
+        desc: '타인 프로필 조회',
+        steps: [
+          '회원 카드 클릭 → 상세 프로필이 나오는가?',
+          '프로필 사진, 이름, 직책, 연락처가 표시되는가?',
+          '사업 정보 섹션이 표시되는가?',
+          '뒤로가기로 회원 목록으로 돌아오는가?'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'profile', icon: '👤', title: '내 프로필',
+    scenarios: [
+      {
+        title: '프로필 정보 수정',
+        desc: '수정 → 저장 → 반영 확인',
+        steps: [
+          '사이드바 → 내 프로필 → 정보가 표시되는가?',
+          '"내 정보 수정" → 수정 폼에 기존 정보가 채워져 있는가?',
+          '회사명을 변경 후 저장 → 반영되는가?',
+          '다시 수정해서 원래대로 되돌리기'
+        ]
+      },
+      {
+        title: '사업 PR 입력 (신규 기능)',
+        desc: '한 줄 PR, 서비스 설명, SNS 링크',
+        steps: [
+          '프로필 화면에 "사업 정보" 섹션이 보이는가?',
+          '수정 폼 → 하단에 "사업 PR" 섹션이 있는가?',
+          '한 줄 PR: "프리미엄 IT 서비스" 입력',
+          '주요 서비스: "웹개발, 앱개발" 입력',
+          '"+ SNS 추가" → instagram, @my_company 입력',
+          'SNS 하나 더 추가: youtube, @my_channel',
+          '저장 후 프로필에 입력한 내용이 표시되는가?',
+          'SNS 배지(📷 instagram 등)가 표시되고 클릭 가능한가?'
+        ]
+      },
+      {
+        title: '프로필 사진 변경',
+        desc: '사진 업로드 + 반영',
+        steps: [
+          '프로필 사진(아바타) 클릭 → 파일 선택 창이 나오는가?',
+          '사진 선택 → 변경되는가?',
+          '새로고침 후에도 유지되는가?',
+          '회원 목록에서도 변경된 사진이 보이는가?'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'admin', icon: '⚙️', title: '관리자 웹',
+    scenarios: [
+      {
+        title: '대시보드',
+        desc: '통계 데이터 정확성',
+        steps: [
+          'admin/ 접속 → 로그인 → 대시보드가 표시되는가?',
+          '전체 회원/게시글/일정 수가 표시되는가?',
+          '최근 가입 회원, 최근 게시글 목록이 보이는가?'
+        ]
+      },
+      {
+        title: '회원 관리 + 인쇄 + CSV',
+        desc: '관리 기능 종합',
+        steps: [
+          '로컬 관리 → 영등포JC 관리 → 회원 관리 클릭',
+          '회원 테이블이 표시되는가?',
+          '검색으로 회원을 찾을 수 있는가?',
+          '회원 클릭 → 인물카드(상세)가 열리는가?',
+          '"인쇄" 버튼 → 새 창에서 인쇄 화면이 나오는가?',
+          '"CSV 다운로드" → 파일이 다운로드되는가?',
+          '다운로드된 CSV를 엑셀에서 열면 한글이 정상인가?'
+        ]
+      },
+      {
+        title: '회원 정지 → 해제',
+        desc: '정지/해제 기능 + 앱 영향',
+        steps: [
+          '회원 테이블에서 "정지" 클릭 → 상태가 변하는가?',
+          '정지된 회원으로 앱 로그인 시도 → 차단되는가?',
+          '"해제" 클릭 → 상태가 "활동"으로 돌아가는가?',
+          '해당 회원으로 다시 로그인이 되는가?'
+        ]
+      },
+      {
+        title: '배너 광고 관리 (신규)',
+        desc: '등록 → 이미지 → 활성화 → 앱 반영',
+        steps: [
+          '사이드바 → "배너 광고" 클릭 → 관리 화면이 나오는가?',
+          '"+ 새 배너" → 제목/설명/링크 입력 후 등록',
+          '등록된 배너의 "이미지" 버튼 → 이미지 업로드 가능한가?',
+          '앱 홈 화면 새로고침 → 배너에 등록한 내용이 보이는가?',
+          '배너 클릭 → 입력한 링크가 새 탭에서 열리는가?',
+          '"비활성" 클릭 → 앱에서 해당 배너가 사라지는가?',
+          '"삭제" 클릭 → 완전히 제거되는가?'
+        ]
+      },
+      {
+        title: '감사 로그',
+        desc: '관리자 활동 기록 확인',
+        steps: [
+          '감사 로그 메뉴 → 활동 로그가 표시되는가?',
+          '방금 수행한 정지/해제, 배너 등록 활동이 기록되어 있는가?',
+          '각 로그에 날짜, 관리자, 액션이 표시되는가?'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'cross', icon: '🔗', title: '연동 테스트',
+    scenarios: [
+      {
+        title: '공지 작성 → 홈 반영',
+        desc: '관리자 공지가 앱 홈에 즉시 반영되는지',
+        steps: [
+          '관리자 웹 → 공지사항 → 새 공지 작성 후 등록',
+          '앱 홈 화면 새로고침 → 공지 섹션에 방금 쓴 공지가 보이는가?',
+          '게시판 → 공지 탭에도 표시되는가?'
+        ]
+      },
+      {
+        title: '프로필 PR → 회원 목록 반영',
+        desc: '프로필 수정 내용이 회원 목록에 반영되는지',
+        steps: [
+          '내 프로필 수정 → 한 줄 PR "테스트 PR" 입력 후 저장',
+          '회원 탭 → 내 카드에 "테스트 PR"이 작은 글씨로 보이는가?',
+          'PR 삭제 후 저장 → 회원 목록에서도 사라지는가?'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'stress', icon: '⚡', title: '안정성 / 반복',
+    scenarios: [
+      {
+        title: '빠른 화면 전환',
+        desc: '앱 안정성',
+        steps: [
+          '홈→게시판→일정→회원→회의를 빠르게 5바퀴 반복',
+          '앱이 멈추거나 흰 화면이 나오지 않는가?',
+          '마지막에 홈 탭 → 정상 표시되는가?'
+        ]
+      },
+      {
+        title: '댓글/좋아요 반복',
+        desc: '데이터 정합성',
+        steps: [
+          '게시글에 댓글 3개 연속 작성 → 모두 순서대로 보이는가?',
+          '첫 번째 댓글 삭제 → 나머지 2개만 남는가?',
+          '좋아요를 빠르게 10번 클릭 → 최종 수가 0 또는 1인가?',
+          '새로고침 후에도 같은 수가 유지되는가?'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'mobile', icon: '📱', title: '모바일 테스트',
+    scenarios: [
+      {
+        title: '핸드폰에서 전체 확인',
+        desc: '실제 모바일 환경',
+        steps: [
+          '핸드폰 브라우저에서 앱 접속 → 로그인 화면이 모바일에 맞는가?',
+          '키보드가 올라와도 입력 필드가 가려지지 않는가?',
+          '배너 스와이프가 터치로 동작하는가?',
+          '하단 탭 버튼들이 손가락으로 누르기 편한 크기인가?',
+          '전화 아이콘 터치 → 실제 전화 앱이 열리는가?',
+          '가로 모드(화면 회전)에서도 깨지지 않는가?',
+          '전체적으로 글씨 크기, 간격이 모바일에 적합한가?'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'design', icon: '🎨', title: '디자인 / 사용성',
+    scenarios: [
+      {
+        title: '전체 디자인 통일성',
+        desc: '색상, 크기, 간격 일관성',
+        steps: [
+          '전체적으로 파란색 톤이 일관되게 적용되었는가?',
+          '버튼 크기가 손가락으로 누르기 적당한가?',
+          '텍스트가 읽기 편한 크기인가?',
+          '로딩 중일 때 스켈레톤 또는 로딩 표시가 나오는가?',
+          '빈 목록일 때 적절한 안내 메시지가 나오는가?',
+          '화면 전환이 매끄러운가 (깜빡임 없이)?',
+          '관리자 웹이 PC에서 보기 좋은 레이아웃인가?',
+          '같은 유형의 버튼/카드가 화면마다 동일한 스타일인가?'
+        ]
+      }
+    ]
+  }
+];
+
+// State
+let results = JSON.parse(localStorage.getItem('jc_qa_results') || '{}');
+
+function getStepKey(catId, scenIdx, stepIdx) {
+  return `${catId}_${scenIdx}_${stepIdx}`;
+}
+
+function getStepState(key) {
+  return results[key] || { status: 'pending', issue: '' };
+}
+
+function setStepState(key, status, issue) {
+  results[key] = { status, issue: issue || '' };
+  localStorage.setItem('jc_qa_results', JSON.stringify(results));
+  updateStats();
+}
+
+function render() {
+  const container = document.getElementById('test-container');
+  let html = '';
+
+  DATA.forEach(cat => {
+    html += `<div class="category" id="cat-${cat.id}">`;
+    html += `<div class="category-header" onclick="toggleCategory('${cat.id}')">`;
+    html += `<h2><span class="cat-icon">${cat.icon}</span> ${cat.title} <span class="cat-stats" id="cat-stats-${cat.id}"></span></h2>`;
+    html += `<span class="toggle">▼</span></div>`;
+    html += `<div class="category-body">`;
+
+    cat.scenarios.forEach((scen, si) => {
+      html += `<div class="scenario" id="scen-${cat.id}-${si}">`;
+      html += `<div class="scenario-header" onclick="toggleScenario('${cat.id}',${si})">`;
+      html += `<div><h3>${scen.title}</h3><div class="scenario-desc">${scen.desc}</div></div></div>`;
+      html += `<div class="scenario-body">`;
+
+      scen.steps.forEach((step, sti) => {
+        const key = getStepKey(cat.id, si, sti);
+        const state = getStepState(key);
+        html += `<div class="step ${state.status}" id="step-${key}" data-key="${key}">`;
+        html += `<div class="step-num">${sti + 1}</div>`;
+        html += `<div class="step-content">`;
+        html += `<div class="step-text">${step}</div>`;
+        html += `<textarea class="issue-input" placeholder="어떤 문제가 있었는지 적어주세요..." onchange="updateIssue('${key}', this.value)">${state.issue || ''}</textarea>`;
+        html += `</div>`;
+        html += `<div class="step-actions">`;
+        html += `<button class="btn-pass" onclick="markStep('${key}','pass')" title="통과">✓</button>`;
+        html += `<button class="btn-fail" onclick="markStep('${key}','fail')" title="실패">✗</button>`;
+        html += `</div></div>`;
+      });
+
+      html += `</div></div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  container.innerHTML = html;
+  updateStats();
+}
+
+function markStep(key, status) {
+  const current = getStepState(key);
+  if (current.status === status) {
+    setStepState(key, 'pending', current.issue);
+  } else {
+    setStepState(key, status, current.issue);
+  }
+  const el = document.getElementById('step-' + key);
+  if (el) {
+    el.className = 'step ' + getStepState(key).status;
+  }
+  updateIssueSummary();
+}
+
+function updateIssue(key, text) {
+  const state = getStepState(key);
+  setStepState(key, state.status, text);
+  updateIssueSummary();
+}
+
+function updateStats() {
+  let total = 0, pass = 0, fail = 0;
+  DATA.forEach(cat => {
+    let catPass = 0, catTotal = 0;
+    cat.scenarios.forEach((scen, si) => {
+      scen.steps.forEach((_, sti) => {
+        const key = getStepKey(cat.id, si, sti);
+        const state = getStepState(key);
+        total++;
+        catTotal++;
+        if (state.status === 'pass') { pass++; catPass++; }
+        if (state.status === 'fail') fail++;
+      });
+    });
+    const catEl = document.getElementById('cat-stats-' + cat.id);
+    if (catEl) catEl.textContent = `(${catPass}/${catTotal})`;
+  });
+
+  document.getElementById('stat-pass').textContent = '통과: ' + pass;
+  document.getElementById('stat-fail').textContent = '실패: ' + fail;
+  document.getElementById('stat-pending').textContent = '미완: ' + (total - pass - fail);
+  document.getElementById('stat-progress').textContent = '진행률: ' + Math.round((pass + fail) / total * 100) + '%';
+  updateIssueSummary();
+}
+
+function updateIssueSummary() {
+  const el = document.getElementById('issue-summary');
+  let issues = [];
+  DATA.forEach(cat => {
+    cat.scenarios.forEach((scen, si) => {
+      scen.steps.forEach((step, sti) => {
+        const key = getStepKey(cat.id, si, sti);
+        const state = getStepState(key);
+        if (state.status === 'fail') {
+          issues.push({ cat: cat.title, scen: scen.title, step: step, issue: state.issue, stepNum: sti + 1 });
+        }
+      });
+    });
+  });
+
+  if (issues.length === 0) {
+    el.innerHTML = '<div class="container"><div class="summary-section"><div class="no-issues">발견된 문제가 없습니다</div></div></div>';
+    return;
+  }
+
+  let html = '<div class="container"><div class="summary-section"><h2>발견된 문제 (' + issues.length + '건)</h2><ul class="issue-list">';
+  issues.forEach(i => {
+    html += '<li><div class="issue-location">[' + i.cat + '] ' + i.scen + ' - ' + i.stepNum + '단계</div>';
+    html += '<div>' + i.step + '</div>';
+    if (i.issue) html += '<div class="issue-text">메모: ' + i.issue + '</div>';
+    html += '</li>';
+  });
+  html += '</ul></div></div>';
+  el.innerHTML = html;
+}
+
+function toggleCategory(catId) {
+  document.getElementById('cat-' + catId).classList.toggle('collapsed');
+}
+
+function toggleScenario(catId, scenIdx) {
+  document.getElementById('scen-' + catId + '-' + scenIdx).classList.toggle('collapsed');
+}
+
+let allCollapsed = false;
+function toggleAll() {
+  allCollapsed = !allCollapsed;
+  document.querySelectorAll('.category').forEach(el => {
+    el.classList.toggle('collapsed', allCollapsed);
+  });
+  document.getElementById('btn-toggle').textContent = allCollapsed ? '모두 펼치기' : '모두 접기';
+}
+
+function filterSteps(filter) {
+  document.querySelectorAll('.controls button[data-filter]').forEach(b => b.classList.remove('active'));
+  document.querySelector('.controls button[data-filter="' + filter + '"]').classList.add('active');
+  document.querySelectorAll('.step').forEach(el => {
+    if (filter === 'all') { el.style.display = ''; return; }
+    const key = el.dataset.key;
+    const state = getStepState(key);
+    el.style.display = state.status === filter ? '' : 'none';
+  });
+}
+
+function copyResults() {
+  let text = '=== JC QA 테스트 결과 ===\n날짜: ' + new Date().toLocaleDateString('ko-KR') + '\n\n';
+  let total = 0, pass = 0, fail = 0;
+  DATA.forEach(cat => {
+    text += '\n## ' + cat.icon + ' ' + cat.title + '\n';
+    cat.scenarios.forEach((scen, si) => {
+      text += '\n### ' + scen.title + '\n';
+      scen.steps.forEach((step, sti) => {
+        const key = getStepKey(cat.id, si, sti);
+        const state = getStepState(key);
+        const mark = state.status === 'pass' ? '[O]' : state.status === 'fail' ? '[X]' : '[ ]';
+        text += mark + ' ' + (sti+1) + '. ' + step + '\n';
+        if (state.issue) text += '   → 문제: ' + state.issue + '\n';
+        total++;
+        if (state.status === 'pass') pass++;
+        if (state.status === 'fail') fail++;
+      });
+    });
+  });
+  text += '\n\n=== 요약 ===\n통과: ' + pass + ' / 실패: ' + fail + ' / 미완: ' + (total-pass-fail) + ' / 전체: ' + total + '\n';
+  navigator.clipboard.writeText(text).then(() => alert('결과가 클립보드에 복사되었습니다!'));
+}
+
+function saveToFile() {
+  let text = copyResultsText();
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'JC_QA_결과_' + new Date().toISOString().substring(0,10) + '.txt';
+  a.click();
+}
+
+function copyResultsText() {
+  let text = '=== JC QA 테스트 결과 ===\n날짜: ' + new Date().toLocaleDateString('ko-KR') + '\n\n';
+  let total = 0, pass = 0, fail = 0;
+  DATA.forEach(cat => {
+    text += '\n## ' + cat.icon + ' ' + cat.title + '\n';
+    cat.scenarios.forEach((scen, si) => {
+      text += '\n### ' + scen.title + '\n';
+      scen.steps.forEach((step, sti) => {
+        const key = getStepKey(cat.id, si, sti);
+        const state = getStepState(key);
+        const mark = state.status === 'pass' ? '[O]' : state.status === 'fail' ? '[X]' : '[ ]';
+        text += mark + ' ' + (sti+1) + '. ' + step + '\n';
+        if (state.issue) text += '   → 문제: ' + state.issue + '\n';
+        total++;
+        if (state.status === 'pass') pass++;
+        if (state.status === 'fail') fail++;
+      });
+    });
+  });
+  text += '\n\n=== 요약 ===\n통과: ' + pass + ' / 실패: ' + fail + ' / 미완: ' + (total-pass-fail) + ' / 전체: ' + total + '\n';
+  return text;
+}
+
+function resetAll() {
+  if (!confirm('모든 테스트 결과를 초기화하시겠습니까?')) return;
+  results = {};
+  localStorage.removeItem('jc_qa_results');
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

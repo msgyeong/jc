@@ -61,7 +61,7 @@ async function loadGroupBoardScreen() {
     var titleEl = document.getElementById('group-board-title');
     if (titleEl) titleEl.textContent = _currentGroupBoardName || '그룹 게시판';
 
-    container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+    container.innerHTML = renderSkeleton('list');
 
     try {
         var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts?page=1&limit=20');
@@ -71,11 +71,7 @@ async function loadGroupBoardScreen() {
 
         // 게시글 목록 (탭 없음 — 단일 게시글 목록)
         if (posts.length === 0) {
-            html += '<div class="gb-empty-state">';
-            html += '<div class="gb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg></div>';
-            html += '<p class="gb-empty-text">아직 게시글이 없습니다</p>';
-            html += '<p class="gb-empty-sub">첫 번째 게시글을 작성해보세요</p>';
-            html += '</div>';
+            html += renderEmptyState('document', '아직 게시글이 없습니다', '첫 번째 게시글을 작성해보세요');
         } else {
             html += '<div class="gb-post-list">';
             posts.forEach(function(p) {
@@ -94,12 +90,7 @@ async function loadGroupBoardScreen() {
         if (fab) fab.style.display = '';
     } catch (err) {
         console.error('Group board load error:', err);
-        container.innerHTML = '<div class="gb-empty-state">'
-            + '<div class="gb-empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="#D1D5DB"/></svg></div>'
-            + '<p class="gb-empty-text">게시글을 불러올 수 없습니다</p>'
-            + '<p class="gb-empty-sub">' + escapeHtml(err.message || '') + '</p>'
-            + '<button class="gb-retry-btn" data-action="retry-load">다시 시도</button>'
-            + '</div>';
+        container.innerHTML = renderErrorState('게시글을 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'loadGroupBoardScreen()');
     }
 }
 

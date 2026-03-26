@@ -423,7 +423,7 @@ router.get('/members/:id', async (req, res) => {
  * PUT /api/admin/members/:id
  * 관리자 전용 회원 정보 수정
  */
-router.put('/members/:id', async (req, res) => {
+router.put('/members/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
         const {

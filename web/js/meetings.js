@@ -36,7 +36,7 @@ async function loadMeetingsScreen() {
         </div>`;
 
         if (meetings.length === 0) {
-            container.innerHTML = createBtn + createFormHtml + '<div style="text-align:center;padding:40px 0;color:var(--text-secondary)">등록된 회의가 없습니다.</div>';
+            container.innerHTML = createBtn + createFormHtml + renderEmptyState('calendar', '등록된 회의가 없습니다', '새 회의를 등록해보세요');
             return;
         }
 

@@ -9,7 +9,7 @@ async function loadOrgChartScreen() {
     var userInfo = typeof getCurrentUser === 'function' ? getCurrentUser() : JSON.parse(localStorage.getItem('user_info') || 'null');
     var isManager = userInfo && ['admin', 'super_admin', 'local_admin'].includes(userInfo.role);
 
-    container.innerHTML = '<div class="oc-loading">로딩 중...</div>';
+    container.innerHTML = renderSkeleton('list');
 
     try {
         var res = await apiClient.request('/orgchart');
@@ -31,7 +31,7 @@ async function loadOrgChartScreen() {
         var currentUserId = userInfo ? userInfo.id : null;
 
         if (groups.length === 0) {
-            html += '<div class="oc-empty">조직도가 아직 등록되지 않았습니다.</div>';
+            html += renderEmptyState('users', '조직도가 아직 등록되지 않았습니다', '관리자가 조직도를 등록할 수 있습니다');
         } else {
             groups.forEach(function(g) {
                 html += renderOrgGroup(g, isManager, currentUserId);
@@ -47,7 +47,7 @@ async function loadOrgChartScreen() {
 
         container.innerHTML = html;
     } catch (err) {
-        container.innerHTML = '<div class="oc-error">' + escapeHtml(err.message || '조직도를 불러올 수 없습니다.') + '</div>';
+        container.innerHTML = renderErrorState('조직도를 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'loadOrgChartScreen()');
     }
 }
 

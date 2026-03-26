@@ -289,6 +289,10 @@ app.listen(PORT, () => {
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lat DOUBLE PRECISION").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lng DOUBLE PRECISION").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_address VARCHAR(500)").catch(() => {});
+    // S-07: 사업 PR 섹션
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_headline VARCHAR(100)").catch(() => {});
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_description TEXT").catch(() => {});
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_social_links JSONB DEFAULT '[]'::jsonb").catch(() => {});
     // 조직도 테이블
     dbQuery(`CREATE TABLE IF NOT EXISTS orgchart_groups (
         id SERIAL PRIMARY KEY, org_id INTEGER REFERENCES organizations(id),

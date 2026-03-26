@@ -242,6 +242,7 @@ function createMemberCard(member) {
                 </div>
                 ${member.position ? `<div class="member-position-v2">${escapeHtml(member.position)}</div>` : ''}
                 ${member.company ? `<div class="member-company-v2">${escapeHtml(member.company)}</div>` : ''}
+                ${member.business_headline ? `<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">${escapeHtml(member.business_headline)}</div>` : ''}
                 ${member.industry ? `<span class="industry-tag">${escapeHtml(getIndustryName(member.industry))}</span>` : ''}
             </div>
             ${callBtn}

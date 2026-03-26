@@ -31,6 +31,9 @@ router.get('/', authenticate, async (req, res) => {
                 company, position, department, work_phone,
                 industry, industry_detail,
                 position_id, phone_visibility,
+                business_headline, business_description,
+                business_address, business_social_links,
+                website, profession,
                 created_at, updated_at
              FROM users
              WHERE id = $1`,
@@ -76,7 +79,7 @@ router.put('/', authenticate, async (req, res) => {
     try {
         const userId = req.user.userId;
         const userRole = req.user.role;
-        const { name, phone, address, birth_date, gender, company, work_phone, industry, industry_detail, website, map_visible, business_address, business_lat, business_lng, join_date, phone_visibility } = req.body;
+        const { name, phone, address, birth_date, gender, company, work_phone, industry, industry_detail, website, map_visible, business_address, business_lat, business_lng, join_date, phone_visibility, business_headline, business_description, business_social_links, profession } = req.body;
 
         // phone_visibility 유효성 검증
         const VALID_PHONE_VISIBILITY = ['local', 'district', 'all'];
@@ -144,9 +147,13 @@ router.put('/', authenticate, async (req, res) => {
                      business_lng = COALESCE($14, business_lng),
                      join_date = COALESCE($15, join_date),
                      phone_visibility = COALESCE($16, phone_visibility),
+                     business_headline = COALESCE($17, business_headline),
+                     business_description = COALESCE($18, business_description),
+                     business_social_links = COALESCE($19, business_social_links),
+                     profession = COALESCE($20, profession),
                      updated_at = NOW()
-                 WHERE id = $17`,
-                [name, phone, address, birth_date, gender, company, work_phone, industry || null, industry_detail || null, website || null, map_visible !== undefined ? map_visible : null, business_address || null, business_lat || null, business_lng || null, join_date || null, phone_visibility || null, userId]
+                 WHERE id = $21`,
+                [name, phone, address, birth_date, gender, company, work_phone, industry || null, industry_detail || null, website || null, map_visible !== undefined ? map_visible : null, business_address || null, business_lat || null, business_lng || null, join_date || null, phone_visibility || null, business_headline !== undefined ? business_headline : null, business_description !== undefined ? business_description : null, business_social_links ? JSON.stringify(business_social_links) : null, profession !== undefined ? profession : null, userId]
             );
         }
 

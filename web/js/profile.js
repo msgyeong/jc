@@ -107,6 +107,9 @@ function renderProfile(p) {
 
             <div id="profile-title-history-container"></div>
 
+            <!-- 사업 PR 섹션 -->
+            ${renderBusinessPR(p)}
+
             <!-- 메뉴 -->
             <div class="settings-group">
                 <div class="settings-item" onclick="showEditProfileForm()">
@@ -210,7 +213,18 @@ function showEditProfileForm() {
                     </div>
                     <div class="form-group"><label>업종 상세</label><input type="text" id="edit-industry-detail" value="${escapeHtml(p.industry_detail || '')}" placeholder="상세 업종 (예: 소프트웨어 개발)" maxlength="100"></div>
                     <div class="form-group"><label>직장 전화</label><input type="tel" id="edit-work-phone" value="${escapeHtml(p.work_phone || '')}"></div>
+                    <div class="form-group"><label>직업</label><input type="text" id="edit-profession" value="${escapeHtml(p.profession || '')}" placeholder="예: 대표이사, 변호사, 의사"></div>
                     <div class="form-group"><label>대표 사이트</label><input type="url" id="edit-website" value="${escapeHtml(p.website || '')}" placeholder="홈페이지, 인스타, 유튜브 등 URL"></div>
+                </div>
+                <div class="info-section">
+                    <h3 class="info-section-title">사업 PR</h3>
+                    <div class="form-group"><label>한 줄 PR (100자)</label><input type="text" id="edit-biz-headline" value="${escapeHtml(p.business_headline || '')}" placeholder="예: 프리미엄 식품 수출 전문" maxlength="100"></div>
+                    <div class="form-group"><label>주요 서비스/상품</label><textarea id="edit-biz-description" rows="4" placeholder="사업 소개, 주요 서비스, 상품 등을 자유롭게 입력하세요" maxlength="500" style="resize:vertical">${escapeHtml(p.business_description || '')}</textarea></div>
+                    <div class="form-group"><label>사업장 주소</label><input type="text" id="edit-biz-address" value="${escapeHtml(p.business_address || '')}" placeholder="사업장 주소"></div>
+                    <div class="form-group"><label>SNS 링크</label>
+                        <div id="social-links-container">${renderSocialLinksForm(p.business_social_links)}</div>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="addSocialLinkField()" style="margin-top:8px">+ SNS 추가</button>
+                    </div>
                 </div>
                 <div id="profile-edit-error" class="inline-error-message"></div>
                 <button type="submit" class="btn btn-primary btn-full" id="profile-edit-submit-btn">
@@ -243,8 +257,13 @@ async function handleProfileEditSubmit(event) {
         industry: document.getElementById('edit-industry')?.value || null,
         industry_detail: document.getElementById('edit-industry-detail')?.value?.trim() || null,
         website: document.getElementById('edit-website')?.value?.trim() || null,
+        profession: document.getElementById('edit-profession')?.value?.trim() || null,
         join_date: document.getElementById('edit-join-date')?.value || null,
-        phone_visibility: document.getElementById('edit-phone-visibility')?.value || 'local'
+        phone_visibility: document.getElementById('edit-phone-visibility')?.value || 'local',
+        business_headline: document.getElementById('edit-biz-headline')?.value?.trim() || null,
+        business_description: document.getElementById('edit-biz-description')?.value?.trim() || null,
+        business_address: document.getElementById('edit-biz-address')?.value?.trim() || null,
+        business_social_links: collectSocialLinks()
     };
 
     setButtonLoading(submitBtn, true);
@@ -362,6 +381,82 @@ async function loadProfileTitleHistory(userId) {
                 `).join('')}
             </div>`;
     } catch (_) { container.innerHTML = ''; }
+}
+
+// ========== 사업 PR 섹션 ==========
+
+function renderBusinessPR(p) {
+    const hasBiz = p.business_headline || p.business_description || p.website || p.business_address || p.profession;
+    const socialLinks = p.business_social_links || [];
+    const hasSocial = Array.isArray(socialLinks) && socialLinks.length > 0;
+
+    if (!hasBiz && !hasSocial) {
+        return `
+            <div class="info-section">
+                <h3 class="info-section-title">사업 정보</h3>
+                <div style="text-align:center;padding:20px 0;color:var(--text-secondary)">
+                    등록된 사업 정보가 없습니다.
+                    <div style="margin-top:8px"><button class="btn btn-outline btn-sm" onclick="showEditProfileForm()">추가하기</button></div>
+                </div>
+            </div>`;
+    }
+
+    const platformIcons = { facebook: '📘', instagram: '📷', youtube: '🎬', twitter: '🐦', linkedin: '💼', tiktok: '🎵', blog: '📝' };
+
+    return `
+        <div class="info-section">
+            <h3 class="info-section-title">사업 정보</h3>
+            ${p.business_headline ? `<div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:8px">${escapeHtml(p.business_headline)}</div>` : ''}
+            ${p.profession ? profileInfoRow('직업', p.profession, 'company') : ''}
+            ${p.business_description ? `<div style="margin:8px 0;padding:12px;background:var(--primary-light,#EFF6FF);border-radius:8px;font-size:13px;line-height:1.6;white-space:pre-wrap">${escapeHtml(p.business_description)}</div>` : ''}
+            ${p.business_address ? profileInfoRow('사업장', p.business_address, 'location') : ''}
+            ${p.website ? `<div class="info-row"><span class="info-label">웹사이트</span><span class="info-value"><a href="${ensureUrl(p.website)}" target="_blank" rel="noopener" style="color:var(--primary-color);text-decoration:none">${escapeHtml(p.website)}</a></span></div>` : ''}
+            ${hasSocial ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px">${socialLinks.map(s => `<a href="${ensureUrl(s.url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--secondary-color,#F9FAFB);border-radius:16px;font-size:12px;text-decoration:none;color:var(--text-primary)">${platformIcons[s.platform] || '🔗'} ${escapeHtml(s.platform)}</a>`).join('')}</div>` : ''}
+        </div>`;
+}
+
+function renderSocialLinksForm(links) {
+    if (!links || !Array.isArray(links) || links.length === 0) return '';
+    return links.map((s, i) => `
+        <div class="social-link-row" style="display:flex;gap:6px;margin-bottom:6px;align-items:center">
+            <select class="social-platform" style="width:100px;padding:8px;border:1px solid var(--border-color);border-radius:8px;font-size:13px">
+                ${['facebook','instagram','youtube','twitter','linkedin','tiktok','blog'].map(p => `<option value="${p}" ${s.platform === p ? 'selected' : ''}>${p}</option>`).join('')}
+            </select>
+            <input type="text" class="social-url" value="${escapeHtml(s.url || '')}" placeholder="URL 또는 @아이디" style="flex:1;padding:8px;border:1px solid var(--border-color);border-radius:8px;font-size:13px">
+            <button type="button" onclick="this.closest('.social-link-row').remove()" style="background:none;border:none;color:var(--error-color);cursor:pointer;font-size:18px">&times;</button>
+        </div>`).join('');
+}
+
+function addSocialLinkField() {
+    const container = document.getElementById('social-links-container');
+    if (!container) return;
+    const row = document.createElement('div');
+    row.className = 'social-link-row';
+    row.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center';
+    row.innerHTML = `
+        <select class="social-platform" style="width:100px;padding:8px;border:1px solid var(--border-color);border-radius:8px;font-size:13px">
+            ${['facebook','instagram','youtube','twitter','linkedin','tiktok','blog'].map(p => `<option value="${p}">${p}</option>`).join('')}
+        </select>
+        <input type="text" class="social-url" value="" placeholder="URL 또는 @아이디" style="flex:1;padding:8px;border:1px solid var(--border-color);border-radius:8px;font-size:13px">
+        <button type="button" onclick="this.closest('.social-link-row').remove()" style="background:none;border:none;color:var(--error-color);cursor:pointer;font-size:18px">&times;</button>`;
+    container.appendChild(row);
+}
+
+function collectSocialLinks() {
+    const rows = document.querySelectorAll('#social-links-container .social-link-row');
+    const links = [];
+    rows.forEach(row => {
+        const platform = row.querySelector('.social-platform')?.value;
+        const url = row.querySelector('.social-url')?.value?.trim();
+        if (platform && url) links.push({ platform, url });
+    });
+    return links;
+}
+
+function ensureUrl(url) {
+    if (!url) return '#';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return 'https://' + url;
 }
 
 function handleEditProfile() { showEditProfileForm(); }

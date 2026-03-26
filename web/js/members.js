@@ -75,7 +75,7 @@ async function loadMembersScreen() {
         const [favRes, groupsRes, membersRes] = await Promise.all([
             apiClient.request('/favorites').catch(() => ({ success: false })),
             apiClient.request('/member-groups').catch(() => ({ success: false })),
-            apiClient.request('/members?page=1&limit=50').catch(() => ({ success: false }))
+            apiClient.request('/members?page=1&limit=50' + (currentIndustryFilter ? '&industry=' + currentIndustryFilter : '') + (currentPositionFilter ? '&position_id=' + currentPositionFilter : '') + (currentJoinNumberFilter ? '&join_number=' + currentJoinNumberFilter : '')).catch(() => ({ success: false }))
         ]);
 
         const members = membersRes.members || (membersRes.data && (membersRes.data.members || membersRes.data.items)) || [];
@@ -195,23 +195,37 @@ function renderGroupsSections(groups) {
     `).join('');
 }
 
+var currentPositionFilter = '';
+var currentJoinNumberFilter = '';
+
 function renderAllMembersSection(members, count) {
     const industryOptions = INDUSTRY_CATEGORIES.map(c =>
         `<option value="${c.code}"${currentIndustryFilter === c.code ? ' selected' : ''}>${c.name}</option>`
     ).join('');
 
+    const positionOptions = [
+        {id: 1, name: '회장'}, {id: 2, name: '수석부회장'}, {id: 3, name: '부회장'},
+        {id: 4, name: '총무'}, {id: 5, name: '이사'}, {id: 6, name: '감사'}, {id: 7, name: '일반회원'}
+    ].map(p => `<option value="${p.id}"${currentPositionFilter == p.id ? ' selected' : ''}>${p.name}</option>`).join('');
+
     const cards = members.map(m => createMemberCard(m)).join('');
 
     return `
         <div class="member-section" id="section-all-members">
-            <div class="member-section-header all-members-header">
+            <div class="member-section-header all-members-header" style="flex-wrap:wrap;gap:6px">
                 <span>회원 ${count}명</span>
-                <select class="industry-filter-inline" onchange="handleIndustryFilterChange(this.value)">
-                    <option value="">업종: 전체</option>
-                    ${industryOptions}
-                </select>
+                <div style="display:flex;gap:4px;flex-wrap:wrap">
+                    <select class="industry-filter-inline" onchange="handleIndustryFilterChange(this.value)" style="font-size:12px;padding:4px 8px">
+                        <option value="">업종: 전체</option>
+                        ${industryOptions}
+                    </select>
+                    <select class="industry-filter-inline" onchange="handlePositionFilterChange(this.value)" style="font-size:12px;padding:4px 8px">
+                        <option value="">직책: 전체</option>
+                        ${positionOptions}
+                    </select>
+                </div>
             </div>
-            <div class="member-section-list">${cards || '<div class="empty-text" style="padding:16px;text-align:center;color:var(--text-secondary)">회원이 없습니다</div>'}</div>
+            <div class="member-section-list">${cards || renderEmptyState('users', '조건에 맞는 회원이 없습니다')}</div>
         </div>`;
 }
 
@@ -281,7 +295,12 @@ function createSearchResultCard(member) {
 
 function handleIndustryFilterChange(value) {
     currentIndustryFilter = value;
-    loadMembersScreen(); // 전체 새로고침
+    loadMembersScreen();
+}
+
+function handlePositionFilterChange(value) {
+    currentPositionFilter = value;
+    loadMembersScreen();
 }
 
 // ========== 즐겨찾기 ==========

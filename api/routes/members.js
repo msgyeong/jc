@@ -32,6 +32,8 @@ router.get('/', authenticate, async (req, res) => {
         const limit = parseInt(req.query.limit) || 50;
         const offset = (page - 1) * limit;
         const industry = req.query.industry;
+        const positionId = req.query.position_id;
+        const joinNumber = req.query.join_number;
 
         const conditions = ["u.status = 'active'", "u.role != 'super_admin'"];
         const params = [limit, offset, req.user.userId];
@@ -39,6 +41,14 @@ router.get('/', authenticate, async (req, res) => {
         if (industry && VALID_INDUSTRY_CODES.includes(industry)) {
             params.push(industry);
             conditions.push(`u.industry = $${params.length}`);
+        }
+        if (positionId) {
+            params.push(parseInt(positionId));
+            conditions.push(`u.position_id = $${params.length}`);
+        }
+        if (joinNumber) {
+            params.push(joinNumber);
+            conditions.push(`u.join_number = $${params.length}`);
         }
 
         const whereClause = conditions.join(' AND ');
@@ -48,6 +58,14 @@ router.get('/', authenticate, async (req, res) => {
         if (industry && VALID_INDUSTRY_CODES.includes(industry)) {
             countParams.push(industry);
             countConditions.push(`industry = $${countParams.length}`);
+        }
+        if (positionId) {
+            countParams.push(parseInt(positionId));
+            countConditions.push(`position_id = $${countParams.length}`);
+        }
+        if (joinNumber) {
+            countParams.push(joinNumber);
+            countConditions.push(`join_number = $${countParams.length}`);
         }
         const countRes = await query(
             `SELECT COUNT(*) FROM users WHERE ${countConditions.join(' AND ')}`,

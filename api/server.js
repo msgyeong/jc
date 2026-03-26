@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const { authenticate: serverAuth } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const postsRoutes = require('./routes/posts');
 const uploadRoutes = require('./routes/upload');
@@ -109,7 +110,7 @@ app.use('/api/schedules', schedulesRoutes);
 app.use('/api/members', membersRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', serverAuth, adminRoutes); // 전체 admin 라우트 인증 필수
 // seed 라우트는 개발 환경에서만 사용
 if (process.env.NODE_ENV !== 'production') {
     app.use('/api/seed', seedRoutes);
@@ -125,7 +126,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/mobile-admin', mobileAdminRoutes);
 app.use('/api/meetings', meetingsRoutes);
 app.use('/api/organizations', organizationsRoutes);
-app.use('/api/admin-app', mobileAdminRoutes);
+// app.use('/api/admin-app', mobileAdminRoutes); // 중복 제거 (mobile-admin으로 통일)
 app.use('/api/orgchart', orgchartRoutes);
 app.use('/api/map', mapRoutes);
 app.use('/api/group-board', groupBoardRoutes);

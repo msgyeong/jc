@@ -163,7 +163,7 @@ async function loadBannerSummary() {
                 }
             }
             banners.push({
-                gradient: 'linear-gradient(135deg, #162D4A 0%, #2D5F8A 100%)',
+                gradient: 'linear-gradient(135deg, #1D4ED8 0%, #60A5FA 100%)',
                 title: escapeHtml(next.title),
                 subtitle: dateLabel + (next.location ? ' · ' + escapeHtml(next.location) : ''),
                 cta: '일정 보기',
@@ -171,7 +171,7 @@ async function loadBannerSummary() {
             });
         } else {
             banners.push({
-                gradient: 'linear-gradient(135deg, #162D4A 0%, #2D5F8A 100%)',
+                gradient: 'linear-gradient(135deg, #1D4ED8 0%, #60A5FA 100%)',
                 title: '일정 확인',
                 subtitle: '다가오는 모임과 행사 일정을 확인하세요',
                 cta: '일정 보기',
@@ -226,7 +226,7 @@ async function loadBannerSummary() {
         } catch (_b) { /* 배너 로드 실패 무시 */ }
     } catch (_) {
         banners.push(
-            { gradient: 'linear-gradient(135deg, #162D4A 0%, #2D5F8A 100%)', title: '일정 확인', subtitle: '다가오는 모임과 행사 일정을 확인하세요', cta: '일정 보기', action: "switchTab('schedules')" },
+            { gradient: 'linear-gradient(135deg, #1D4ED8 0%, #60A5FA 100%)', title: '일정 확인', subtitle: '다가오는 모임과 행사 일정을 확인하세요', cta: '일정 보기', action: "switchTab('schedules')" },
             { gradient: 'linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)', title: '회원 소통', subtitle: '공지사항과 게시판을 통해 소식을 나누세요', cta: '게시판 가기', action: "switchTab('posts')" }
         );
     }

@@ -464,7 +464,7 @@ html {
 
 .form-group input:focus {
     border-color: var(--input-border-focus);
-    box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.08);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08);
 }
 
 .form-group input.error {
@@ -510,7 +510,7 @@ html {
     transition: border-color 0.15s;
     -webkit-appearance: none;
 }
-.edu-input:focus { border-color: var(--input-border-focus); box-shadow: 0 0 0 2px rgba(30,58,95,0.08); }
+.edu-input:focus { border-color: var(--input-border-focus); box-shadow: 0 0 0 2px rgba(37,99,235,0.08); }
 /* 라벨 + 추가 버튼 한 줄 */
 .form-label-row {
     display: flex;
@@ -1341,7 +1341,7 @@ input::-ms-clear {
     font-size: 28px;
     font-weight: 300;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     transition: var(--transition);
     z-index: 1000;
     display: flex;
@@ -1353,7 +1353,7 @@ input::-ms-clear {
 
 .fab:hover {
     transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(30, 58, 95, 0.4);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
 }
 
 .edit-button {
@@ -6408,7 +6408,7 @@ input[type="date"]:focus {
 .push-send-form .form-input:focus {
     outline: none;
     border-color: #2563EB;
-    box-shadow: 0 0 0 2px rgba(30,58,95,0.1);
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
 }
 .push-target-options {
     display: flex;
@@ -6701,7 +6701,7 @@ input[type="date"]:focus {
 .notice-edit-form .form-input:focus {
     outline: none;
     border-color: #2563EB;
-    box-shadow: 0 0 0 2px rgba(30,58,95,0.1);
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
 }
 .notice-pin-toggle {
     display: flex;

@@ -234,7 +234,7 @@ function renderDossierBasic(el) {
     el.innerHTML = ''
         // 섹션 1: JC 정보 (최상단)
         + '<div class="dossier-section">'
-        + '<h4 class="dossier-section-title" style="font-weight:600;font-size:15px;color:#1E3A5F;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">JC 정보</h4>'
+        + '<h4 class="dossier-section-title" style="font-weight:600;font-size:15px;color:#2563EB;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">JC 정보</h4>'
         + '<div class="dossier-grid">'
         + dossierHoverEditField('직책', m.position_name, '회원', 'startDossierPositionEdit')
         + dossierHoverEditField('직업(직종)', m.profession, '-', 'startDossierProfessionEdit')
@@ -243,7 +243,7 @@ function renderDossierBasic(el) {
         + '</div></div>'
         // 섹션 2: 기본 정보
         + '<div class="dossier-section">'
-        + '<h4 class="dossier-section-title" style="font-weight:600;font-size:15px;color:#1E3A5F;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">기본 정보</h4>'
+        + '<h4 class="dossier-section-title" style="font-weight:600;font-size:15px;color:#2563EB;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">기본 정보</h4>'
         + '<div class="dossier-grid">'
         + dossierField('이름', m.name)
         + dossierField('이메일', m.email)
@@ -254,7 +254,7 @@ function renderDossierBasic(el) {
         + '</div></div>'
         // 섹션 3: 직장 정보 (접힌 상태)
         + '<div class="dossier-section">'
-        + '<div class="dossier-collapsible-header" onclick="toggleDossierSection(this)" style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600;font-size:15px;color:#1E3A5F;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">'
+        + '<div class="dossier-collapsible-header" onclick="toggleDossierSection(this)" style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600;font-size:15px;color:#2563EB;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">'
         + '<span class="dossier-collapse-arrow" style="font-size:12px;color:#6B7280;transition:transform 0.3s">&#9654;</span> 직장 정보'
         + '</div>'
         + '<div class="dossier-collapsible-body" style="max-height:0;overflow:hidden;transition:max-height 0.3s ease">'
@@ -268,7 +268,7 @@ function renderDossierBasic(el) {
         + '</div></div></div>'
         // 섹션 4: 기타
         + '<div class="dossier-section">'
-        + '<h4 class="dossier-section-title" style="font-weight:600;font-size:15px;color:#1E3A5F;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">기타</h4>'
+        + '<h4 class="dossier-section-title" style="font-weight:600;font-size:15px;color:#2563EB;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:16px">기타</h4>'
         + '<div class="dossier-grid">'
         + dossierField('긴급연락처', m.emergency_contact)
         + dossierField('긴급연락자', m.emergency_contact_name)

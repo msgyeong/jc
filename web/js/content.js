@@ -174,7 +174,7 @@ function renderContentView(screen, screenName, contentType, pageTitle, data, isA
             } else {
             html += '<div style="margin-top:16px;padding:12px;background:#F9FAFB;border-radius:8px;border:1px solid #E5E7EB;">' +
                 '<a href="' + fileUrl + '" ' +
-                    'style="display:flex;align-items:center;gap:8px;color:#1F4FD8;text-decoration:none;font-size:13px;" download>' +
+                    'style="display:flex;align-items:center;gap:8px;color:#2563EB;text-decoration:none;font-size:13px;" download>' +
                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
                         '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>' +
                         '<polyline points="7 10 12 15 17 10"/>' +

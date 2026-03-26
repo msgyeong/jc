@@ -14,7 +14,7 @@ async function loadMeetingsScreen() {
         const meetings = res.data?.items || res.data || [];
 
         // 관리자용 회의 생성 FAB 버튼
-        var createBtn = isAdminUser ? '<button class="fab" onclick="showCreateMeetingForm()" style="position:fixed;right:20px;bottom:80px;z-index:100;width:56px;height:56px;border-radius:50%;background:var(--primary-color,#1F4FD8);color:#fff;border:none;font-size:24px;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer">+</button>' : '';
+        var createBtn = isAdminUser ? '<button class="fab" onclick="showCreateMeetingForm()" style="position:fixed;right:20px;bottom:80px;z-index:100;width:56px;height:56px;border-radius:50%;background:var(--primary-color,#2563EB);color:#fff;border:none;font-size:24px;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer">+</button>' : '';
         var createFormHtml = `<div id="create-meeting-form" style="display:none;margin-bottom:20px;padding:16px;border:1px solid var(--border-color);border-radius:12px;background:var(--card-bg,#fff)">
             <h3 style="margin:0 0 12px;font-size:16px">새 회의 생성</h3>
             <div style="display:flex;flex-direction:column;gap:10px">

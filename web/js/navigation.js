@@ -697,7 +697,7 @@ function openSideMenu() {
     }
     var profileEl = document.getElementById('side-menu-profile');
     if (profileEl && user) {
-        profileEl.innerHTML = '<div style="width:36px;height:36px;border-radius:50%;background:#DBEAFE;display:flex;align-items:center;justify-content:center;font-weight:600;color:#1E3A5F">'
+        profileEl.innerHTML = '<div style="width:36px;height:36px;border-radius:50%;background:#DBEAFE;display:flex;align-items:center;justify-content:center;font-weight:600;color:#2563EB">'
             + escapeHtml((user.name || '?')[0]) + '</div>'
             + '<div><div style="font-weight:600;font-size:14px">' + escapeHtml(user.name || '') + '</div>'
             + '<div style="font-size:12px;color:#6B7280">' + escapeHtml(user.email || '') + '</div></div>';

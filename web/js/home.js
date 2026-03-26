@@ -138,7 +138,7 @@ async function loadBannerSummary() {
 
     const banners = [
         {
-            gradient: 'linear-gradient(135deg, #1E3A5F 0%, #3D6B99 100%)',
+            gradient: 'linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)',
             title: '영등포 JC',
             subtitle: '회원관리 커뮤니티 앱에 오신 것을 환영합니다',
             cta: '둘러보기'
@@ -186,7 +186,7 @@ async function loadBannerSummary() {
         const displayNotices = bannerNotices.length > 0 ? bannerNotices : notices.slice(0, 1);
         if (displayNotices.length > 0) {
             const gradients = [
-                'linear-gradient(135deg, #1E3A5F 0%, #6B9BC3 100%)',
+                'linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)',
                 'linear-gradient(135deg, #2D4A6F 0%, #5B8DB8 100%)',
                 'linear-gradient(135deg, #1A3550 0%, #4A7FA5 100%)'
             ];
@@ -201,7 +201,7 @@ async function loadBannerSummary() {
             });
         } else {
             banners.push({
-                gradient: 'linear-gradient(135deg, #1E3A5F 0%, #6B9BC3 100%)',
+                gradient: 'linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)',
                 title: '회원 소통',
                 subtitle: '공지사항과 게시판을 통해 소식을 나누세요',
                 cta: '게시판 가기',
@@ -212,7 +212,7 @@ async function loadBannerSummary() {
         // API 실패 시 기본 배너 추가
         banners.push(
             { gradient: 'linear-gradient(135deg, #162D4A 0%, #2D5F8A 100%)', title: '일정 확인', subtitle: '다가오는 모임과 행사 일정을 확인하세요', cta: '일정 보기', action: "switchTab('schedules')" },
-            { gradient: 'linear-gradient(135deg, #1E3A5F 0%, #6B9BC3 100%)', title: '회원 소통', subtitle: '공지사항과 게시판을 통해 소식을 나누세요', cta: '게시판 가기', action: "switchTab('posts')" }
+            { gradient: 'linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)', title: '회원 소통', subtitle: '공지사항과 게시판을 통해 소식을 나누세요', cta: '게시판 가기', action: "switchTab('posts')" }
         );
     }
 

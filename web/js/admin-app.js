@@ -42,7 +42,7 @@ function renderAdminMenuInProfile() {
     section.id = 'profile-admin-section';
     section.className = 'settings-group admin-menu-group';
     section.innerHTML = '<div class="settings-group-title admin-section-title">'
-        + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+        + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
         + ' 관리'
         + '</div>'
         + '<div class="settings-item" onclick="showAdminHub()">'
@@ -992,7 +992,7 @@ async function renderLocalAdminDashboard(container) {
     // 회원 목록 섹션
     html += '<div class="local-admin-section">'
         + '<div class="local-admin-section-title">'
-        + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
+        + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
         + ' 회원 목록'
         + '</div>'
         + '<div id="local-admin-member-list"><div style="padding:12px;text-align:center;color:#9CA3AF;font-size:13px">로딩 중...</div></div>'

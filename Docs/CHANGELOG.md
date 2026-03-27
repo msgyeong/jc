@@ -2,6 +2,35 @@
 
 ---
 
+## 2026-03-27 (2차) — 소모임 기능 + UI 개선 + 보완
+
+### 소모임 (신규 기능)
+- 소모임 생성/수정/삭제 (모든 active 회원 가능)
+- 멤버 초대 (타로컬 포함, 이름·회사·조직명 검색)
+- 초대 수락/거절 + push 알림 자동 발송
+- 소모임 게시판 (게시글 CRUD, 댓글/대댓글, 이미지 첨부)
+- 소모임 일정 (생성/수정/삭제 + 메인 캘린더 통합, 보라색 태그)
+- 소모임 멤버 목록 (역할 표시: 개설자/관리자/멤버)
+- DB: clubs, club_members, club_posts, club_post_comments, club_post_reads, club_schedules (6개 테이블)
+
+### UI 개선
+- 사이드메뉴: "조직도" → "로컬조직도" 이름 변경
+- 사이드메뉴: "소모임" 메뉴 추가 (초대 대기 배지 표시)
+- 조직도 내 그룹 게시판 버튼 제거 (소모임으로 이동)
+- JC 지도 팝업에 "프로필 보기" 링크 추가 → 타인 프로필 화면 이동
+- 프로필에 "소속 로컬" 정보 표시 (조직명 + 지구)
+- 타인 프로필 상세 화면 신규 추가 (member-detail-screen)
+
+### 법적/보안 보완
+- 개인정보처리방침 전용 페이지 추가 (사이드메뉴 > 정관 하단)
+- DB 커넥션 풀 최적화 (max:25, idleTimeout:30s, connectionTimeout:5s)
+
+### 변경 파일 (14개)
+- 신규: clubs.js (API), clubs.js (프론트), 030_clubs.sql
+- 수정: server.js, index.html, navigation.js, orgchart.js, schedules.js, jc-map.js, profile.js, members.js, main.css, database.js, CHANGELOG.md
+
+---
+
 ## 2026-03-27 — QA 전면 개선 + 보안/법적 보완 (7ff3dae)
 
 ### 법적 보완 (개인정보보호법 준수)

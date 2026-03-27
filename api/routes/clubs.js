@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../config/database');
 const { authenticate } = require('../middleware/auth');
+const { sendPushToUser } = require('../utils/pushSender');
 
 /**
  * 소모임 멤버십 확인
@@ -245,16 +246,31 @@ router.post('/:clubId/invite', authenticate, async (req, res) => {
             return res.status(400).json({ success: false, error: '초대할 회원을 선택하세요.' });
         }
 
+        // 소모임 이름 + 초대자 이름 조회
+        const clubInfo = await query('SELECT name FROM clubs WHERE id = $1', [clubId]);
+        const inviterInfo = await query('SELECT name FROM users WHERE id = $1', [userId]);
+        const clubName = clubInfo.rows[0]?.name || '소모임';
+        const inviterName = inviterInfo.rows[0]?.name || '회원';
+
         let invited = 0;
         for (const targetId of user_ids) {
             try {
-                await query(
+                const result = await query(
                     `INSERT INTO club_members (club_id, user_id, role, status, invited_by)
                      VALUES ($1, $2, 'member', 'pending', $3)
-                     ON CONFLICT (club_id, user_id) DO NOTHING`,
+                     ON CONFLICT (club_id, user_id) DO NOTHING RETURNING id`,
                     [clubId, targetId, userId]
                 );
-                invited++;
+                if (result.rows.length > 0) {
+                    invited++;
+                    // push 알림 발송
+                    sendPushToUser(targetId, {
+                        title: '소모임 초대',
+                        body: `${inviterName}님이 "${clubName}" 소모임에 초대했습니다`,
+                        type: 'club_invite',
+                        data: { clubId }
+                    }).catch(() => {});
+                }
             } catch (_) { /* 이미 멤버 */ }
         }
 

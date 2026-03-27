@@ -5,6 +5,7 @@ var _clubPage = 1;
 var _clubLoading = false;
 var _editingClubPostId = null;
 var _currentClubTab = 'posts';
+var _editingClubScheduleId = null;
 var _clubInviteSelected = [];
 
 // ========== 소모임 목록 ==========
@@ -517,11 +518,16 @@ async function loadClubSchedules() {
             var start = new Date(s.start_date);
             var dateStr = start.getFullYear() + '-' + String(start.getMonth() + 1).padStart(2, '0') + '-' + String(start.getDate()).padStart(2, '0');
             var timeStr = String(start.getHours()).padStart(2, '0') + ':' + String(start.getMinutes()).padStart(2, '0');
+            var isCreator = currentUser && s.created_by === currentUser.id;
             html += '<div class="gb-schedule-card">'
                 + '<div class="gb-schedule-date">' + dateStr + ' ' + timeStr + '</div>'
                 + '<div class="gb-schedule-title">' + escapeHtml(s.title) + '</div>'
                 + (s.location ? '<div class="gb-schedule-location">' + escapeHtml(s.location) + '</div>' : '')
                 + '<div class="gb-schedule-creator">' + escapeHtml(s.creator_name) + '</div>'
+                + (isCreator ? '<div class="gb-schedule-actions">'
+                    + '<button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();editClubSchedule(' + s.id + ')">수정</button>'
+                    + '<button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();deleteClubSchedule(' + s.id + ')">삭제</button>'
+                    + '</div>' : '')
                 + '</div>';
         });
         tc.innerHTML = html;
@@ -530,8 +536,42 @@ async function loadClubSchedules() {
     }
 }
 
-function showClubScheduleForm() {
+function showClubScheduleForm(scheduleId) {
+    _editingClubScheduleId = scheduleId || null;
+    document.getElementById('cs-title') && (document.getElementById('cs-title').value = '');
+    document.getElementById('cs-description') && (document.getElementById('cs-description').value = '');
+    document.getElementById('cs-location') && (document.getElementById('cs-location').value = '');
+    document.getElementById('cs-start-date') && (document.getElementById('cs-start-date').value = '');
+    document.getElementById('cs-end-date') && (document.getElementById('cs-end-date').value = '');
+    if (scheduleId) loadClubScheduleForEdit(scheduleId);
     navigateToScreen('club-schedule-form');
+}
+
+async function loadClubScheduleForEdit(scheduleId) {
+    try {
+        var res = await apiClient.request('/clubs/' + _currentClubId + '/schedules');
+        if (res.success) {
+            var s = res.schedules.find(function(x) { return x.id === scheduleId; });
+            if (s) {
+                document.getElementById('cs-title').value = s.title || '';
+                document.getElementById('cs-description').value = s.description || '';
+                document.getElementById('cs-location').value = s.location || '';
+                if (s.start_date) document.getElementById('cs-start-date').value = s.start_date.substring(0, 16);
+                if (s.end_date) document.getElementById('cs-end-date').value = s.end_date.substring(0, 16);
+                if (s.category) document.getElementById('cs-category').value = s.category;
+            }
+        }
+    } catch (_) {}
+}
+
+function editClubSchedule(scheduleId) { showClubScheduleForm(scheduleId); }
+
+async function deleteClubSchedule(scheduleId) {
+    if (!confirm('일정을 삭제하시겠습니까?')) return;
+    try {
+        await apiClient.request('/clubs/' + _currentClubId + '/schedules/' + scheduleId, { method: 'DELETE' });
+        loadClubSchedules();
+    } catch (_) {}
 }
 
 function initClubScheduleForm() {
@@ -550,8 +590,10 @@ function initClubScheduleForm() {
             if (!title || !startDate) return;
 
             try {
-                await apiClient.request('/clubs/' + _currentClubId + '/schedules', {
-                    method: 'POST',
+                var url = '/clubs/' + _currentClubId + '/schedules' + (_editingClubScheduleId ? '/' + _editingClubScheduleId : '');
+                var method = _editingClubScheduleId ? 'PUT' : 'POST';
+                await apiClient.request(url, {
+                    method: method,
                     body: JSON.stringify({
                         title: title, description: desc, location: location,
                         start_date: startDate, end_date: endDate || null, category: category

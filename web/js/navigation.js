@@ -284,6 +284,23 @@ async function updateNavBadges() {
             }
         });
     } catch (_) {}
+
+    // 소모임 초대 대기 배지
+    try {
+        const clubRes = await apiClient.request('/clubs');
+        if (clubRes.success) {
+            const pendingCount = (clubRes.clubs || []).filter(c => c.my_status === 'pending').length;
+            const badge = document.getElementById('club-invite-badge');
+            if (badge) {
+                if (pendingCount > 0) {
+                    badge.textContent = String(pendingCount);
+                    badge.style.display = '';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+    } catch (_) {}
 }
 
 // 탭 전환 함수

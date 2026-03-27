@@ -1356,6 +1356,77 @@
             </div>
         </div>
 
+        <!-- 개인정보처리방침 -->
+        <div id="privacy-policy-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title">개인정보처리방침</h1>
+            </div>
+            <div class="screen-content" style="padding:16px">
+                <div class="privacy-policy-content">
+                    <h3>1. 개인정보의 수집 및 이용 목적</h3>
+                    <p>영등포청년회의소(이하 "JC")는 다음의 목적으로 개인정보를 수집·이용합니다.</p>
+                    <ul>
+                        <li>회원 가입·인증 및 회원 관리</li>
+                        <li>커뮤니티 서비스 제공 (게시판, 일정, 소모임)</li>
+                        <li>공지사항 및 알림 발송</li>
+                        <li>회원 간 연락처 공유 (공개 범위 설정에 따름)</li>
+                    </ul>
+
+                    <h3>2. 수집하는 개인정보 항목</h3>
+                    <p><strong>필수:</strong> 이름, 이메일, 비밀번호, 연락처</p>
+                    <p><strong>선택:</strong> 주소, 생년월일, 성별, 회사명, 직책, 부서, 업종, 프로필 사진, 사업장 주소, SNS 링크</p>
+
+                    <h3>3. 개인정보의 보유 및 이용 기간</h3>
+                    <p>회원 탈퇴 시까지 보유하며, 탈퇴 후 <strong>90일 이내</strong>에 개인정보를 완전 파기합니다.</p>
+                    <p>단, 관련 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관합니다.</p>
+                    <ul>
+                        <li>전자상거래 등에서의 소비자 보호에 관한 법률: 계약 또는 청약철회 기록 5년</li>
+                        <li>통신비밀보호법: 로그인 기록 3개월</li>
+                    </ul>
+
+                    <h3>4. 개인정보의 제3자 제공</h3>
+                    <p>JC는 원칙적으로 개인정보를 외부에 제공하지 않습니다. 다만 다음의 경우 예외로 합니다.</p>
+                    <ul>
+                        <li>회원이 사전에 동의한 경우</li>
+                        <li>법률에 특별한 규정이 있는 경우</li>
+                    </ul>
+
+                    <h3>5. 개인정보의 파기</h3>
+                    <p>보유 기간 경과, 처리 목적 달성 등으로 개인정보가 불필요하게 되었을 때에는 지체 없이 파기합니다.</p>
+                    <ul>
+                        <li>전자적 파일: 복구 불가능한 방법으로 영구 삭제</li>
+                        <li>자동 파기: 탈퇴 후 90일 경과 시 스케줄러에 의해 자동 파기</li>
+                    </ul>
+
+                    <h3>6. 정보 주체의 권리</h3>
+                    <p>회원은 언제든지 다음의 권리를 행사할 수 있습니다.</p>
+                    <ul>
+                        <li>개인정보 열람, 정정, 삭제 요구</li>
+                        <li>개인정보 처리 정지 요구</li>
+                        <li>회원 탈퇴 (설정 > 회원 탈퇴)</li>
+                        <li>연락처 공개 범위 설정 변경 (프로필 > 전화번호 공개 범위)</li>
+                    </ul>
+
+                    <h3>7. 개인정보 보호 조치</h3>
+                    <ul>
+                        <li>비밀번호 암호화 저장 (bcrypt)</li>
+                        <li>JWT 토큰 기반 인증</li>
+                        <li>SSL/TLS 암호화 통신</li>
+                        <li>SQL 인젝션 방지 (파라미터화 쿼리)</li>
+                        <li>XSS 방지 (입출력 이스케이프 처리)</li>
+                    </ul>
+
+                    <h3>8. 개인정보 보호책임자</h3>
+                    <p>영등포청년회의소 사무국</p>
+                    <p>문의: 앱 내 설정 > 문의하기</p>
+
+                    <h3>9. 시행일</h3>
+                    <p>본 방침은 2026년 3월 27일부터 시행됩니다.</p>
+                </div>
+            </div>
+        </div>
+
         <div id="jc-vision-screen" class="screen">
             <div class="app-bar">
                 <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
@@ -1715,11 +1786,12 @@
         </div>
         <nav class="side-menu-nav">
             <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('org-chart')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="8" y="17" width="8" height="4" rx="1"/></svg><span>로컬조직도</span></a>
-            <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('clubs')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>소모임</span></a>
+            <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('clubs')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>소모임</span><span class="side-menu-badge" id="club-invite-badge" style="display:none"></span></a>
             <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('jc-vision')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>JC 비전·목표</span></a>
             <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('jc-roles')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><span>직책 업무</span></a>
             <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('jc-map')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>JC 지도</span></a>
             <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('jc-charter')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>정관</span></a>
+            <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('privacy-policy')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><span>개인정보처리방침</span></a>
             <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('meeting-records')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>회의록</span></a>
             <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('portal')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>포털 (타 로컬 방문)</span></a>
             <div class="side-menu-divider"></div>

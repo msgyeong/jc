@@ -8093,6 +8093,19 @@ a.sns-badge:hover {
     border-radius: 10px;
 }
 
+/* 사이드메뉴 배지 */
+.side-menu-badge {
+    background: #DC2626;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+    margin-left: auto;
+}
+
 /* ========== 소모임 (Clubs) ========== */
 
 .club-section-title {
@@ -8181,3 +8194,14 @@ a.sns-badge:hover {
     display: inline-block;
     margin-top: 4px;
 }
+
+/* 개인정보처리방침 */
+.privacy-policy-content { font-size: 14px; line-height: 1.8; color: var(--text-primary); }
+.privacy-policy-content h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; color: var(--text-primary); }
+.privacy-policy-content h3:first-child { margin-top: 0; }
+.privacy-policy-content p { margin: 4px 0; }
+.privacy-policy-content ul { margin: 4px 0 8px 20px; }
+.privacy-policy-content li { margin: 2px 0; }
+
+/* 일정 수정/삭제 버튼 */
+.gb-schedule-actions { display: flex; gap: 6px; margin-top: 8px; }

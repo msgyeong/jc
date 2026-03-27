@@ -25,7 +25,7 @@ router.get('/', authenticate, async (req, res) => {
             LEFT JOIN users u ON s.created_by = u.id
         `;
 
-        const conditions = [];
+        const conditions = ['s.deleted_at IS NULL'];
         const params = [];
 
         // 월별 조회 (캘린더용)
@@ -37,9 +37,7 @@ router.get('/', authenticate, async (req, res) => {
             conditions.push('s.start_date >= CURRENT_DATE');
         }
 
-        if (conditions.length > 0) {
-            sqlQuery += ' WHERE ' + conditions.join(' AND ');
-        }
+        sqlQuery += ' WHERE ' + conditions.join(' AND ');
 
         sqlQuery += ' ORDER BY s.start_date ASC';
 
@@ -289,7 +287,7 @@ router.delete('/:id', authenticate, async (req, res) => {
         }
 
         // 일정 삭제
-        await query('DELETE FROM schedules WHERE id = $1', [id]);
+        await query('UPDATE schedules SET deleted_at = NOW() WHERE id = $1', [id]);
 
         res.json({
             success: true,

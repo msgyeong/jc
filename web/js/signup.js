@@ -94,7 +94,81 @@ function validateSignupForm() {
         }
     }
     
+    // 약관 동의 검증
+    const agreeTerms = document.getElementById('agree-terms');
+    if (agreeTerms && !agreeTerms.checked) {
+        showError('agree-terms-error', '이용약관에 동의해주세요.');
+        isValid = false;
+    }
+    const agreePrivacy = document.getElementById('agree-privacy');
+    if (agreePrivacy && !agreePrivacy.checked) {
+        showError('agree-privacy-error', '개인정보 수집 및 이용에 동의해주세요.');
+        isValid = false;
+    }
+
     return isValid;
+}
+
+// 약관/개인정보 팝업
+function showTermsPopup() {
+    showLegalPopup('이용약관', ''
+        + '<h4>영등포 JC 회원관리 앱 이용약관</h4>'
+        + '<p><strong>제1조 (목적)</strong><br>이 약관은 영등포청년회의소(이하 "회의소")가 제공하는 회원관리 앱(이하 "서비스")의 이용 조건 및 절차에 관한 사항을 규정함을 목적으로 합니다.</p>'
+        + '<p><strong>제2조 (이용자격)</strong><br>서비스는 회의소 회원으로 가입 승인된 자에 한하여 이용할 수 있습니다.</p>'
+        + '<p><strong>제3조 (서비스의 내용)</strong><br>회의소는 다음과 같은 서비스를 제공합니다:<br>1. 공지사항 및 게시판 기능<br>2. 일정 관리 및 참석 여부 확인<br>3. 회원 정보 조회<br>4. 푸시 알림 서비스</p>'
+        + '<p><strong>제4조 (이용자의 의무)</strong><br>1. 이용자는 타인의 개인정보를 부정 사용하거나 유출해서는 안 됩니다.<br>2. 서비스를 통해 취득한 정보를 회의소의 사전 승인 없이 외부에 공개하거나 상업적으로 이용할 수 없습니다.</p>'
+        + '<p><strong>제5조 (서비스 변경 및 중단)</strong><br>회의소는 운영상 필요에 따라 서비스의 전부 또는 일부를 변경하거나 중단할 수 있으며, 사전에 공지합니다.</p>'
+        + '<p><strong>제6조 (탈퇴 및 자격상실)</strong><br>1. 회원은 언제든지 탈퇴를 요청할 수 있습니다.<br>2. 탈퇴 후 90일간 데이터 보관 후 완전 파기됩니다.</p>'
+        + '<p><strong>제7조 (면책 조항)</strong><br>1. 회의소는 천재지변 또는 불가항력으로 인한 서비스 제공 불가에 대해 책임지지 않습니다.<br>2. 이용자 귀책사유로 인한 서비스 이용 장애에 대해 책임지지 않습니다.</p>'
+        + '<p><strong>제8조 (분쟁 해결)</strong><br>서비스 이용과 관련한 분쟁은 대한민국 법률에 따르며, 서울서부지방법원을 관할법원으로 합니다.</p>'
+        + '<p style="color:#6B7280;font-size:13px;margin-top:16px">시행일: 2026년 1월 1일</p>'
+    );
+}
+
+function showPrivacyPopup() {
+    showLegalPopup('개인정보 수집 및 이용 동의', ''
+        + '<h4>개인정보 수집 및 이용 안내</h4>'
+        + '<p><strong>1. 수집하는 개인정보 항목</strong><br>'
+        + '<em>필수 항목:</em> 이름, 이메일, 비밀번호, 휴대폰번호, 주소, 주민등록번호(앞6자리+뒤1자리), 최종학력<br>'
+        + '<em>선택 항목:</em> 회사명, 직책, 부서, 직장전화, 직장주소, 업종, 프로필사진, 경력, 결혼여부, 배우자정보, 자녀정보, 취미, 비상연락처, 가입소감문, 개인웹사이트</p>'
+        + '<p><strong>2. 수집 및 이용 목적</strong><br>'
+        + '1. 회원 식별 및 가입 승인<br>'
+        + '2. 공지사항, 일정 등 서비스 제공<br>'
+        + '3. 푸시 알림 발송<br>'
+        + '4. 회원 간 연락처 공유 (앱 내 한정, 전화번호 공개 범위 설정에 따름)<br>'
+        + '5. 주소 좌표 변환을 위한 Kakao API 위탁 처리</p>'
+        + '<p><strong>3. 개인정보 보유 및 이용 기간</strong><br>'
+        + '회원 탈퇴 시부터 90일간 보관 후 완전 파기합니다.<br>'
+        + '관련 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관합니다.</p>'
+        + '<p><strong>4. 개인정보의 제3자 제공</strong><br>'
+        + '회의소는 이용자의 동의 없이 개인정보를 제3자에게 제공하지 않습니다.</p>'
+        + '<p><strong>5. 개인정보 처리 위탁</strong><br>'
+        + '주소 좌표 변환: Kakao (카카오 주소 API) - 입력된 주소를 좌표로 변환하기 위해 전달됩니다.</p>'
+        + '<p><strong>6. 이용자의 권리</strong><br>'
+        + '이용자는 언제든지 본인의 개인정보를 열람, 정정, 삭제 요구할 수 있으며, 프로필 수정 또는 회원 탈퇴를 통해 처리할 수 있습니다.</p>'
+        + '<p><strong>7. 개인정보 보호 책임자</strong><br>'
+        + '영등포청년회의소 사무국<br>문의: 앱 내 관리자 연락</p>'
+        + '<p style="color:#6B7280;font-size:13px;margin-top:16px">시행일: 2026년 1월 1일</p>'
+    );
+}
+
+function showLegalPopup(title, content) {
+    var existing = document.getElementById('legal-popup-overlay');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'legal-popup-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML = ''
+        + '<div style="background:#fff;border-radius:12px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;padding:24px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
+        + '<h3 style="font-size:17px;font-weight:600;margin:0">' + title + '</h3>'
+        + '<button onclick="this.closest(\'#legal-popup-overlay\').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#6B7280">&times;</button>'
+        + '</div>'
+        + '<div class="legal-content">' + content + '</div>'
+        + '</div>';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
 }
 
 // 회원가입 처리

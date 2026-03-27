@@ -236,16 +236,22 @@ async function updateNavBadges() {
     // 로그인 전에는 API 호출하지 않음
     if (!localStorage.getItem('auth_token')) return;
     try {
-        // 새 공지 개수 (3일 이내)
-        const postsRes = await apiClient.getPosts(1, 20, 'notice');
-        const posts = postsRes.posts || (postsRes.data && (postsRes.data.posts || postsRes.data.items)) || [];
-        const newNoticeCount = posts.filter(p => {
+        // 새 게시글 개수 (3일 이내, 공지+일반 모두 포함)
+        const [noticeRes, generalRes] = await Promise.all([
+            apiClient.getPosts(1, 20, 'notice'),
+            apiClient.getPosts(1, 20, 'general')
+        ]);
+        const noticePosts = noticeRes.posts || (noticeRes.data && (noticeRes.data.posts || noticeRes.data.items)) || [];
+        const generalPosts = generalRes.posts || (generalRes.data && (generalRes.data.posts || generalRes.data.items)) || [];
+        const allPosts = [...noticePosts, ...generalPosts];
+        const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
+        const newPostCount = allPosts.filter(p => {
             const created = new Date(p.created_at);
-            return (Date.now() - created) <= 3 * 24 * 60 * 60 * 1000;
+            return (Date.now() - created) <= threeDaysMs;
         }).length;
         document.querySelectorAll('.nav-badge[data-badge-tab="posts"]').forEach(d => {
-            if (newNoticeCount > 0) {
-                d.textContent = newNoticeCount > 99 ? '99+' : String(newNoticeCount);
+            if (newPostCount > 0) {
+                d.textContent = newPostCount > 99 ? '99+' : String(newPostCount);
                 d.classList.add('visible');
             } else {
                 d.textContent = '';
@@ -254,13 +260,10 @@ async function updateNavBadges() {
         });
     } catch (_) {}
     try {
-        // 다가오는 일정 개수 (7일 이내)
+        // 다가오는 일정 개수 (upcoming=true 전체, 홈 화면과 동일)
         const schedRes = await apiClient.getSchedules(true);
         const scheds = schedRes.schedules || (schedRes.data && (schedRes.data.schedules || schedRes.data.items)) || [];
-        const upcomingCount = scheds.filter(s => {
-            const start = new Date(s.start_date);
-            return (start - Date.now()) <= 7 * 24 * 60 * 60 * 1000 && start >= Date.now();
-        }).length;
+        const upcomingCount = scheds.length;
         document.querySelectorAll('.nav-badge[data-badge-tab="schedules"]').forEach(d => {
             if (upcomingCount > 0) {
                 d.textContent = upcomingCount > 99 ? '99+' : String(upcomingCount);

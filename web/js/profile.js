@@ -61,6 +61,30 @@ async function loadProfile() {
     }
 }
 
+// SNS 타입별 아이콘/라벨
+var SNS_TYPE_MAP = {
+    instagram: { icon: '\uD83D\uDCF7', label: 'Instagram', urlPrefix: 'https://instagram.com/' },
+    youtube:   { icon: '\uD83C\uDFAC', label: 'YouTube',   urlPrefix: 'https://youtube.com/' },
+    twitter:   { icon: '\uD83D\uDC26', label: 'X (Twitter)', urlPrefix: 'https://x.com/' },
+    facebook:  { icon: '\uD83D\uDCD8', label: 'Facebook',  urlPrefix: 'https://facebook.com/' },
+    blog:      { icon: '\uD83D\uDCDD', label: '블로그',     urlPrefix: '' },
+    other:     { icon: '\uD83D\uDD17', label: '기타',       urlPrefix: '' }
+};
+
+function renderSnsBadges(snsLinks) {
+    if (!snsLinks || !Array.isArray(snsLinks) || snsLinks.length === 0) return '';
+    return snsLinks.map(function(sns) {
+        var info = SNS_TYPE_MAP[sns.type] || SNS_TYPE_MAP.other;
+        var handle = sns.handle || '';
+        var url = handle.startsWith('http') ? handle : (info.urlPrefix ? info.urlPrefix + handle.replace(/^@/, '') : handle);
+        var hasUrl = url && (url.startsWith('http') || url.startsWith('//'));
+        if (hasUrl) {
+            return '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener" class="sns-badge" title="' + escapeHtml(info.label) + '">' + info.icon + ' ' + escapeHtml(handle) + '</a>';
+        }
+        return '<span class="sns-badge">' + info.icon + ' ' + escapeHtml(handle) + '</span>';
+    }).join(' ');
+}
+
 // 프로필 렌더링
 function renderProfile(p) {
     const roleLabel = getRoleText(p.role);
@@ -102,6 +126,18 @@ function renderProfile(p) {
                 ${p.department ? profileInfoRow('부서', p.department, 'group') : ''}
                 ${p.industry ? profileInfoRow('업종', (typeof getIndustryName === 'function' ? getIndustryName(p.industry) : p.industry) + (p.industry_detail ? ' · ' + p.industry_detail : ''), 'company') : ''}
                 ${p.work_phone ? profileInfoRow('직장 전화', p.work_phone, 'phone') : ''}
+            </div>` : ''}
+
+            ${p.one_line_pr || p.service_description || (p.sns_links && p.sns_links.length > 0) ? `
+            <div class="info-section">
+                <h3 class="info-section-title">사업 PR</h3>
+                ${p.one_line_pr ? profileInfoRow('한 줄 PR', p.one_line_pr, 'text') : ''}
+                ${p.service_description ? profileInfoRow('주요 서비스', p.service_description, 'text') : ''}
+                ${p.sns_links && p.sns_links.length > 0 ? `
+                <div class="info-row">
+                    <span class="info-label">SNS</span>
+                    <span class="info-value sns-badges-wrap">${renderSnsBadges(p.sns_links)}</span>
+                </div>` : ''}
             </div>` : ''}
 
             <div class="info-section">
@@ -216,6 +252,18 @@ function showEditProfileForm() {
                     <div class="form-group"><label>직장 전화</label><input type="tel" id="edit-work-phone" value="${escapeHtml(p.work_phone || '')}"></div>
                     <div class="form-group"><label>대표 사이트</label><input type="url" id="edit-website" value="${escapeHtml(p.website || '')}" placeholder="홈페이지, 인스타, 유튜브 등 URL"></div>
                 </div>
+                <div class="info-section">
+                    <h3 class="info-section-title">사업 PR</h3>
+                    <div class="form-group"><label>한 줄 PR</label><input type="text" id="edit-one-line-pr" value="${escapeHtml(p.one_line_pr || '')}" placeholder="예: 프리미엄 IT 서비스" maxlength="100"></div>
+                    <div class="form-group"><label>주요 서비스</label><input type="text" id="edit-service-description" value="${escapeHtml(p.service_description || '')}" placeholder="예: 웹개발, 앱개발, 컨설팅" maxlength="200"></div>
+                    <div class="form-group">
+                        <label>SNS 링크</label>
+                        <div id="sns-links-container">
+                            ${renderSnsEditList(p.sns_links)}
+                        </div>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="addSnsLinkRow()" style="margin-top:8px">+ SNS 추가</button>
+                    </div>
+                </div>
                 <div id="profile-edit-error" class="inline-error-message"></div>
                 <button type="submit" class="btn btn-primary btn-full" id="profile-edit-submit-btn">
                     <span class="btn-text">저장</span>
@@ -224,6 +272,58 @@ function showEditProfileForm() {
             </form>
         </div>
     `;
+}
+
+// SNS 편집 목록 렌더링
+function renderSnsEditList(snsLinks) {
+    if (!snsLinks || !Array.isArray(snsLinks) || snsLinks.length === 0) return '';
+    return snsLinks.map(function(sns, idx) {
+        return renderSnsRow(sns.type || 'other', sns.handle || '', idx);
+    }).join('');
+}
+
+function renderSnsRow(type, handle, idx) {
+    var options = [
+        {val:'instagram', label:'Instagram'},
+        {val:'youtube', label:'YouTube'},
+        {val:'twitter', label:'X (Twitter)'},
+        {val:'facebook', label:'Facebook'},
+        {val:'blog', label:'블로그'},
+        {val:'other', label:'기타'}
+    ];
+    var optHtml = options.map(function(o) {
+        return '<option value="' + o.val + '"' + (type === o.val ? ' selected' : '') + '>' + o.label + '</option>';
+    }).join('');
+    return '<div class="sns-edit-row" data-idx="' + idx + '" style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
+        '<select class="sns-type-select" style="flex:0 0 120px;height:40px;border:1px solid #D1D5DB;border-radius:8px;padding:0 8px;font-size:14px">' + optHtml + '</select>' +
+        '<input type="text" class="sns-handle-input" value="' + escapeHtml(handle) + '" placeholder="@계정명 또는 URL" style="flex:1;height:40px;border:1px solid #D1D5DB;border-radius:8px;padding:0 12px;font-size:14px">' +
+        '<button type="button" class="btn-icon-delete" onclick="removeSnsRow(this)" style="flex:0 0 36px;height:36px;border:none;background:#FEE2E2;color:#DC2626;border-radius:8px;cursor:pointer;font-size:16px" title="삭제">&times;</button>' +
+        '</div>';
+}
+
+function addSnsLinkRow() {
+    var container = document.getElementById('sns-links-container');
+    if (!container) return;
+    var idx = container.querySelectorAll('.sns-edit-row').length;
+    container.insertAdjacentHTML('beforeend', renderSnsRow('instagram', '', idx));
+}
+
+function removeSnsRow(btn) {
+    var row = btn.closest('.sns-edit-row');
+    if (row) row.remove();
+}
+
+function collectSnsLinks() {
+    var container = document.getElementById('sns-links-container');
+    if (!container) return [];
+    var rows = container.querySelectorAll('.sns-edit-row');
+    var links = [];
+    rows.forEach(function(row) {
+        var type = row.querySelector('.sns-type-select').value;
+        var handle = row.querySelector('.sns-handle-input').value.trim();
+        if (handle) links.push({ type: type, handle: handle });
+    });
+    return links;
 }
 
 // 프로필 수정 제출
@@ -248,7 +348,10 @@ async function handleProfileEditSubmit(event) {
         industry_detail: document.getElementById('edit-industry-detail')?.value?.trim() || null,
         website: document.getElementById('edit-website')?.value?.trim() || null,
         join_date: document.getElementById('edit-join-date')?.value || null,
-        phone_visibility: document.getElementById('edit-phone-visibility')?.value || 'local'
+        phone_visibility: document.getElementById('edit-phone-visibility')?.value || 'local',
+        one_line_pr: document.getElementById('edit-one-line-pr')?.value?.trim() || null,
+        service_description: document.getElementById('edit-service-description')?.value?.trim() || null,
+        sns_links: collectSnsLinks()
     };
 
     setButtonLoading(submitBtn, true);

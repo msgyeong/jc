@@ -59,6 +59,8 @@ const phoneSvg16 = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" 
 let currentMembersPage = 1;
 let membersLoading = false;
 let currentIndustryFilter = '';
+let currentPositionFilter = '';
+let cachedPositions = [];
 let searchScope = 'my-org'; // 'my-org' | 'all-org'
 let searchTimeout = null;
 
@@ -66,17 +68,20 @@ let searchTimeout = null;
 
 async function loadMembersScreen() {
     currentIndustryFilter = '';
+    currentPositionFilter = '';
     const container = document.getElementById('member-list');
     if (!container) return;
     container.innerHTML = renderSkeleton('list');
 
     try {
-        // 병렬 로드: 즐겨찾기, 그룹, 회원 목록
-        const [favRes, groupsRes, membersRes] = await Promise.all([
+        // 병렬 로드: 즐겨찾기, 그룹, 회원 목록, 직책 목록
+        const [favRes, groupsRes, membersRes, posRes] = await Promise.all([
             apiClient.request('/favorites').catch(() => ({ success: false })),
             apiClient.request('/member-groups').catch(() => ({ success: false })),
-            apiClient.request('/members?page=1&limit=50').catch(() => ({ success: false }))
+            apiClient.request('/members?page=1&limit=50').catch(() => ({ success: false })),
+            apiClient.request('/positions').catch(() => ({ success: false }))
         ]);
+        cachedPositions = (posRes.success && posRes.data) ? posRes.data : [];
 
         const members = membersRes.members || (membersRes.data && (membersRes.data.members || membersRes.data.items)) || [];
         const total = membersRes.total || (membersRes.data && membersRes.data.total) || members.length;
@@ -200,16 +205,26 @@ function renderAllMembersSection(members, count) {
         `<option value="${c.code}"${currentIndustryFilter === c.code ? ' selected' : ''}>${c.name}</option>`
     ).join('');
 
+    const positionOptions = cachedPositions.map(p =>
+        `<option value="${p.id}"${currentPositionFilter == p.id ? ' selected' : ''}>${escapeHtml(p.name)}</option>`
+    ).join('');
+
     const cards = members.map(m => createMemberCard(m)).join('');
 
     return `
         <div class="member-section" id="section-all-members">
             <div class="member-section-header all-members-header">
                 <span>회원 ${count}명</span>
-                <select class="industry-filter-inline" onchange="handleIndustryFilterChange(this.value)">
-                    <option value="">업종: 전체</option>
-                    ${industryOptions}
-                </select>
+                <div class="member-filters-row">
+                    <select class="industry-filter-inline" onchange="handleIndustryFilterChange(this.value)">
+                        <option value="">업종: 전체</option>
+                        ${industryOptions}
+                    </select>
+                    <select class="industry-filter-inline" onchange="handlePositionFilterChange(this.value)">
+                        <option value="">직책: 전체</option>
+                        ${positionOptions}
+                    </select>
+                </div>
             </div>
             <div class="member-section-list">${cards || '<div class="empty-text" style="padding:16px;text-align:center;color:var(--text-secondary)">회원이 없습니다</div>'}</div>
         </div>`;
@@ -242,6 +257,7 @@ function createMemberCard(member) {
                 </div>
                 ${member.position ? `<div class="member-position-v2">${escapeHtml(member.position)}</div>` : ''}
                 ${member.company ? `<div class="member-company-v2">${escapeHtml(member.company)}</div>` : ''}
+                ${member.one_line_pr ? `<div class="member-one-line-pr">${escapeHtml(member.one_line_pr)}</div>` : ''}
                 ${member.industry ? `<span class="industry-tag">${escapeHtml(getIndustryName(member.industry))}</span>` : ''}
             </div>
             ${callBtn}
@@ -280,7 +296,47 @@ function createSearchResultCard(member) {
 
 function handleIndustryFilterChange(value) {
     currentIndustryFilter = value;
-    loadMembersScreen(); // 전체 새로고침
+    loadFilteredMembers();
+}
+
+function handlePositionFilterChange(value) {
+    currentPositionFilter = value;
+    loadFilteredMembers();
+}
+
+async function loadFilteredMembers() {
+    const container = document.getElementById('member-list');
+    if (!container) return;
+    const listEl = container.querySelector('.member-section-list');
+    if (listEl) listEl.innerHTML = renderSkeleton('list');
+
+    try {
+        let url = '/members?page=1&limit=50';
+        if (currentIndustryFilter) url += `&industry=${encodeURIComponent(currentIndustryFilter)}`;
+        if (currentPositionFilter) url += `&position_id=${encodeURIComponent(currentPositionFilter)}`;
+        const membersRes = await apiClient.request(url);
+        const members = membersRes.members || [];
+        const total = membersRes.total || members.length;
+
+        const userInfo = typeof currentUser !== 'undefined' ? currentUser : JSON.parse(localStorage.getItem('user_info') || 'null');
+        const myId = userInfo ? userInfo.id : null;
+        const otherMembers = members.filter(m => !myId || String(m.id) !== String(myId));
+        const cards = otherMembers.map(m => createMemberCard(m)).join('');
+
+        const badge = document.getElementById('member-count-badge');
+        if (badge) badge.textContent = `${total}명`;
+
+        // 전체 회원 섹션만 업데이트
+        const sectionEl = document.getElementById('section-all-members');
+        if (sectionEl) {
+            const headerSpan = sectionEl.querySelector('.all-members-header > span');
+            if (headerSpan) headerSpan.textContent = `회원 ${total - (members.find(m => myId && String(m.id) === String(myId)) ? 1 : 0)}명`;
+            const listInner = sectionEl.querySelector('.member-section-list');
+            if (listInner) listInner.innerHTML = cards || '<div class="empty-text" style="padding:16px;text-align:center;color:var(--text-secondary)">해당하는 회원이 없습니다</div>';
+        }
+    } catch (error) {
+        console.error('필터 로드 실패:', error);
+    }
 }
 
 // ========== 즐겨찾기 ==========
@@ -530,6 +586,14 @@ async function showMemberDetailScreen(memberId) {
                     ${m.industry ? infoRow('업종', getIndustryName(m.industry) + (m.industry_detail ? ' · ' + m.industry_detail : '')) : ''}
                     ${m.work_phone ? infoRow('직장 전화', m.work_phone, true) : ''}
                     ${m.website ? `<div class="info-row"><span class="info-label">대표 사이트</span><span class="info-value"><a href="${escapeHtml(m.website)}" target="_blank" rel="noopener" style="color:var(--primary-color);text-decoration:underline;word-break:break-all">${escapeHtml(m.website)}</a></span></div>` : ''}
+                </div>` : ''}
+
+                ${m.one_line_pr || m.service_description || (m.sns_links && m.sns_links.length > 0) ? `
+                <div class="info-section">
+                    <h3 class="info-section-title">사업 PR</h3>
+                    ${m.one_line_pr ? infoRow('한 줄 PR', m.one_line_pr) : ''}
+                    ${m.service_description ? infoRow('주요 서비스', m.service_description) : ''}
+                    ${m.sns_links && m.sns_links.length > 0 ? '<div class="info-row"><span class="info-label">SNS</span><span class="info-value sns-badges-wrap">' + (typeof renderSnsBadges === 'function' ? renderSnsBadges(m.sns_links) : '') + '</span></div>' : ''}
                 </div>` : ''}
 
                 <div id="title-history-container"></div>

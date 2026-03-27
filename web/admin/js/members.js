@@ -27,6 +27,14 @@ function renderMembers(container) {
         <div class="page-toolbar">
             <h2 class="page-title">회원 관리</h2>
             <span class="page-count" id="members-count">-</span>
+            <button class="btn btn-ghost btn-sm" onclick="printMembers()" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                인쇄
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="downloadMembersCSV()" style="display:inline-flex;align-items:center;gap:4px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+            </button>
             <div class="search-box">
                 <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" class="search-input" id="members-search" placeholder="이름, 이메일, 전화번호 검색…" value="${escapeHtml(membersState.search)}">
@@ -324,4 +332,89 @@ function startInlineEditProfession(td, memberId, currentValue) {
         await AdminAPI.put('/api/admin/members/' + memberId, { profession: val || null });
         showAdminToast('직업이 저장되었습니다.');
     });
+}
+
+// ── 인쇄 기능 ──
+async function printMembers() {
+    try {
+        const params = new URLSearchParams({ page: 1, limit: 9999 });
+        if (membersState.search) params.set('search', membersState.search);
+        if (membersState.status) params.set('status', membersState.status);
+        if (membersState.role) params.set('role', membersState.role);
+
+        const res = await AdminAPI.get('/api/admin/members?' + params.toString());
+        if (!res.success) throw new Error(res.message);
+
+        const members = res.members || [];
+        const statusMap = { active: '활동', pending: '대기', suspended: '정지', withdrawn: '탈퇴' };
+
+        let rows = members.map(function(m) {
+            return '<tr>' +
+                '<td>' + escapeHtml(m.name) + '</td>' +
+                '<td>' + escapeHtml(m.position_name || '-') + '</td>' +
+                '<td>' + escapeHtml(m.phone || '-') + '</td>' +
+                '<td>' + escapeHtml(m.email || '-') + '</td>' +
+                '<td>' + escapeHtml(m.company || '-') + '</td>' +
+                '<td>' + escapeHtml(m.industry || '-') + '</td>' +
+                '</tr>';
+        }).join('');
+
+        var printHtml = '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+            '<title>회원 목록</title>' +
+            '<style>' +
+            'body { font-family: "Noto Sans KR", sans-serif; padding: 20px; color: #111827; }' +
+            'h1 { font-size: 18px; margin-bottom: 4px; }' +
+            '.meta { font-size: 12px; color: #6B7280; margin-bottom: 16px; }' +
+            'table { width: 100%; border-collapse: collapse; font-size: 13px; }' +
+            'th, td { border: 1px solid #D1D5DB; padding: 6px 10px; text-align: left; }' +
+            'th { background: #F3F4F6; font-weight: 600; }' +
+            'tr:nth-child(even) td { background: #F9FAFB; }' +
+            '@media print { body { padding: 0; } }' +
+            '</style></head><body>' +
+            '<h1>영등포 JC 회원 목록</h1>' +
+            '<div class="meta">출력일: ' + new Date().toLocaleDateString('ko-KR') + ' | 총 ' + members.length + '명</div>' +
+            '<table><thead><tr>' +
+            '<th>이름</th><th>직책</th><th>연락처</th><th>이메일</th><th>회사</th><th>업종</th>' +
+            '</tr></thead><tbody>' + rows + '</tbody></table>' +
+            '</body></html>';
+
+        var w = window.open('', '_blank');
+        w.document.write(printHtml);
+        w.document.close();
+        w.onload = function() { w.print(); };
+    } catch (err) {
+        console.error('Print error:', err);
+        showAdminToast('인쇄 준비 중 오류: ' + err.message, 'error');
+    }
+}
+
+// ── CSV 다운로드 ──
+async function downloadMembersCSV() {
+    try {
+        var token = AdminAPI.getToken();
+        var res = await fetch('/api/admin/members/export/csv', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) {
+            var err = await res.json().catch(function() { return {}; });
+            throw new Error(err.message || 'CSV 다운로드 실패');
+        }
+        var blob = await res.blob();
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        var now = new Date();
+        var dateStr = now.getFullYear() +
+            String(now.getMonth() + 1).padStart(2, '0') +
+            String(now.getDate()).padStart(2, '0');
+        a.href = url;
+        a.download = 'members_' + dateStr + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showAdminToast('CSV 파일이 다운로드되었습니다.');
+    } catch (err) {
+        console.error('CSV download error:', err);
+        showAdminToast('CSV 다운로드 실패: ' + err.message, 'error');
+    }
 }

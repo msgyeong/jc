@@ -124,6 +124,19 @@ function createPostCard(post) {
     `;
 }
 
+// ── 목록 카드 통계 즉시 업데이트 ──
+function updatePostCardStat(postId, type, count) {
+    const card = document.querySelector(`.pc-card[onclick*="posts/${postId}"]`);
+    if (!card) return;
+    const stats = card.querySelectorAll('.pc-stat');
+    // 순서: 댓글(0), 좋아요(1), 조회수(2)
+    const idx = type === 'comments' ? 0 : type === 'likes' ? 1 : -1;
+    if (idx >= 0 && stats[idx]) {
+        const svg = stats[idx].querySelector('svg');
+        stats[idx].innerHTML = (svg ? svg.outerHTML : '') + ' ' + count;
+    }
+}
+
 // ── 무한 스크롤 ──
 function setupPostsInfiniteScroll() {
     if (postsInfiniteScrollSetup) return;
@@ -626,6 +639,8 @@ async function handlePostLikeClick(postId) {
             if (countEl) countEl.textContent = result.likes_count || 0;
             btn.setAttribute('aria-pressed', result.liked ? 'true' : 'false');
             btn.innerHTML = '<svg class="icon-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"' + (result.liked ? ' fill="#DC2626" stroke="#DC2626"' : '') + '/></svg> <span class="post-detail-likes-count">' + (result.likes_count || 0) + '</span>';
+            // 목록 카드 좋아요 수도 즉시 반영
+            updatePostCardStat(postId, 'likes', result.likes_count || 0);
         }
     } catch (_) {}
     btn.disabled = false;
@@ -640,10 +655,13 @@ async function handlePostCommentSubmit(postId, content) {
         const result = await apiClient.createPostComment(postId, content);
         if (result && result.success) {
             await loadCommentsForPost(postId);
+            const newCount = result.comments_count != null ? result.comments_count : null;
             const numEl = document.querySelector('.post-detail-comments-count .num');
-            if (numEl) numEl.textContent = result.comments_count != null ? result.comments_count : (parseInt(numEl.textContent, 10) + 1);
+            if (numEl) numEl.textContent = newCount != null ? newCount : (parseInt(numEl.textContent, 10) + 1);
             const form = document.getElementById('post-detail-comment-form');
             if (form) form.reset();
+            // 목록 카드 댓글 수도 즉시 반영
+            if (newCount != null) updatePostCardStat(postId, 'comments', newCount);
         }
     } catch (err) {
         showToast(err.message || '댓글 등록에 실패했습니다.', 'error');

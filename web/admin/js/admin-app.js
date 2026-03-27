@@ -139,6 +139,7 @@ const PAGE_TITLES = {
     settings: '설정',
     'admin-profile': '내 프로필',
     organizations: '로컬 관리',
+    banners: '배너 광고',
 };
 
 function routeFromHash() {
@@ -159,6 +160,7 @@ function getPageRenderer(page) {
         settings: typeof renderSettings === 'function' ? renderSettings : null,
         'admin-profile': typeof renderAdminProfile === 'function' ? renderAdminProfile : null,
         organizations: typeof renderOrganizations === 'function' ? renderOrganizations : null,
+        banners: typeof renderBanners === 'function' ? renderBanners : null,
     };
     return map[page] || null;
 }

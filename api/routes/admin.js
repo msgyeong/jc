@@ -309,6 +309,59 @@ router.get('/members/pending', async (req, res) => {
 });
 
 /**
+ * GET /api/admin/members/export/csv
+ * 회원 목록 CSV 다운로드
+ */
+router.get('/members/export/csv', async (req, res) => {
+    try {
+        const result = await query(
+            `SELECT u.name, p.name as position_name, u.phone, u.email,
+                    u.company, u.department, u.industry, u.created_at, u.status
+             FROM users u
+             LEFT JOIN positions p ON u.position_id = p.id
+             WHERE u.role != 'super_admin'
+             ORDER BY u.created_at DESC`
+        );
+
+        const statusMap = {
+            active: '활동',
+            pending: '대기',
+            suspended: '정지',
+            withdrawn: '탈퇴'
+        };
+
+        const header = '이름,직책,연락처,이메일,회사,부서,업종,가입일,상태';
+        const rows = result.rows.map(r => {
+            const fields = [
+                r.name || '',
+                r.position_name || '',
+                r.phone || '',
+                r.email || '',
+                r.company || '',
+                r.department || '',
+                r.industry || '',
+                r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : '',
+                statusMap[r.status] || r.status || ''
+            ];
+            return fields.map(f => '"' + String(f).replace(/"/g, '""') + '"').join(',');
+        });
+
+        const csv = '\uFEFF' + header + '\n' + rows.join('\n');
+        const now = new Date();
+        const dateStr = now.getFullYear() +
+            String(now.getMonth() + 1).padStart(2, '0') +
+            String(now.getDate()).padStart(2, '0');
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="members_${dateStr}.csv"`);
+        res.send(csv);
+    } catch (error) {
+        console.error('CSV export error:', error);
+        res.status(500).json({ success: false, message: 'CSV 내보내기 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
  * GET /api/admin/members
  * 전체 회원 목록 (검색/필터/정렬/페이지네이션)
  */
@@ -668,8 +721,8 @@ router.delete('/members/:id/permanent', async (req, res) => {
             await query('DELETE FROM likes WHERE post_id = $1', [p.id]).catch(() => {});
             await query('DELETE FROM post_likes WHERE post_id = $1', [p.id]).catch(() => {});
         }
-        await query('DELETE FROM posts WHERE author_id = $1', [id]).catch(() => {});
-        await query('DELETE FROM schedules WHERE created_by = $1', [id]).catch(() => {});
+        await query('UPDATE posts SET deleted_at = NOW() WHERE author_id = $1', [id]).catch(() => {});
+        await query('UPDATE schedules SET deleted_at = NOW() WHERE created_by = $1', [id]).catch(() => {});
         // 사용자 삭제
         try {
             await query('DELETE FROM users WHERE id = $1', [id]);
@@ -1153,7 +1206,7 @@ router.delete('/posts/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: '게시글을 찾을 수 없습니다.' });
         }
 
-        await query('DELETE FROM posts WHERE id = $1', [id]);
+        await query('UPDATE posts SET deleted_at = NOW() WHERE id = $1', [id]);
 
         writeAuditLog({
             adminId, action: 'post.delete',
@@ -1496,13 +1549,13 @@ router.delete('/notices/:id', async (req, res) => {
             if (linkedScheduleId) {
                 if (deleteLinkedSchedule) {
                     await client.query('UPDATE posts SET linked_schedule_id = NULL WHERE id = $1', [id]);
-                    await client.query('DELETE FROM schedules WHERE id = $1', [linkedScheduleId]);
+                    await client.query('UPDATE schedules SET deleted_at = NOW() WHERE id = $1', [linkedScheduleId]);
                 } else {
                     await client.query('UPDATE posts SET linked_schedule_id = NULL WHERE id = $1', [id]);
                     await client.query('UPDATE schedules SET linked_post_id = NULL WHERE id = $1', [linkedScheduleId]);
                 }
             }
-            await client.query("DELETE FROM posts WHERE id = $1 AND category = 'notice'", [id]);
+            await client.query("UPDATE posts SET deleted_at = NOW() WHERE id = $1 AND category = 'notice'", [id]);
         });
 
         writeAuditLog({
@@ -1821,7 +1874,7 @@ router.delete('/schedules/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const before = await query('SELECT title FROM schedules WHERE id = $1', [id]);
-        await query('DELETE FROM schedules WHERE id = $1', [id]);
+        await query('UPDATE schedules SET deleted_at = NOW() WHERE id = $1', [id]);
         if (before.rows.length > 0) {
             writeAuditLog({
                 adminId: req.user.userId, action: 'schedule.delete',

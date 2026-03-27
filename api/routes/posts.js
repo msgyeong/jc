@@ -18,15 +18,15 @@ function canPostNotice(role) {
  */
 router.get('/', authenticate, async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
+        const page = Math.max(parseInt(req.query.page) || 1, 1);
+        const limit = Math.min(Math.max(parseInt(req.query.limit) || 20, 1), 50);
         const offset = (page - 1) * limit;
         const userId = req.user.userId;
         const category = req.query.category; // 'notice' or 'general'
 
         // Category filter (parameterized)
         const cat = category === 'notice' ? 'notice' : category === 'general' ? 'general' : null;
-        const categoryFilter = cat ? 'WHERE p.category = $1' : '';
+        const categoryFilter = cat ? 'WHERE p.category = $1 AND p.deleted_at IS NULL' : 'WHERE p.deleted_at IS NULL';
         const countParams = cat ? [cat] : [];
 
         const countResult = await query(
@@ -51,7 +51,7 @@ router.get('/', authenticate, async (req, res) => {
         const limitIdx = paramIdx + 1;
         const offsetIdx = paramIdx + 2;
         const userIdx = paramIdx + 3;
-        const listCategoryFilter = cat ? `WHERE p.category = $1` : '';
+        const listCategoryFilter = cat ? `WHERE p.category = $1 AND p.deleted_at IS NULL` : 'WHERE p.deleted_at IS NULL';
 
         let posts;
         try {
@@ -292,37 +292,36 @@ router.post('/:id/like', authenticate, async (req, res) => {
     try {
         const { id: postId } = req.params;
         const userId = req.user.userId;
-        const existing = await query(
-            'SELECT id FROM likes WHERE user_id = $1 AND post_id = $2',
-            [userId, postId]
-        );
-        if (existing.rows.length > 0) {
-            await query('DELETE FROM likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
-            const countResult = await query(
+
+        const result = await transaction(async (client) => {
+            const existing = await client.query(
+                'SELECT id FROM likes WHERE user_id = $1 AND post_id = $2 FOR UPDATE',
+                [userId, postId]
+            );
+            let liked;
+            if (existing.rows.length > 0) {
+                await client.query('DELETE FROM likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
+                liked = false;
+            } else {
+                await client.query(
+                    'INSERT INTO likes (user_id, post_id, created_at) VALUES ($1, $2, NOW()) ON CONFLICT (user_id, post_id) DO NOTHING',
+                    [userId, postId]
+                );
+                liked = true;
+            }
+            const countResult = await client.query(
                 'SELECT COUNT(*) FROM likes WHERE post_id = $1',
                 [postId]
             );
             const likes_count = parseInt(countResult.rows[0]?.count || 0, 10);
-            await query(
+            await client.query(
                 'UPDATE posts SET likes_count = $1, updated_at = NOW() WHERE id = $2',
                 [likes_count, postId]
             );
-            return res.json({ success: true, liked: false, likes_count });
-        }
-        await query(
-            'INSERT INTO likes (user_id, post_id, created_at) VALUES ($1, $2, NOW())',
-            [userId, postId]
-        );
-        const countResult = await query(
-            'SELECT COUNT(*) FROM likes WHERE post_id = $1',
-            [postId]
-        );
-        const likes_count = parseInt(countResult.rows[0]?.count || 0, 10);
-        await query(
-            'UPDATE posts SET likes_count = $1, updated_at = NOW() WHERE id = $2',
-            [likes_count, postId]
-        );
-        return res.json({ success: true, liked: true, likes_count });
+            return { liked, likes_count };
+        });
+
+        return res.json({ success: true, liked: result.liked, likes_count: result.likes_count });
     } catch (err) {
         console.error('Toggle like error:', err);
         return res.status(500).json({
@@ -738,14 +737,14 @@ router.delete('/:id', authenticate, async (req, res) => {
                 if (deleteLinkedSchedule) {
                     // 연결 일정도 함께 삭제
                     await client.query('UPDATE posts SET linked_schedule_id = NULL WHERE id = $1', [id]);
-                    await client.query('DELETE FROM schedules WHERE id = $1', [linkedScheduleId]);
+                    await client.query('UPDATE schedules SET deleted_at = NOW() WHERE id = $1', [linkedScheduleId]);
                 } else {
                     // 연결만 해제, 일정은 독립 유지
                     await client.query('UPDATE posts SET linked_schedule_id = NULL WHERE id = $1', [id]);
                     await client.query('UPDATE schedules SET linked_post_id = NULL WHERE id = $1', [linkedScheduleId]);
                 }
             }
-            await client.query('DELETE FROM posts WHERE id = $1', [id]);
+            await client.query('UPDATE posts SET deleted_at = NOW() WHERE id = $1', [id]);
         });
 
         res.json({

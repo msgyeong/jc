@@ -32,6 +32,7 @@ router.get('/', authenticate, async (req, res) => {
         const limit = parseInt(req.query.limit) || 50;
         const offset = (page - 1) * limit;
         const industry = req.query.industry;
+        const positionId = req.query.position_id ? parseInt(req.query.position_id) : null;
 
         const conditions = ["u.status = 'active'", "u.role != 'super_admin'"];
         const params = [limit, offset, req.user.userId];
@@ -41,6 +42,11 @@ router.get('/', authenticate, async (req, res) => {
             conditions.push(`u.industry = $${params.length}`);
         }
 
+        if (positionId) {
+            params.push(positionId);
+            conditions.push(`u.position_id = $${params.length}`);
+        }
+
         const whereClause = conditions.join(' AND ');
 
         const countParams = [];
@@ -48,6 +54,10 @@ router.get('/', authenticate, async (req, res) => {
         if (industry && VALID_INDUSTRY_CODES.includes(industry)) {
             countParams.push(industry);
             countConditions.push(`industry = $${countParams.length}`);
+        }
+        if (positionId) {
+            countParams.push(positionId);
+            countConditions.push(`position_id = $${countParams.length}`);
         }
         const countRes = await query(
             `SELECT COUNT(*) FROM users WHERE ${countConditions.join(' AND ')}`,
@@ -63,11 +73,13 @@ router.get('/', authenticate, async (req, res) => {
                 u.profile_image, u.role, u.status,
                 u.company, u.position, u.department,
                 u.industry, u.industry_detail, u.profession,
-                u.position_id,
+                u.position_id, u.one_line_pr,
+                pos.name as jc_position,
                 u.created_at,
                 CASE WHEN f.id IS NOT NULL THEN true ELSE false END as is_favorited
              FROM users u
              LEFT JOIN favorites f ON f.target_member_id = u.id AND f.user_id = $3
+             LEFT JOIN positions pos ON pos.id = u.position_id
              WHERE ${whereClause}
              ORDER BY u.name ASC
              LIMIT $1 OFFSET $2`,
@@ -147,10 +159,13 @@ router.get('/search', authenticate, async (req, res) => {
                 u.profile_image, u.role, u.status,
                 u.company, u.position, u.department,
                 u.industry, u.industry_detail, u.profession,
+                u.position_id, u.one_line_pr,
+                pos.name as jc_position,
                 u.created_at,
                 CASE WHEN f.id IS NOT NULL THEN true ELSE false END as is_favorited
              FROM users u
              LEFT JOIN favorites f ON f.target_member_id = u.id AND f.user_id = $1
+             LEFT JOIN positions pos ON pos.id = u.position_id
              WHERE ${conditions.join(' AND ')}
              ORDER BY u.name ASC
              LIMIT 50`,
@@ -219,27 +234,36 @@ router.get('/search-all', authenticate, async (req, res) => {
             conditions.push(`u.org_id = $${params.length}`);
         }
 
+        // 파라미터화된 org_id, district 바인딩
+        params.push(myOrgId || null);
+        const myOrgIdParam = `$${params.length}`;
+        params.push(myDistrict || null);
+        const myDistrictParam = `$${params.length}`;
+
         const result = await query(
             `SELECT
                 u.id, u.name, u.profile_image,
                 u.company, u.position, u.industry, u.profession,
                 u.org_id, u.phone_visibility,
+                u.position_id,
+                pos.name as jc_position,
                 COALESCE(o.name, '소속 없음') as org_name,
                 o.district as org_district,
                 CASE WHEN f.id IS NOT NULL THEN true ELSE false END as is_favorited,
                 CASE
-                    WHEN u.org_id = ${myOrgId ? myOrgId : 'NULL'} THEN u.phone
+                    WHEN u.org_id = ${myOrgIdParam} THEN u.phone
                     WHEN COALESCE(u.phone_visibility, 'local') = 'all' THEN u.phone
                     WHEN COALESCE(u.phone_visibility, 'local') = 'district'
-                         AND o.district = ${myDistrict ? "'" + myDistrict.replace(/'/g, "''") + "'" : 'NULL'} THEN u.phone
+                         AND o.district = ${myDistrictParam} THEN u.phone
                     ELSE NULL
                 END as phone
              FROM users u
              LEFT JOIN organizations o ON o.id = u.org_id
              LEFT JOIN favorites f ON f.target_member_id = u.id AND f.user_id = $1
+             LEFT JOIN positions pos ON pos.id = u.position_id
              WHERE ${conditions.join(' AND ')}
              ORDER BY
-                CASE WHEN u.org_id = ${myOrgId ? myOrgId : 'NULL'} THEN 0 ELSE 1 END,
+                CASE WHEN u.org_id = ${myOrgIdParam} THEN 0 ELSE 1 END,
                 o.name ASC, u.name ASC
              LIMIT 100`,
             params
@@ -274,10 +298,13 @@ router.get('/:id', authenticate, async (req, res) => {
                 u.company, u.position, u.department, u.work_phone,
                 u.industry, u.industry_detail, u.profession,
                 u.position_id, u.website, u.phone_visibility,
+                u.one_line_pr, u.service_description, u.sns_links,
                 u.org_id, u.created_at, u.updated_at,
+                pos.name as jc_position,
                 o.district as org_district
              FROM users u
              LEFT JOIN organizations o ON o.id = u.org_id
+             LEFT JOIN positions pos ON pos.id = u.position_id
              WHERE u.id = $1 AND u.status NOT IN ('withdrawn', 'rejected')`,
             [id]
         );

@@ -520,6 +520,19 @@ input::-ms-clear {
     accent-color: var(--primary-color);
 }
 
+.consent-label {
+    padding: 12px;
+    background: var(--bg-secondary, #F3F4F6);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.consent-link {
+    color: var(--primary-color);
+    text-decoration: underline;
+    font-weight: 500;
+}
+
 /* ==================== 버튼 스타일 ==================== */
 .btn {
     width: 100%;
@@ -4915,6 +4928,45 @@ input[type="date"]:focus {
     margin-top: 4px;
 }
 
+/* 회원 카드 한 줄 PR */
+.member-one-line-pr {
+    font-size: 11px;
+    color: #6B7280;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+    font-style: italic;
+}
+
+/* SNS 배지 */
+.sns-badges-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.sns-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: #F3F4F6;
+    color: #374151;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+a.sns-badge:hover {
+    background: #E5E7EB;
+    color: #1F4FD8;
+}
+
 /* ================================================
    Web Push 알림 UI
    ================================================ */
@@ -7008,6 +7060,14 @@ input[type="date"]:focus {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.member-filters-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 
 .industry-filter-inline {

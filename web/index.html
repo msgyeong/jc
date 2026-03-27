@@ -607,6 +607,26 @@
                         <small class="help-text">이 메시지는 회원 프로필에 표시됩니다</small>
                     </div>
 
+                    <!-- 약관 동의 -->
+                    <h3 class="section-title">약관 동의</h3>
+
+                    <div class="form-group">
+                        <label class="checkbox-label consent-label">
+                            <input type="checkbox" id="agree-terms" required>
+                            <span>[필수] <a href="#" onclick="showTermsPopup(); return false;" class="consent-link">이용약관</a>에 동의합니다</span>
+                        </label>
+                        <span class="error-message" id="agree-terms-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label consent-label">
+                            <input type="checkbox" id="agree-privacy" required>
+                            <span>[필수] <a href="#" onclick="showPrivacyPopup(); return false;" class="consent-link">개인정보 수집 및 이용</a>에 동의합니다</span>
+                        </label>
+                        <span class="help-text">수집 항목: 이름, 이메일, 연락처, 주소, 주민번호(앞6+뒤1자리), 직장정보, 학력, 가족정보</span>
+                        <span class="error-message" id="agree-privacy-error"></span>
+                    </div>
+
                     <div class="inline-error-message" id="signup-inline-error"></div>
 
                     <div class="button-group">

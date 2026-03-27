@@ -241,7 +241,7 @@ router.delete('/:id', authenticate, async (req, res) => {
             });
         }
 
-        await query('DELETE FROM posts WHERE id = $1', [id]);
+        await query('UPDATE posts SET deleted_at = NOW() WHERE id = $1', [id]);
 
         res.json({
             success: true,

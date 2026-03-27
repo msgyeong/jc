@@ -136,17 +136,50 @@ async function loadBannerSummary() {
     const section = document.querySelector('.banner-section');
     if (!section) return;
 
-    const banners = [
-        {
-            gradient: 'linear-gradient(135deg, #1E3A5F 0%, #3D6B99 100%)',
-            title: '영등포 JC',
-            subtitle: '회원관리 커뮤니티 앱에 오신 것을 환영합니다',
-            cta: '둘러보기'
-        }
-    ];
+    const banners = [];
 
     try {
-        // 다가오는 일정 배너
+        // 1) 관리자 등록 배너 (banners API) 우선 로드
+        try {
+            const bannerRes = await fetch('/api/banners');
+            const bannerData = await bannerRes.json();
+            const apiBanners = (bannerData.data && bannerData.data.banners) || [];
+            const defaultGradients = [
+                'linear-gradient(135deg, #1E3A5F 0%, #3D6B99 100%)',
+                'linear-gradient(135deg, #162D4A 0%, #2D5F8A 100%)',
+                'linear-gradient(135deg, #2D4A6F 0%, #5B8DB8 100%)',
+                'linear-gradient(135deg, #1A3550 0%, #4A7FA5 100%)'
+            ];
+            apiBanners.forEach((ab, i) => {
+                const bannerItem = {
+                    gradient: defaultGradients[i % defaultGradients.length],
+                    title: escapeHtml(ab.title),
+                    subtitle: ab.description ? escapeHtml(ab.description) : '',
+                    cta: ab.link_url ? '자세히 보기' : ''
+                };
+                if (ab.image_url) {
+                    bannerItem.imageUrl = ab.image_url;
+                }
+                if (ab.link_url) {
+                    bannerItem.action = "window.open('" + ab.link_url.replace(/'/g, "\\'") + "', '_blank')";
+                }
+                banners.push(bannerItem);
+            });
+        } catch (_apiBannerErr) {
+            // 배너 API 실패 시 무시
+        }
+
+        // 2) API 배너가 없으면 기본 환영 배너
+        if (banners.length === 0) {
+            banners.push({
+                gradient: 'linear-gradient(135deg, #1E3A5F 0%, #3D6B99 100%)',
+                title: '영등포 JC',
+                subtitle: '회원관리 커뮤니티 앱에 오신 것을 환영합니다',
+                cta: '둘러보기'
+            });
+        }
+
+        // 3) 다가오는 일정 배너
         const schedRes = await apiClient.getSchedules(true);
         const scheds = schedRes.schedules || (schedRes.data && (schedRes.data.schedules || schedRes.data.items)) || [];
         if (scheds.length > 0) {
@@ -169,17 +202,9 @@ async function loadBannerSummary() {
                 cta: '일정 보기',
                 action: "navigateTo('/schedules/" + next.id + "')"
             });
-        } else {
-            banners.push({
-                gradient: 'linear-gradient(135deg, #162D4A 0%, #2D5F8A 100%)',
-                title: '일정 확인',
-                subtitle: '다가오는 모임과 행사 일정을 확인하세요',
-                cta: '일정 보기',
-                action: "switchTab('schedules')"
-            });
         }
 
-        // 공지 배너 (is_banner 체크된 공지 우선, 없으면 최신 공지)
+        // 4) 공지 배너 (is_banner 체크된 공지 우선, 없으면 최신 공지)
         const noticeRes = await apiClient.getPosts(1, 10, 'notice');
         const notices = noticeRes.posts || (noticeRes.data && (noticeRes.data.posts || noticeRes.data.items)) || [];
         const bannerNotices = notices.filter(n => n.is_banner);
@@ -199,31 +224,27 @@ async function loadBannerSummary() {
                     action: "navigateTo('/posts/" + n.id + "')"
                 });
             });
-        } else {
-            banners.push({
-                gradient: 'linear-gradient(135deg, #1E3A5F 0%, #6B9BC3 100%)',
-                title: '회원 소통',
-                subtitle: '공지사항과 게시판을 통해 소식을 나누세요',
-                cta: '게시판 가기',
-                action: "switchTab('posts')"
-            });
         }
     } catch (_) {
-        // API 실패 시 기본 배너 추가
-        banners.push(
-            { gradient: 'linear-gradient(135deg, #162D4A 0%, #2D5F8A 100%)', title: '일정 확인', subtitle: '다가오는 모임과 행사 일정을 확인하세요', cta: '일정 보기', action: "switchTab('schedules')" },
-            { gradient: 'linear-gradient(135deg, #1E3A5F 0%, #6B9BC3 100%)', title: '회원 소통', subtitle: '공지사항과 게시판을 통해 소식을 나누세요', cta: '게시판 가기', action: "switchTab('posts')" }
-        );
+        // API 실패 시 기본 배너
+        if (banners.length === 0) {
+            banners.push(
+                { gradient: 'linear-gradient(135deg, #1E3A5F 0%, #3D6B99 100%)', title: '영등포 JC', subtitle: '회원관리 커뮤니티 앱에 오신 것을 환영합니다', cta: '둘러보기' },
+                { gradient: 'linear-gradient(135deg, #162D4A 0%, #2D5F8A 100%)', title: '일정 확인', subtitle: '다가오는 모임과 행사 일정을 확인하세요', cta: '일정 보기', action: "switchTab('schedules')" },
+                { gradient: 'linear-gradient(135deg, #1E3A5F 0%, #6B9BC3 100%)', title: '회원 소통', subtitle: '공지사항과 게시판을 통해 소식을 나누세요', cta: '게시판 가기', action: "switchTab('posts')" }
+            );
+        }
     }
 
     section.innerHTML = `
         <div class="banner-carousel" role="region" aria-label="홈 배너" aria-roledescription="carousel">
             <div class="banner-track" id="banner-track">
                 ${banners.map((b, i) => `
-                    <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="배너 ${i+1}/${banners.length}" style="background:${b.gradient}${b.action ? ';cursor:pointer' : ''}" ${b.action ? 'onclick="' + b.action + '"' : ''}>
-                        <div class="banner-title">${b.title}</div>
-                        <div class="banner-subtitle">${b.subtitle}</div>
-                        ${b.cta ? `<span class="banner-cta"${b.action ? ' onclick="' + b.action + '"' : ''}>${b.cta}</span>` : ''}
+                    <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="배너 ${i+1}/${banners.length}" style="background:${b.imageUrl ? `url(${b.imageUrl}) center/cover no-repeat` : b.gradient}${b.action ? ';cursor:pointer' : ''}" ${b.action ? 'onclick="' + b.action + '"' : ''}>
+                        ${b.imageUrl ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.35);border-radius:inherit"></div>' : ''}
+                        <div class="banner-title" ${b.imageUrl ? 'style="position:relative;z-index:1"' : ''}>${b.title}</div>
+                        <div class="banner-subtitle" ${b.imageUrl ? 'style="position:relative;z-index:1"' : ''}>${b.subtitle}</div>
+                        ${b.cta ? `<span class="banner-cta" ${b.imageUrl ? 'style="position:relative;z-index:1"' : ''}${b.action ? ' onclick="' + b.action + '"' : ''}>${b.cta}</span>` : ''}
                     </div>
                 `).join('')}
             </div>

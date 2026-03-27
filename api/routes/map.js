@@ -108,7 +108,7 @@ router.post('/geocode', authenticate, async (req, res) => {
 
         const kakaoRes = await new Promise((resolve, reject) => {
             https.get(url, {
-                headers: { 'Authorization': 'KakaoAK bf233c9ee97fc1e97870c696f6375006' }
+                headers: { 'Authorization': `KakaoAK ${process.env.KAKAO_REST_API_KEY || 'bf233c9ee97fc1e97870c696f6375006'}` }
             }, (response) => {
                 let data = '';
                 response.on('data', chunk => data += chunk);
@@ -150,7 +150,7 @@ router.post('/auto-geocode-all', authenticate, async (req, res) => {
                 const url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(m.address)}`;
                 const kakaoRes = await new Promise((resolve, reject) => {
                     https.get(url, {
-                        headers: { 'Authorization': 'KakaoAK bf233c9ee97fc1e97870c696f6375006' }
+                        headers: { 'Authorization': `KakaoAK ${process.env.KAKAO_REST_API_KEY || 'bf233c9ee97fc1e97870c696f6375006'}` }
                     }, (response) => {
                         let data = '';
                         response.on('data', chunk => data += chunk);

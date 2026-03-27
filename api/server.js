@@ -28,8 +28,10 @@ const contentRoutes = require('./routes/content');
 const orgchartRoutes = require('./routes/orgchart');
 const mapRoutes = require('./routes/map');
 const groupBoardRoutes = require('./routes/group-board');
+const bannersRoutes = require('./routes/banners');
 const { startReminderCron } = require('./utils/reminderCron');
 const { startNotificationScheduler } = require('./cron/notification-scheduler');
+const { startDataPurgeScheduler } = require('./cron/data-purge-scheduler');
 
 // Express 앱 초기화
 const app = express();
@@ -130,6 +132,20 @@ app.use('/api/orgchart', orgchartRoutes);
 app.use('/api/map', mapRoutes);
 app.use('/api/group-board', groupBoardRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/banners', bannersRoutes);
+
+// 일반 사용자용 직책(positions) 목록 조회
+const { authenticate: authMiddleware } = require('./middleware/auth');
+app.get('/api/positions', authMiddleware, async (req, res) => {
+    try {
+        const { query: dbQuery } = require('./config/database');
+        const result = await dbQuery('SELECT id, name FROM positions WHERE org_id IS NULL OR org_id = (SELECT org_id FROM users WHERE id = $1) ORDER BY sort_order ASC, name ASC', [req.user.userId]);
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.error('Get positions error:', error);
+        res.json({ success: true, data: [] });
+    }
+});
 
 // 업로드 파일 정적 제공 (URL: /uploads/파일명)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -156,7 +172,7 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // 서버 시작
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log('='.repeat(50));
     console.log('🚀 영등포 JC API 서버 시작');
     console.log('='.repeat(50));
@@ -183,6 +199,10 @@ app.listen(PORT, () => {
     const { query: dbQuery } = require('./config/database');
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS website VARCHAR(500)").catch(() => {});
     dbQuery("ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_banner BOOLEAN DEFAULT false").catch(() => {});
+    // 사업 PR 컬럼 (029_business_pr)
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS one_line_pr TEXT").catch(() => {});
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS service_description TEXT").catch(() => {});
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS sns_links JSONB DEFAULT '[]'::jsonb").catch(() => {});
     // 회의 테이블
     dbQuery(`CREATE TABLE IF NOT EXISTS meetings (
         id SERIAL PRIMARY KEY, title VARCHAR(200) NOT NULL, description TEXT,
@@ -306,10 +326,26 @@ app.listen(PORT, () => {
         updated_at TIMESTAMP DEFAULT NOW()
     )`).catch(() => {});
 
+    // 배너 광고 테이블 (029_banners)
+    dbQuery(`CREATE TABLE IF NOT EXISTS banners (
+        id SERIAL PRIMARY KEY, title VARCHAR(200) NOT NULL, description TEXT,
+        image_url TEXT, link_url TEXT, is_active BOOLEAN DEFAULT true,
+        sort_order INTEGER DEFAULT 0, created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`).catch(() => {});
+
+    // soft delete 컬럼 추가 (028_soft_delete_columns)
+    await query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL`).catch(() => {});
+    await query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL`).catch(() => {});
+    await query(`CREATE INDEX IF NOT EXISTS idx_posts_deleted_at ON posts (deleted_at) WHERE deleted_at IS NULL`).catch(() => {});
+    await query(`CREATE INDEX IF NOT EXISTS idx_schedules_deleted_at ON schedules (deleted_at) WHERE deleted_at IS NULL`).catch(() => {});
+
     // 리마인더 cron 시작
     startReminderCron();
     // 예약 알림 스케줄러 시작
     startNotificationScheduler();
+    // 개인정보 자동 파기 스케줄러 (탈퇴 90일 후)
+    startDataPurgeScheduler();
 });
 
 // Graceful shutdown

@@ -156,7 +156,7 @@ router.delete('/posts/bulk', requireMobilePermission('post_manage'), async (req,
             );
             // 게시글 삭제 (FK CASCADE로 관련 데이터 자동 삭제)
             await client.query(
-                `DELETE FROM posts WHERE id = ANY($1)`,
+                `UPDATE posts SET deleted_at = NOW() WHERE id = ANY($1)`,
                 [safeIds]
             );
         });
@@ -212,7 +212,7 @@ router.delete('/posts/:id', requireMobilePermission('post_manage'), async (req, 
                 `UPDATE schedules SET linked_post_id = NULL WHERE linked_post_id = $1`,
                 [postId]
             );
-            await client.query('DELETE FROM posts WHERE id = $1', [postId]);
+            await client.query('UPDATE posts SET deleted_at = NOW() WHERE id = $1', [postId]);
         });
 
         res.json({ success: true });
@@ -248,7 +248,7 @@ router.delete('/schedules/bulk', requireMobilePermission('schedule_manage'), asy
             );
             // 일정 삭제 (FK CASCADE로 관련 데이터 자동 삭제)
             await client.query(
-                `DELETE FROM schedules WHERE id = ANY($1)`,
+                `UPDATE schedules SET deleted_at = NOW() WHERE id = ANY($1)`,
                 [safeIds]
             );
         });
@@ -304,7 +304,7 @@ router.delete('/schedules/:id', requireMobilePermission('schedule_manage'), asyn
                 `UPDATE posts SET linked_schedule_id = NULL WHERE linked_schedule_id = $1`,
                 [scheduleId]
             );
-            await client.query('DELETE FROM schedules WHERE id = $1', [scheduleId]);
+            await client.query('UPDATE schedules SET deleted_at = NOW() WHERE id = $1', [scheduleId]);
         });
 
         res.json({ success: true });
@@ -400,7 +400,7 @@ router.delete('/notices/bulk', requireMobilePermission('notice_manage'), async (
         }
 
         const result = await query(
-            `DELETE FROM posts WHERE id = ANY($1) AND category = 'notice' RETURNING id`,
+            `UPDATE posts SET deleted_at = NOW() WHERE id = ANY($1) AND category = 'notice' RETURNING id`,
             [safeIds]
         );
 
@@ -451,7 +451,7 @@ router.delete('/notices/:id', requireMobilePermission('notice_manage'), async (r
         const noticeId = parseInt(req.params.id);
 
         const result = await query(
-            `DELETE FROM posts WHERE id = $1 AND category = 'notice' RETURNING id`,
+            `UPDATE posts SET deleted_at = NOW() WHERE id = $1 AND category = 'notice' RETURNING id`,
             [noticeId]
         );
 

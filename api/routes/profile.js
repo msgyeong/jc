@@ -25,15 +25,18 @@ router.get('/', authenticate, async (req, res) => {
         // 프로필 조회
         const result = await query(
             `SELECT
-                id, email, name, phone, address,
-                profile_image, role, status,
-                birth_date, gender,
-                company, position, department, work_phone,
-                industry, industry_detail,
-                position_id, phone_visibility,
-                created_at, updated_at
-             FROM users
-             WHERE id = $1`,
+                u.id, u.email, u.name, u.phone, u.address,
+                u.profile_image, u.role, u.status,
+                u.birth_date, u.gender,
+                u.company, u.position, u.department, u.work_phone,
+                u.industry, u.industry_detail,
+                u.position_id, u.phone_visibility,
+                u.one_line_pr, u.service_description, u.sns_links,
+                pos.name as jc_position,
+                u.created_at, u.updated_at
+             FROM users u
+             LEFT JOIN positions pos ON pos.id = u.position_id
+             WHERE u.id = $1`,
             [userId]
         );
 
@@ -76,7 +79,7 @@ router.put('/', authenticate, async (req, res) => {
     try {
         const userId = req.user.userId;
         const userRole = req.user.role;
-        const { name, phone, address, birth_date, gender, company, work_phone, industry, industry_detail, website, map_visible, business_address, business_lat, business_lng, join_date, phone_visibility } = req.body;
+        const { name, phone, address, birth_date, gender, company, work_phone, industry, industry_detail, website, map_visible, business_address, business_lat, business_lng, join_date, phone_visibility, one_line_pr, service_description, sns_links } = req.body;
 
         // phone_visibility 유효성 검증
         const VALID_PHONE_VISIBILITY = ['local', 'district', 'all'];
@@ -125,9 +128,13 @@ router.put('/', authenticate, async (req, res) => {
                      birth_date = $4, gender = $5,
                      company = $6, position = $7, department = $8, work_phone = $9,
                      industry = $10, industry_detail = $11, join_number = $12,
-                     website = $13, updated_at = NOW()
-                 WHERE id = $14`,
-                [name, phone, address, birth_date, gender, company, position || null, department || null, work_phone, industry || null, industry_detail || null, join_number || null, website || null, userId]
+                     website = $13,
+                     one_line_pr = $14,
+                     service_description = $15,
+                     sns_links = COALESCE($16::jsonb, '[]'::jsonb),
+                     updated_at = NOW()
+                 WHERE id = $17`,
+                [name, phone, address, birth_date, gender, company, position || null, department || null, work_phone, industry || null, industry_detail || null, join_number || null, website || null, one_line_pr || null, service_description || null, sns_links ? JSON.stringify(sns_links) : null, userId]
             );
         } else {
             // 일반 회원: position, department, join_number 필드 제외
@@ -144,9 +151,12 @@ router.put('/', authenticate, async (req, res) => {
                      business_lng = COALESCE($14, business_lng),
                      join_date = COALESCE($15, join_date),
                      phone_visibility = COALESCE($16, phone_visibility),
+                     one_line_pr = $17,
+                     service_description = $18,
+                     sns_links = COALESCE($19::jsonb, '[]'::jsonb),
                      updated_at = NOW()
-                 WHERE id = $17`,
-                [name, phone, address, birth_date, gender, company, work_phone, industry || null, industry_detail || null, website || null, map_visible !== undefined ? map_visible : null, business_address || null, business_lat || null, business_lng || null, join_date || null, phone_visibility || null, userId]
+                 WHERE id = $20`,
+                [name, phone, address, birth_date, gender, company, work_phone, industry || null, industry_detail || null, website || null, map_visible !== undefined ? map_visible : null, business_address || null, business_lat || null, business_lng || null, join_date || null, phone_visibility || null, one_line_pr || null, service_description || null, sns_links ? JSON.stringify(sns_links) : null, userId]
             );
         }
 

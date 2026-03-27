@@ -69,6 +69,20 @@ async function loadMonthSchedules() {
         } catch (ge) {
             console.log('그룹 일정 로드 건너뜀:', ge.message);
         }
+
+        // 내가 속한 소모임 일정 병합
+        try {
+            const clubResult = await apiClient.request('/clubs/my-schedules/all?year=' + calYear + '&month=' + (calMonth + 1));
+            if (clubResult.success && Array.isArray(clubResult.schedules)) {
+                clubResult.schedules.forEach(function(cs) {
+                    cs._isClubSchedule = true;
+                    cs._clubName = cs.club_name || '';
+                    calSchedules.push(cs);
+                });
+            }
+        } catch (ce) {
+            console.log('소모임 일정 로드 건너뜀:', ce.message);
+        }
     } catch (e) {
         console.error('월별 일정 로드 실패:', e);
         calSchedules = [];
@@ -167,6 +181,8 @@ function createScheduleCard(schedule) {
     const endRaw = schedule.end_date || '';
     const isGroup = schedule._isGroupSchedule;
     const groupName = schedule._groupName || '';
+    const isClub = schedule._isClubSchedule;
+    const clubName = schedule._clubName || '';
 
     let timeStr = '';
     if (startRaw.includes('T')) {
@@ -180,13 +196,14 @@ function createScheduleCard(schedule) {
         }
     }
 
-    const clickHandler = isGroup ? '' : `onclick="navigateTo('/schedules/${schedule.id}')"`;
+    const clickHandler = (isGroup || isClub) ? '' : `onclick="navigateTo('/schedules/${schedule.id}')"`;
 
     return `
-        <div class="schedule-card-v2" ${clickHandler} style="border-left: 4px solid ${categoryColor}">
+        <div class="schedule-card-v2" ${clickHandler} style="border-left: 4px solid ${isClub ? '#8B5CF6' : categoryColor}">
             <div class="schedule-card-top">
                 <span class="schedule-cat-badge" style="background:${categoryColor}15;color:${categoryColor}">${categoryLabel}</span>
                 ${isGroup ? `<span class="schedule-group-badge">${escapeHtml(groupName)}</span>` : ''}
+                ${isClub ? `<span class="schedule-group-badge" style="background:#8B5CF615;color:#8B5CF6">${escapeHtml(clubName)}</span>` : ''}
                 ${timeStr ? `<span class="schedule-time-badge">${timeStr}</span>` : ''}
             </div>
             <h3 class="schedule-card-title">${escapeHtml(schedule.title)}</h3>

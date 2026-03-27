@@ -152,6 +152,16 @@ function navigateToScreen(screenName) {
             if (typeof loadContentScreen === 'function') loadContentScreen(screenName);
         } else if (screenName === 'group-board') {
             if (typeof loadGroupBoardScreen === 'function') loadGroupBoardScreen();
+        } else if (screenName === 'clubs') {
+            if (typeof loadClubsScreen === 'function') loadClubsScreen();
+        } else if (screenName === 'club-detail') {
+            if (typeof loadClubDetailScreen === 'function') loadClubDetailScreen();
+        } else if (screenName === 'club-create') {
+            if (typeof initClubCreateForm === 'function') initClubCreateForm();
+        } else if (screenName === 'club-invite') {
+            if (typeof loadClubInviteScreen === 'function') loadClubInviteScreen();
+        } else if (screenName === 'member-detail') {
+            // loadMemberDetail은 호출 측에서 직접 실행
         }
 
         // history.pushState for back navigation (로그인 전 화면은 제외)

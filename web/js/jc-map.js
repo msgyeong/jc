@@ -115,6 +115,7 @@ async function loadJcMapScreen() {
             if (m.business_address) popup += '<div style="color:#6B7280;margin-top:4px">📍 ' + escapeHtml(m.business_address) + '</div>';
             if (m.phone) popup += '<div style="margin-top:4px"><a href="tel:' + escapeHtml(m.phone) + '">📞 ' + escapeHtml(m.phone) + '</a></div>';
             if (m.website) popup += '<div><a href="' + escapeHtml(m.website) + '" target="_blank">🌐 사이트</a></div>';
+            popup += '<div style="margin-top:6px;text-align:center"><a href="#" onclick="event.preventDefault();jcMap.closePopup();navigateToScreen(\'member-detail\');loadMemberDetail(' + m.id + ')" style="color:#3B82F6;font-weight:600;font-size:13px">프로필 보기</a></div>';
             popup += '</div>';
 
             marker.bindPopup(popup);

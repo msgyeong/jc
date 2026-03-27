@@ -33,9 +33,11 @@ router.get('/', authenticate, async (req, res) => {
                 u.position_id, u.phone_visibility,
                 u.one_line_pr, u.service_description, u.sns_links,
                 pos.name as jc_position,
+                o.name as org_name, o.district as org_district,
                 u.created_at, u.updated_at
              FROM users u
              LEFT JOIN positions pos ON pos.id = u.position_id
+             LEFT JOIN organizations o ON o.id = u.org_id
              WHERE u.id = $1`,
             [userId]
         );

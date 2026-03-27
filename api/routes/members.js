@@ -301,7 +301,7 @@ router.get('/:id', authenticate, async (req, res) => {
                 u.one_line_pr, u.service_description, u.sns_links,
                 u.org_id, u.created_at, u.updated_at,
                 pos.name as jc_position,
-                o.district as org_district
+                o.name as org_name, o.district as org_district
              FROM users u
              LEFT JOIN organizations o ON o.id = u.org_id
              LEFT JOIN positions pos ON pos.id = u.position_id

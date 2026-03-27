@@ -1197,6 +1197,165 @@
             </div>
         </div>
 
+        <!-- 소모임 목록 화면 -->
+        <div id="clubs-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title">소모임</h1>
+                <button class="gb-fab" onclick="showClubCreateForm()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+            </div>
+            <div class="screen-content" id="clubs-content">
+                <div class="content-placeholder">로딩 중...</div>
+            </div>
+        </div>
+
+        <!-- 소모임 상세 화면 -->
+        <div id="club-detail-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title" id="club-detail-title">소모임</h1>
+                <button class="gb-fab" id="club-action-btn" style="display:none;" onclick="showClubPostForm()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+            </div>
+            <div class="screen-content" id="club-detail-content">
+            </div>
+        </div>
+
+        <!-- 소모임 게시글 상세 -->
+        <div id="club-post-detail-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title">게시글</h1>
+            </div>
+            <div class="screen-content" id="club-post-detail-content">
+            </div>
+        </div>
+
+        <!-- 소모임 게시글 작성/수정 -->
+        <div id="club-post-form-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title" id="club-post-form-title">게시글 작성</h1>
+            </div>
+            <div class="screen-content">
+                <form id="club-post-form" class="gb-form">
+                    <div class="form-group">
+                        <label for="cp-title">제목</label>
+                        <input type="text" id="cp-title" placeholder="제목을 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cp-content">내용</label>
+                        <textarea id="cp-content" class="form-textarea" rows="10" placeholder="내용을 입력하세요"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>이미지 첨부</label>
+                        <label class="gb-file-upload" for="cp-images">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            <span>사진 선택 (최대 5장)</span>
+                        </label>
+                        <input type="file" id="cp-images" accept="image/*" multiple style="display:none">
+                        <div id="cp-image-preview" class="gb-image-preview"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">등록</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 소모임 일정 작성 -->
+        <div id="club-schedule-form-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title">일정 추가</h1>
+            </div>
+            <div class="screen-content">
+                <form id="club-schedule-form" class="gb-form">
+                    <div class="form-group">
+                        <label for="cs-title">제목</label>
+                        <input type="text" id="cs-title" placeholder="일정 제목" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cs-description">설명</label>
+                        <textarea id="cs-description" class="form-textarea" rows="4" placeholder="일정에 대한 설명"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="cs-location">장소</label>
+                        <input type="text" id="cs-location" placeholder="장소를 입력하세요">
+                    </div>
+                    <div class="gb-form-row">
+                        <div class="form-group gb-form-half">
+                            <label for="cs-start-date">시작</label>
+                            <input type="datetime-local" id="cs-start-date" required>
+                        </div>
+                        <div class="form-group gb-form-half">
+                            <label for="cs-end-date">종료</label>
+                            <input type="datetime-local" id="cs-end-date">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="cs-category">분류</label>
+                        <select id="cs-category">
+                            <option value="meeting">회의</option>
+                            <option value="event">행사</option>
+                            <option value="training">교육</option>
+                            <option value="other">기타</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">등록</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 소모임 생성 -->
+        <div id="club-create-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title">소모임 만들기</h1>
+            </div>
+            <div class="screen-content">
+                <form id="club-create-form" class="gb-form">
+                    <div class="form-group">
+                        <label for="club-name">소모임 이름</label>
+                        <input type="text" id="club-name" placeholder="예: 축구 동호회" required maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="club-description">소개</label>
+                        <textarea id="club-description" class="form-textarea" rows="4" placeholder="소모임에 대한 간단한 소개"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">만들기</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 소모임 멤버 초대 -->
+        <div id="club-invite-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title">멤버 초대</h1>
+            </div>
+            <div class="screen-content">
+                <div class="club-invite-search">
+                    <input type="search" id="club-invite-query" placeholder="이름·회사·조직명 검색 (초성 가능)" autocomplete="off">
+                    <div class="help-text">우리 로컬 + 타로컬 회원 모두 검색됩니다</div>
+                </div>
+                <div id="club-invite-results"></div>
+                <div id="club-invite-selected" class="club-invite-selected-list"></div>
+                <button type="button" class="btn btn-primary" id="club-invite-submit-btn" style="display:none" onclick="submitClubInvites()">초대하기</button>
+            </div>
+        </div>
+
+        <!-- 회원 프로필 상세 (타인) -->
+        <div id="member-detail-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <h1 class="app-bar-title">프로필</h1>
+            </div>
+            <div class="screen-content" id="member-detail-content">
+            </div>
+        </div>
+
         <div id="jc-vision-screen" class="screen">
             <div class="app-bar">
                 <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
@@ -1555,7 +1714,8 @@
             <button class="side-menu-close" onclick="closeSideMenu()">&times;</button>
         </div>
         <nav class="side-menu-nav">
-            <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('org-chart')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="8" y="17" width="8" height="4" rx="1"/></svg><span>조직도</span></a>
+            <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('org-chart')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="4" rx="1"/><rect x="5" y="10" width="14" height="4" rx="1"/><rect x="8" y="17" width="8" height="4" rx="1"/></svg><span>로컬조직도</span></a>
+            <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('clubs')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>소모임</span></a>
             <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('jc-vision')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>JC 비전·목표</span></a>
             <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('jc-roles')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg><span>직책 업무</span></a>
             <a class="side-menu-item" onclick="closeSideMenu();navigateToScreen('jc-map')"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>JC 지도</span></a>
@@ -1593,6 +1753,7 @@
     <script src="js/content.js?v=20260318c"></script>
     <script src="js/orgchart.js?v=20260319b"></script>
     <script src="js/group-board.js?v=20260319b"></script>
+    <script src="js/clubs.js?v=20260327a"></script>
     <script src="js/jc-map.js?v=20260318c"></script>
     <script src="js/navigation.js?v=20260319a"></script>
     <script src="js/app.js?v=20260318g"></script>

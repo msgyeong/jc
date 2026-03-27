@@ -111,6 +111,7 @@ function renderProfile(p) {
             <!-- 기본 정보 -->
             <div class="info-section">
                 <h3 class="info-section-title">기본 정보</h3>
+                ${p.org_name ? profileInfoRow('소속 로컬', p.org_name + (p.org_district ? ' (' + p.org_district + ')' : ''), 'group') : ''}
                 ${profileInfoRow('이메일', p.email, 'mail')}
                 ${profileInfoRow('연락처', p.phone, 'phone')}
                 ${profileInfoRow('주소', p.address, 'location')}

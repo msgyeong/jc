@@ -8092,3 +8092,92 @@ a.sns-badge:hover {
     font-weight: 600;
     border-radius: 10px;
 }
+
+/* ========== 소모임 (Clubs) ========== */
+
+.club-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 8px 0 4px;
+}
+
+.club-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    cursor: pointer;
+    transition: box-shadow 0.15s;
+}
+.club-card:active { box-shadow: 0 0 0 2px var(--primary-color); }
+
+.club-card-pending {
+    border: 1.5px dashed var(--primary-color);
+    background: var(--primary-light, #EEF2FF);
+}
+
+.club-card-header { display: flex; justify-content: space-between; align-items: center; }
+.club-card-name { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.club-card-meta { font-size: 12px; color: var(--text-secondary); }
+.club-card-desc { font-size: 13px; color: var(--text-secondary); margin-top: 6px; line-height: 1.4; }
+
+.club-badge {
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+
+.club-invite-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+/* 소모임 상세 */
+.club-members-row { display: flex; align-items: center; gap: 4px; padding: 12px 0; flex-wrap: wrap; }
+.club-member-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+.club-member-avatar-default { background: var(--primary-light, #E6ECFA); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
+.club-member-more { background: #E5E7EB; color: #6B7280; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+.club-member-add-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px dashed #D1D5DB; background: none; color: #9CA3AF; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+.club-admin-row { display: flex; gap: 8px; padding-bottom: 12px; }
+
+/* 멤버 목록 탭 */
+.club-member-card { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #F3F4F6; cursor: pointer; }
+.club-member-info { flex: 1; }
+.club-member-name { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.club-member-sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+.club-member-org { font-size: 12px; color: var(--primary-color); margin-top: 2px; }
+
+.club-role-tag { font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
+.club-role-tag.owner { background: #FEF3C7; color: #92400E; }
+.club-role-tag.admin { background: #DBEAFE; color: #1E40AF; }
+
+/* 멤버 초대 */
+.club-invite-search { padding-bottom: 12px; }
+.club-invite-search input { width: 100%; padding: 10px 14px; border: 1.5px solid #E5E7EB; border-radius: 10px; font-size: 14px; }
+.club-invite-search input:focus { border-color: var(--primary-color); outline: none; }
+
+.club-invite-item { display: flex; align-items: center; padding: 12px 8px; border-bottom: 1px solid #F3F4F6; cursor: pointer; }
+.club-invite-item.selected { background: #EEF2FF; }
+.club-invite-item-name { flex: 1; font-size: 14px; font-weight: 500; }
+.club-invite-item-sub { font-size: 12px; color: var(--text-secondary); }
+.club-invite-check { font-size: 16px; color: var(--primary-color); font-weight: 700; width: 24px; text-align: center; }
+
+.club-invite-selected-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0; }
+.club-invite-tag { display: inline-flex; align-items: center; gap: 4px; background: var(--primary-light, #EEF2FF); color: var(--primary-color); padding: 4px 10px; border-radius: 16px; font-size: 13px; font-weight: 500; }
+.club-invite-tag button { background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 16px; padding: 0; line-height: 1; }
+
+/* 프로필 로컬 태그 */
+.profile-org-tag {
+    font-size: 13px;
+    color: var(--primary-color);
+    background: var(--primary-light, #EEF2FF);
+    padding: 3px 10px;
+    border-radius: 12px;
+    display: inline-block;
+    margin-top: 4px;
+}

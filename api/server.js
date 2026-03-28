@@ -399,46 +399,51 @@ app.listen(PORT, async () => {
     dbQuery(`CREATE INDEX IF NOT EXISTS idx_posts_deleted_at ON posts (deleted_at) WHERE deleted_at IS NULL`).catch(() => {});
     dbQuery(`CREATE INDEX IF NOT EXISTS idx_schedules_deleted_at ON schedules (deleted_at) WHERE deleted_at IS NULL`).catch(() => {});
 
-    // 소모임 테이블 (030_clubs)
-    dbQuery(`CREATE TABLE IF NOT EXISTS clubs (
-        id SERIAL PRIMARY KEY, name VARCHAR(100) NOT NULL, description TEXT,
-        image_url TEXT, created_by INTEGER NOT NULL REFERENCES users(id),
-        is_active BOOLEAN DEFAULT true,
-        created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
-    )`).catch(() => {});
-    dbQuery(`CREATE TABLE IF NOT EXISTS club_members (
-        id SERIAL PRIMARY KEY, club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        role VARCHAR(20) DEFAULT 'member', status VARCHAR(20) DEFAULT 'pending',
-        invited_by INTEGER REFERENCES users(id), joined_at TIMESTAMP DEFAULT NOW(),
-        UNIQUE(club_id, user_id)
-    )`).catch(() => {});
-    dbQuery(`CREATE TABLE IF NOT EXISTS club_posts (
-        id SERIAL PRIMARY KEY, club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
-        author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        title VARCHAR(200) NOT NULL, content TEXT, images TEXT,
-        is_pinned BOOLEAN DEFAULT false, views INTEGER DEFAULT 0,
-        likes_count INTEGER DEFAULT 0, comments_count INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
-    )`).catch(() => {});
-    dbQuery(`CREATE TABLE IF NOT EXISTS club_post_comments (
-        id SERIAL PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES club_posts(id) ON DELETE CASCADE,
-        author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        content TEXT NOT NULL, parent_id INTEGER REFERENCES club_post_comments(id) ON DELETE CASCADE,
-        is_deleted BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT NOW()
-    )`).catch(() => {});
-    dbQuery(`CREATE TABLE IF NOT EXISTS club_post_reads (
-        id SERIAL PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES club_posts(id) ON DELETE CASCADE,
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        read_at TIMESTAMP DEFAULT NOW(), UNIQUE(post_id, user_id)
-    )`).catch(() => {});
-    dbQuery(`CREATE TABLE IF NOT EXISTS club_schedules (
-        id SERIAL PRIMARY KEY, club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
-        created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        title VARCHAR(200) NOT NULL, description TEXT, location VARCHAR(200),
-        start_date TIMESTAMP NOT NULL, end_date TIMESTAMP, category VARCHAR(50) DEFAULT 'meeting',
-        created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
-    )`).catch(() => {});
+    // 소모임 테이블 (030_clubs) — await로 순차 실행 (FK 의존성)
+    try {
+        await dbQuery(`CREATE TABLE IF NOT EXISTS clubs (
+            id SERIAL PRIMARY KEY, name VARCHAR(100) NOT NULL, description TEXT,
+            image_url TEXT, created_by INTEGER NOT NULL REFERENCES users(id),
+            is_active BOOLEAN DEFAULT true,
+            created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
+        )`);
+        await dbQuery(`CREATE TABLE IF NOT EXISTS club_members (
+            id SERIAL PRIMARY KEY, club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            role VARCHAR(20) DEFAULT 'member', status VARCHAR(20) DEFAULT 'pending',
+            invited_by INTEGER REFERENCES users(id), joined_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE(club_id, user_id)
+        )`);
+        await dbQuery(`CREATE TABLE IF NOT EXISTS club_posts (
+            id SERIAL PRIMARY KEY, club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+            author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            title VARCHAR(200) NOT NULL, content TEXT, images TEXT,
+            is_pinned BOOLEAN DEFAULT false, views INTEGER DEFAULT 0,
+            likes_count INTEGER DEFAULT 0, comments_count INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
+        )`);
+        await dbQuery(`CREATE TABLE IF NOT EXISTS club_post_comments (
+            id SERIAL PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES club_posts(id) ON DELETE CASCADE,
+            author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            content TEXT NOT NULL, parent_id INTEGER REFERENCES club_post_comments(id) ON DELETE CASCADE,
+            is_deleted BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT NOW()
+        )`);
+        await dbQuery(`CREATE TABLE IF NOT EXISTS club_post_reads (
+            id SERIAL PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES club_posts(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            read_at TIMESTAMP DEFAULT NOW(), UNIQUE(post_id, user_id)
+        )`);
+        await dbQuery(`CREATE TABLE IF NOT EXISTS club_schedules (
+            id SERIAL PRIMARY KEY, club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+            created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            title VARCHAR(200) NOT NULL, description TEXT, location VARCHAR(200),
+            start_date TIMESTAMP NOT NULL, end_date TIMESTAMP, category VARCHAR(50) DEFAULT 'meeting',
+            created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
+        )`);
+        console.log('✅ 소모임 테이블 생성 완료');
+    } catch (clubErr) {
+        console.error('소모임 테이블 생성 오류 (무시):', clubErr.message);
+    }
 
     // 리마인더 cron 시작
     startReminderCron();

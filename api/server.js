@@ -316,6 +316,10 @@ app.listen(PORT, async () => {
     dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS created_by INTEGER").catch(() => {});
     dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS member_id INTEGER").catch(() => {});
     dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS description TEXT").catch(() => {});
+    dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0").catch(() => {});
+    dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true").catch(() => {});
+    dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS link_url TEXT").catch(() => {});
+    dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS image_url TEXT").catch(() => {});
     // S-07: 사업 PR 섹션
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_headline VARCHAR(100)").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_description TEXT").catch(() => {});

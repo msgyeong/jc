@@ -2,7 +2,7 @@
    영등포 JC — 관리자 회원 관리
    ================================================ */
 
-let membersState = { page: 1, search: '', status: '', role: '', total: 0, totalPages: 0 };
+let membersState = { page: 1, search: '', status: '', role: '', org_id: '', total: 0, totalPages: 0 };
 
 var ADMIN_DEFAULT_AVATAR = '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="15" r="6" fill="#A0C4E8"/><ellipse cx="20" cy="32" rx="11" ry="8" fill="#A0C4E8"/></svg>';
 
@@ -54,6 +54,9 @@ function renderMembers(container) {
                 <option value="admin">관리자</option>
                 <option value="super_admin">슈퍼관리자</option>
             </select>
+            <select class="filter-select" id="filter-org">
+                <option value="">전체 로컬</option>
+            </select>
         </div>
         <div id="members-table-wrap"></div>
         <div id="members-pagination"></div>
@@ -86,6 +89,27 @@ function renderMembers(container) {
         loadMembers();
     });
 
+    document.getElementById('filter-org').addEventListener('change', e => {
+        membersState.org_id = e.target.value;
+        membersState.page = 1;
+        loadMembers();
+    });
+
+    // 로컬 목록 로드
+    try {
+        var orgRes = await AdminAPI.get('/api/organizations');
+        var orgSel = document.getElementById('filter-org');
+        if (orgRes.data && orgSel) {
+            orgRes.data.forEach(function(o) {
+                var opt = document.createElement('option');
+                opt.value = o.id;
+                opt.textContent = o.name;
+                orgSel.appendChild(opt);
+            });
+            if (membersState.org_id) orgSel.value = membersState.org_id;
+        }
+    } catch (_) {}
+
     loadMembers();
 }
 
@@ -101,6 +125,7 @@ async function loadMembers() {
         if (membersState.search) params.set('search', membersState.search);
         if (membersState.status) params.set('status', membersState.status);
         if (membersState.role) params.set('role', membersState.role);
+        if (membersState.org_id) params.set('org_id', membersState.org_id);
 
         const res = await AdminAPI.get('/api/admin/members?' + params.toString());
         if (!res.success) throw new Error(res.message);

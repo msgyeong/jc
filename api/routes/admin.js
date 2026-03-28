@@ -400,6 +400,13 @@ router.get('/members', async (req, res) => {
             whereClause += ` AND u.role = $${params.length}`;
         }
 
+        // 로컬(조직) 필터
+        const orgId = req.query.org_id;
+        if (orgId) {
+            params.push(parseInt(orgId));
+            whereClause += ` AND u.org_id = $${params.length}`;
+        }
+
         const countResult = await query(
             `SELECT COUNT(*) FROM users u ${whereClause}`,
             params

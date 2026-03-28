@@ -63,10 +63,11 @@ class ApiClient {
                     // 로그인/비밀번호 찾기 등 인증 엔드포인트는 서버 메시지 그대로 전달
                     throw new Error(data.message || '인증에 실패했습니다.');
                 }
-                // 500 서버 에러
+                // 500 서버 에러 — 서버 메시지 전달
                 if (response.status >= 500) {
-                    console.error('서버 에러:', response.status, data.message || data);
-                    throw new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                    var serverMsg = data.detail || data.error || data.message || '서버 오류가 발생했습니다.';
+                    console.error('서버 에러:', response.status, serverMsg);
+                    throw new Error(serverMsg);
                 }
                 console.error('API 에러:', data.message || data);
                 throw new Error(data.message || 'API 요청 실패');

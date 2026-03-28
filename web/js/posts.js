@@ -528,6 +528,7 @@ async function handlePostCreateSubmit(e) {
     submitBtn.textContent = '등록 중...';
     try {
         const images = getPostCreateImages();
+        console.log('[DEBUG] 게시글 작성 — images:', JSON.stringify(images), 'postCreateImageUrls:', JSON.stringify(postCreateImageUrls));
         const isPinned = document.getElementById('post-create-is-pinned');
         const isBanner = document.getElementById('post-create-is-banner');
         const payload = {

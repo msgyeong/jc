@@ -633,6 +633,7 @@ async function loadPostDetail(postId) {
     try {
         const result = await apiClient.getPost(postId);
         if (result.success && result.post) {
+            console.log('[DEBUG] 게시글 상세 — post.images:', JSON.stringify(result.post.images), 'author_image:', result.post.author_image);
             container.innerHTML = renderPostDetail(result.post);
             initPostGallery(result.post.id);
             loadCommentsForPost(postId);
@@ -725,6 +726,7 @@ function renderPostDetail(post) {
 
     const liked = post.user_has_liked === true;
     const images = parseImageArray(post.images);
+    console.log('[DEBUG] renderPostDetail — raw images:', JSON.stringify(post.images), 'parsed:', JSON.stringify(images));
     let imagesHtml = '';
     if (images.length > 0) {
         imagesHtml = `<div class="post-image-gallery" id="post-gallery-${post.id}">

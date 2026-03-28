@@ -4,7 +4,7 @@ const ALL_PERMISSIONS = ['member_approve', 'post_manage', 'schedule_manage', 'no
 const ROLE_PERMISSIONS = {
     super_admin: ['member_approve', 'post_manage', 'schedule_manage', 'notice_manage', 'push_send', 'meeting_manage'],
     admin: ['member_approve', 'post_manage', 'schedule_manage', 'notice_manage', 'push_send', 'meeting_manage'],
-    local_admin: ['notice_manage', 'schedule_manage', 'meeting_manage'],
+    local_admin: ['member_approve', 'post_manage', 'schedule_manage', 'notice_manage', 'push_send', 'meeting_manage'],
     member: []
 };
 

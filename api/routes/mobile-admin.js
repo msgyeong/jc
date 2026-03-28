@@ -13,12 +13,17 @@ router.use(authenticate);
    ====================================================== */
 router.get('/pending-members', requireMobilePermission('member_approve'), async (req, res) => {
     try {
-        const result = await query(
-            `SELECT id, name, email, phone, created_at
-             FROM users
-             WHERE status = 'pending'
-             ORDER BY created_at DESC`
-        );
+        // local_admin은 같은 로컬 대기 회원만
+        const orgId = req.user.orgId;
+        const isSuperAdmin = req.user.role === 'super_admin';
+        let sql = `SELECT id, name, email, phone, created_at FROM users WHERE status = 'pending'`;
+        const params = [];
+        if (!isSuperAdmin && orgId) {
+            params.push(orgId);
+            sql += ` AND org_id = $${params.length}`;
+        }
+        sql += ` ORDER BY created_at DESC`;
+        const result = await query(sql, params);
         res.json({
             success: true,
             data: {

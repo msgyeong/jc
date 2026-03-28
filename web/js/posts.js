@@ -981,10 +981,18 @@ async function loadLinkedScheduleForPost(post) {
         const catClass = (typeof CATEGORY_BADGE_CLASS !== 'undefined' && CATEGORY_BADGE_CLASS[sched.category]) || 'badge-other';
         const dateStr = sched.start_date ? new Date(sched.start_date).toLocaleDateString('ko-KR') : '';
         let timeStr = '';
-        if (sched.start_date && sched.start_date.includes('T')) {
-            const st = sched.start_date.split('T')[1]?.substring(0, 5) || '';
-            const et = sched.end_date && sched.end_date.includes('T') ? sched.end_date.split('T')[1]?.substring(0, 5) || '' : '';
-            if (st && st !== '00:00') timeStr = et ? `${st}~${et}` : st;
+        if (sched.start_date) {
+            const sd = new Date(sched.start_date);
+            const sh = sd.getHours(), sm = sd.getMinutes();
+            if (sh !== 0 || sm !== 0) {
+                const st = String(sh).padStart(2,'0') + ':' + String(sm).padStart(2,'0');
+                timeStr = st;
+                if (sched.end_date) {
+                    const ed = new Date(sched.end_date);
+                    const eh = ed.getHours(), em = ed.getMinutes();
+                    if (eh !== 0 || em !== 0) timeStr += '~' + String(eh).padStart(2,'0') + ':' + String(em).padStart(2,'0');
+                }
+            }
         }
         container.innerHTML = `
             <div class="linked-schedule-banner" onclick="navigateTo('/schedules/${sched.id}')">

@@ -8253,6 +8253,43 @@ a.sns-badge:hover {
 }
 
 /* 탭 바 */
+/* 소모임 탭 (gb-tabs / gb-tab) */
+.gb-tabs {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.gb-tab {
+    flex: 1;
+    padding: 12px 0;
+    border: none;
+    background: none;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-family);
+    color: var(--text-secondary);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+    text-align: center;
+}
+.gb-tab.active {
+    color: var(--primary-color);
+}
+.gb-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background: var(--primary-color);
+    border-radius: 1px;
+}
+
 .gb-tab-bar {
     display: flex;
     background: white;

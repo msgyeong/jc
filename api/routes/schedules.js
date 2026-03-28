@@ -586,10 +586,12 @@ router.get('/:id/attendance/summary', authenticate, async (req, res) => {
             else if (r.status === 'not_attending') not_attending = r.count;
         });
 
-        // 전체 승인 회원 수
-        const totalResult = await query(
-            "SELECT COUNT(*)::int as count FROM users WHERE status = 'active'"
-        );
+        // 전체 승인 회원 수 (같은 로컬 소속만)
+        const userOrg = await query('SELECT org_id FROM users WHERE id = $1', [userId]);
+        const orgId = userOrg.rows[0]?.org_id;
+        const totalResult = orgId
+            ? await query("SELECT COUNT(*)::int as count FROM users WHERE status = 'active' AND org_id = $1", [orgId])
+            : await query("SELECT COUNT(*)::int as count FROM users WHERE status = 'active'");
         const total_members = totalResult.rows[0].count;
         const no_response = total_members - attending - not_attending;
 
@@ -654,11 +656,13 @@ router.get('/:id/attendance/details', authenticate, async (req, res) => {
 
         const data = { attending, not_attending };
 
-        // 관리자만 미응답자 목록 포함
+        // 관리자만 미응답자 목록 포함 (같은 로컬 소속만)
         if (isAdmin) {
-            const allMembers = await query(
-                "SELECT id, name, position FROM users WHERE status = 'active' ORDER BY position NULLS LAST, name"
-            );
+            const userOrg2 = await query('SELECT org_id FROM users WHERE id = $1', [userId]);
+            const orgId2 = userOrg2.rows[0]?.org_id;
+            const allMembers = orgId2
+                ? await query("SELECT id, name, position FROM users WHERE status = 'active' AND org_id = $1 ORDER BY position NULLS LAST, name", [orgId2])
+                : await query("SELECT id, name, position FROM users WHERE status = 'active' ORDER BY position NULLS LAST, name");
             data.no_response = allMembers.rows
                 .filter(m => !respondedUserIds.has(m.id))
                 .map(m => ({ user_id: m.id, name: m.name, jc_position: m.position || null }));
@@ -703,10 +707,12 @@ router.get('/:id/attendance/export', authenticate, async (req, res) => {
 
         const respondedUserIds = new Set(votesResult.rows.map(r => r.user_id));
 
-        // 미응답자
-        const allMembers = await query(
-            "SELECT id, name, position FROM users WHERE status = 'active' ORDER BY position NULLS LAST, name"
-        );
+        // 미응답자 (같은 로컬 소속만)
+        const userOrgCsv = await query('SELECT org_id FROM users WHERE id = $1', [userId]);
+        const orgIdCsv = userOrgCsv.rows[0]?.org_id;
+        const allMembers = orgIdCsv
+            ? await query("SELECT id, name, position FROM users WHERE status = 'active' AND org_id = $1 ORDER BY position NULLS LAST, name", [orgIdCsv])
+            : await query("SELECT id, name, position FROM users WHERE status = 'active' ORDER BY position NULLS LAST, name");
         const noResponse = allMembers.rows.filter(m => !respondedUserIds.has(m.id));
 
         // CSV 생성

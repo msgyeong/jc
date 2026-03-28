@@ -101,27 +101,36 @@ function showClubCreateForm() {
 
 function initClubCreateForm() {
     var form = document.getElementById('club-create-form');
-    if (form && !form._bound) {
-        form._bound = true;
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            var name = document.getElementById('club-name').value.trim();
-            var desc = document.getElementById('club-description').value.trim();
-            if (!name) return;
+    if (!form) return;
+    var newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+    newForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var name = document.getElementById('club-name').value.trim();
+        var desc = document.getElementById('club-description').value.trim();
+        if (!name) { showToast('소모임 이름을 입력하세요', 'error'); return; }
 
-            try {
-                var res = await apiClient.request('/clubs', {
-                    method: 'POST', body: JSON.stringify({ name: name, description: desc })
-                });
-                if (res.success) {
-                    form.reset();
-                    openClubDetail(res.club.id, res.club.name);
-                }
-            } catch (err) {
-                console.error('Club create error:', err);
+        var submitBtn = newForm.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            var res = await apiClient.request('/clubs', {
+                method: 'POST', body: JSON.stringify({ name: name, description: desc })
+            });
+            if (res.success) {
+                showToast('소모임이 생성되었습니다');
+                newForm.reset();
+                openClubDetail(res.club.id, res.club.name);
+            } else {
+                showToast(res.message || '소모임 생성에 실패했습니다', 'error');
             }
-        });
-    }
+        } catch (err) {
+            console.error('Club create error:', err);
+            showToast(err.message || '소모임 생성 중 오류가 발생했습니다', 'error');
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    });
 }
 
 // ========== 소모임 상세 ==========
@@ -425,57 +434,66 @@ async function deleteClubPost(postId) {
 
 function initClubPostForm() {
     var form = document.getElementById('club-post-form');
-    if (form && !form._bound) {
-        form._bound = true;
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            var title = document.getElementById('cp-title').value.trim();
-            var content = document.getElementById('cp-content').value.trim();
-            if (!title) return;
+    if (!form) return;
+    // 매번 새로 바인딩
+    var newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+    newForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var title = document.getElementById('cp-title').value.trim();
+        var content = document.getElementById('cp-content').value.trim();
+        if (!title) { showToast('제목을 입력하세요', 'error'); return; }
+        if (!_currentClubId) { showToast('소모임 정보를 찾을 수 없습니다', 'error'); return; }
 
-            // 이미지 업로드
-            var images = null;
-            var fileInput = document.getElementById('cp-images');
-            if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                images = await uploadClubPostImages(fileInput.files);
-            }
+        var submitBtn = newForm.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
 
-            var body = { title: title, content: content };
-            if (images) body.images = JSON.stringify(images);
-
-            try {
-                if (_editingClubPostId) {
-                    await apiClient.request('/clubs/' + _currentClubId + '/posts/' + _editingClubPostId, {
-                        method: 'PUT', body: JSON.stringify(body)
-                    });
-                } else {
-                    await apiClient.request('/clubs/' + _currentClubId + '/posts', {
-                        method: 'POST', body: JSON.stringify(body)
-                    });
-                }
-                form.reset();
-                history.back();
-            } catch (err) {
-                console.error('Club post submit error:', err);
-            }
-        });
-
-        // 이미지 프리뷰
+        // 이미지 업로드
+        var images = null;
         var fileInput = document.getElementById('cp-images');
-        if (fileInput) {
-            fileInput.addEventListener('change', function() {
-                var preview = document.getElementById('cp-image-preview');
-                if (!preview) return;
-                preview.innerHTML = '';
-                Array.from(this.files).slice(0, 5).forEach(function(file) {
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        preview.innerHTML += '<img src="' + e.target.result + '" class="gb-preview-img">';
-                    };
-                    reader.readAsDataURL(file);
-                });
-            });
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            images = await uploadClubPostImages(fileInput.files);
         }
+
+        var body = { title: title, content: content };
+        if (images) body.images = JSON.stringify(images);
+
+        try {
+            if (_editingClubPostId) {
+                await apiClient.request('/clubs/' + _currentClubId + '/posts/' + _editingClubPostId, {
+                    method: 'PUT', body: JSON.stringify(body)
+                });
+            } else {
+                await apiClient.request('/clubs/' + _currentClubId + '/posts', {
+                    method: 'POST', body: JSON.stringify(body)
+                });
+            }
+            showToast(_editingClubPostId ? '게시글이 수정되었습니다' : '게시글이 등록되었습니다');
+            newForm.reset();
+            history.back();
+        } catch (err) {
+            console.error('Club post submit error:', err);
+            showToast(err.message || '게시글 등록 중 오류가 발생했습니다', 'error');
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    });
+
+    // 이미지 프리뷰
+    var fileInput = document.getElementById('cp-images');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            var preview = document.getElementById('cp-image-preview');
+            if (!preview) return;
+            preview.innerHTML = '';
+            Array.from(this.files).slice(0, 5).forEach(function(file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML += '<img src="' + e.target.result + '" class="gb-preview-img">';
+                };
+                reader.readAsDataURL(file);
+            });
+        });
     }
 }
 
@@ -576,36 +594,50 @@ async function deleteClubSchedule(scheduleId) {
 
 function initClubScheduleForm() {
     var form = document.getElementById('club-schedule-form');
-    if (form && !form._bound) {
-        form._bound = true;
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            var title = document.getElementById('cs-title').value.trim();
-            var desc = document.getElementById('cs-description').value.trim();
-            var location = document.getElementById('cs-location').value.trim();
-            var startDate = document.getElementById('cs-start-date').value;
-            var endDate = document.getElementById('cs-end-date').value;
-            var category = document.getElementById('cs-category').value;
+    if (!form) return;
+    // 매번 새로 바인딩 (이전 리스너 제거 후)
+    var newForm = form.cloneNode(true);
+    form.parentNode.replaceChild(newForm, form);
+    newForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var title = document.getElementById('cs-title').value.trim();
+        var desc = document.getElementById('cs-description').value.trim();
+        var loc = document.getElementById('cs-location').value.trim();
+        var startDate = document.getElementById('cs-start-date').value;
+        var endDate = document.getElementById('cs-end-date').value;
+        var category = document.getElementById('cs-category').value;
 
-            if (!title || !startDate) return;
+        if (!title) { showToast('제목을 입력하세요', 'error'); return; }
+        if (!startDate) { showToast('시작 날짜를 입력하세요', 'error'); return; }
+        if (!_currentClubId) { showToast('소모임 정보를 찾을 수 없습니다', 'error'); return; }
 
-            try {
-                var url = '/clubs/' + _currentClubId + '/schedules' + (_editingClubScheduleId ? '/' + _editingClubScheduleId : '');
-                var method = _editingClubScheduleId ? 'PUT' : 'POST';
-                await apiClient.request(url, {
-                    method: method,
-                    body: JSON.stringify({
-                        title: title, description: desc, location: location,
-                        start_date: startDate, end_date: endDate || null, category: category
-                    })
-                });
-                form.reset();
+        var submitBtn = newForm.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            var url = '/clubs/' + _currentClubId + '/schedules' + (_editingClubScheduleId ? '/' + _editingClubScheduleId : '');
+            var method = _editingClubScheduleId ? 'PUT' : 'POST';
+            var res = await apiClient.request(url, {
+                method: method,
+                body: JSON.stringify({
+                    title: title, description: desc, location: loc,
+                    start_date: startDate, end_date: endDate || null, category: category
+                })
+            });
+            if (res.success) {
+                showToast(_editingClubScheduleId ? '일정이 수정되었습니다' : '일정이 등록되었습니다');
+                newForm.reset();
                 history.back();
-            } catch (err) {
-                console.error('Club schedule create error:', err);
+            } else {
+                showToast(res.message || '일정 등록에 실패했습니다', 'error');
             }
-        });
-    }
+        } catch (err) {
+            console.error('Club schedule create error:', err);
+            showToast(err.message || '일정 등록 중 오류가 발생했습니다', 'error');
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    });
 }
 
 // ========== 멤버 목록 ==========

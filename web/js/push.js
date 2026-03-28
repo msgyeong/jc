@@ -81,20 +81,17 @@ async function getVapidPublicKey() {
 // 구독 요청
 async function subscribePush() {
   if (!swRegistration) {
-    showToast('서비스 워커가 등록되지 않았습니다', 'error');
     return false;
   }
 
   // iOS standalone 체크
   if (isIOS() && !isStandalone()) {
-    showToast('홈 화면에 추가한 후 이용해주세요', 'error');
     showPWAInstallBanner();
     return false;
   }
 
   // PushManager 지원 체크
   if (!('PushManager' in window)) {
-    showToast('이 브라우저는 푸시 알림을 지원하지 않습니다', 'error');
     return false;
   }
 
@@ -108,7 +105,6 @@ async function subscribePush() {
   // VAPID 키 가져오기
   const vapidKey = await getVapidPublicKey();
   if (!vapidKey) {
-    showToast('푸시 설정을 불러올 수 없습니다', 'error');
     return false;
   }
 
@@ -132,13 +128,11 @@ async function subscribePush() {
       })
     });
 
-    showToast('알림이 활성화되었습니다', 'success');
     hidePushSubscribeBanner();
     updatePushStatusUI();
     return true;
   } catch (err) {
     console.error('[Push] 구독 실패:', err);
-    showToast('알림 등록에 실패했습니다', 'error');
     return false;
   }
 }
@@ -157,12 +151,10 @@ async function unsubscribePush() {
     });
 
     pushSubscription = null;
-    showToast('알림이 해제되었습니다', 'success');
     updatePushStatusUI();
     return true;
   } catch (err) {
     console.error('[Push] 구독 해제 실패:', err);
-    showToast('알림 해제에 실패했습니다', 'error');
     return false;
   }
 }

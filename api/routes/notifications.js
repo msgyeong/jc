@@ -49,11 +49,8 @@ pushRouter.post('/subscribe', authenticate, async (req, res) => {
         // endpoint URL 형식 검증
         try {
             new URL(endpoint);
-        } catch (_) {
-            return res.status(400).json({
-                success: false,
-                message: '유효하지 않은 endpoint URL입니다.'
-            });
+        } catch (urlErr) {
+            return res.status(400).json({ success: false, message: '유효하지 않은 endpoint URL입니다.' });
         }
 
         const userAgent = req.headers['user-agent'] || null;

@@ -200,6 +200,18 @@ function formatDate(dateString, format) {
     });
 }
 
+// 상대 시간 포맷 별칭 (formatDate의 format 미지정 = 상대 시간)
+function formatRelativeTime(dateString) { return formatDate(dateString); }
+
+// 현재 사용자 정보 (안전하게)
+function getCurrentUserSafe() {
+    try {
+        return typeof getCurrentUser === 'function'
+            ? getCurrentUser()
+            : JSON.parse(localStorage.getItem('user_info') || 'null');
+    } catch (_) { return null; }
+}
+
 // HTML 이스케이프
 function escapeHtml(text) {
     if (!text) return '';

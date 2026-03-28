@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const { authenticate: serverAuth } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const postsRoutes = require('./routes/posts');
 const uploadRoutes = require('./routes/upload');
@@ -112,7 +113,7 @@ app.use('/api/schedules', schedulesRoutes);
 app.use('/api/members', membersRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', serverAuth, adminRoutes); // 전체 admin 라우트 인증 필수
 // seed 라우트는 개발 환경에서만 사용
 if (process.env.NODE_ENV !== 'production') {
     app.use('/api/seed', seedRoutes);
@@ -128,7 +129,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/mobile-admin', mobileAdminRoutes);
 app.use('/api/meetings', meetingsRoutes);
 app.use('/api/organizations', organizationsRoutes);
-app.use('/api/admin-app', mobileAdminRoutes);
+// app.use('/api/admin-app', mobileAdminRoutes); // 중복 제거 (mobile-admin으로 통일)
 app.use('/api/orgchart', orgchartRoutes);
 app.use('/api/map', mapRoutes);
 app.use('/api/group-board', groupBoardRoutes);
@@ -172,6 +173,54 @@ app.use(notFoundHandler);
 
 // 에러 핸들러
 app.use(errorHandler);
+
+// ========== DB 스키마 자동 보정 (서버 시작 시) ==========
+const { query: dbQuery } = require('./config/database');
+(async function ensureDbSchema() {
+    var fixes = [
+        // posts 테이블 누락 컬럼
+        "ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT false",
+        "ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_banner BOOLEAN DEFAULT false",
+        "ALTER TABLE posts ADD COLUMN IF NOT EXISTS attendance_enabled BOOLEAN DEFAULT false",
+        "ALTER TABLE posts ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0",
+        "ALTER TABLE posts ADD COLUMN IF NOT EXISTS comments_count INTEGER DEFAULT 0",
+        "ALTER TABLE posts ADD COLUMN IF NOT EXISTS linked_schedule_id INTEGER",
+        // schedules 테이블 누락 컬럼
+        "ALTER TABLE schedules ADD COLUMN IF NOT EXISTS views INTEGER DEFAULT 0",
+        "ALTER TABLE schedules ADD COLUMN IF NOT EXISTS linked_post_id INTEGER",
+        // group_posts 테이블 누락 컬럼
+        "ALTER TABLE group_posts ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0",
+        "ALTER TABLE group_posts ADD COLUMN IF NOT EXISTS attendance_enabled BOOLEAN DEFAULT false",
+        // posts.category CHECK 제약조건 업데이트 (notice 포함)
+        "ALTER TABLE posts DROP CONSTRAINT IF EXISTS posts_category_check",
+        "ALTER TABLE posts ADD CONSTRAINT posts_category_check CHECK (category IN ('general', 'notice', 'question', 'announcement', 'event'))",
+        // read_status 테이블 + 인덱스
+        `CREATE TABLE IF NOT EXISTS read_status (
+            id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL,
+            post_id INTEGER, notice_id INTEGER, schedule_id INTEGER,
+            read_at TIMESTAMP DEFAULT NOW()
+        )`,
+        "CREATE UNIQUE INDEX IF NOT EXISTS read_status_user_post_idx ON read_status (user_id, post_id) WHERE post_id IS NOT NULL",
+        // 그룹 좋아요/참석 테이블
+        `CREATE TABLE IF NOT EXISTS group_post_likes (
+            id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, post_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW(), UNIQUE(user_id, post_id)
+        )`,
+        `CREATE TABLE IF NOT EXISTS group_comment_likes (
+            id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, comment_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW(), UNIQUE(user_id, comment_id)
+        )`,
+        `CREATE TABLE IF NOT EXISTS group_post_attendance (
+            id SERIAL PRIMARY KEY, post_id INTEGER NOT NULL, user_id INTEGER NOT NULL,
+            status VARCHAR(20) NOT NULL, responded_at TIMESTAMP DEFAULT NOW(), UNIQUE(post_id, user_id)
+        )`
+    ];
+    var ok = 0, fail = 0;
+    for (var sql of fixes) {
+        try { await dbQuery(sql); ok++; } catch (e) { fail++; }
+    }
+    console.log('✅ DB 스키마 보정 완료 (' + ok + ' 성공, ' + fail + ' 스킵)');
+})();
 
 // 서버 시작
 app.listen(PORT, async () => {
@@ -263,6 +312,14 @@ app.listen(PORT, async () => {
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lat DOUBLE PRECISION").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lng DOUBLE PRECISION").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_address VARCHAR(500)").catch(() => {});
+    // S-09: 배너 광고
+    dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS created_by INTEGER").catch(() => {});
+    dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS member_id INTEGER").catch(() => {});
+    dbQuery("ALTER TABLE banners ADD COLUMN IF NOT EXISTS description TEXT").catch(() => {});
+    // S-07: 사업 PR 섹션
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_headline VARCHAR(100)").catch(() => {});
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_description TEXT").catch(() => {});
+    dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_social_links JSONB DEFAULT '[]'::jsonb").catch(() => {});
     // 로컬조직도 테이블
     dbQuery(`CREATE TABLE IF NOT EXISTS orgchart_groups (
         id SERIAL PRIMARY KEY, org_id INTEGER REFERENCES organizations(id),

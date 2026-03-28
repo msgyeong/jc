@@ -219,7 +219,7 @@ router.post('/:id/comments', authenticate, async (req, res) => {
                     }).catch(e => console.error('[Push] N-05 발송 에러:', e.message));
                 }
             }
-        } catch (_) { /* 푸시 실패해도 무시 */ }
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
 
         return res.json({ success: true, message: '댓글이 등록되었습니다.', comments_count });
     } catch (err) {
@@ -375,9 +375,7 @@ router.get('/:id', authenticate, async (req, res) => {
                     [post.linked_schedule_id]
                 );
                 post.linked_schedule = schedResult.rows[0] || null;
-            } catch (_) {
-                post.linked_schedule = null;
-            }
+            } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
         }
 
         let user_has_liked = false;
@@ -387,7 +385,7 @@ router.get('/:id', authenticate, async (req, res) => {
                 [userId, id]
             );
             user_has_liked = (likeRow.rows && likeRow.rows.length > 0);
-        } catch (_) { }
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
         if (!user_has_liked) {
             try {
                 const pl = await query(
@@ -395,10 +393,11 @@ router.get('/:id', authenticate, async (req, res) => {
                     [userId, id]
                 );
                 user_has_liked = (pl.rows && pl.rows.length > 0);
-            } catch (_) { }
+            } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
         }
         post.user_has_liked = user_has_liked;
 
+        // 읽음 처리 (read_status)
         try {
             await query(
                 `INSERT INTO read_status (user_id, post_id, read_at)
@@ -406,7 +405,35 @@ router.get('/:id', authenticate, async (req, res) => {
                  ON CONFLICT (user_id, post_id) DO UPDATE SET read_at = NOW()`,
                 [userId, id]
             );
-        } catch (_) { /* read_status 미적용 시 무시 */ }
+        } catch (readErr) {
+            console.error('[read_status] INSERT 실패:', readErr.message);
+            // UNIQUE 제약조건 없으면 테이블 재생성 시도
+            try {
+                await query(`
+                    CREATE TABLE IF NOT EXISTS read_status (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
+                        post_id INTEGER,
+                        notice_id INTEGER,
+                        schedule_id INTEGER,
+                        read_at TIMESTAMP DEFAULT NOW()
+                    )
+                `);
+                // UNIQUE 제약조건 추가 (없으면)
+                await query(`
+                    CREATE UNIQUE INDEX IF NOT EXISTS read_status_user_post_idx ON read_status (user_id, post_id) WHERE post_id IS NOT NULL
+                `);
+                // 재시도 (UNIQUE 인덱스 기반)
+                await query(
+                    `INSERT INTO read_status (user_id, post_id, read_at)
+                     VALUES ($1, $2, NOW())
+                     ON CONFLICT (user_id, post_id) WHERE post_id IS NOT NULL DO UPDATE SET read_at = NOW()`,
+                    [userId, id]
+                );
+            } catch (retryErr) {
+                console.error('[read_status] 재시도 실패:', retryErr.message);
+            }
+        }
 
         res.json({
             success: true,
@@ -448,8 +475,8 @@ router.post('/', authenticate, async (req, res) => {
             });
         }
 
-        // schedule 객체가 있으면 트랜잭션으로 공지+일정 동시 생성
-        if (schedule && cat === 'notice') {
+        // schedule 객체가 있으면 트랜잭션으로 게시글+일정 동시 생성 (공지/일반 모두)
+        if (schedule) {
             const result = await transaction(async (client) => {
                 // 1. 공지 생성
                 const attendance_enabled = req.body.attendance_enabled || false;

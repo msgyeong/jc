@@ -116,14 +116,25 @@ router.post('/members', authenticate, async (req, res) => {
         if (!group_id) return res.status(400).json({ success: false, error: '그룹을 선택하세요.' });
         if (!user_id && !manual_name) return res.status(400).json({ success: false, error: '회원을 선택하거나 이름을 입력하세요.' });
 
-        // position_title: 입력값 우선, 없으면 회원 프로필의 position 사용
+        // position_title: 입력값 우선, 없으면 회원 프로필의 position 또는 JC직책 사용, 최종 폴백 '회원'
         let finalPosition = position_title;
         if (!finalPosition && user_id) {
-            const userRow = await query('SELECT position FROM users WHERE id = $1', [user_id]);
-            finalPosition = (userRow.rows[0] && userRow.rows[0].position) || '회원';
+            try {
+                const userRow = await query(
+                    `SELECT u.position, p.name as jc_position
+                     FROM users u LEFT JOIN positions p ON u.position_id = p.id
+                     WHERE u.id = $1`, [user_id]);
+                if (userRow.rows[0]) {
+                    finalPosition = userRow.rows[0].jc_position || userRow.rows[0].position || '회원';
+                } else {
+                    finalPosition = '회원';
+                }
+            } catch (e) {
+                finalPosition = '회원';
+            }
         }
-        if (!finalPosition && manual_name) {
-            return res.status(400).json({ success: false, error: '수기 등록 시 직책명을 입력하세요.' });
+        if (!finalPosition) {
+            finalPosition = manual_name ? '비회원' : '회원';
         }
 
         // 중복 체크 (같은 그룹에 같은 회원)

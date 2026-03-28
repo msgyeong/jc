@@ -101,9 +101,7 @@ router.get('/:id', authenticate, async (req, res) => {
                     [schedule.linked_post_id]
                 );
                 schedule.linked_post = postResult.rows[0] || null;
-            } catch (_) {
-                schedule.linked_post = null;
-            }
+            } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
         }
 
         res.json({
@@ -149,6 +147,14 @@ router.post('/', authenticate, async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: '제목과 날짜를 입력해주세요.'
+            });
+        }
+
+        // 종료일이 시작일보다 빠른 경우 차단
+        if (end_date && new Date(end_date) < new Date(start_date)) {
+            return res.status(400).json({
+                success: false,
+                message: '종료일은 시작일보다 빠를 수 없습니다.'
             });
         }
 
@@ -219,6 +225,14 @@ router.put('/:id', authenticate, async (req, res) => {
             return res.status(403).json({
                 success: false,
                 message: '일정 수정 권한이 없습니다.'
+            });
+        }
+
+        // 종료일이 시작일보다 빠른 경우 차단
+        if (end_date && start_date && new Date(end_date) < new Date(start_date)) {
+            return res.status(400).json({
+                success: false,
+                message: '종료일은 시작일보다 빠를 수 없습니다.'
             });
         }
 
@@ -439,7 +453,7 @@ router.post('/:id/comments', authenticate, async (req, res) => {
                     }).catch(e => console.error('[Push] N-05 발송 에러:', e.message));
                 }
             }
-        } catch (_) { /* 푸시 실패해도 무시 */ }
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
 
         res.status(201).json({
             success: true,

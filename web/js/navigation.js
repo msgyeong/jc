@@ -76,17 +76,82 @@ function navigateTo(path) {
 }
 
 // 화면 전환
+// ========== 라우터 (기초 교체 2단계) ==========
+// nav: 탭 활성화, showNav: 네비바 표시, init: 진입, leave: 이탈 정리, noHistory: pushState 안함
+var _currentScreen = null; // 현재 활성 화면 이름
 var _lastScreenName = '';
+
+var _routes = {
+    'home':         { nav: 'home',      showNav: true,  init: function() { if (typeof updateUserDisplay === 'function') updateUserDisplay(); loadHomeData(); } },
+    'posts':        { nav: 'posts',     showNav: true,  init: function() { if (typeof loadPostsScreen === 'function') loadPostsScreen(); } },
+    'schedules':    { nav: 'schedules', showNav: true,
+        init: function() { if (typeof loadSchedulesScreen === 'function') loadSchedulesScreen(); },
+        leave: function() { if (typeof _scheduleDetailActive !== 'undefined') _scheduleDetailActive = false; if (typeof backToScheduleList === 'function') backToScheduleList(); }
+    },
+    'members':      { nav: 'members',   showNav: true,  init: function() { if (typeof loadMembersScreen === 'function') loadMembersScreen(); } },
+    'meetings':     { nav: 'meetings',  showNav: true,  init: function() { if (typeof loadMeetingsScreen === 'function') loadMeetingsScreen(); } },
+    'profile':      { nav: 'profile',   showNav: true,  init: function() { if (typeof loadProfile === 'function') loadProfile(); } },
+    'login':        { noHistory: true, init: function() { var f = document.getElementById('login-form'); if (f) f.reset(); clearAllErrors(); setTimeout(function() { var el = document.getElementById('login-email'); if (el) el.focus(); }, 100); } },
+    'signup':       { noHistory: true, init: function() { var f = document.getElementById('signup-form'); if (f) f.reset(); clearAllErrors(); setTimeout(function() { var el = document.getElementById('signup-org'); if (el) el.focus(); }, 100); } },
+    'forgot-password': { noHistory: true, init: function() { resetForgotPasswordToStep1(); ['forgot-password-form','forgot-verify-form','forgot-set-password-form'].forEach(function(id) { var f = document.getElementById(id); if (f) f.reset(); }); clearAllErrors(); setTimeout(function() { var el = document.getElementById('forgot-email'); if (el) el.focus(); }, 100); } },
+    'pending-approval': { noHistory: true },
+    'admin':        { init: function() { if (typeof initAdminPage === 'function') initAdminPage(); } },
+    'admin-manage': { init: function() { if (typeof initLocalAdmin === 'function') initLocalAdmin(); } },
+    'notifications': {},
+    'notification-settings': { nav: 'profile' },
+    'settings':     { nav: 'profile', init: function() { if (typeof renderSettingsScreen === 'function') renderSettingsScreen(); } },
+    'portal':       { init: function() { if (typeof loadPortalScreen === 'function') loadPortalScreen(); } },
+    'org-chart':    { init: function() { if (typeof loadOrgChartScreen === 'function') loadOrgChartScreen(); } },
+    'jc-map':       { init: function() { setTimeout(function() { if (typeof loadJcMapScreen === 'function') loadJcMapScreen(); }, 100); } },
+    'jc-vision':    { init: function() { if (typeof loadContentScreen === 'function') loadContentScreen('jc-vision'); } },
+    'jc-roles':     { init: function() { if (typeof loadContentScreen === 'function') loadContentScreen('jc-roles'); } },
+    'jc-charter':   { init: function() { if (typeof loadContentScreen === 'function') loadContentScreen('jc-charter'); } },
+    'group-board':  {
+        init: function() { if (typeof loadGroupBoardScreen === 'function') loadGroupBoardScreen(); },
+        leave: function() { if (typeof _currentGroupBoardId !== 'undefined') { _groupBoardLoading = false; } }
+    },
+    'clubs':        { init: function() { if (typeof loadClubsScreen === 'function') loadClubsScreen(); } },
+    'club-detail':  { init: function() { if (typeof loadClubDetailScreen === 'function') loadClubDetailScreen(); } },
+    'club-create':  { init: function() { if (typeof initClubCreateForm === 'function') initClubCreateForm(); } },
+    'club-invite':  { init: function() { if (typeof loadClubInviteScreen === 'function') loadClubInviteScreen(); } },
+    'member-detail': {},
+    'meeting-records': { init: function() { if (typeof loadMeetingRecordsScreen === 'function') loadMeetingRecordsScreen(); } }
+};
+
+// 중앙 pushState 함수 — 모든 파일에서 이것만 호출
+function pushRoute(screenName, extraState) {
+    if (window._navPopstate) return;
+    var state = { screen: screenName };
+    if (extraState) {
+        for (var k in extraState) state[k] = extraState[k];
+    }
+    history.pushState(state, '', '#' + screenName);
+}
+
 function navigateToScreen(screenName) {
     console.log('📱 화면 전환:', screenName);
 
+    // 이전 화면 leave 콜백 호출 (상태 정리 — 동일 화면 재진입도 포함)
+    if (_currentScreen) {
+        var prevRoute = _routes[_currentScreen];
+        if (prevRoute && prevRoute.leave) {
+            try { prevRoute.leave(); } catch (e) { console.error('Screen leave error:', _currentScreen, e); }
+        }
+    }
+    _currentScreen = screenName;
+
     // 모든 화면 숨기기
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active', 'slide-forward', 'slide-back');
-    });
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active', 'slide-forward', 'slide-back'); });
+
+    // 공유 하단 네비바 표시/숨김
+    var route = _routes[screenName] || {};
+    var sharedNav = document.getElementById('shared-bottom-nav');
+    if (sharedNav) {
+        sharedNav.style.display = route.showNav ? '' : 'none';
+    }
 
     // 선택한 화면 표시
-    const targetScreen = document.getElementById(`${screenName}-screen`);
+    var targetScreen = document.getElementById(screenName + '-screen');
     if (targetScreen) {
         // 방향 감지: 상세화면(detail/create/edit)으로 이동 시 forward, 돌아올 때 back
         var isForward = /detail|create|edit|signup|forgot|settings|notification/.test(screenName);
@@ -95,91 +160,18 @@ function navigateToScreen(screenName) {
         else if (isBack) targetScreen.classList.add('slide-back');
         _lastScreenName = screenName;
         targetScreen.classList.add('active');
-        
-        // 화면별 추가 처리
-        if (screenName === 'home') {
-            updateNavigation('home');
-            if (typeof updateUserDisplay === 'function') updateUserDisplay();
-            loadHomeData(); // 홈 화면 로드
-        } else if (screenName === 'login') {
-            // 로그인 화면으로 돌아갈 때 폼 초기화
-            const form = document.getElementById('login-form');
-            if (form) {
-                form.reset();
-            }
-            clearAllErrors();
-            // 첫 번째 입력 필드에 자동 포커스
-            setTimeout(function() { var el = document.getElementById('login-email'); if (el) el.focus(); }, 100);
-        } else if (screenName === 'signup') {
-            const form = document.getElementById('signup-form');
-            if (form) {
-                form.reset();
-            }
-            clearAllErrors();
-            setTimeout(function() { var el = document.getElementById('signup-org'); if (el) el.focus(); }, 100);
-        } else if (screenName === 'forgot-password') {
-            // Step 1으로 리셋
-            resetForgotPasswordToStep1();
-            const form = document.getElementById('forgot-password-form');
-            if (form) form.reset();
-            const verifyForm = document.getElementById('forgot-verify-form');
-            if (verifyForm) verifyForm.reset();
-            const setForm = document.getElementById('forgot-set-password-form');
-            if (setForm) setForm.reset();
-            clearAllErrors();
-            setTimeout(function() { var el = document.getElementById('forgot-email'); if (el) el.focus(); }, 100);
-        } else if (screenName === 'admin') {
-            // 관리자 페이지 초기화
-            if (typeof initAdminPage === 'function') {
-                initAdminPage();
-            }
-        } else if (screenName === 'notifications') {
-            // 알림 센터 — 네비 업데이트 없음 (독립 화면)
-        } else if (screenName === 'notification-settings') {
-            // 알림 설정 — 프로필 탭 활성
-            updateNavigation('profile');
-        } else if (screenName === 'posts') {
-            updateNavigation('posts');
-            if (typeof loadPostsScreen === 'function') {
-                loadPostsScreen();
-            }
-        } else if (screenName === 'settings') {
-            updateNavigation('profile');
-            if (typeof renderSettingsScreen === 'function') {
-                renderSettingsScreen();
-            }
-        } else if (screenName === 'admin-manage') {
-            if (typeof initLocalAdmin === 'function') initLocalAdmin();
-        } else if (screenName === 'portal') {
-            if (typeof loadPortalScreen === 'function') loadPortalScreen();
-        } else if (screenName === 'org-chart') {
-            if (typeof loadOrgChartScreen === 'function') loadOrgChartScreen();
-        } else if (screenName === 'jc-map') {
-            if (typeof loadJcMapScreen === 'function') {
-                // 맵은 화면이 표시된 후 초기화해야 함
-                setTimeout(function() { loadJcMapScreen(); }, 100);
-            }
-        } else if (['jc-vision','jc-roles','jc-charter'].includes(screenName)) {
-            if (typeof loadContentScreen === 'function') loadContentScreen(screenName);
-        } else if (screenName === 'group-board') {
-            if (typeof loadGroupBoardScreen === 'function') loadGroupBoardScreen();
-        } else if (screenName === 'clubs') {
-            if (typeof loadClubsScreen === 'function') loadClubsScreen();
-        } else if (screenName === 'club-detail') {
-            if (typeof loadClubDetailScreen === 'function') loadClubDetailScreen();
-        } else if (screenName === 'club-create') {
-            if (typeof initClubCreateForm === 'function') initClubCreateForm();
-        } else if (screenName === 'club-invite') {
-            if (typeof loadClubInviteScreen === 'function') loadClubInviteScreen();
-        } else if (screenName === 'member-detail') {
-            // loadMemberDetail은 호출 측에서 직접 실행
+
+        // 탭 활성화
+        if (route.nav) updateNavigation(route.nav);
+
+        // 화면 초기화 함수 호출
+        if (route.init) {
+            try { route.init(); } catch (err) { console.error('Screen init error:', screenName, err); }
         }
 
-        // history.pushState for back navigation (로그인 전 화면은 제외)
-        var authScreens = ['splash', 'login', 'signup', 'forgot-password', 'pending-approval'];
-        if (!window._navPopstate && authScreens.indexOf(screenName) === -1) {
-            var stateObj = { screen: screenName };
-            history.pushState(stateObj, '', '#' + screenName);
+        // history pushState (인증 화면 제외)
+        if (!route.noHistory) {
+            pushRoute(screenName);
         }
 
         console.log('✅ 화면 전환 완료:', screenName);
@@ -253,22 +245,30 @@ function initNavBadges() {
     updateNavBadges();
 }
 
-async function updateNavBadges() {
+var _navBadgeTimer = null;
+function updateNavBadges() {
+    // 디바운스 — 500ms 이내 중복 호출 방지
+    if (_navBadgeTimer) clearTimeout(_navBadgeTimer);
+    _navBadgeTimer = setTimeout(_updateNavBadgesNow, 500);
+}
+async function _updateNavBadgesNow() {
+    _navBadgeTimer = null;
     // 로그인 전에는 API 호출하지 않음
     if (!localStorage.getItem('auth_token')) return;
     try {
-        // 새 게시글 개수 (3일 이내, 공지+일반 모두 포함)
-        const [noticeRes, generalRes] = await Promise.all([
-            apiClient.getPosts(1, 20, 'notice'),
-            apiClient.getPosts(1, 20, 'general')
-        ]);
-        const noticePosts = noticeRes.posts || (noticeRes.data && (noticeRes.data.posts || noticeRes.data.items)) || [];
-        const generalPosts = generalRes.posts || (generalRes.data && (generalRes.data.posts || generalRes.data.items)) || [];
-        const allPosts = [...noticePosts, ...generalPosts];
-        const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
-        const newPostCount = allPosts.filter(p => {
+        // 새 공지 개수 (3일 이내 + 미읽음) — 공지 + 일반 모두 확인
+        let newPostCount = 0;
+        const noticeRes = await apiClient.getPosts(1, 50, 'notice');
+        const notices = noticeRes.posts || (noticeRes.data && (noticeRes.data.posts || noticeRes.data.items)) || [];
+        newPostCount += notices.filter(p => {
             const created = new Date(p.created_at);
-            return (Date.now() - created) <= threeDaysMs;
+            return (Date.now() - created) <= 3 * 24 * 60 * 60 * 1000 && !p.read_by_current_user;
+        }).length;
+        const generalRes = await apiClient.getPosts(1, 50, 'general');
+        const generals = generalRes.posts || (generalRes.data && (generalRes.data.posts || generalRes.data.items)) || [];
+        newPostCount += generals.filter(p => {
+            const created = new Date(p.created_at);
+            return (Date.now() - created) <= 3 * 24 * 60 * 60 * 1000 && !p.read_by_current_user;
         }).length;
         document.querySelectorAll('.nav-badge[data-badge-tab="posts"]').forEach(d => {
             if (newPostCount > 0) {
@@ -279,7 +279,13 @@ async function updateNavBadges() {
                 d.classList.remove('visible');
             }
         });
-    } catch (_) {}
+    } catch (_) {
+        // API 실패 시 뱃지 제거
+        document.querySelectorAll('.nav-badge[data-badge-tab="posts"]').forEach(d => {
+            d.textContent = '';
+            d.classList.remove('visible');
+        });
+    }
     try {
         // 다가오는 일정 개수 (upcoming=true 전체, 홈 화면과 동일)
         const schedRes = await apiClient.getSchedules(true);
@@ -317,84 +323,42 @@ async function updateNavBadges() {
 // 탭 전환 함수
 async function switchTab(tab) {
     console.log('📱 탭 전환:', tab);
-    
-    // 모든 네비게이션 업데이트
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.tab === tab) {
-            item.classList.add('active');
+
+    // 이전 화면 leave 콜백 호출
+    if (_currentScreen && _currentScreen !== tab) {
+        var prevRoute = _routes[_currentScreen];
+        if (prevRoute && prevRoute.leave) {
+            try { prevRoute.leave(); } catch (e) { console.error('Tab leave error:', _currentScreen, e); }
         }
-    });
-    
-    // 화면 전환
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
-    });
-    
-    let targetScreen;
-    
-    switch(tab) {
-        case 'home':
-            targetScreen = document.getElementById('home-screen');
-            if (targetScreen) {
-                targetScreen.classList.add('active');
-                await loadHomeData();
-            }
-            break;
-            
-        case 'posts':
-            targetScreen = document.getElementById('posts-screen');
-            if (targetScreen) {
-                targetScreen.classList.add('active');
-                await loadPostsScreen();
-            }
-            break;
-            
-        case 'notices':
-            targetScreen = document.getElementById('notices-screen');
-            if (targetScreen) {
-                targetScreen.classList.add('active');
-                await loadNoticesScreen();
-            }
-            break;
-            
-        case 'schedules':
-            targetScreen = document.getElementById('schedules-screen');
-            if (targetScreen) {
-                targetScreen.classList.add('active');
-                await loadSchedulesScreen();
-            }
-            break;
-            
-        case 'members':
-            targetScreen = document.getElementById('members-screen');
-            if (targetScreen) {
-                targetScreen.classList.add('active');
-                await loadMembersScreen();
-            }
-            break;
-            
-        case 'profile':
-            targetScreen = document.getElementById('profile-screen');
-            if (targetScreen) {
-                targetScreen.classList.add('active');
-                await loadProfile();
-            }
-            break;
-
-        case 'meetings':
-            targetScreen = document.getElementById('meetings-screen');
-            if (targetScreen) {
-                targetScreen.classList.add('active');
-                if (typeof loadMeetingsScreen === 'function') loadMeetingsScreen();
-            }
-            break;
-
-        default:
-            console.error('알 수 없는 탭:', tab);
     }
-    
-    // history.pushState for back navigation
+    _currentScreen = tab;
+
+    // 공유 하단 네비바 표시 + 네비게이션 활성화 업데이트
+    var sharedNav = document.getElementById('shared-bottom-nav');
+    if (sharedNav) sharedNav.style.display = '';
+    updateNavigation(tab);
+
+    // 화면 전환
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    var targetScreen = document.getElementById(tab + '-screen');
+    if (targetScreen) {
+        targetScreen.classList.add('active');
+
+        // 일정 탭: 상세 플래그 해제 (loadSchedulesScreen의 init에서 목록 복원)
+        if (tab === 'schedules') {
+            if (typeof _scheduleDetailActive !== 'undefined') _scheduleDetailActive = false;
+        }
+
+        // 라우트 초기화 함수 실행
+        var route = _routes[tab];
+        if (route && route.init) {
+            try { await route.init(); } catch (err) { console.error('Tab init error:', tab, err); }
+        }
+    } else {
+        console.error('알 수 없는 탭:', tab);
+    }
+
+    // history pushState
     if (!window._navPopstate) {
         history.pushState({ screen: tab, tab: tab }, '', '#' + tab);
     }
@@ -679,31 +643,47 @@ window.addEventListener('popstate', function(e) {
 
     var state = e.state;
     if (state && state.screen) {
-        // 이전 화면으로 돌아가기
         window._navPopstate = true;
-        if (state.tab) {
+
+        // 특수 화면 (상세 뷰에서 부모로 복귀)
+        var _popstateSpecial = {
+            'schedule-detail': function() {
+                // backToScheduleList는 loadSchedulesScreen 내부에서 처리
+                if (typeof _scheduleDetailActive !== 'undefined') _scheduleDetailActive = false;
+                navigateToScreen('schedules');
+            },
+            'post-detail': function() { navigateToScreen('posts'); },
+            'group-board': function() {
+                // 항상 openGroupBoard로 상태 초기화 보장
+                if (typeof openGroupBoard === 'function') {
+                    var gId = state.groupId || (typeof _currentGroupBoardId !== 'undefined' ? _currentGroupBoardId : null);
+                    var gName = state.groupName || (typeof _currentGroupBoardName !== 'undefined' ? _currentGroupBoardName : '');
+                    if (gId) {
+                        openGroupBoard(gId, gName);
+                    } else {
+                        navigateToScreen('orgchart');
+                    }
+                } else {
+                    navigateToScreen('orgchart');
+                }
+            },
+            'admin-hub': function() { if (typeof showAdminHub === 'function') showAdminHub(); },
+            'pending-members': function() { if (typeof showPendingMembersScreen === 'function') showPendingMembersScreen(); },
+            'push-send': function() { if (typeof showPushSendScreen === 'function') showPushSendScreen(); },
+            'notice-manage': function() { if (typeof showNoticeManageScreen === 'function') showNoticeManageScreen(); },
+            'notice-edit': function() { if (typeof showNoticeManageScreen === 'function') showNoticeManageScreen(); },
+            'post-manage': function() { if (typeof showPostManageScreen === 'function') showPostManageScreen(); },
+            'schedule-manage': function() { if (typeof showScheduleManageScreen === 'function') showScheduleManageScreen(); }
+        };
+
+        if (_popstateSpecial[state.screen]) {
+            _popstateSpecial[state.screen]();
+        } else if (state.tab) {
             switchTab(state.tab);
-        } else if (state.screen === 'admin-hub' && typeof showAdminHub === 'function') {
-            showAdminHub();
-        } else if (state.screen === 'pending-members' && typeof showPendingMembersScreen === 'function') {
-            showPendingMembersScreen();
-        } else if (state.screen === 'push-send' && typeof showPushSendScreen === 'function') {
-            showPushSendScreen();
-        } else if (state.screen === 'notice-manage' && typeof showNoticeManageScreen === 'function') {
-            showNoticeManageScreen();
-        } else if (state.screen === 'notice-edit' && typeof showNoticeManageScreen === 'function') {
-            showNoticeManageScreen();
-        } else if (state.screen === 'post-manage' && typeof showPostManageScreen === 'function') {
-            showPostManageScreen();
-        } else if (state.screen === 'schedule-manage' && typeof showScheduleManageScreen === 'function') {
-            showScheduleManageScreen();
-        } else if (state.screen === 'admin-manage' && typeof initLocalAdmin === 'function') {
-            navigateToScreen('admin-manage');
-        } else if (['org-chart','jc-vision','jc-roles','jc-charter','jc-map'].includes(state.screen)) {
-            navigateToScreen(state.screen);
         } else {
             navigateToScreen(state.screen);
         }
+
         window._navPopstate = false;
     } else {
         // history 스택 바닥 → 홈이면 종료 확인, 아니면 홈으로
@@ -765,7 +745,7 @@ function openSideMenu() {
     }
     var profileEl = document.getElementById('side-menu-profile');
     if (profileEl && user) {
-        profileEl.innerHTML = '<div style="width:36px;height:36px;border-radius:50%;background:#DBEAFE;display:flex;align-items:center;justify-content:center;font-weight:600;color:#1E3A5F">'
+        profileEl.innerHTML = '<div style="width:36px;height:36px;border-radius:50%;background:#DBEAFE;display:flex;align-items:center;justify-content:center;font-weight:600;color:#2563EB">'
             + escapeHtml((user.name || '?')[0]) + '</div>'
             + '<div><div style="font-weight:600;font-size:14px">' + escapeHtml(user.name || '') + '</div>'
             + '<div style="font-size:12px;color:#6B7280">' + escapeHtml(user.email || '') + '</div></div>';

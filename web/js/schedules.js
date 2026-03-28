@@ -8,19 +8,13 @@ const CATEGORY_LABELS = {
     event: '행사', meeting: '회의', training: '교육', holiday: '휴일', other: '기타'
 };
 const CATEGORY_COLORS = {
-    event: '#1E3A5F', meeting: '#F59E0B', training: '#059669', holiday: '#DC2626', other: '#6B7280'
+    event: '#2563EB', meeting: '#F59E0B', training: '#059669', holiday: '#DC2626', other: '#6B7280'
 };
 const CATEGORY_BADGE_CLASS = {
     event: 'badge-event', meeting: 'badge-meeting', training: 'badge-training', holiday: 'badge-holiday', other: 'badge-other'
 };
 
-function getCurrentUserSafe() {
-    try {
-        return typeof getCurrentUser === 'function'
-            ? getCurrentUser()
-            : JSON.parse(localStorage.getItem('user_info') || 'null');
-    } catch (_) { return null; }
-}
+// getCurrentUserSafe → utils.js로 통합됨
 
 function canCreateSchedule() {
     const user = getCurrentUserSafe();
@@ -30,6 +24,9 @@ function canCreateSchedule() {
 // ========== 캘린더 로직 ==========
 
 async function loadSchedulesScreen() {
+    // 상세 화면이 활성화 중이면 목록 로드 스킵 (상세가 덮어쓰여지는 것 방지)
+    if (_scheduleDetailActive) return;
+
     const now = new Date();
     if (calYear == null) calYear = now.getFullYear();
     if (calMonth == null) calMonth = now.getMonth();
@@ -186,21 +183,28 @@ function createScheduleCard(schedule) {
     const clubName = schedule._clubName || '';
 
     let timeStr = '';
-    if (startRaw.includes('T')) {
-        const st = startRaw.split('T')[1]?.substring(0, 5);
-        if (st && st !== '00:00') {
+    if (startRaw) {
+        const sd = new Date(startRaw);
+        const sh = sd.getHours(), sm = sd.getMinutes();
+        if (sh !== 0 || sm !== 0) {
+            const st = `${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}`;
             timeStr = st;
-            if (endRaw.includes('T')) {
-                const et = endRaw.split('T')[1]?.substring(0, 5);
-                if (et && et !== '00:00') timeStr += ` ~ ${et}`;
+            if (endRaw) {
+                const ed = new Date(endRaw);
+                const eh = ed.getHours(), em = ed.getMinutes();
+                if (eh !== 0 || em !== 0) {
+                    timeStr += ` ~ ${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}`;
+                }
             }
         }
     }
 
-    const clickHandler = (isGroup || isClub) ? '' : `onclick="navigateTo('/schedules/${schedule.id}')"`;
+    const clickHandler = isClub ? ''
+        : isGroup ? `onclick="showGroupScheduleDetail(${schedule.id}, ${schedule.group_id})"`
+        : `onclick="navigateTo('/schedules/${schedule.id}')"`;
 
     return `
-        <div class="schedule-card-v2" ${clickHandler} style="border-left: 4px solid ${isClub ? '#8B5CF6' : categoryColor}">
+        <div class="schedule-card-v2" ${clickHandler} style="${clickHandler ? 'cursor:pointer;' : ''}border-left: 4px solid ${isClub ? '#8B5CF6' : categoryColor}">
             <div class="schedule-card-top">
                 <span class="schedule-cat-badge" style="background:${categoryColor}15;color:${categoryColor}">${categoryLabel}</span>
                 ${isGroup ? `<span class="schedule-group-badge">${escapeHtml(groupName)}</span>` : ''}
@@ -218,6 +222,8 @@ function createScheduleCard(schedule) {
 
 let scheduleDropdownOpen = false;
 
+var _scheduleDetailActive = false;
+
 async function showScheduleDetailScreen(scheduleId) {
     const screen = document.getElementById('schedules-screen');
     const container = document.getElementById('schedule-list');
@@ -225,11 +231,15 @@ async function showScheduleDetailScreen(scheduleId) {
     const dayHeader = document.getElementById('schedule-day-header');
     if (!screen || !container) return;
 
+    _scheduleDetailActive = true;
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     screen.classList.add('active');
     if (calContainer) calContainer.style.display = 'none';
     if (dayHeader) dayHeader.style.display = 'none';
     container.innerHTML = renderSkeleton('schedule-detail');
+
+    // history state 기록 — popstate에서 일정 목록으로 돌아가기 위함
+    if (typeof pushRoute === 'function') pushRoute('schedule-detail', { scheduleId: scheduleId });
 
     // FAB 숨김
     const createBtn = document.getElementById('create-schedule-btn');
@@ -238,6 +248,7 @@ async function showScheduleDetailScreen(scheduleId) {
     try {
         const res = await apiClient.getSchedule(scheduleId);
         if (!res.success || !res.schedule) {
+            _scheduleDetailActive = false;
             container.innerHTML = renderErrorState('일정 정보를 불러올 수 없습니다', '', 'showScheduleDetailScreen(' + scheduleId + ')');
             return;
         }
@@ -367,7 +378,124 @@ async function showScheduleDetailScreen(scheduleId) {
         loadScheduleComments(scheduleId);
 
     } catch (_) {
+        _scheduleDetailActive = false;
         container.innerHTML = renderErrorState('일정 정보를 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'showScheduleDetailScreen(' + scheduleId + ')');
+    }
+}
+
+// ========== 그룹 일정 상세 ==========
+
+async function showGroupScheduleDetail(scheduleId, groupId) {
+    const screen = document.getElementById('schedules-screen');
+    const container = document.getElementById('schedule-list');
+    const calContainer = document.getElementById('calendar-container');
+    const dayHeader = document.getElementById('schedule-day-header');
+    if (!screen || !container) return;
+
+    _scheduleDetailActive = true;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    screen.classList.add('active');
+    if (calContainer) calContainer.style.display = 'none';
+    if (dayHeader) dayHeader.style.display = 'none';
+    container.innerHTML = renderSkeleton('schedule-detail');
+
+    if (typeof pushRoute === 'function') pushRoute('schedule-detail', { scheduleId: scheduleId, groupId: groupId });
+
+    const createBtn = document.getElementById('create-schedule-btn');
+    if (createBtn) createBtn.style.display = 'none';
+
+    try {
+        const res = await apiClient.request('/group-board/' + groupId + '/schedules');
+        if (!res.success || !res.schedules) {
+            container.innerHTML = renderErrorState('일정 정보를 불러올 수 없습니다', '', 'showGroupScheduleDetail(' + scheduleId + ',' + groupId + ')');
+            return;
+        }
+        const s = res.schedules.find(function(item) { return item.id === scheduleId; });
+        if (!s) {
+            container.innerHTML = renderErrorState('일정을 찾을 수 없습니다', '', 'showGroupScheduleDetail(' + scheduleId + ',' + groupId + ')');
+            return;
+        }
+
+        const category = s.category || 'other';
+        const categoryLabel = CATEGORY_LABELS[category] || category;
+        const badgeClass = CATEGORY_BADGE_CLASS[category] || 'badge-other';
+        const weekdays = ['일','월','화','수','목','금','토'];
+
+        const startRaw = s.start_date || '';
+        const endRaw = s.end_date || '';
+        let dateDisplay = '', timeDisplay = '', isAllDay = false;
+
+        if (startRaw) {
+            const sd = new Date(startRaw);
+            dateDisplay = `${sd.getFullYear()}.${String(sd.getMonth()+1).padStart(2,'0')}.${String(sd.getDate()).padStart(2,'0')} (${weekdays[sd.getDay()]})`;
+            const sh = sd.getHours(), sm = sd.getMinutes();
+            if (sh === 0 && sm === 0) {
+                isAllDay = true;
+            } else {
+                timeDisplay = `${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}`;
+            }
+            if (endRaw) {
+                const ed = new Date(endRaw);
+                if (ed.toDateString() !== sd.toDateString()) {
+                    dateDisplay += ` ~ ${ed.getFullYear()}.${String(ed.getMonth()+1).padStart(2,'0')}.${String(ed.getDate()).padStart(2,'0')} (${weekdays[ed.getDay()]})`;
+                }
+                const eh = ed.getHours(), em = ed.getMinutes();
+                if (eh !== 0 || em !== 0) {
+                    const endT = `${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}`;
+                    timeDisplay = timeDisplay ? `${timeDisplay} ~ ${endT}` : endT;
+                    isAllDay = false;
+                }
+            }
+        }
+
+        const groupName = s.group_name || '';
+        const creatorName = s.creator_name || '';
+
+        container.innerHTML = `
+            <div class="detail-view schedule-detail">
+                <button class="btn-back" data-action="schedule-back-list">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    목록으로
+                </button>
+
+                <div class="schedule-detail-section">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <span class="schedule-category-badge ${badgeClass}">${categoryLabel}</span>
+                        ${groupName ? `<span class="schedule-group-badge">${escapeHtml(groupName)}</span>` : ''}
+                    </div>
+                    <h2 style="font-size:20px;font-weight:700;color:#111827;line-height:1.4;margin-top:8px">${escapeHtml(s.title || '')}</h2>
+
+                    <div class="schedule-info-row" style="margin-top:16px">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span class="schedule-info-text date">${dateDisplay}${isAllDay ? '<span class="schedule-allday-badge">종일</span>' : ''}</span>
+                    </div>
+                    ${timeDisplay ? `<div class="schedule-info-row">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span class="schedule-info-text">${timeDisplay}</span>
+                    </div>` : ''}
+                    ${s.location ? `<div class="schedule-info-row">
+                        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        <span class="schedule-info-text" style="flex:1">${escapeHtml(s.location)}</span>
+                        <span class="schedule-map-icon" onclick="window.open('https://map.naver.com/v5/search/'+encodeURIComponent('${escapeHtml(s.location)}'),'_blank')" title="지도에서 보기">
+                            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        </span>
+                    </div>` : ''}
+                    ${creatorName ? `<div class="schedule-info-row">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span class="schedule-info-text sub">${escapeHtml(creatorName)}</span>
+                    </div>` : ''}
+                </div>
+
+                ${s.description ? `<div class="schedule-detail-section">
+                    <div class="schedule-detail-section-title">설명</div>
+                    <div class="schedule-detail-divider"></div>
+                    <div style="font-size:15px;color:#374151;line-height:1.7;white-space:pre-wrap">${escapeHtml(s.description)}</div>
+                </div>` : ''}
+            </div>
+        `;
+    } catch (_) {
+        _scheduleDetailActive = false;
+        container.innerHTML = renderErrorState('일정 정보를 불러올 수 없습니다', '네트워크 연결을 확인해주세요', 'showGroupScheduleDetail(' + scheduleId + ',' + groupId + ')');
     }
 }
 
@@ -550,11 +678,9 @@ async function submitScheduleComment(scheduleId) {
             body: JSON.stringify({ content })
         });
         if (res.success) {
-            showToast('댓글이 등록되었습니다');
             loadScheduleComments(scheduleId);
         }
     } catch (e) {
-        showToast(e.message || '댓글 작성에 실패했습니다', 'error');
         if (sendBtn) sendBtn.disabled = false;
     }
 }
@@ -618,18 +744,17 @@ async function submitAttendance(status, scheduleId) {
             body: JSON.stringify({ status: status })
         });
         if (res.success) {
-            showToast(status === 'attending' ? '참석으로 표시했습니다' : '불참으로 표시했습니다', 'info');
             loadAttendanceVote(sid);
             loadAttendeeList(sid);
         }
     } catch (e) {
-        showToast(e.message || '참석 등록에 실패했습니다', 'error');
     }
 }
 
 // ========== 목록 복귀 ==========
 
 function backToScheduleList() {
+    _scheduleDetailActive = false;
     const calContainer = document.getElementById('calendar-container');
     const dayHeader = document.getElementById('schedule-day-header');
     if (calContainer) calContainer.style.display = '';
@@ -678,7 +803,7 @@ function renderScheduleForm(data = {}) {
 
     container.innerHTML = `
         <div class="schedule-form-wrapper">
-            <button class="btn-back" data-action="schedule-back-list" style="margin:16px">
+            <button class="btn-back" data-action="schedule-back-list" style="margin:0 0 8px 0">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
                 취소
             </button>
@@ -705,19 +830,13 @@ function renderScheduleForm(data = {}) {
 
                     <div class="schedule-form-field">
                         <label class="schedule-form-label">시작 날짜/시간 <span class="required">*</span></label>
-                        <div class="date-time-row ${isAllDay ? 'all-day-active' : ''}" id="sf-start-row">
-                            <input type="date" class="schedule-form-input date-input" id="sf-start-date" value="${startDate}">
-                            <input type="time" class="schedule-form-input time-input" id="sf-start-time" value="${startTime}">
-                        </div>
+                        <input type="datetime-local" class="schedule-form-input" id="sf-start-datetime" value="${startDate ? startDate + (startTime ? 'T' + startTime : '') : ''}">
                         <div class="schedule-form-error" id="sf-start-error" style="display:none"></div>
                     </div>
 
                     <div class="schedule-form-field">
                         <label class="schedule-form-label">종료 날짜/시간</label>
-                        <div class="date-time-row ${isAllDay ? 'all-day-active' : ''}" id="sf-end-row">
-                            <input type="date" class="schedule-form-input date-input" id="sf-end-date" value="${endDate}">
-                            <input type="time" class="schedule-form-input time-input" id="sf-end-time" value="${endTime}">
-                        </div>
+                        <input type="datetime-local" class="schedule-form-input" id="sf-end-datetime" value="${endDate ? endDate + (endTime ? 'T' + endTime : '') : ''}">
                         <div class="schedule-form-error" id="sf-end-error" style="display:none"></div>
                     </div>
 
@@ -776,14 +895,8 @@ function renderScheduleForm(data = {}) {
         </div>
     `;
 
-    // 종일 이벤트 토글
-    document.getElementById('sf-allday')?.addEventListener('change', (e) => {
-        const rows = [document.getElementById('sf-start-row'), document.getElementById('sf-end-row')];
-        rows.forEach(r => r && r.classList.toggle('all-day-active', e.target.checked));
-    });
-
     // 인라인 에러 실시간 해제
-    ['sf-title', 'sf-category', 'sf-start-date', 'sf-end-date', 'sf-location', 'sf-description'].forEach(id => {
+    ['sf-title', 'sf-category', 'sf-start-datetime', 'sf-end-datetime', 'sf-location', 'sf-description'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', () => {
             const errEl = document.getElementById(id + '-error') || document.getElementById(id.replace('sf-', 'sf-') + '-error');
             // 간단한 매핑으로 해당 에러 숨기기
@@ -796,8 +909,8 @@ function hideScheduleFormError(fieldId) {
     const map = {
         'sf-title': 'sf-title-error',
         'sf-category': 'sf-category-error',
-        'sf-start-date': 'sf-start-error',
-        'sf-end-date': 'sf-end-error',
+        'sf-start-datetime': 'sf-start-error',
+        'sf-end-datetime': 'sf-end-error',
         'sf-location': 'sf-location-error',
         'sf-description': 'sf-desc-error'
     };
@@ -840,10 +953,8 @@ function validateScheduleForm() {
     let firstError = null;
     const title = document.getElementById('sf-title')?.value?.trim();
     const category = document.getElementById('sf-category')?.value;
-    const startDate = document.getElementById('sf-start-date')?.value;
-    const endDate = document.getElementById('sf-end-date')?.value;
-    const startTime = document.getElementById('sf-start-time')?.value;
-    const endTime = document.getElementById('sf-end-time')?.value;
+    const startDatetime = document.getElementById('sf-start-datetime')?.value;
+    const endDatetime = document.getElementById('sf-end-datetime')?.value;
     const location = document.getElementById('sf-location')?.value?.trim();
     const description = document.getElementById('sf-description')?.value?.trim();
 
@@ -867,21 +978,15 @@ function validateScheduleForm() {
         valid = false;
     }
 
-    if (!startDate) {
-        showScheduleFormError('sf-start-date', 'sf-start-error', '시작 날짜를 선택해주세요');
-        if (!firstError) firstError = 'sf-start-date';
+    if (!startDatetime) {
+        showScheduleFormError('sf-start-datetime', 'sf-start-error', '시작 날짜를 선택해주세요');
+        if (!firstError) firstError = 'sf-start-datetime';
         valid = false;
     }
 
-    if (startDate && endDate && endDate < startDate) {
-        showScheduleFormError('sf-end-date', 'sf-end-error', '종료 날짜는 시작 날짜 이후여야 합니다');
-        if (!firstError) firstError = 'sf-end-date';
-        valid = false;
-    }
-
-    if (startDate && endDate && startDate === endDate && startTime && endTime && endTime <= startTime) {
-        showScheduleFormError('sf-end-date', 'sf-end-error', '종료 시간은 시작 시간 이후여야 합니다');
-        if (!firstError) firstError = 'sf-end-date';
+    if (startDatetime && endDatetime && endDatetime < startDatetime) {
+        showScheduleFormError('sf-end-datetime', 'sf-end-error', '종료 시간은 시작 시간 이후여야 합니다');
+        if (!firstError) firstError = 'sf-end-datetime';
         valid = false;
     }
 
@@ -908,18 +1013,15 @@ async function handleScheduleFormSubmit(e) {
     e.preventDefault();
     if (!validateScheduleForm()) return;
 
-    const isAllDay = document.getElementById('sf-allday')?.checked;
     const title = document.getElementById('sf-title').value.trim();
     const category = document.getElementById('sf-category').value;
-    const startDate = document.getElementById('sf-start-date').value;
-    const startTime = isAllDay ? '' : (document.getElementById('sf-start-time')?.value || '');
-    const endDate = document.getElementById('sf-end-date')?.value || '';
-    const endTime = isAllDay ? '' : (document.getElementById('sf-end-time')?.value || '');
+    const startDatetime = document.getElementById('sf-start-datetime').value;
+    const endDatetime = document.getElementById('sf-end-datetime')?.value || '';
     const location = document.getElementById('sf-location')?.value?.trim();
     const description = document.getElementById('sf-description')?.value?.trim();
 
-    const start_date = startTime ? `${startDate}T${startTime}:00` : `${startDate}T00:00:00`;
-    const end_date = endDate ? (endTime ? `${endDate}T${endTime}:00` : `${endDate}T00:00:00`) : null;
+    const start_date = startDatetime ? startDatetime + ':00' : '';
+    const end_date = endDatetime ? endDatetime + ':00' : null;
     const payload = { title, start_date, end_date, location, description, category };
 
     const btn = document.getElementById('sf-submit-btn');
@@ -931,17 +1033,14 @@ async function handleScheduleFormSubmit(e) {
             ? await apiClient.updateSchedule(editId, payload)
             : await apiClient.createSchedule(payload);
         if (!res.success) {
-            showToast(res.message || '저장에 실패했습니다', 'error');
             return;
         }
-        showToast(editId ? '일정이 수정되었습니다' : '일정이 등록되었습니다');
         calSelectedDate = startDate;
         calYear = new Date(startDate).getFullYear();
         calMonth = new Date(startDate).getMonth();
         await loadMonthSchedules();
         backToScheduleList();
     } catch (err) {
-        showToast(err.message || '저장 중 오류가 발생했습니다', 'error');
     } finally {
         if (btn) { btn.disabled = false; btn.textContent = e.target.dataset.editId ? '수정 완료' : '일정 등록'; }
     }
@@ -950,7 +1049,6 @@ async function handleScheduleFormSubmit(e) {
 async function handleEditSchedule(scheduleId) {
     try {
         const res = await apiClient.getSchedule(scheduleId);
-        if (!res.success || !res.schedule) { showToast('일정을 불러오지 못했습니다', 'error'); return; }
         const calContainer = document.getElementById('calendar-container');
         const dayHeader = document.getElementById('schedule-day-header');
         if (calContainer) calContainer.style.display = 'none';
@@ -959,7 +1057,6 @@ async function handleEditSchedule(scheduleId) {
         if (createBtn) createBtn.style.display = 'none';
         renderScheduleForm(res.schedule);
     } catch (_) {
-        showToast('일정을 불러오지 못했습니다', 'error');
     }
 }
 
@@ -967,12 +1064,9 @@ async function handleDeleteSchedule(scheduleId) {
     if (!confirm('일정을 삭제하시겠습니까?\n삭제 시 투표 기록도 함께 삭제됩니다.')) return;
     try {
         const res = await apiClient.deleteSchedule(scheduleId);
-        if (!res.success) { showToast(res.message || '삭제에 실패했습니다', 'error'); return; }
-        showToast('일정이 삭제되었습니다');
         await loadMonthSchedules();
         backToScheduleList();
     } catch (e) {
-        showToast(e.message || '삭제 중 오류가 발생했습니다', 'error');
     }
 }
 

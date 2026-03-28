@@ -143,7 +143,6 @@ async function saveNotificationSetting(key, value) {
     });
   } catch (err) {
     console.error('[NotificationSettings] 저장 실패:', err);
-    showToast('설정 저장에 실패했습니다', 'error');
   }
 }
 

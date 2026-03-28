@@ -33,6 +33,7 @@ router.get('/', authenticate, async (req, res) => {
         const offset = (page - 1) * limit;
         const industry = req.query.industry;
         const positionId = req.query.position_id ? parseInt(req.query.position_id) : null;
+        const joinNumber = req.query.join_number;
 
         const conditions = ["u.status = 'active'", "u.role != 'super_admin'"];
         const params = [limit, offset, req.user.userId];
@@ -41,10 +42,13 @@ router.get('/', authenticate, async (req, res) => {
             params.push(industry);
             conditions.push(`u.industry = $${params.length}`);
         }
-
         if (positionId) {
-            params.push(positionId);
+            params.push(parseInt(positionId));
             conditions.push(`u.position_id = $${params.length}`);
+        }
+        if (joinNumber) {
+            params.push(joinNumber);
+            conditions.push(`u.join_number = $${params.length}`);
         }
 
         const whereClause = conditions.join(' AND ');
@@ -56,8 +60,12 @@ router.get('/', authenticate, async (req, res) => {
             countConditions.push(`industry = $${countParams.length}`);
         }
         if (positionId) {
-            countParams.push(positionId);
+            countParams.push(parseInt(positionId));
             countConditions.push(`position_id = $${countParams.length}`);
+        }
+        if (joinNumber) {
+            countParams.push(joinNumber);
+            countConditions.push(`join_number = $${countParams.length}`);
         }
         const countRes = await query(
             `SELECT COUNT(*) FROM users WHERE ${countConditions.join(' AND ')}`,
@@ -73,6 +81,7 @@ router.get('/', authenticate, async (req, res) => {
                 u.profile_image, u.role, u.status,
                 u.company, u.position, u.department,
                 u.industry, u.industry_detail, u.profession,
+                u.business_headline, u.website, u.business_address,
                 u.position_id, u.one_line_pr,
                 pos.name as jc_position,
                 u.created_at,
@@ -297,6 +306,7 @@ router.get('/:id', authenticate, async (req, res) => {
                 u.birth_date, u.gender,
                 u.company, u.position, u.department, u.work_phone,
                 u.industry, u.industry_detail, u.profession,
+                u.business_headline, u.website, u.business_address,
                 u.position_id, u.website, u.phone_visibility,
                 u.one_line_pr, u.service_description, u.sns_links,
                 u.org_id, u.created_at, u.updated_at,

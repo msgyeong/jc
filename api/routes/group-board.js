@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../config/database');
 const { authenticate } = require('../middleware/auth');
+const { sendPushToUser } = require('../utils/pushSender');
 
 /**
  * 그룹 멤버십 확인 미들웨어
@@ -18,6 +19,74 @@ async function verifyGroupMember(userId, groupId) {
 function isManagerRole(role) {
     return ['super_admin', 'admin', 'local_admin'].includes(role);
 }
+
+// ========== 정적 라우트 (/:groupId 패턴보다 먼저 매칭되어야 함) ==========
+
+/**
+ * GET /api/group-board/my-schedules/all
+ * 내가 속한 모든 그룹의 일정 조회 (일정 탭 통합용)
+ */
+router.get('/my-schedules/all', authenticate, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { year, month } = req.query;
+
+        let dateFilter = '';
+        const params = [userId];
+
+        if (year && month) {
+            dateFilter = 'AND EXTRACT(YEAR FROM gs.start_date) = $2 AND EXTRACT(MONTH FROM gs.start_date) = $3';
+            params.push(parseInt(year), parseInt(month));
+        }
+
+        const result = await query(
+            `SELECT gs.*, og.name as group_name, u.name as creator_name
+             FROM group_schedules gs
+             JOIN orgchart_groups og ON gs.group_id = og.id
+             JOIN users u ON gs.created_by = u.id
+             WHERE gs.group_id IN (
+                 SELECT om.group_id FROM orgchart_members om WHERE om.user_id = $1
+             )
+             ${dateFilter}
+             ORDER BY gs.start_date ASC`,
+            params
+        );
+
+        res.json({ success: true, schedules: result.rows });
+    } catch (error) {
+        console.error('My group schedules error:', error);
+        res.status(500).json({ success: false, error: '그룹 일정을 불러올 수 없습니다.' });
+    }
+});
+
+/**
+ * GET /api/group-board/my-groups/list
+ * 내가 속한 조직도 그룹 목록 (게시판 접근용)
+ */
+router.get('/my-groups/list', authenticate, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const result = await query(
+            `SELECT og.id, og.name, og.sort_order,
+                    (SELECT COUNT(*) FROM orgchart_members WHERE group_id = og.id) as member_count,
+                    (SELECT COUNT(*) FROM group_posts WHERE group_id = og.id) as post_count,
+                    (SELECT COUNT(*) FROM group_posts gp
+                     WHERE gp.group_id = og.id
+                     AND NOT EXISTS (SELECT 1 FROM group_post_reads gpr WHERE gpr.post_id = gp.id AND gpr.user_id = $1)
+                    ) as unread_count
+             FROM orgchart_groups og
+             WHERE og.id IN (SELECT om.group_id FROM orgchart_members om WHERE om.user_id = $1)
+             ORDER BY og.sort_order, og.name`,
+            [userId]
+        );
+
+        res.json({ success: true, groups: result.rows });
+    } catch (error) {
+        console.error('My groups list error:', error);
+        res.status(500).json({ success: false, error: '그룹 목록을 불러올 수 없습니다.' });
+    }
+});
 
 // ========== 그룹 게시글 ==========
 
@@ -110,20 +179,49 @@ router.get('/:groupId/posts/:postId', authenticate, async (req, res) => {
             return res.status(404).json({ success: false, error: '게시글을 찾을 수 없습니다.' });
         }
 
-        // 댓글 조회
-        const comments = await query(
-            `SELECT gc.*, u.name as author_name, u.profile_image as author_image
-             FROM group_post_comments gc
-             JOIN users u ON gc.author_id = u.id
-             WHERE gc.post_id = $1 AND gc.is_deleted = false
-             ORDER BY gc.created_at ASC`,
-            [postId]
-        );
+        // 댓글 조회 (좋아요 수 포함)
+        let comments;
+        try {
+            comments = await query(
+                `SELECT gc.*, u.name as author_name, u.profile_image as author_image,
+                        COALESCE((SELECT COUNT(*) FROM group_comment_likes WHERE comment_id = gc.id), 0) as likes_count
+                 FROM group_post_comments gc
+                 JOIN users u ON gc.author_id = u.id
+                 WHERE gc.post_id = $1 AND gc.is_deleted = false
+                 ORDER BY gc.created_at ASC`,
+                [postId]
+            );
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
+
+        // 좋아요 상태 확인
+        let user_has_liked = false;
+        try {
+            const likeCheck = await query('SELECT id FROM group_post_likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
+            user_has_liked = likeCheck.rows.length > 0;
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
+
+        // 연결된 그룹 일정 조회 (같은 그룹, 같은 제목으로 매칭)
+        let linkedSchedule = null;
+        try {
+            const schedResult = await query(
+                `SELECT * FROM group_schedules
+                 WHERE group_id = $1 AND title = $2
+                 ORDER BY created_at DESC LIMIT 1`,
+                [groupId, result.rows[0].title]
+            );
+            if (schedResult.rows.length > 0) {
+                linkedSchedule = schedResult.rows[0];
+            }
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
+
+        const postData = result.rows[0];
+        postData.user_has_liked = user_has_liked;
 
         res.json({
             success: true,
-            post: result.rows[0],
-            comments: comments.rows
+            post: postData,
+            comments: comments.rows,
+            schedule: linkedSchedule
         });
     } catch (error) {
         console.error('Group post detail error:', error);
@@ -145,18 +243,52 @@ router.post('/:groupId/posts', authenticate, async (req, res) => {
             return res.status(403).json({ success: false, error: '이 그룹의 멤버만 게시글을 작성할 수 있습니다.' });
         }
 
-        const { title, content, images, is_pinned } = req.body;
+        const { title, content, images, is_pinned, push_setting, attendance_enabled } = req.body;
         if (!title || !title.trim()) {
             return res.status(400).json({ success: false, error: '제목을 입력하세요.' });
         }
 
-        const result = await query(
-            `INSERT INTO group_posts (group_id, author_id, title, content, images, is_pinned)
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [groupId, userId, title.trim(), content || '', images || null, is_pinned || false]
-        );
+        // attendance_enabled 컬럼이 없을 수 있으므로 안전하게 처리
+        let result;
+        try {
+            result = await query(
+                `INSERT INTO group_posts (group_id, author_id, title, content, images, is_pinned, attendance_enabled)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+                [groupId, userId, title.trim(), content || '', images || null, is_pinned || false, attendance_enabled || false]
+            );
+        } catch (e) {
+            if (e.message && e.message.includes('attendance_enabled')) {
+                await query('ALTER TABLE group_posts ADD COLUMN IF NOT EXISTS attendance_enabled BOOLEAN DEFAULT false').catch(function(){});
+                result = await query(
+                    `INSERT INTO group_posts (group_id, author_id, title, content, images, is_pinned, attendance_enabled)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+                    [groupId, userId, title.trim(), content || '', images || null, is_pinned || false, attendance_enabled || false]
+                );
+            } else {
+                throw e;
+            }
+        }
 
         res.json({ success: true, post: result.rows[0] });
+
+        // 그룹 멤버들에게 푸시 알림 발송 (push_setting이 'none'이 아닐 때만)
+        if (push_setting !== 'none') {
+            try {
+                const groupInfo = await query('SELECT name FROM orgchart_groups WHERE id = $1', [groupId]);
+                const groupName = groupInfo.rows.length > 0 ? groupInfo.rows[0].name : '그룹';
+                const members = await query('SELECT user_id FROM orgchart_members WHERE group_id = $1 AND user_id != $2', [groupId, userId]);
+                for (const m of members.rows) {
+                    sendPushToUser(m.user_id, {
+                        title: groupName + ' 새 게시글',
+                        body: title.trim(),
+                        type: 'N-01',
+                        data: { screen: 'group-board', groupId: groupId }
+                    }).catch(function() {});
+                }
+            } catch (pushErr) {
+                console.error('Group post push error:', pushErr.message);
+            }
+        }
     } catch (error) {
         console.error('Group post create error:', error);
         res.status(500).json({ success: false, error: '게시글 작성에 실패했습니다.' });
@@ -301,6 +433,149 @@ router.delete('/:groupId/posts/:postId/comments/:commentId', authenticate, async
     }
 });
 
+// ========== 그룹 게시글 참석 ==========
+
+/**
+ * POST /api/group-board/:groupId/posts/:postId/attendance
+ */
+router.post('/:groupId/posts/:postId/attendance', authenticate, async (req, res) => {
+    try {
+        const postId = parseInt(req.params.postId);
+        const userId = req.user.userId;
+        const { status } = req.body;
+        if (!status || !['attending', 'not_attending'].includes(status)) {
+            return res.status(400).json({ success: false, error: 'status는 attending 또는 not_attending이어야 합니다.' });
+        }
+        try {
+            await query(
+                `INSERT INTO group_post_attendance (post_id, user_id, status, responded_at)
+                 VALUES ($1, $2, $3, NOW()) ON CONFLICT (post_id, user_id) DO UPDATE SET status = $3, responded_at = NOW()`,
+                [postId, userId, status]
+            );
+        } catch (e) {
+            if (e.message && e.message.includes('group_post_attendance')) {
+                await query(`CREATE TABLE IF NOT EXISTS group_post_attendance (
+                    id SERIAL PRIMARY KEY, post_id INTEGER NOT NULL, user_id INTEGER NOT NULL,
+                    status VARCHAR(20) NOT NULL, responded_at TIMESTAMP DEFAULT NOW(), UNIQUE(post_id, user_id)
+                )`);
+                await query(
+                    `INSERT INTO group_post_attendance (post_id, user_id, status, responded_at)
+                     VALUES ($1, $2, $3, NOW()) ON CONFLICT (post_id, user_id) DO UPDATE SET status = $3, responded_at = NOW()`,
+                    [postId, userId, status]
+                );
+            } else { throw e; }
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Group post attendance error:', error);
+        res.status(500).json({ success: false, error: '참석 처리에 실패했습니다.' });
+    }
+});
+
+/**
+ * GET /api/group-board/:groupId/posts/:postId/attendance
+ */
+router.get('/:groupId/posts/:postId/attendance', authenticate, async (req, res) => {
+    try {
+        const postId = parseInt(req.params.postId);
+        const userId = req.user.userId;
+        let attending = 0, not_attending = 0, my_status = null;
+        try {
+            const countRes = await query(`SELECT status, COUNT(*) as cnt FROM group_post_attendance WHERE post_id = $1 GROUP BY status`, [postId]);
+            countRes.rows.forEach(r => { if (r.status === 'attending') attending = parseInt(r.cnt); else not_attending = parseInt(r.cnt); });
+            const myRes = await query(`SELECT status FROM group_post_attendance WHERE post_id = $1 AND user_id = $2`, [postId, userId]);
+            if (myRes.rows.length > 0) my_status = myRes.rows[0].status;
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
+        res.json({ success: true, data: { attending, not_attending, my_status } });
+    } catch (error) {
+        res.status(500).json({ success: false, error: '참석 현황을 불러올 수 없습니다.' });
+    }
+});
+
+// ========== 그룹 게시글 좋아요 ==========
+
+/**
+ * POST /api/group-board/:groupId/posts/:postId/like
+ * 좋아요 토글
+ */
+router.post('/:groupId/posts/:postId/like', authenticate, async (req, res) => {
+    try {
+        const groupId = parseInt(req.params.groupId);
+        const postId = parseInt(req.params.postId);
+        const userId = req.user.userId;
+
+        const isMember = await verifyGroupMember(userId, groupId);
+        if (!isMember && !isManagerRole(req.user.role)) {
+            return res.status(403).json({ success: false, error: '권한이 없습니다.' });
+        }
+
+        // likes 테이블에서 group_post_id 컬럼이 없을 수 있으므로 별도 테이블 사용
+        let existing;
+        try {
+            existing = await query('SELECT id FROM group_post_likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
+        } catch (catchErr) {
+            console.error("[group_post_likes]", catchErr.message);
+            existing = { rows: [] };
+        }
+
+        let liked;
+        if (existing.rows.length > 0) {
+            await query('DELETE FROM group_post_likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
+            liked = false;
+        } else {
+            await query('INSERT INTO group_post_likes (user_id, post_id) VALUES ($1, $2)', [userId, postId]);
+            liked = true;
+        }
+
+        const countRes = await query('SELECT COUNT(*) FROM group_post_likes WHERE post_id = $1', [postId]);
+        const likes_count = parseInt(countRes.rows[0].count);
+        await query('UPDATE group_posts SET likes_count = $1 WHERE id = $2', [likes_count, postId]);
+
+        res.json({ success: true, liked, likes_count });
+    } catch (error) {
+        console.error('Group post like error:', error);
+        res.status(500).json({ success: false, error: '좋아요 처리에 실패했습니다.' });
+    }
+});
+
+// ========== 그룹 댓글 좋아요 ==========
+
+/**
+ * POST /api/group-board/:groupId/comments/:commentId/like
+ * 댓글 좋아요 토글
+ */
+router.post('/:groupId/comments/:commentId/like', authenticate, async (req, res) => {
+    try {
+        const commentId = parseInt(req.params.commentId);
+        const userId = req.user.userId;
+
+        let existing;
+        try {
+            existing = await query('SELECT id FROM group_comment_likes WHERE user_id = $1 AND comment_id = $2', [userId, commentId]);
+        } catch (catchErr) {
+            console.error("[group_comment_likes]", catchErr.message);
+            existing = { rows: [] };
+        }
+
+        let liked;
+        if (existing.rows.length > 0) {
+            await query('DELETE FROM group_comment_likes WHERE user_id = $1 AND comment_id = $2', [userId, commentId]);
+            liked = false;
+        } else {
+            await query('INSERT INTO group_comment_likes (user_id, comment_id) VALUES ($1, $2)', [userId, commentId]);
+            liked = true;
+        }
+
+        const countRes = await query('SELECT COUNT(*) FROM group_comment_likes WHERE comment_id = $1', [commentId]);
+        const likes_count = parseInt(countRes.rows[0].count);
+
+        res.json({ success: true, liked, likes_count });
+    } catch (error) {
+        console.error('Group comment like error:', error);
+        res.status(500).json({ success: false, error: '좋아요 처리에 실패했습니다.' });
+    }
+});
+
 // ========== 그룹 일정 ==========
 
 /**
@@ -371,6 +646,23 @@ router.post('/:groupId/schedules', authenticate, async (req, res) => {
         );
 
         res.json({ success: true, schedule: result.rows[0] });
+
+        // 그룹 멤버들에게 일정 푸시 알림 발송 (작성자 제외)
+        try {
+            const groupInfo = await query('SELECT name FROM orgchart_groups WHERE id = $1', [groupId]);
+            const groupName = groupInfo.rows.length > 0 ? groupInfo.rows[0].name : '그룹';
+            const members = await query('SELECT user_id FROM orgchart_members WHERE group_id = $1 AND user_id != $2', [groupId, userId]);
+            for (const m of members.rows) {
+                sendPushToUser(m.user_id, {
+                    title: groupName + ' 새 일정',
+                    body: title.trim() + (location ? ' · ' + location : ''),
+                    type: 'N-02',
+                    data: { screen: 'schedules', scheduleId: result.rows[0].id }
+                }).catch(function() {});
+            }
+        } catch (pushErr) {
+            console.error('Group schedule push error:', pushErr.message);
+        }
     } catch (error) {
         console.error('Group schedule create error:', error);
         res.status(500).json({ success: false, error: '일정 생성에 실패했습니다.' });
@@ -503,5 +795,4 @@ router.get('/my-groups/list', authenticate, async (req, res) => {
         res.status(500).json({ success: false, error: '그룹 목록을 불러올 수 없습니다.' });
     }
 });
-
 module.exports = router;

@@ -35,6 +35,23 @@ router.post('/signup', async (req, res) => {
             });
         }
 
+        // 이메일 형식 검증
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                message: '올바른 이메일 형식을 입력해주세요.'
+            });
+        }
+
+        // 비밀번호 길이 검증 (최소 8자)
+        if (password.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: '비밀번호는 8자 이상이어야 합니다.'
+            });
+        }
+
         // 이메일 중복 확인
         const existingUser = await query(
             'SELECT id FROM users WHERE email = $1',
@@ -141,7 +158,7 @@ router.post('/signup', async (req, res) => {
                         [address, parseFloat(docs[0].y), parseFloat(docs[0].x), user.id]
                     );
                 }
-            } catch (_) { /* 좌표 변환 실패해도 무시 */ }
+            } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
         }
 
         res.status(201).json({
@@ -654,7 +671,7 @@ router.post('/withdraw', authenticate, async (req, res) => {
         // Push 구독 삭제
         try {
             await query('DELETE FROM push_subscriptions WHERE user_id = $1', [userId]);
-        } catch (_) { /* 테이블 없어도 무시 */ }
+        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
 
         res.json({
             success: true,

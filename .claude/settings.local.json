@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "WebFetch(*)",
+      "WebSearch",
+      "mcp__playwright__browser_navigate",
+      "mcp__postgres__query",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_snapshot"
+    ]
+  }
+}

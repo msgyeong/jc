@@ -20,6 +20,8 @@
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
 #.vscode/
+.vscode/mcp.json
+.mcp.json
 
 # Node.js
 node_modules/
@@ -33,3 +35,4 @@ node_modules/
 
 # Agent logs (contains DB credentials and sensitive info)
 Docs/agent-logs/
+image/mov/

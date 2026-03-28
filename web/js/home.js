@@ -196,7 +196,7 @@ async function loadBannerSummary() {
                 }
             }
             banners.push({
-                gradient: 'linear-gradient(135deg, #162D4A 0%, #2D5F8A 100%)',
+                gradient: 'linear-gradient(135deg, #1D4ED8 0%, #60A5FA 100%)',
                 title: escapeHtml(next.title),
                 subtitle: dateLabel + (next.location ? ' · ' + escapeHtml(next.location) : ''),
                 cta: '일정 보기',
@@ -211,7 +211,7 @@ async function loadBannerSummary() {
         const displayNotices = bannerNotices.length > 0 ? bannerNotices : notices.slice(0, 1);
         if (displayNotices.length > 0) {
             const gradients = [
-                'linear-gradient(135deg, #1E3A5F 0%, #6B9BC3 100%)',
+                'linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)',
                 'linear-gradient(135deg, #2D4A6F 0%, #5B8DB8 100%)',
                 'linear-gradient(135deg, #1A3550 0%, #4A7FA5 100%)'
             ];
@@ -225,6 +225,22 @@ async function loadBannerSummary() {
                 });
             });
         }
+        // DB 배너 광고 (관리자가 등록한 회원 사업장 배너)
+        try {
+            const bannerRes = await apiClient.request('/admin/banners/active');
+            if (bannerRes.success && bannerRes.data && bannerRes.data.length > 0) {
+                bannerRes.data.forEach(b => {
+                    banners.push({
+                        gradient: b.image_url ? '' : 'linear-gradient(135deg, #1D4ED8 0%, #60A5FA 100%)',
+                        image: b.image_url || null,
+                        title: escapeHtml(b.title),
+                        subtitle: b.description ? escapeHtml(b.description) : '',
+                        cta: b.link_url ? '자세히 보기' : '',
+                        action: b.link_url ? "window.open('" + b.link_url + "','_blank')" : ''
+                    });
+                });
+            }
+        } catch (_b) { /* 배너 로드 실패 무시 */ }
     } catch (_) {
         // API 실패 시 기본 배너
         if (banners.length === 0) {
@@ -240,7 +256,7 @@ async function loadBannerSummary() {
         <div class="banner-carousel" role="region" aria-label="홈 배너" aria-roledescription="carousel">
             <div class="banner-track" id="banner-track">
                 ${banners.map((b, i) => `
-                    <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="배너 ${i+1}/${banners.length}" style="background:${b.imageUrl ? `url(${b.imageUrl}) center/cover no-repeat` : b.gradient}${b.action ? ';cursor:pointer' : ''}" ${b.action ? 'onclick="' + b.action + '"' : ''}>
+                    <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="배너 ${i+1}/${banners.length}" style="background:${b.imageUrl ? `url(${b.imageUrl}) center/cover no-repeat` : (b.image ? `url(${b.image}) center/cover no-repeat` : b.gradient)}${b.action ? ';cursor:pointer' : ''}" ${b.action ? 'onclick="' + b.action + '"' : ''}>
                         ${b.imageUrl ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.35);border-radius:inherit"></div>' : ''}
                         <div class="banner-title" ${b.imageUrl ? 'style="position:relative;z-index:1"' : ''}>${b.title}</div>
                         <div class="banner-subtitle" ${b.imageUrl ? 'style="position:relative;z-index:1"' : ''}>${b.subtitle}</div>
@@ -330,41 +346,9 @@ function initBannerCarousel(total) {
     });
 }
 
-// 새 콘텐츠 여부 확인 (3일 이내)
-function isNewContent(createdAt) {
-    if (!createdAt) return false;
-    
-    const created = new Date(createdAt);
-    const now = new Date();
-    const diffDays = Math.floor((now - created) / (1000 * 60 * 60 * 24));
-    
-    return diffDays <= 3;
-}
-
-// 상대 시간 포맷 (예: "2시간 전", "3일 전")
-function formatRelativeTime(dateString) {
-    if (!dateString) return '';
-    
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffSec = Math.floor(diffMs / 1000);
-    const diffMin = Math.floor(diffSec / 60);
-    const diffHour = Math.floor(diffMin / 60);
-    const diffDay = Math.floor(diffHour / 24);
-    
-    if (diffSec < 60) {
-        return '방금 전';
-    } else if (diffMin < 60) {
-        return `${diffMin}분 전`;
-    } else if (diffHour < 24) {
-        return `${diffHour}시간 전`;
-    } else if (diffDay < 7) {
-        return `${diffDay}일 전`;
-    } else {
-        return formatDate(dateString, 'YYYY-MM-DD');
-    }
-}
+// isNewContent → utils.js의 isNew()로 통합됨
+function isNewContent(createdAt) { return isNew(createdAt); }
+// formatRelativeTime → utils.js로 통합됨
 
 // formatDate, escapeHtml → utils.js로 통합됨
 

@@ -38,8 +38,7 @@
         var theme = localStorage.getItem('theme') || 'light';
         if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
         var fontSize = localStorage.getItem('font_size') || 'medium';
-        var sizes = { small: '14px', medium: '16px', large: '18px', xlarge: '20px' };
-        document.documentElement.style.fontSize = sizes[fontSize] || '16px';
+        document.documentElement.setAttribute('data-font-size', fontSize);
     })();
     </script>
 </head>
@@ -277,11 +276,21 @@
                 <h1 class="app-bar-title">회원가입</h1>
             </div>
             <div class="screen-content">
-                <div class="info-box">
-                    ⚠️ 회원가입 후 관리자 승인이 필요합니다.
-                </div>
-                
                 <form id="signup-form" class="auth-form">
+                    <!-- 프로필 사진 -->
+                    <div class="form-group signup-photo-group">
+                        <label>프로필 사진 <span class="badge-optional">선택</span></label>
+                        <div class="signup-avatar-wrap" onclick="document.getElementById('signup-photo-input').click()">
+                            <div class="signup-avatar-preview" id="signup-avatar-preview">
+                                <svg viewBox="0 0 80 80" fill="none"><circle cx="40" cy="30" r="14" fill="#D1D5DB"/><ellipse cx="40" cy="68" rx="24" ry="16" fill="#D1D5DB"/></svg>
+                            </div>
+                            <div class="signup-avatar-camera">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4" fill="#6B7280" stroke="none"/></svg>
+                            </div>
+                            <input type="file" id="signup-photo-input" accept="image/*" style="display:none">
+                        </div>
+                    </div>
+
                     <!-- 소속 로컬 선택 -->
                     <div class="form-group">
                         <label for="signup-org">
@@ -511,24 +520,20 @@
                     <h3 class="section-title">Step 4: 학력/경력 정보</h3>
 
                     <div class="form-group">
-                        <label>최종 학력 <span class="required-badge">필수</span></label>
-                        <div id="education-list">
-                            <!-- 학력 항목들이 동적으로 추가됩니다 -->
+                        <div class="form-label-row">
+                            <label>학력 <span class="required-badge">필수</span></label>
+                            <button type="button" class="form-add-btn" onclick="addEducationField()">+ 추가</button>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-add-education" onclick="addEducationField()">
-                            + 학력 추가
-                        </button>
+                        <div id="education-list"></div>
                         <span class="error-message" id="education-error"></span>
                     </div>
 
                     <div class="form-group">
-                        <label>경력 <span class="optional-badge">선택</span></label>
-                        <div id="career-list">
-                            <!-- 경력 항목들이 동적으로 추가됩니다 -->
+                        <div class="form-label-row">
+                            <label>경력 <span class="optional-badge">선택</span></label>
+                            <button type="button" class="form-add-btn" onclick="addCareerField()">+ 추가</button>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-add-career" onclick="addCareerField()">
-                            + 경력 추가
-                        </button>
+                        <div id="career-list"></div>
                     </div>
 
                     <!-- Step 5: 가족 정보 (선택) -->
@@ -549,21 +554,10 @@
                     </div>
 
                     <div id="spouse-info" style="display: none;">
-                        <div class="form-group">
-                            <label for="spouse-name">배우자 이름</label>
-                            <input 
-                                type="text" 
-                                id="spouse-name" 
-                                placeholder="배우자 이름"
-                            >
-                        </div>
-
-                        <div class="form-group">
-                            <label for="spouse-birth">배우자 생년월일</label>
-                            <input 
-                                type="date" 
-                                id="spouse-birth"
-                            >
+                        <label class="form-sub-label">배우자 이름 / 생년월일</label>
+                        <div class="family-row-2col">
+                            <input type="text" id="spouse-name" placeholder="이름">
+                            <input type="date" id="spouse-birth">
                         </div>
                     </div>
 
@@ -582,12 +576,11 @@
                     </div>
 
                     <div id="children-info" style="display: none;">
-                        <div id="children-list">
-                            <!-- 자녀 항목들이 동적으로 추가됩니다 -->
+                        <div class="form-label-row">
+                            <label class="form-sub-label" style="margin:0">자녀 이름 / 생년월일</label>
+                            <button type="button" class="form-add-btn" onclick="addChildField()">+ 추가</button>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-add-child" onclick="addChildField()">
-                            + 자녀 추가
-                        </button>
+                        <div id="children-list"></div>
                     </div>
 
                     <!-- Step 6: 기타 정보 (선택) -->
@@ -664,6 +657,10 @@
                     </div>
 
                     <div class="inline-error-message" id="signup-inline-error"></div>
+
+                    <div class="info-box" style="margin-bottom:16px">
+                        ⚠️ 회원가입 후 관리자 승인이 필요합니다.
+                    </div>
 
                     <div class="button-group">
                         <button type="button" class="btn btn-secondary" onclick="navigateToScreen('login')">
@@ -745,33 +742,14 @@
             </div>
             
             <!-- 하단 네비게이션 -->
-            <nav class="bottom-nav">
-                <button class="nav-item active" data-tab="home">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
-                    <span class="nav-label">홈</span>
-                </button>
-                <button class="nav-item" data-tab="posts">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
-                    <span class="nav-label">게시판</span>
-                </button>
-                <button class="nav-item" data-tab="schedules">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                    <span class="nav-label">일정</span>
-                </button>
-                <button class="nav-item" data-tab="members">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회원</span>
-                </button>
-                <button class="nav-item" data-tab="meetings">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회의</span>
-                </button>
-            </nav>
         </div>
 
         <!-- 게시판 화면 -->
         <div id="posts-screen" class="screen">
             <div class="app-bar app-bar--with-tabs">
+                <button class="hamburger-btn" onclick="openSideMenu()" aria-label="메뉴">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
                 <h1 class="app-bar-title">게시판</h1>
                 <button class="app-bar-icon-btn" id="post-search-toggle" aria-label="게시글 검색">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -792,28 +770,6 @@
                 </div>
                 <div class="posts-scroll-sentinel" aria-hidden="true"></div>
             </div>
-            <nav class="bottom-nav">
-                <button class="nav-item" data-tab="home">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
-                    <span class="nav-label">홈</span>
-                </button>
-                <button class="nav-item active" data-tab="posts">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
-                    <span class="nav-label">게시판</span>
-                </button>
-                <button class="nav-item" data-tab="schedules">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                    <span class="nav-label">일정</span>
-                </button>
-                <button class="nav-item" data-tab="members">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회원</span>
-                </button>
-                <button class="nav-item" data-tab="meetings">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회의</span>
-                </button>
-            </nav>
         </div>
 
         <!-- 게시글 상세 화면 -->
@@ -959,33 +915,14 @@
                     <div class="content-loading">공지사항 로딩 중...</div>
                 </div>
             </div>
-            <nav class="bottom-nav">
-                <button class="nav-item" data-tab="home">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
-                    <span class="nav-label">홈</span>
-                </button>
-                <button class="nav-item" data-tab="posts">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
-                    <span class="nav-label">게시판</span>
-                </button>
-                <button class="nav-item" data-tab="schedules">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                    <span class="nav-label">일정</span>
-                </button>
-                <button class="nav-item" data-tab="members">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회원</span>
-                </button>
-                <button class="nav-item" data-tab="meetings">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회의</span>
-                </button>
-            </nav>
         </div>
 
         <!-- 일정 화면 -->
         <div id="schedules-screen" class="screen">
             <div class="app-bar">
+                <button class="hamburger-btn" onclick="openSideMenu()" aria-label="메뉴">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
                 <h1 class="app-bar-title">일정</h1>
                 <button class="app-bar-action-pill" id="schedule-today-btn" title="오늘">오늘</button>
                 <button class="fab" id="create-schedule-btn" style="display: none;" aria-label="새 일정 작성">+</button>
@@ -1013,33 +950,14 @@
                     <div class="empty-state">날짜를 선택하세요</div>
                 </div>
             </div>
-            <nav class="bottom-nav">
-                <button class="nav-item" data-tab="home">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
-                    <span class="nav-label">홈</span>
-                </button>
-                <button class="nav-item" data-tab="posts">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
-                    <span class="nav-label">게시판</span>
-                </button>
-                <button class="nav-item active" data-tab="schedules">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                    <span class="nav-label">일정</span>
-                </button>
-                <button class="nav-item" data-tab="members">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회원</span>
-                </button>
-                <button class="nav-item" data-tab="meetings">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회의</span>
-                </button>
-            </nav>
         </div>
 
         <!-- 회원 화면 -->
         <div id="members-screen" class="screen">
             <div class="app-bar">
+                <button class="hamburger-btn" onclick="openSideMenu()" aria-label="메뉴">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
                 <h1 class="app-bar-title">회원</h1>
                 <div class="app-bar-right">
                     <span class="app-bar-badge" id="member-count-badge"></span>
@@ -1072,28 +990,6 @@
                     <div class="search-empty-hint">이름, 초성(ㄱㅁㅇ), 업종, 조직명으로 검색하세요</div>
                 </div>
             </div>
-            <nav class="bottom-nav">
-                <button class="nav-item" data-tab="home">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
-                    <span class="nav-label">홈</span>
-                </button>
-                <button class="nav-item" data-tab="posts">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
-                    <span class="nav-label">게시판</span>
-                </button>
-                <button class="nav-item" data-tab="schedules">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                    <span class="nav-label">일정</span>
-                </button>
-                <button class="nav-item active" data-tab="members">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회원</span>
-                </button>
-                <button class="nav-item" data-tab="meetings">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회의</span>
-                </button>
-            </nav>
         </div>
 
         <!-- 회의 화면 -->
@@ -1107,28 +1003,6 @@
             <div class="screen-content with-bottom-nav" id="meetings-content">
                 <div class="content-loading">회의 목록 로딩 중...</div>
             </div>
-            <nav class="bottom-nav">
-                <button class="nav-item" data-tab="home">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
-                    <span class="nav-label">홈</span>
-                </button>
-                <button class="nav-item" data-tab="posts">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
-                    <span class="nav-label">게시판</span>
-                </button>
-                <button class="nav-item" data-tab="schedules">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                    <span class="nav-label">일정</span>
-                </button>
-                <button class="nav-item" data-tab="members">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회원</span>
-                </button>
-                <button class="nav-item active" data-tab="meetings">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회의</span>
-                </button>
-            </nav>
         </div>
 
         <!-- 사이드 메뉴 콘텐츠 화면들 -->
@@ -1136,6 +1010,7 @@
             <div class="app-bar">
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">로컬조직도</h1>
+                <button class="app-bar-home-btn" onclick="navigateToScreen('home');updateNavigation('home')" title="홈"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
             </div>
             <div class="screen-content" id="org-chart-content">
                 <div class="content-placeholder">관리자가 로컬조직도를 등록하면 여기에 표시됩니다.</div>
@@ -1147,6 +1022,7 @@
             <div class="app-bar">
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title" id="group-board-title">그룹 게시판</h1>
+                <button class="app-bar-home-btn" onclick="navigateToScreen('home');updateNavigation('home')" title="홈"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
                 <button class="gb-fab" id="create-group-post-btn" style="display:none;" onclick="showGroupPostForm()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
@@ -1161,37 +1037,49 @@
             <div class="app-bar">
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">게시글</h1>
+                <button class="app-bar-home-btn" onclick="navigateToScreen('home');updateNavigation('home')" title="홈"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
             </div>
             <div class="screen-content" id="group-post-detail-content">
             </div>
         </div>
 
-        <!-- 그룹 게시글 작성/수정 화면 -->
+        <!-- 그룹 게시글 작성/수정 화면 (공지 게시판 포맷 통일) -->
         <div id="group-post-form-screen" class="screen">
             <div class="app-bar">
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title" id="group-post-form-title">게시글 작성</h1>
+                <button class="app-bar-home-btn" onclick="navigateToScreen('home');updateNavigation('home')" title="홈" style="margin-right:8px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
+                <button type="submit" form="group-post-form" class="app-bar-action" id="gp-submit-btn">등록</button>
             </div>
             <div class="screen-content">
-                <form id="group-post-form" class="gb-form">
-                    <div class="form-group">
-                        <label for="gp-title">제목</label>
-                        <input type="text" id="gp-title" placeholder="제목을 입력하세요" required>
+                <form id="group-post-form" class="post-create-form">
+                    <input type="text" id="gp-title" class="post-create-title-input" placeholder="제목을 입력하세요" maxlength="200" required>
+                    <textarea id="gp-content" class="post-create-content-input" placeholder="내용을 입력하세요" rows="10"></textarea>
+
+                    <!-- 사진 -->
+                    <div class="post-create-images-section">
+                        <div class="post-create-images-header">
+                            <span class="post-create-images-label">사진</span>
+                            <span class="post-create-images-count" id="gp-images-count">(0/5)</span>
+                        </div>
+                        <div class="post-create-images-scroll">
+                            <div id="gp-image-preview" class="post-form-images-list"></div>
+                            <input type="file" id="gp-images" accept="image/*" multiple style="display:none">
+                            <button type="button" class="post-create-add-image-btn" id="gp-upload-btn">
+                                <span class="post-create-add-image-icon">📷</span>
+                                <span class="post-create-add-image-text">추가</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="gp-content">내용</label>
-                        <textarea id="gp-content" class="form-textarea" rows="10" placeholder="내용을 입력하세요"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>이미지 첨부</label>
-                        <label class="gb-file-upload" for="gp-images">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                            <span>사진 선택 (최대 5장)</span>
-                        </label>
-                        <input type="file" id="gp-images" accept="image/*" multiple style="display:none">
-                        <div id="gp-image-preview" class="gb-image-preview"></div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">등록</button>
+
+                    <!-- 참석 확인 -->
+                    <div id="gp-attendance-section"></div>
+
+                    <!-- 일정 첨부 (공지 게시판과 동일) -->
+                    <div id="gp-schedule-attach"></div>
+
+                    <!-- Push 알림 설정 -->
+                    <div id="gp-push-setting"></div>
                 </form>
             </div>
         </div>
@@ -1226,16 +1114,7 @@
                             <input type="datetime-local" id="gs-end-date">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="gs-category">분류</label>
-                        <select id="gs-category">
-                            <option value="meeting">회의</option>
-                            <option value="event">행사</option>
-                            <option value="training">교육</option>
-                            <option value="other">기타</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">등록</button>
+                    <button type="submit" class="btn btn-primary btn-full">일정 등록</button>
                 </form>
             </div>
         </div>
@@ -1566,28 +1445,6 @@
                     <div class="content-loading">알림 로딩 중...</div>
                 </div>
             </div>
-            <nav class="bottom-nav">
-                <button class="nav-item" data-tab="home" onclick="switchTab('home')">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
-                    <span class="nav-label">홈</span>
-                </button>
-                <button class="nav-item" data-tab="posts" onclick="switchTab('posts')">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
-                    <span class="nav-label">게시판</span>
-                </button>
-                <button class="nav-item" data-tab="schedules" onclick="switchTab('schedules')">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                    <span class="nav-label">일정</span>
-                </button>
-                <button class="nav-item" data-tab="members" onclick="switchTab('members')">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회원</span>
-                </button>
-                <button class="nav-item" data-tab="profile" onclick="switchTab('profile')">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-                    <span class="nav-label">프로필</span>
-                </button>
-            </nav>
         </div>
 
         <!-- 알림 설정 화면 -->
@@ -1603,28 +1460,6 @@
                     <div class="content-loading">설정 로딩 중...</div>
                 </div>
             </div>
-            <nav class="bottom-nav">
-                <button class="nav-item" data-tab="home" onclick="switchTab('home')">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
-                    <span class="nav-label">홈</span>
-                </button>
-                <button class="nav-item" data-tab="posts" onclick="switchTab('posts')">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
-                    <span class="nav-label">게시판</span>
-                </button>
-                <button class="nav-item" data-tab="schedules" onclick="switchTab('schedules')">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                    <span class="nav-label">일정</span>
-                </button>
-                <button class="nav-item" data-tab="members" onclick="switchTab('members')">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                    <span class="nav-label">회원</span>
-                </button>
-                <button class="nav-item active" data-tab="profile" onclick="switchTab('profile')">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-                    <span class="nav-label">프로필</span>
-                </button>
-            </nav>
         </div>
 
         <!-- 앱 관리 허브 화면 -->
@@ -1670,7 +1505,7 @@
                     <span class="icon">&larr;</span>
                 </button>
                 <h1 class="app-bar-title">공지 관리</h1>
-                <button class="app-bar-action" onclick="showNoticeEditor()" style="font-size:14px;font-weight:600;color:#1E3A5F;background:none;border:none;cursor:pointer">+ 새 공지</button>
+                <button class="app-bar-action" onclick="showNoticeEditor()" style="font-size:14px;font-weight:600;color:#2563EB;background:none;border:none;cursor:pointer">+ 새 공지</button>
             </div>
             <div class="screen-content" id="notice-manage-content">
             </div>
@@ -1844,6 +1679,30 @@
         </nav>
     </div>
 
+    <!-- 공유 하단 네비게이션 (1개만 유지) -->
+    <nav class="bottom-nav" id="shared-bottom-nav">
+        <button class="nav-item" data-tab="home">
+            <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
+            <span class="nav-label">홈</span>
+        </button>
+        <button class="nav-item" data-tab="posts">
+            <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></span>
+            <span class="nav-label">게시판</span>
+        </button>
+        <button class="nav-item" data-tab="schedules">
+            <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            <span class="nav-label">일정</span>
+        </button>
+        <button class="nav-item" data-tab="members">
+            <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            <span class="nav-label">회원</span>
+        </button>
+        <button class="nav-item" data-tab="meetings">
+            <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            <span class="nav-label">회의</span>
+        </button>
+    </nav>
+
     <!-- 앱 스크립트 -->
     <script src="js/config.js?v=20260328a"></script>
     <script src="js/api-client.js?v=20260328a"></script>
@@ -1851,6 +1710,7 @@
     <script src="js/auth.js?v=20260328a"></script>
     <script src="js/signup.js?v=20260328a"></script>
     <script src="js/home.js?v=20260328a"></script>
+    <script src="js/card-components.js?v=20260328a"></script>
     <script src="js/posts.js?v=20260328a"></script>
     <script src="js/notices.js?v=20260328a"></script>
     <script src="js/schedules.js?v=20260328a"></script>

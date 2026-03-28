@@ -73,7 +73,17 @@ async function loadPosts(page = 1) {
 }
 
 // ── 게시글 카드 생성 (재디자인) ──
+// createPostCard → card-components.js의 renderPostCard 위임
 function createPostCard(post) {
+    // Use renderPostCard if available (card-components.js), otherwise inline
+    if (typeof renderPostCard === 'function') {
+        return renderPostCard(post, {
+            clickAttr: 'onclick="navigateTo(\'/posts/' + post.id + '\')"',
+            showThumb: true,
+            readField: 'read_by_current_user'
+        });
+    }
+
     const isNew = isNewContent(post.created_at);
     const unread = isNew && (post.read_by_current_user !== true);
     const parsedImages = parseImageArray(post.images);
@@ -158,9 +168,19 @@ function setupPostsInfiniteScroll() {
 async function loadPostsScreen() {
     currentPostsPage = 0;
     hasMorePosts = true;
+    postsLoading = false;
+
+    // 탭 UI를 현재 카테고리에 맞게 갱신
+    document.querySelectorAll('.board-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.category === currentBoardCategory);
+    });
+
     await loadPosts(1);
     setupPostsInfiniteScroll();
     updateCreatePostBtnVisibility();
+
+    // 목록 로드 완료 후 하단 탭 뱃지 갱신 (read_status 반영)
+    if (typeof updateNavBadges === 'function') updateNavBadges();
 }
 
 // ── 서브탭 전환 ──
@@ -525,19 +545,16 @@ async function handlePostCreateSubmit(e) {
         }
         const result = await apiClient.createPost(payload);
         if (result.success) {
-            if (typeof loadPostsScreen === 'function') {
-                await loadPostsScreen();
-            }
-            navigateToScreen('posts');
-            if (typeof updateNavigation === 'function') {
-                updateNavigation('posts');
-            }
+            // 폼 초기화
             titleEl.value = '';
             contentEl.value = '';
             postCreatePreviewUrls.forEach(u => { if (u) URL.revokeObjectURL(u); });
             postCreateImageUrls = [];
             postCreatePreviewUrls = [];
             renderPostFormImages('post-create-images-list', [], removePostCreateImage);
+
+            // 게시판 목록으로 이동 (navigateToScreen이 loadPostsScreen 호출)
+            navigateToScreen('posts');
         } else {
             if (errorEl) {
                 errorEl.textContent = result.message || '게시글 작성에 실패했습니다.';
@@ -566,19 +583,34 @@ function handlePostCreateCancel() {
 
 // ── 게시글 상세 화면 표시 ──
 function showPostDetailScreen(postId) {
-    const detailScreen = document.getElementById('post-detail-screen');
-    if (!detailScreen) return;
+    try {
+        var detailScreen = document.getElementById('post-detail-screen');
+        if (!detailScreen) { console.error('post-detail-screen not found'); return; }
 
-    // N배지 제거: 해당 카드의 N뱃지를 즉시 제거 (읽음 처리)
-    const card = document.querySelector(`.pc-card[onclick*="posts/${postId}"]`);
-    if (card) {
-        const nBadge = card.querySelector('.pc-badge-n');
-        if (nBadge) nBadge.remove();
+        // N배지 즉시 제거 (DOM)
+        document.querySelectorAll('.pc-card .pc-badge-n').forEach(function(badge) {
+            var card = badge.closest('.pc-card');
+            if (card) {
+                var onclick = card.getAttribute('onclick') || '';
+                var action = card.getAttribute('data-action') || '';
+                if (onclick.indexOf('posts/' + postId) !== -1 || (action === 'open-post' && card.getAttribute('data-post-id') == postId)) {
+                    badge.remove();
+                }
+            }
+        });
+
+        document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+        detailScreen.classList.add('active');
+
+        if (typeof pushRoute === 'function') pushRoute('post-detail', { postId: postId });
+
+        // 상세 로드 (API 호출 → read_status INSERT) → 완료 후 뱃지 갱신
+        loadPostDetail(postId).then(function() {
+            if (typeof updateNavBadges === 'function') updateNavBadges();
+        });
+    } catch (err) {
+        console.error('showPostDetailScreen error:', err);
     }
-
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    detailScreen.classList.add('active');
-    loadPostDetail(postId);
 }
 
 // ── 게시글 상세 로드 ──
@@ -666,7 +698,6 @@ async function handlePostCommentSubmit(postId, content) {
             if (newCount != null) updatePostCardStat(postId, 'comments', newCount);
         }
     } catch (err) {
-        showToast(err.message || '댓글 등록에 실패했습니다.', 'error');
     }
 }
 
@@ -753,10 +784,8 @@ function renderPostDetail(post) {
 
 // ── 상세 뒤로가기 ──
 function handlePostDetailBack() {
+    // 목록 화면으로 전환 (loadPostsScreen이 호출되어 목록 재조회 + 뱃지 갱신)
     navigateToScreen('posts');
-    if (typeof updateNavigation === 'function') {
-        updateNavigation('posts');
-    }
 }
 
 // ── 수정 화면 ──
@@ -923,11 +952,9 @@ function handlePostDelete(postId) {
             if (result && result.success) {
                 handlePostDetailBack();
             } else {
-                showToast(result.message || '삭제에 실패했습니다.', 'error');
             }
         })
         .catch((err) => {
-            showToast(err.message || '삭제 중 오류가 발생했습니다.', 'error');
         });
 }
 
@@ -1014,13 +1041,11 @@ async function submitPostAttendance(status, postId) {
             body: JSON.stringify({ status: status })
         });
         if (res.success) {
-            showToast(status === 'attending' ? '참석으로 표시했습니다' : '불참으로 표시했습니다', 'info');
             // 다시 로드
             const postRes = await apiClient.getPost(postId);
             if (postRes.success && postRes.post) loadPostAttendance(postRes.post);
         }
     } catch (e) {
-        showToast(e.message || '참석 등록에 실패했습니다', 'error');
     }
 }
 

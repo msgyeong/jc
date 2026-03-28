@@ -476,7 +476,7 @@ router.get('/members/:id', async (req, res) => {
  * PUT /api/admin/members/:id
  * 관리자 전용 회원 정보 수정
  */
-router.put('/members/:id', async (req, res) => {
+router.put('/members/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
         const {
@@ -3137,6 +3137,116 @@ router.get('/mobile-admin-log', async (req, res) => {
     } catch (err) {
         console.error('Get admin log error:', err);
         res.status(500).json({ success: false, message: '권한 이력 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+// ═══════════ 배너 광고 관리 ═══════════
+
+/** GET /api/admin/banners — 전체 배너 목록 */
+router.get('/banners', authenticate, async (req, res) => {
+    try {
+        const result = await query('SELECT * FROM banners ORDER BY order_index ASC, id DESC');
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+/** POST /api/admin/banners — 배너 생성 (이미지 업로드) */
+router.post('/banners', authenticate, async (req, res) => {
+    try {
+        const { title, link_url, description, member_id, order_index } = req.body;
+        if (!title) return res.status(400).json({ success: false, message: '배너 제목을 입력하세요.' });
+        const result = await query(
+            `INSERT INTO banners (title, link_url, description, member_id, order_index, is_active, created_by, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, true, $6, NOW(), NOW()) RETURNING id`,
+            [title, link_url || null, description || null, member_id || null, order_index || 0, req.user.userId]
+        );
+        res.json({ success: true, data: { id: result.rows[0].id }, message: '배너가 등록되었습니다.' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+/** PUT /api/admin/banners/:id — 배너 수정 */
+router.put('/banners/:id', authenticate, async (req, res) => {
+    try {
+        const { title, image_url, link_url, description, member_id, order_index, is_active } = req.body;
+        await query(
+            `UPDATE banners SET title = COALESCE($1, title), image_url = COALESCE($2, image_url),
+             link_url = COALESCE($3, link_url), description = COALESCE($4, description),
+             member_id = COALESCE($5, member_id), order_index = COALESCE($6, order_index),
+             is_active = COALESCE($7, is_active), updated_at = NOW() WHERE id = $8`,
+            [title, image_url, link_url, description, member_id, order_index, is_active, req.params.id]
+        );
+        res.json({ success: true, message: '배너가 수정되었습니다.' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+/** PUT /api/admin/banners/:id/image — 배너 이미지 업로드 */
+const bannerUpload = require('multer')({ storage: require('multer').memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+router.put('/banners/:id/image', authenticate, bannerUpload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ success: false, message: '이미지를 선택하세요.' });
+        const filename = `banner-${req.params.id}-${Date.now()}.${req.file.originalname.split('.').pop()}`;
+        const imgResult = await query(
+            'INSERT INTO post_images (filename, mime_type, image_data, file_size, uploaded_by) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+            [filename, req.file.mimetype, req.file.buffer, req.file.size, req.user.userId]
+        );
+        const imageUrl = '/api/upload/images/' + imgResult.rows[0].id;
+        await query('UPDATE banners SET image_url = $1, updated_at = NOW() WHERE id = $2', [imageUrl, req.params.id]);
+        res.json({ success: true, imageUrl, message: '배너 이미지가 업로드되었습니다.' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+/** DELETE /api/admin/banners/:id — 배너 삭제 */
+router.delete('/banners/:id', authenticate, async (req, res) => {
+    try {
+        await query('DELETE FROM banners WHERE id = $1', [req.params.id]);
+        res.json({ success: true, message: '배너가 삭제되었습니다.' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+/** GET /api/banners/active — 공개 배너 목록 (인증 불필요하지만 라우터 위치상 여기) */
+router.get('/banners/active', async (_req, res) => {
+    try {
+        const result = await query('SELECT id, title, image_url, link_url, description FROM banners WHERE is_active = true ORDER BY order_index ASC');
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+/**
+ * POST /api/admin/cleanup-all-data
+ * 모든 목업 데이터 삭제 (super_admin만)
+ */
+router.post('/cleanup-all-data', authenticate, requireRole('super_admin'), async (req, res) => {
+    try {
+        var tables = [
+            'notification_log', 'push_subscriptions',
+            'read_status', 'likes', 'post_likes',
+            'group_post_likes', 'group_comment_likes', 'group_post_attendance',
+            'post_attendance', 'schedule_attendance',
+            'group_post_reads', 'group_post_comments', 'group_posts', 'group_schedules',
+            'comments', 'posts', 'schedules'
+        ];
+        var results = {};
+        for (var t of tables) {
+            try {
+                var r = await query('DELETE FROM ' + t);
+                results[t] = r.rowCount + ' rows';
+            } catch (e) { results[t] = 'skip: ' + e.message.substring(0, 50); }
+        }
+        res.json({ success: true, results });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

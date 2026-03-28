@@ -108,10 +108,14 @@ CREATE TABLE IF NOT EXISTS posts (
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     images TEXT[],
-    category TEXT DEFAULT 'general' CHECK (category IN ('general', 'question', 'announcement', 'event')),
+    category TEXT DEFAULT 'general' CHECK (category IN ('general', 'notice', 'question', 'announcement', 'event')),
     views INTEGER DEFAULT 0,
     likes_count INTEGER DEFAULT 0,
     comments_count INTEGER DEFAULT 0,
+    is_pinned BOOLEAN DEFAULT false,
+    is_banner BOOLEAN DEFAULT false,
+    attendance_enabled BOOLEAN DEFAULT false,
+    linked_schedule_id INTEGER,  -- schedules 테이블 생성 후 FK 추가
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -191,12 +195,17 @@ CREATE TABLE IF NOT EXISTS schedules (
     location TEXT,
     category TEXT DEFAULT 'event' CHECK (category IN ('event', 'meeting', 'training', 'holiday', 'other')),
     created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    linked_post_id INTEGER REFERENCES posts(id) ON DELETE SET NULL,
+    views INTEGER DEFAULT 0,
     likes_count INTEGER DEFAULT 0,
     comments_count INTEGER DEFAULT 0,
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- posts.linked_schedule_id FK 추가 (schedules 생성 후)
+ALTER TABLE posts ADD CONSTRAINT fk_posts_schedule FOREIGN KEY (linked_schedule_id) REFERENCES schedules(id) ON DELETE SET NULL;
 
 -- comments 테이블에 FK 추가 (notices, schedules 생성 후)
 ALTER TABLE comments ADD CONSTRAINT fk_comments_notice FOREIGN KEY (notice_id) REFERENCES notices(id) ON DELETE CASCADE;

@@ -1,167 +1,52 @@
-# JC 프로젝트 — Claude Code 공통 컨텍스트
-
-> 이 파일은 Claude Code가 매 세션 시작 시 자동으로 읽는 프로젝트 지침입니다.
-
----
+# JC 프로젝트 — Claude Code 지침
 
 ## 프로젝트 개요
+- **영등포 JC 회원관리 커뮤니티 앱** (하이브리드 웹앱)
+- GitHub: `msgyeong/jc` / 배포: `https://jc-production-7db6.up.railway.app`
+- 기술: HTML/CSS/Vanilla JS (SPA) + Node.js Express + Railway PostgreSQL
+- 배포: Docker (Nginx + Node.js) → Railway 자동 배포 (main push)
 
-- **프로젝트명**: 영등포 JC 회원관리 커뮤니티 앱
-- **목적**: 영등포청년회의소(영등포JC) 회원 공지/게시글/일정/회원 정보 통합 관리
-- **GitHub**: `msgyeong/jc`
-- **배포 URL**: `https://jc-production-7db6.up.railway.app`
-
----
-
-## 기술 스택 (확정)
-
-| 영역 | 기술 |
-|------|------|
-| **프론트엔드 (웹앱)** | HTML, CSS, Vanilla JavaScript (SPA 방식) |
-| **백엔드 API** | Node.js Express, JWT (jsonwebtoken + bcrypt) |
-| **데이터베이스** | Railway PostgreSQL (pg 라이브러리) |
-| **관리자 웹** | web/admin/ (HTML + JS, 동일 SPA 구조) |
-| **배포** | Docker (Nginx + Node.js) → Railway 자동 배포 (main 브랜치 push) |
-| **파일 스토리지** | Cloudinary (추후) |
-
-### ⚠️ Flutter는 절대 사용하지 않음 — 최우선 규칙
-- 이 프로젝트는 **하이브리드 웹앱** 단일 버전으로 개발합니다.
-- `web/` 폴더(HTML/JS/CSS)가 **유일한** 프론트엔드입니다.
-- `lib/` 폴더(Flutter)는 **완전 삭제됨**. Flutter 관련 파일/코드를 절대 생성하지 마세요.
-- Flutter, Dart, Riverpod, GoRouter 관련 코드를 신규로 작성하지 마세요.
-- **모든 신규 기능은 반드시 `web/js/`(프론트) + `api/routes/`(백엔드)에 구현하세요.**
-
-### ⚠️ Supabase는 사용하지 않음
-- Supabase 관련 코드, 패키지, 설정을 절대 추가하지 마세요.
-- 기존 Supabase 코드가 남아있으면 제거 대상입니다.
-- DB는 오직 Railway PostgreSQL만 사용합니다.
-
----
-
-## 프로젝트 구조
-
-```
-E:/app/jc/
-├── api/                    # Node.js Express API 서버
-│   ├── server.js           # 메인 서버 (PORT || 3000)
-│   ├── config/database.js  # Railway PostgreSQL 연결
-│   ├── middleware/          # auth.js (JWT), errorHandler.js
-│   ├── routes/             # auth, posts, notices, schedules, members, profile
-│   └── utils/              # jwt.js, password.js
-├── web/                    # 프론트엔드 웹앱 (실제 서비스 코드)
-│   ├── index.html          # SPA 메인 페이지
-│   ├── js/                 # JavaScript 모듈 (app, auth, api-client, 각 화면별)
-│   ├── styles/main.css     # 전체 스타일
-│   ├── admin/              # 관리자 콘솔 (별도 SPA)
-│   └── image/              # 이미지 리소스
-├── admin-web/              # 관리자 웹 (Next.js) — 미구현
-├── database/migrations/    # SQL 마이그레이션 파일
-├── Dockerfile              # Multi-stage: Node.js + Nginx
-├── nginx.conf              # API 프록시 + 정적 파일
-├── start.sh                # 컨테이너 시작 스크립트
-└── Docs/                   # PRD, 태스크, 디자인 시스템 문서
-    ├── prd/                # 00-overview ~ 08-design
-    ├── tasks-web/          # 웹 구현 태스크
-    ├── tasks-common/       # 공통 체크리스트
-    ├── design-system/      # 색상, 타이포, 컴포넌트
-    ├── wireframes/         # 화면별 와이어프레임
-    └── user-flows/         # 유저 플로우
-```
-
----
-
-## 디자인 시스템
-
-- **라이트 테마만 사용** (다크 테마 대응 불필요)
-- Primary: `#1F4FD8` / Secondary: `#E6ECFA` / Accent: `#F59E0B`
-- Background: `#F9FAFB` / Text: `#111827` / SubText: `#6B7280` / Error: `#DC2626`
-- 폰트: Noto Sans KR
-- 카드: cornerRadius 12, elevation 1~2
-- 버튼: 높이 48, cornerRadius 8
-
----
-
-## 현재 게시판 구조 (신규 설계)
-
-하단 탭 "게시판" 하나에 **공지 게시판** / **일반 게시판** 두 개 서브탭을 운영한다.
-
-```
-┌─────────────────────────────────────┐
-│  게시판                    [+ 작성]  │  ← AppBar
-├──────────────┬──────────────────────┤
-│  공지 게시판  │   일반 게시판         │  ← TabBar (서브탭)
-├──────────────┴──────────────────────┤
-│  [게시글 카드] ...무한 스크롤...      │  ← TabBarView
-├─────────────────────────────────────┤
-│  홈 │ 게시판 │ 일정 │ 회원 │ 프로필  │  ← 하단 탭
-└─────────────────────────────────────┘
-```
-
-- **공지 게시판**: `category = 'notice'` — 관리자/지정 직책만 작성 (`can_post_notice = true`)
-- **일반 게시판**: `category = 'general'` — 모든 승인된 회원 작성 가능
-- **FAB(+)**: 공지탭은 권한자만, 일반탭은 모든 회원에게 노출
-- **고정 공지**: `is_pinned = true` → 공지탭 상단 고정
-- 댓글/대댓글(대대댓글 불가), 공감(토글), N배지(3일 이내+미읽음), 이미지(최대 5개) 동일 적용
-
----
-
-## 회원 상태 체크 로직
-
-| 조건 | 상태 |
-|------|------|
-| `is_approved = false`, `rejection_reason IS NULL` | 승인 대기 |
-| `is_approved = false`, `rejection_reason IS NOT NULL` | 가입 거절 |
-| `is_suspended = true` | 정지 |
-| `withdrawn_at IS NOT NULL` 또는 `is_deleted = true` | 탈퇴 |
-| `is_approved = true`, `is_suspended = false` | 정상 (로그인 허용) |
-
----
-
-## API 응답 형식 표준
-
-```json
-// 성공
-{ "success": true, "data": { ... } }
-
-// 성공 (목록)
-{ "success": true, "data": { "items": [...], "total": 100, "page": 1, "totalPages": 5 } }
-
-// 실패
-{ "success": false, "error": "에러 메시지", "code": "ERROR_CODE" }
-```
-
----
+## 절대 금지 사항
+- **Flutter/Dart 사용 금지** — `web/js/` + `api/routes/`에서만 개발
+- **Supabase 사용 금지** — Railway PostgreSQL만 사용
 
 ## 개발 규칙
+1. SQL은 반드시 파라미터화 쿼리 ($1, $2) — SQL 인젝션 방지
+2. 에러는 인라인 표시 (스낵바 X)
+3. 빈 상태, 로딩 상태, 에러 상태 UI 필수
+4. soft delete 사용 (deleted_at)
+5. 디자인: `Docs/design-system/` 가이드 준수, 독자적 스타일 금지
 
-1. **SQL은 반드시 파라미터화 쿼리** ($1, $2) 사용 — SQL 인젝션 방지
-2. **에러는 인라인 표시** — 스낵바 대신 해당 입력 필드 하단에 표시
-3. **빈 상태, 로딩 상태, 에러 상태 UI 필수**
-4. **하드코딩 금지** — 상수는 constants 파일에
-5. **soft delete 사용** — deleted_at 필드 설정
-6. **Supabase 코드 금지** — Railway PostgreSQL + Express API만 사용
+## 디자인 시스템 (요약)
+- 라이트 테마만 사용
+- Primary: `#1F4FD8` / Accent: `#F59E0B` / Error: `#DC2626`
+- 폰트: Noto Sans KR / 카드: radius 12 / 버튼: 높이 48, radius 8
 
----
+## Git & 배포 규칙
+- main 브랜치 push = Railway 자동 배포
+- **작업 완료 시 확인 질문 없이 바로 commit & push**
+- 사장님은 비개발자 — 기술적 확인 질문 하지 말 것, 자율 진행
 
-## 팀 에이전트 구성
+## MCP 서버 활용 (필수)
+- **Postgres MCP**: DB 스키마/데이터를 직접 쿼리 — 추측 금지, 확인 후 코딩
+- **Playwright MCP**: 배포된 앱을 브라우저로 직접 열어서 버그 확인/검증
+- **Sequential Thinking**: 복잡한 버그 분석, 기능 설계 시 구조화 사고
+- 코드만 보고 추측하지 말고, MCP로 실제 상태를 확인한 후 작업할 것
 
-이 프로젝트는 **팀 에이전트** 체제로 운영됩니다. 각 역할을 인지하고 협업하세요.
+## 팀 에이전트 규칙
+- 문서 기준 작업 (문서 vs 코드 충돌 시 문서 우선)
+- 같은 버그 2번 이상 지적받지 않도록 한 사이클에 끝내기
+- MCP 도구를 적극 활용하여 검증 (상세: 아래 문서)
+- 상세: [`Docs/claude-reference/team-agent-rules.md`](Docs/claude-reference/team-agent-rules.md)
 
-| 역할 | 설명 |
+## 참고 문서
+| 문서 | 위치 |
 |------|------|
-| **사장** | 최종 의사결정자, 지시 및 방향 설정 (사용자) |
-| **프론트엔드 에이전트** | `web/js/`, `web/styles/`, `web/index.html` 담당 |
-| **백엔드 에이전트** | `api/` (Express 라우트, 미들웨어, DB 쿼리) 담당 |
-| **테스터 에이전트** | 기능 테스트, API 테스트, 배포 검증 |
-| **기획자 에이전트** | PRD, 유저 플로우, 요구사항 정의 (`Docs/`) |
-| **디자이너 에이전트** | UI/UX 디자인, 디자인 시스템 (`Docs/design-system/`) |
-
----
-
-## 참고 문서 위치
-
-- PRD: `Docs/prd/` (00~08)
-- 게시판 정책: `Docs/tasks-common/02-0-board-and-schedule-policy.md`
-- 디자인 시스템: `Docs/design-system/`
-- 와이어프레임: `Docs/wireframes/`
-- 팀 지시문: `Docs/team-board-directives.md`
+| 프로젝트 구조 | [`Docs/claude-reference/project-structure.md`](Docs/claude-reference/project-structure.md) |
+| 게시판·회원·API 명세 | [`Docs/claude-reference/board-and-member-spec.md`](Docs/claude-reference/board-and-member-spec.md) |
+| 팀 에이전트 & 품질 사이클 | [`Docs/claude-reference/team-agent-rules.md`](Docs/claude-reference/team-agent-rules.md) |
+| PRD | `Docs/prd/` (00~08) |
+| 게시판 정책 | `Docs/tasks-common/02-0-board-and-schedule-policy.md` |
+| 디자인 시스템 | `Docs/design-system/` |
+| 와이어프레임 | `Docs/wireframes/` |
+| 에이전트 작업 이력 | `Docs/agent-logs/` |

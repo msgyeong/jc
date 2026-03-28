@@ -26,9 +26,9 @@
     #app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--background-color);position:relative}
     .screen{display:none;flex-direction:column;width:100%;min-height:100vh}
     .screen.active{display:flex}
-    #splash-screen{background-color:var(--background-color);display:flex;align-items:center;justify-content:center;min-height:100vh}
-    .splash-content{text-align:center}
-    .splash-content .logo{max-width:180px;height:auto}
+    #splash-screen{background-color:var(--background-color)}
+    .splash-content{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:32px}
+    .splash-content .logo{max-width:160px;height:auto}
     .loading-spinner{width:32px;height:32px;border:3px solid #E5E7EB;border-top-color:var(--primary-color);border-radius:50%;animation:spin .8s linear infinite;margin:16px auto}
     @keyframes spin{to{transform:rotate(360deg)}}
     </style>

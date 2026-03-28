@@ -22,7 +22,7 @@ function adminPositionBadge(posName) {
     return '<span class="badge" style="' + style + '">' + escapeHtml(posName) + '</span>';
 }
 
-function renderMembers(container) {
+async function renderMembers(container) {
     container.innerHTML = `
         <div class="page-toolbar">
             <h2 class="page-title">회원 관리</h2>

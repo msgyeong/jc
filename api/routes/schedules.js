@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { query } = require('../config/database');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, addOrgFilter } = require('../middleware/auth');
 const { sendPushToAll, sendPushToUser } = require('../utils/pushSender');
 
 /**
@@ -27,6 +27,9 @@ router.get('/', authenticate, async (req, res) => {
 
         const conditions = ['s.deleted_at IS NULL'];
         const params = [];
+
+        // 멀티테넌트 org_id 필터
+        addOrgFilter(conditions, params, req, 's');
 
         // 월별 조회 (캘린더용)
         if (year && month) {
@@ -73,7 +76,7 @@ router.get('/:id', authenticate, async (req, res) => {
             `SELECT
                 s.id, s.title, s.start_date, s.end_date,
                 s.location, s.description, s.category,
-                s.linked_post_id, s.views,
+                s.linked_post_id, s.views, s.org_id,
                 s.created_at, s.updated_at,
                 s.created_by as author_id, u.name as author_name, u.profile_image as author_image
              FROM schedules s
@@ -90,6 +93,14 @@ router.get('/:id', authenticate, async (req, res) => {
         }
 
         const schedule = result.rows[0];
+
+        // 멀티테넌트: org_id 소속 확인 (super_admin 제외)
+        if (req.user.role !== 'super_admin' && req.user.orgId && schedule.org_id && schedule.org_id !== req.user.orgId) {
+            return res.status(403).json({
+                success: false,
+                message: '다른 조직의 일정에 접근할 수 없습니다.'
+            });
+        }
 
         // 연결된 공지 정보 조회
         if (schedule.linked_post_id) {
@@ -160,10 +171,10 @@ router.post('/', authenticate, async (req, res) => {
 
         // 일정 생성
         const result = await query(
-            `INSERT INTO schedules (created_by, title, start_date, end_date, location, description, category, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+            `INSERT INTO schedules (created_by, title, start_date, end_date, location, description, category, org_id, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
              RETURNING id`,
-            [authorId, title, start_date, end_date, location, description, category]
+            [authorId, title, start_date, end_date, location, description, category, req.user.orgId || null]
         );
 
         const newScheduleId = result.rows[0].id;

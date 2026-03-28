@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 const { query, transaction } = require('../config/database');
-const { authenticate, requireRole } = require('../middleware/auth');
+const { authenticate, requireRole, addOrgFilter } = require('../middleware/auth');
 const { comparePassword, hashPassword } = require('../utils/password');
 const { generateToken } = require('../utils/jwt');
 const { writeAuditLog } = require('../utils/auditLog');
@@ -177,20 +177,29 @@ router.get('/dashboard/stats', async (req, res) => {
         const now = new Date();
         const firstOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
 
+        // 멀티테넌트: non-super_admin은 자기 조직만 통계
+        const isSuperAdmin = req.user.role === 'super_admin';
+        const orgId = req.user.orgId;
+        const orgFilter = (!isSuperAdmin && orgId) ? ' AND org_id = $1' : '';
+        const orgFilterPost = (!isSuperAdmin && orgId) ? ' AND org_id = $1' : '';
+        const orgParams = (!isSuperAdmin && orgId) ? [orgId] : [];
+        const orgParamsMonth = (!isSuperAdmin && orgId) ? [orgId, firstOfMonth] : [firstOfMonth];
+        const monthIdx = (!isSuperAdmin && orgId) ? '$2' : '$1';
+
         const [
             totalMembers, activeMembers, pendingMembers, monthMembers,
             totalPosts, monthPosts,
             totalSchedules, monthSchedules,
             totalComments
         ] = await Promise.all([
-            query('SELECT COUNT(*) FROM users'),
-            query("SELECT COUNT(*) FROM users WHERE status = 'active'"),
-            query("SELECT COUNT(*) FROM users WHERE status = 'pending'"),
-            query('SELECT COUNT(*) FROM users WHERE created_at >= $1', [firstOfMonth]),
-            query('SELECT COUNT(*) FROM posts'),
-            query('SELECT COUNT(*) FROM posts WHERE created_at >= $1', [firstOfMonth]),
-            query('SELECT COUNT(*) FROM schedules'),
-            query('SELECT COUNT(*) FROM schedules WHERE created_at >= $1', [firstOfMonth]),
+            query(`SELECT COUNT(*) FROM users WHERE 1=1${orgFilter}`, orgParams),
+            query(`SELECT COUNT(*) FROM users WHERE status = 'active'${orgFilter}`, orgParams),
+            query(`SELECT COUNT(*) FROM users WHERE status = 'pending'${orgFilter}`, orgParams),
+            query(`SELECT COUNT(*) FROM users WHERE created_at >= ${monthIdx}${orgFilter}`, orgParamsMonth),
+            query(`SELECT COUNT(*) FROM posts WHERE 1=1${orgFilterPost}`, orgParams),
+            query(`SELECT COUNT(*) FROM posts WHERE created_at >= ${monthIdx}${orgFilterPost}`, orgParamsMonth),
+            query(`SELECT COUNT(*) FROM schedules WHERE 1=1${orgFilterPost}`, orgParams),
+            query(`SELECT COUNT(*) FROM schedules WHERE created_at >= ${monthIdx}${orgFilterPost}`, orgParamsMonth),
             query("SELECT COUNT(*) FROM comments WHERE is_deleted = false OR is_deleted IS NULL"),
         ]);
 
@@ -400,11 +409,17 @@ router.get('/members', async (req, res) => {
             whereClause += ` AND u.role = $${params.length}`;
         }
 
-        // 로컬(조직) 필터
-        const orgId = req.query.org_id;
-        if (orgId) {
-            params.push(parseInt(orgId));
+        // 멀티테넌트: non-super_admin은 자기 조직으로 강제 필터
+        if (req.user.role !== 'super_admin' && req.user.orgId) {
+            params.push(req.user.orgId);
             whereClause += ` AND u.org_id = $${params.length}`;
+        } else {
+            // super_admin은 선택적 org_id 필터
+            const orgId = req.query.org_id;
+            if (orgId) {
+                params.push(parseInt(orgId));
+                whereClause += ` AND u.org_id = $${params.length}`;
+            }
         }
 
         const countResult = await query(

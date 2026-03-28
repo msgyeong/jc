@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { query, transaction } = require('../config/database');
-const { authenticate, requireRole } = require('../middleware/auth');
+const { authenticate, requireRole, addOrgFilter } = require('../middleware/auth');
 
 // Multer: memoryStorage, PDF only, max 20MB
 const upload = multer({
@@ -81,7 +81,6 @@ router.get('/', authenticate, async (req, res) => {
         const status = req.query.status; // optional filter
         const meetingType = req.query.type; // optional filter
 
-        let whereClause = '';
         const params = [];
         const conditions = [];
 
@@ -93,10 +92,10 @@ router.get('/', authenticate, async (req, res) => {
             params.push(meetingType);
             conditions.push(`m.meeting_type = $${params.length}`);
         }
+        // 멀티테넌트 org_id 필터
+        addOrgFilter(conditions, params, req, 'm');
 
-        if (conditions.length > 0) {
-            whereClause = 'WHERE ' + conditions.join(' AND ');
-        }
+        const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
 
         // Count
         const countResult = await query(
@@ -171,10 +170,10 @@ router.post('/', authenticate, async (req, res) => {
         const type = allowedTypes.includes(meeting_type) ? meeting_type : 'regular';
 
         const result = await query(
-            `INSERT INTO meetings (title, description, meeting_type, meeting_date, location, created_by)
-             VALUES ($1, $2, $3, $4, $5, $6)
+            `INSERT INTO meetings (title, description, meeting_type, meeting_date, location, created_by, org_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING *`,
-            [title, description || null, type, meeting_date, location || null, req.user.userId]
+            [title, description || null, type, meeting_date, location || null, req.user.userId, req.user.orgId || null]
         );
 
         return res.status(201).json({

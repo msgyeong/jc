@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { query, transaction } = require('../config/database');
-const { authenticate, requireRole } = require('../middleware/auth');
+const { authenticate, requireRole, addOrgFilter } = require('../middleware/auth');
 const { sendPushToAll, sendPushToUser } = require('../utils/pushSender');
 const { createScheduledNotifications } = require('../cron/notification-scheduler');
 
@@ -26,11 +26,18 @@ router.get('/', authenticate, async (req, res) => {
 
         // Category filter (parameterized)
         const cat = category === 'notice' ? 'notice' : category === 'general' ? 'general' : null;
-        const categoryFilter = cat ? 'WHERE p.category = $1 AND p.deleted_at IS NULL' : 'WHERE p.deleted_at IS NULL';
-        const countParams = cat ? [cat] : [];
+
+        // Count query with org_id filter
+        const countConditions = ['p.deleted_at IS NULL'];
+        const countParams = [];
+        if (cat) {
+            countParams.push(cat);
+            countConditions.push(`p.category = $${countParams.length}`);
+        }
+        addOrgFilter(countConditions, countParams, req, 'p');
 
         const countResult = await query(
-            `SELECT COUNT(*) FROM posts p ${categoryFilter}`,
+            `SELECT COUNT(*) FROM posts p WHERE ${countConditions.join(' AND ')}`,
             countParams
         );
         const total = parseInt(countResult.rows[0].count);
@@ -40,18 +47,20 @@ router.get('/', authenticate, async (req, res) => {
             ? 'ORDER BY p.is_pinned DESC NULLS LAST, p.created_at DESC'
             : 'ORDER BY p.created_at DESC';
 
-        // Build parameterized query
+        // Build parameterized query with org_id filter
+        const listConditions = ['p.deleted_at IS NULL'];
         const listParams = [];
-        let paramIdx = 0;
         if (cat) {
             listParams.push(cat);
-            paramIdx = 1;
+            listConditions.push(`p.category = $${listParams.length}`);
         }
-        listParams.push(limit, offset, userId);
-        const limitIdx = paramIdx + 1;
-        const offsetIdx = paramIdx + 2;
-        const userIdx = paramIdx + 3;
-        const listCategoryFilter = cat ? `WHERE p.category = $1 AND p.deleted_at IS NULL` : 'WHERE p.deleted_at IS NULL';
+        addOrgFilter(listConditions, listParams, req, 'p');
+        listParams.push(userId);
+        const userIdx = listParams.length;
+        listParams.push(limit, offset);
+        const limitIdx = listParams.length - 1;
+        const offsetIdx = listParams.length;
+        const listWhereClause = `WHERE ${listConditions.join(' AND ')}`;
 
         let posts;
         try {
@@ -66,7 +75,7 @@ router.get('/', authenticate, async (req, res) => {
                  FROM posts p
                  LEFT JOIN users u ON p.author_id = u.id
                  LEFT JOIN read_status pr ON pr.post_id = p.id AND pr.user_id = $${userIdx}
-                 ${listCategoryFilter}
+                 ${listWhereClause}
                  ${orderClause}
                  LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
                 listParams
@@ -78,10 +87,17 @@ router.get('/', authenticate, async (req, res) => {
         } catch (e) {
             const msg = (e && e.message) || '';
             if (msg.includes('read_status') || msg.includes('schedule_id') || msg.includes('is_pinned')) {
-                const fallbackParams = cat ? [cat, limit, offset] : [limit, offset];
-                const fallbackFilter = cat ? 'WHERE p.category = $1' : '';
-                const fbLimitIdx = cat ? 2 : 1;
-                const fbOffsetIdx = cat ? 3 : 2;
+                const fbConditions = [];
+                const fallbackParams = [];
+                if (cat) {
+                    fallbackParams.push(cat);
+                    fbConditions.push(`p.category = $${fallbackParams.length}`);
+                }
+                addOrgFilter(fbConditions, fallbackParams, req, 'p');
+                fallbackParams.push(limit, offset);
+                const fbLimitIdx = fallbackParams.length - 1;
+                const fbOffsetIdx = fallbackParams.length;
+                const fbWhere = fbConditions.length > 0 ? 'WHERE ' + fbConditions.join(' AND ') : '';
                 const result = await query(
                     `SELECT
                         p.id, p.title, p.content, p.images, p.category,
@@ -90,7 +106,7 @@ router.get('/', authenticate, async (req, res) => {
                         u.id as author_id, u.name as author_name, u.profile_image as author_image
                      FROM posts p
                      LEFT JOIN users u ON p.author_id = u.id
-                     ${fallbackFilter}
+                     ${fbWhere}
                      ORDER BY p.created_at DESC
                      LIMIT $${fbLimitIdx} OFFSET $${fbOffsetIdx}`,
                     fallbackParams
@@ -484,10 +500,10 @@ router.post('/', authenticate, async (req, res) => {
                 const attendance_enabled = req.body.attendance_enabled || false;
                 const is_banner = req.body.is_banner || false;
                 const postResult = await client.query(
-                    `INSERT INTO posts (author_id, title, content, images, category, is_pinned, is_banner, attendance_enabled, created_at, updated_at)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+                    `INSERT INTO posts (author_id, title, content, images, category, is_pinned, is_banner, attendance_enabled, org_id, created_at, updated_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
                      RETURNING id`,
-                    [authorId, title, content, images, cat, pinned, is_banner, attendance_enabled]
+                    [authorId, title, content, images, cat, pinned, is_banner, attendance_enabled, req.user.orgId || null]
                 );
                 const postId = postResult.rows[0].id;
 
@@ -556,10 +572,10 @@ router.post('/', authenticate, async (req, res) => {
         const attendance_enabled = req.body.attendance_enabled || false;
         const is_banner = req.body.is_banner || false;
         const result = await query(
-            `INSERT INTO posts (author_id, title, content, images, category, is_pinned, is_banner, attendance_enabled, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+            `INSERT INTO posts (author_id, title, content, images, category, is_pinned, is_banner, attendance_enabled, org_id, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
              RETURNING id`,
-            [authorId, title, content, images, cat, pinned, is_banner, attendance_enabled]
+            [authorId, title, content, images, cat, pinned, is_banner, attendance_enabled, req.user.orgId || null]
         );
 
         const newPostId = result.rows[0].id;

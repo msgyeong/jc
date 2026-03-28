@@ -64,6 +64,7 @@ let currentJoinNumberFilter = '';
 let cachedPositions = [];
 let searchScope = 'my-org'; // 'my-org' | 'all-org'
 let searchTimeout = null;
+let crossOrgEnabled = false; // 타로컬 보기 토글
 
 // ========== 메인 화면 로드 ==========
 
@@ -79,7 +80,7 @@ async function loadMembersScreen() {
         const [favRes, groupsRes, membersRes, posRes] = await Promise.all([
             apiClient.request('/favorites').catch(() => ({ success: false })),
             apiClient.request('/member-groups').catch(() => ({ success: false })),
-            apiClient.request('/members?page=1&limit=50' + (currentIndustryFilter ? '&industry=' + currentIndustryFilter : '') + (currentPositionFilter ? '&position_id=' + currentPositionFilter : '') + (currentJoinNumberFilter ? '&join_number=' + currentJoinNumberFilter : '')).catch(() => ({ success: false })),
+            apiClient.request('/members?page=1&limit=50' + (currentIndustryFilter ? '&industry=' + currentIndustryFilter : '') + (currentPositionFilter ? '&position_id=' + currentPositionFilter : '') + (currentJoinNumberFilter ? '&join_number=' + currentJoinNumberFilter : '') + (crossOrgEnabled ? '&cross_org=true' : '')).catch(() => ({ success: false })),
             apiClient.request('/positions').catch(() => ({ success: false }))
         ]);
         cachedPositions = (posRes.success && posRes.data) ? posRes.data : [];
@@ -230,6 +231,10 @@ function renderAllMembersSection(members, count) {
                         <option value="">직책: 전체</option>
                         ${positionOptions}
                     </select>
+                    <label class="cross-org-toggle" style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:#6B7280;cursor:pointer;margin-left:4px">
+                        <input type="checkbox" id="cross-org-check" onchange="handleCrossOrgToggle(this.checked)" style="accent-color:#1F4FD8">
+                        <span>타로컬 보기</span>
+                    </label>
                 </div>
             </div>
             <div class="member-section-list">${cards || renderEmptyState('users', '조건에 맞는 회원이 없습니다')}</div>
@@ -310,6 +315,11 @@ function handlePositionFilterChange(value) {
     loadFilteredMembers();
 }
 
+function handleCrossOrgToggle(checked) {
+    crossOrgEnabled = checked;
+    loadFilteredMembers();
+}
+
 async function loadFilteredMembers() {
     const container = document.getElementById('member-list');
     if (!container) return;
@@ -320,6 +330,7 @@ async function loadFilteredMembers() {
         let url = '/members?page=1&limit=50';
         if (currentIndustryFilter) url += `&industry=${encodeURIComponent(currentIndustryFilter)}`;
         if (currentPositionFilter) url += `&position_id=${encodeURIComponent(currentPositionFilter)}`;
+        if (crossOrgEnabled) url += '&cross_org=true';
         const membersRes = await apiClient.request(url);
         const members = membersRes.members || [];
         const total = membersRes.total || members.length;

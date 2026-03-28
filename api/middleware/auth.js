@@ -86,7 +86,19 @@ function requireRole(allowedRoles) {
     };
 }
 
+/**
+ * 멀티테넌트 org_id 필터 헬퍼
+ * super_admin이 아닌 경우 조건 배열에 org_id 필터를 추가한다.
+ */
+function addOrgFilter(conditions, params, req, tableAlias) {
+    if (req.user.role !== 'super_admin' && req.user.orgId) {
+        params.push(req.user.orgId);
+        conditions.push(`${tableAlias}.org_id = $${params.length}`);
+    }
+}
+
 module.exports = {
     authenticate,
-    requireRole
+    requireRole,
+    addOrgFilter
 };

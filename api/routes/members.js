@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { query } = require('../config/database');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, addOrgFilter } = require('../middleware/auth');
 
 // 업종 카테고리 상수
 const INDUSTRY_CATEGORIES = [
@@ -35,6 +35,7 @@ router.get('/', authenticate, async (req, res) => {
         const positionId = req.query.position_id ? parseInt(req.query.position_id) : null;
         const joinNumber = req.query.join_number;
 
+        const crossOrg = req.query.cross_org === 'true';
         const conditions = ["u.status = 'active'", "u.role != 'super_admin'"];
         const params = [limit, offset, req.user.userId];
 
@@ -49,6 +50,10 @@ router.get('/', authenticate, async (req, res) => {
         if (joinNumber) {
             params.push(joinNumber);
             conditions.push(`u.join_number = $${params.length}`);
+        }
+        // 멀티테넌트: cross_org가 아니면 같은 조직만
+        if (!crossOrg) {
+            addOrgFilter(conditions, params, req, 'u');
         }
 
         const whereClause = conditions.join(' AND ');
@@ -66,6 +71,11 @@ router.get('/', authenticate, async (req, res) => {
         if (joinNumber) {
             countParams.push(joinNumber);
             countConditions.push(`join_number = $${countParams.length}`);
+        }
+        // count 쿼리에도 동일한 org_id 필터 (테이블 alias 없음이므로 직접 추가)
+        if (!crossOrg && req.user.role !== 'super_admin' && req.user.orgId) {
+            countParams.push(req.user.orgId);
+            countConditions.push(`org_id = $${countParams.length}`);
         }
         const countRes = await query(
             `SELECT COUNT(*) FROM users WHERE ${countConditions.join(' AND ')}`,
@@ -130,6 +140,7 @@ router.get('/search', authenticate, async (req, res) => {
     try {
         const searchQuery = (req.query.q || '').trim();
         const industry = req.query.industry;
+        const crossOrg = req.query.cross_org === 'true';
 
         if (!searchQuery && !industry) {
             return res.json({ success: true, members: [], total: 0 });
@@ -137,6 +148,11 @@ router.get('/search', authenticate, async (req, res) => {
 
         const conditions = ["u.status = 'active'", "u.role != 'super_admin'"];
         const params = [req.user.userId];
+
+        // 멀티테넌트: cross_org가 아니면 같은 조직만
+        if (!crossOrg) {
+            addOrgFilter(conditions, params, req, 'u');
+        }
 
         if (searchQuery) {
             if (isAllChosung(searchQuery)) {

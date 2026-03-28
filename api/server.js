@@ -445,6 +445,14 @@ app.listen(PORT, async () => {
         console.error('소모임 테이블 생성 오류 (무시):', clubErr.message);
     }
 
+    // 멀티테넌트: posts/schedules/meetings에 org_id 컬럼 추가
+    dbQuery("ALTER TABLE posts ADD COLUMN IF NOT EXISTS org_id INTEGER REFERENCES organizations(id)").catch(() => {});
+    dbQuery("ALTER TABLE schedules ADD COLUMN IF NOT EXISTS org_id INTEGER REFERENCES organizations(id)").catch(() => {});
+    dbQuery("ALTER TABLE meetings ADD COLUMN IF NOT EXISTS org_id INTEGER REFERENCES organizations(id)").catch(() => {});
+    dbQuery("CREATE INDEX IF NOT EXISTS idx_posts_org_id ON posts(org_id)").catch(() => {});
+    dbQuery("CREATE INDEX IF NOT EXISTS idx_schedules_org_id ON schedules(org_id)").catch(() => {});
+    dbQuery("CREATE INDEX IF NOT EXISTS idx_meetings_org_id ON meetings(org_id)").catch(() => {});
+
     // 리마인더 cron 시작
     startReminderCron();
     // 예약 알림 스케줄러 시작
@@ -452,6 +460,17 @@ app.listen(PORT, async () => {
     // 개인정보 자동 파기 스케줄러 (탈퇴 90일 후)
     startDataPurgeScheduler();
 });
+
+// org_id 백필 (서버 시작 8초 후)
+setTimeout(async () => {
+    const { query: dbQ } = require('./config/database');
+    try {
+        await dbQ("UPDATE posts SET org_id = (SELECT org_id FROM users WHERE users.id = posts.author_id) WHERE org_id IS NULL");
+        await dbQ("UPDATE schedules SET org_id = (SELECT org_id FROM users WHERE users.id = schedules.created_by) WHERE org_id IS NULL");
+        await dbQ("UPDATE meetings SET org_id = (SELECT org_id FROM users WHERE users.id = meetings.created_by) WHERE org_id IS NULL");
+        console.log('org_id 백필 완료');
+    } catch (e) { console.log('org_id 백필 스킵:', e.message); }
+}, 8000);
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

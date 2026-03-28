@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { query } = require('../config/database');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, addOrgFilter } = require('../middleware/auth');
 
 /**
  * [하위호환] GET /api/notices → /api/posts?category=notice 로 프록시
@@ -15,13 +15,26 @@ router.get('/', authenticate, async (req, res) => {
         const offset = (page - 1) * limit;
         const userId = req.user.userId;
 
+        // org_id 필터 적용
+        const countConditions = ["p.category = 'notice'"];
+        const countParams = [];
+        addOrgFilter(countConditions, countParams, req, 'p');
         const countResult = await query(
-            "SELECT COUNT(*) FROM posts WHERE category = 'notice'"
+            `SELECT COUNT(*) FROM posts p WHERE ${countConditions.join(' AND ')}`,
+            countParams
         );
         const total = parseInt(countResult.rows[0].count);
 
         let result;
         try {
+            const listConditions = ["p.category = 'notice'"];
+            const listParams = [];
+            addOrgFilter(listConditions, listParams, req, 'p');
+            listParams.push(userId);
+            const userIdx = listParams.length;
+            listParams.push(limit, offset);
+            const limitIdx = listParams.length - 1;
+            const offsetIdx = listParams.length;
             result = await query(
                 `SELECT
                     p.id, p.title, p.content, p.images, p.category,
@@ -31,13 +44,19 @@ router.get('/', authenticate, async (req, res) => {
                     pr.read_at as read_at
                  FROM posts p
                  LEFT JOIN users u ON p.author_id = u.id
-                 LEFT JOIN read_status pr ON pr.post_id = p.id AND pr.user_id = $3
-                 WHERE p.category = 'notice'
+                 LEFT JOIN read_status pr ON pr.post_id = p.id AND pr.user_id = $${userIdx}
+                 WHERE ${listConditions.join(' AND ')}
                  ORDER BY p.is_pinned DESC NULLS LAST, p.created_at DESC
-                 LIMIT $1 OFFSET $2`,
-                [limit, offset, userId]
+                 LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+                listParams
             );
         } catch (e) {
+            const fbConditions = ["p.category = 'notice'"];
+            const fbParams = [];
+            addOrgFilter(fbConditions, fbParams, req, 'p');
+            fbParams.push(limit, offset);
+            const fbLimitIdx = fbParams.length - 1;
+            const fbOffsetIdx = fbParams.length;
             result = await query(
                 `SELECT
                     p.id, p.title, p.content, p.images, p.category,
@@ -46,10 +65,10 @@ router.get('/', authenticate, async (req, res) => {
                     u.id as author_id, u.name as author_name, u.profile_image as author_image
                  FROM posts p
                  LEFT JOIN users u ON p.author_id = u.id
-                 WHERE p.category = 'notice'
+                 WHERE ${fbConditions.join(' AND ')}
                  ORDER BY p.is_pinned DESC NULLS LAST, p.created_at DESC
-                 LIMIT $1 OFFSET $2`,
-                [limit, offset]
+                 LIMIT $${fbLimitIdx} OFFSET $${fbOffsetIdx}`,
+                fbParams
             );
         }
 
@@ -140,10 +159,10 @@ router.post('/', authenticate, async (req, res) => {
         }
 
         const result = await query(
-            `INSERT INTO posts (author_id, title, content, category, is_pinned, created_at, updated_at)
-             VALUES ($1, $2, $3, 'notice', $4, NOW(), NOW())
+            `INSERT INTO posts (author_id, title, content, category, is_pinned, org_id, created_at, updated_at)
+             VALUES ($1, $2, $3, 'notice', $4, $5, NOW(), NOW())
              RETURNING id`,
-            [authorId, title, content, is_pinned || false]
+            [authorId, title, content, is_pinned || false, req.user.orgId || null]
         );
 
         res.status(201).json({

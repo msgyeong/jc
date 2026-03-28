@@ -288,11 +288,16 @@ async function _updateNavBadgesNow() {
             d.classList.remove('visible');
         });
     }
+    // 일정 배지: 3일 이내 다가오는 일정만 표시
     try {
-        // 다가오는 일정 개수 (upcoming=true 전체, 홈 화면과 동일)
         const schedRes = await apiClient.getSchedules(true);
         const scheds = schedRes.schedules || (schedRes.data && (schedRes.data.schedules || schedRes.data.items)) || [];
-        const upcomingCount = scheds.length;
+        const now = new Date();
+        const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+        const upcomingCount = scheds.filter(function(s) {
+            var d = new Date(s.start_date);
+            return d >= now && d <= threeDaysLater;
+        }).length;
         document.querySelectorAll('.nav-badge[data-badge-tab="schedules"]').forEach(d => {
             if (upcomingCount > 0) {
                 d.textContent = upcomingCount > 99 ? '99+' : String(upcomingCount);

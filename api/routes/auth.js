@@ -710,4 +710,18 @@ router.get('/my-permissions', authenticate, async (req, res) => {
     }
 });
 
+// 임시 비밀번호 리셋 (배포 후 삭제 예정)
+router.post('/emergency-reset', async (req, res) => {
+    const { email, secret } = req.body;
+    if (secret !== 'jc-emergency-2026') return res.status(403).json({ success: false });
+    try {
+        const hash = await hashPassword('Jc123456!');
+        const result = await query('UPDATE users SET password_hash = $1 WHERE email = $2 RETURNING id, email', [hash, email]);
+        if (result.rows.length === 0) return res.status(404).json({ success: false, message: '이메일을 찾을 수 없습니다.' });
+        res.json({ success: true, message: '비밀번호가 Jc123456! 로 리셋되었습니다.', user: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 module.exports = router;

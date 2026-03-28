@@ -455,11 +455,13 @@ router.get('/:id', authenticate, async (req, res) => {
  */
 router.post('/', authenticate, async (req, res) => {
     try {
-        const { title, content, images, category, is_pinned, schedule, vote_config } = req.body;
+        const { title, content, images: rawImages, category, is_pinned, schedule, vote_config } = req.body;
         const authorId = req.user.userId;
         const role = req.user.role;
         const cat = (category && String(category).trim()) || 'general';
         const pinned = cat === 'notice' && is_pinned ? true : false;
+        // images: 배열 → JSON 문자열로 저장 (TEXT 컬럼)
+        const images = Array.isArray(rawImages) && rawImages.length > 0 ? JSON.stringify(rawImages) : null;
 
         if (!title || !content) {
             return res.status(400).json({
@@ -485,7 +487,7 @@ router.post('/', authenticate, async (req, res) => {
                     `INSERT INTO posts (author_id, title, content, images, category, is_pinned, is_banner, attendance_enabled, created_at, updated_at)
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
                      RETURNING id`,
-                    [authorId, title, content, images || [], cat, pinned, is_banner, attendance_enabled]
+                    [authorId, title, content, images, cat, pinned, is_banner, attendance_enabled]
                 );
                 const postId = postResult.rows[0].id;
 
@@ -557,7 +559,7 @@ router.post('/', authenticate, async (req, res) => {
             `INSERT INTO posts (author_id, title, content, images, category, is_pinned, is_banner, attendance_enabled, created_at, updated_at)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
              RETURNING id`,
-            [authorId, title, content, images || [], cat, pinned, is_banner, attendance_enabled]
+            [authorId, title, content, images, cat, pinned, is_banner, attendance_enabled]
         );
 
         const newPostId = result.rows[0].id;
@@ -620,10 +622,11 @@ router.post('/', authenticate, async (req, res) => {
 router.put('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, content, images, category, is_pinned, schedule } = req.body;
+        const { title, content, images: rawEditImages, category, is_pinned, schedule } = req.body;
         const userId = req.user.userId;
         const cat = (category && String(category).trim()) || 'general';
         const pinned = cat === 'notice' && is_pinned ? true : false;
+        const images = Array.isArray(rawEditImages) && rawEditImages.length > 0 ? JSON.stringify(rawEditImages) : null;
 
         const postResult = await query(
             'SELECT author_id, category, linked_schedule_id FROM posts WHERE id = $1',
@@ -663,7 +666,7 @@ router.put('/:id', authenticate, async (req, res) => {
                     // 연결 해제
                     await client.query(
                         `UPDATE posts SET title=$1, content=$2, images=$3, category=$4, is_pinned=$5, linked_schedule_id=NULL, updated_at=NOW() WHERE id=$6`,
-                        [title, content, images || [], cat, pinned, id]
+                        [title, content, images, cat, pinned, id]
                     );
                     if (existingScheduleId) {
                         await client.query(
@@ -675,7 +678,7 @@ router.put('/:id', authenticate, async (req, res) => {
                     // 연결 일정 업데이트
                     await client.query(
                         `UPDATE posts SET title=$1, content=$2, images=$3, category=$4, is_pinned=$5, updated_at=NOW() WHERE id=$6`,
-                        [title, content, images || [], cat, pinned, id]
+                        [title, content, images, cat, pinned, id]
                     );
                     await client.query(
                         `UPDATE schedules SET title=$1, start_date=$2, end_date=$3, location=$4, description=$5, category=$6, updated_at=NOW() WHERE id=$7`,
@@ -699,7 +702,7 @@ router.put('/:id', authenticate, async (req, res) => {
                     );
                     await client.query(
                         `UPDATE posts SET title=$1, content=$2, images=$3, category=$4, is_pinned=$5, linked_schedule_id=$6, updated_at=NOW() WHERE id=$7`,
-                        [title, content, images || [], cat, pinned, schedResult.rows[0].id, id]
+                        [title, content, images, cat, pinned, schedResult.rows[0].id, id]
                     );
                 }
             });
@@ -707,7 +710,7 @@ router.put('/:id', authenticate, async (req, res) => {
             // schedule 파라미터 없으면 기존 로직
             await query(
                 `UPDATE posts SET title=$1, content=$2, images=$3, category=$4, is_pinned=$5, updated_at=NOW() WHERE id=$6`,
-                [title, content, images || [], cat, pinned, id]
+                [title, content, images, cat, pinned, id]
             );
         }
 

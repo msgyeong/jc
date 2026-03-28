@@ -5475,6 +5475,10 @@ a.sns-badge:hover {
     background: #DBEAFE;
     color: #2563EB;
 }
+.notification-icon--club {
+    background: #FEF3C7;
+    color: #D97706;
+}
 
 .notification-icon--reminder {
     background: #FEF3C7;

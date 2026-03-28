@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JC 회원관리 앱 가이드</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; color: #1a1a2e; line-height: 1.7; background: #fff; }
+
+@page { size: A4; margin: 0; }
+@media print {
+    .page { page-break-after: always; }
+    .page:last-child { page-break-after: avoid; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+.page {
+    width: 210mm; min-height: 297mm;
+    margin: 0 auto; padding: 0;
+    position: relative; overflow: hidden;
+}
+
+/* ==================== 표지 ==================== */
+.cover {
+    background: linear-gradient(135deg, #1E3A5F 0%, #2D5F8A 40%, #4A90C4 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; color: #fff;
+}
+.cover-badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 30px;
+    padding: 8px 24px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    margin-bottom: 40px;
+}
+.cover h1 {
+    font-size: 48px; font-weight: 900;
+    margin-bottom: 16px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+.cover h2 {
+    font-size: 22px; font-weight: 300;
+    opacity: 0.9; margin-bottom: 60px;
+}
+.cover-features {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    justify-content: center; max-width: 600px;
+}
+.cover-feature {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    width: 160px; text-align: center;
+}
+.cover-feature-icon { font-size: 28px; margin-bottom: 8px; }
+.cover-feature-label { font-size: 13px; font-weight: 500; }
+.cover-footer {
+    position: absolute; bottom: 40px;
+    font-size: 13px; opacity: 0.6;
+}
+
+/* ==================== 내용 페이지 ==================== */
+.content-page { padding: 50px 60px; }
+.page-number {
+    position: absolute; bottom: 30px; right: 60px;
+    font-size: 12px; color: #999;
+}
+.section-badge {
+    display: inline-block;
+    background: #1E3A5F; color: #fff;
+    font-size: 11px; font-weight: 700;
+    padding: 4px 14px; border-radius: 20px;
+    margin-bottom: 12px; letter-spacing: 1px;
+}
+.section-title {
+    font-size: 28px; font-weight: 800;
+    color: #1E3A5F; margin-bottom: 8px;
+    line-height: 1.3;
+}
+.section-subtitle {
+    font-size: 15px; color: #6B7280;
+    margin-bottom: 30px; line-height: 1.6;
+}
+
+/* 기능 카드 */
+.feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px; margin-bottom: 30px;
+}
+.feature-card {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 24px;
+}
+.feature-card-icon {
+    width: 44px; height: 44px;
+    background: #1E3A5F;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px; font-size: 22px;
+}
+.feature-card h3 {
+    font-size: 16px; font-weight: 700;
+    color: #1E3A5F; margin-bottom: 6px;
+}
+.feature-card p {
+    font-size: 13px; color: #64748B;
+    line-height: 1.6;
+}
+
+/* 스크린샷 영역 */
+.screenshot-area {
+    background: #F1F5F9;
+    border: 2px dashed #CBD5E1;
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    margin: 20px 0;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.screenshot-area.has-img {
+    padding: 0; border: none; background: none;
+}
+.screenshot-area img {
+    max-width: 100%; border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+.screenshot-label {
+    font-size: 13px; color: #94A3B8;
+    margin-top: 8px;
+}
+.screenshot-row {
+    display: flex; gap: 16px;
+    margin: 20px 0;
+}
+.screenshot-row .screenshot-area {
+    flex: 1; min-height: 200px;
+}
+
+/* 순서 리스트 */
+.step-list { list-style: none; padding: 0; margin: 20px 0; }
+.step-item {
+    display: flex; gap: 16px;
+    margin-bottom: 16px; align-items: flex-start;
+}
+.step-num {
+    width: 32px; height: 32px;
+    background: #1E3A5F; color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+    flex-shrink: 0;
+}
+.step-text { flex: 1; }
+.step-text h4 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+.step-text p { font-size: 13px; color: #64748B; }
+
+/* 하이라이트 박스 */
+.highlight-box {
+    background: linear-gradient(135deg, #EFF6FF 0%, #F0F4FF 100%);
+    border-left: 4px solid #1E3A5F;
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+    margin: 20px 0;
+}
+.highlight-box h4 { font-size: 14px; color: #1E3A5F; font-weight: 700; margin-bottom: 4px; }
+.highlight-box p { font-size: 13px; color: #475569; }
+
+/* 목차 */
+.toc-list { list-style: none; padding: 0; }
+.toc-item {
+    display: flex; justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid #F1F5F9;
+    font-size: 15px;
+}
+.toc-item:last-child { border-bottom: none; }
+.toc-num { color: #1E3A5F; font-weight: 700; width: 30px; }
+.toc-label { flex: 1; font-weight: 500; }
+.toc-page { color: #94A3B8; font-size: 13px; }
+
+/* 비교 테이블 */
+.compare-table {
+    width: 100%; border-collapse: collapse;
+    margin: 20px 0; font-size: 13px;
+}
+.compare-table th {
+    background: #1E3A5F; color: #fff;
+    padding: 12px 16px; text-align: left;
+    font-weight: 600;
+}
+.compare-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid #E2E8F0;
+}
+.compare-table tr:nth-child(even) td { background: #F8FAFC; }
+
+/* 뒷표지 */
+.back-cover {
+    background: #1E3A5F;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; color: #fff;
+}
+.back-cover h2 { font-size: 32px; font-weight: 700; margin-bottom: 16px; }
+.back-cover p { font-size: 15px; opacity: 0.7; margin-bottom: 8px; }
+.qr-placeholder {
+    width: 150px; height: 150px;
+    background: #fff; border-radius: 12px;
+    margin: 30px 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #1E3A5F; font-size: 13px; font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== 표지 ==================== -->
+<div class="page cover">
+    <div class="cover-badge">MEMBER MANAGEMENT APP</div>
+    <h1>JC 회원관리 앱</h1>
+    <h2>우리 로컬의 모든 것을 한 손에</h2>
+    <div class="cover-features">
+        <div class="cover-feature">
+            <div class="cover-feature-icon">📋</div>
+            <div class="cover-feature-label">공지 & 게시판</div>
+        </div>
+        <div class="cover-feature">
+            <div class="cover-feature-icon">📅</div>
+            <div class="cover-feature-label">일정 관리</div>
+        </div>
+        <div class="cover-feature">
+            <div class="cover-feature-icon">👥</div>
+            <div class="cover-feature-label">회원 정보</div>
+        </div>
+        <div class="cover-feature">
+            <div class="cover-feature-icon">🗺️</div>
+            <div class="cover-feature-label">JC 지도</div>
+        </div>
+        <div class="cover-feature">
+            <div class="cover-feature-icon">💬</div>
+            <div class="cover-feature-label">소모임</div>
+        </div>
+        <div class="cover-feature">
+            <div class="cover-feature-icon">📊</div>
+            <div class="cover-feature-label">회의 관리</div>
+        </div>
+    </div>
+    <div class="cover-footer">2026 JC Korea &middot; 회원 전용 커뮤니티 앱</div>
+</div>
+
+<!-- ==================== 목차 ==================== -->
+<div class="page content-page">
+    <div class="section-badge">CONTENTS</div>
+    <div class="section-title">목차</div>
+    <div class="section-subtitle">앱의 주요 기능을 한눈에 확인하세요</div>
+
+    <ul class="toc-list">
+        <li class="toc-item"><span class="toc-num">01</span><span class="toc-label">앱 시작하기 (가입 & 로그인)</span><span class="toc-page">3</span></li>
+        <li class="toc-item"><span class="toc-num">02</span><span class="toc-label">홈 화면 둘러보기</span><span class="toc-page">4</span></li>
+        <li class="toc-item"><span class="toc-num">03</span><span class="toc-label">게시판 (공지 & 일반)</span><span class="toc-page">5</span></li>
+        <li class="toc-item"><span class="toc-num">04</span><span class="toc-label">일정 & 캘린더</span><span class="toc-page">6</span></li>
+        <li class="toc-item"><span class="toc-num">05</span><span class="toc-label">회원 목록 & 프로필</span><span class="toc-page">7</span></li>
+        <li class="toc-item"><span class="toc-num">06</span><span class="toc-label">회의 관리 & 회의록</span><span class="toc-page">8</span></li>
+        <li class="toc-item"><span class="toc-num">07</span><span class="toc-label">소모임</span><span class="toc-page">9</span></li>
+        <li class="toc-item"><span class="toc-num">08</span><span class="toc-label">JC 지도</span><span class="toc-page">10</span></li>
+        <li class="toc-item"><span class="toc-num">09</span><span class="toc-label">로컬조직도 & 기타 메뉴</span><span class="toc-page">11</span></li>
+        <li class="toc-item"><span class="toc-num">10</span><span class="toc-label">내 프로필 & 설정</span><span class="toc-page">12</span></li>
+    </ul>
+
+    <div class="highlight-box">
+        <h4>앱 접속 방법</h4>
+        <p>모바일 브라우저(크롬/사파리)에서 앱 URL에 접속하세요.<br>
+        홈 화면에 추가하면 앱처럼 사용할 수 있습니다.</p>
+    </div>
+    <span class="page-number">2</span>
+</div>
+
+<!-- ==================== 01. 가입 & 로그인 ==================== -->
+<div class="page content-page">
+    <div class="section-badge">01</div>
+    <div class="section-title">앱 시작하기</div>
+    <div class="section-subtitle">회원가입 후 관리자 승인을 받으면 모든 기능을 이용할 수 있습니다.</div>
+
+    <ol class="step-list">
+        <li class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-text">
+                <h4>소속 로컬 선택</h4>
+                <p>회원가입 시 소속 로컬(지부)을 선택합니다. 해당 로컬의 데이터만 볼 수 있습니다.</p>
+            </div>
+        </li>
+        <li class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-text">
+                <h4>기본 정보 입력</h4>
+                <p>이메일, 비밀번호, 이름, 연락처, 주소, 직장 정보 등을 입력합니다.</p>
+            </div>
+        </li>
+        <li class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-text">
+                <h4>관리자 승인 대기</h4>
+                <p>가입 후 로컬 관리자가 승인하면 앱 이용이 가능합니다.</p>
+            </div>
+        </li>
+        <li class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-text">
+                <h4>로그인</h4>
+                <p>승인 후 이메일과 비밀번호로 로그인합니다. "로그인 유지"를 체크하면 자동 로그인됩니다.</p>
+            </div>
+        </li>
+    </ol>
+
+    <div class="screenshot-row">
+        <div class="screenshot-area">
+            <div style="font-size:40px;margin-bottom:8px">📱</div>
+            <div class="screenshot-label">회원가입 화면 스크린샷</div>
+        </div>
+        <div class="screenshot-area">
+            <div style="font-size:40px;margin-bottom:8px">🔐</div>
+            <div class="screenshot-label">로그인 화면 스크린샷</div>
+        </div>
+    </div>
+    <span class="page-number">3</span>
+</div>
+
+<!-- ==================== 02. 홈 화면 ==================== -->
+<div class="page content-page">
+    <div class="section-badge">02</div>
+    <div class="section-title">홈 화면</div>
+    <div class="section-subtitle">로그인하면 가장 먼저 보이는 메인 화면입니다. 최신 공지와 다가오는 일정을 한눈에 확인하세요.</div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-icon">🎠</div>
+            <h3>배너 캐러셀</h3>
+            <p>중요 공지, 다가오는 일정, 광고 배너가 자동으로 슬라이드됩니다. 좌우 스와이프로 넘길 수 있습니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">📢</div>
+            <h3>공지사항 요약</h3>
+            <p>최신 공지사항이 카드로 표시됩니다. "전체 보기"를 누르면 게시판으로 이동합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">📅</div>
+            <h3>다가오는 일정</h3>
+            <p>가까운 일정이 날짜별로 표시됩니다. 탭하면 일정 상세로 이동합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">☰</div>
+            <h3>사이드 메뉴</h3>
+            <p>좌측 상단 메뉴 버튼(≡)을 누르면 로컬조직도, 소모임, JC 지도 등 추가 메뉴에 접근합니다.</p>
+        </div>
+    </div>
+
+    <div class="screenshot-area">
+        <div style="font-size:40px;margin-bottom:8px">🏠</div>
+        <div class="screenshot-label">홈 화면 스크린샷 (배너 + 공지 + 일정 요약)</div>
+    </div>
+    <span class="page-number">4</span>
+</div>
+
+<!-- ==================== 03. 게시판 ==================== -->
+<div class="page content-page">
+    <div class="section-badge">03</div>
+    <div class="section-title">게시판</div>
+    <div class="section-subtitle">공지 게시판과 일반 게시판으로 나뉘어 소식을 나눌 수 있습니다.</div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-icon">📌</div>
+            <h3>공지 게시판</h3>
+            <p>관리자가 작성하는 공지사항입니다. 중요 공지는 상단에 고정됩니다. 새 글에는 N 배지가 표시됩니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">✏️</div>
+            <h3>일반 게시판</h3>
+            <p>모든 회원이 자유롭게 글을 작성할 수 있습니다. 이미지 첨부(최대 8장), 댓글, 공감이 가능합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">📎</div>
+            <h3>일정 연결</h3>
+            <p>게시글 작성 시 일정을 함께 등록할 수 있습니다. 참석 여부 확인도 게시글에서 바로 가능합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">🔍</div>
+            <h3>검색 기능</h3>
+            <p>게시판 상단 검색 아이콘으로 제목/작성자로 게시글을 검색할 수 있습니다.</p>
+        </div>
+    </div>
+
+    <div class="screenshot-row">
+        <div class="screenshot-area">
+            <div style="font-size:36px;margin-bottom:8px">📋</div>
+            <div class="screenshot-label">게시판 목록</div>
+        </div>
+        <div class="screenshot-area">
+            <div style="font-size:36px;margin-bottom:8px">📝</div>
+            <div class="screenshot-label">게시글 상세 + 댓글</div>
+        </div>
+    </div>
+    <span class="page-number">5</span>
+</div>
+
+<!-- ==================== 04. 일정 ==================== -->
+<div class="page content-page">
+    <div class="section-badge">04</div>
+    <div class="section-title">일정 & 캘린더</div>
+    <div class="section-subtitle">로컬의 모든 일정을 캘린더에서 한눈에 확인하고, 참석 여부를 등록하세요.</div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-icon">📆</div>
+            <h3>월별 캘린더</h3>
+            <p>이번 달 일정이 달력에 색상별 점으로 표시됩니다. 날짜를 탭하면 해당 날짜의 일정 목록이 나옵니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">✅</div>
+            <h3>참석 여부</h3>
+            <p>일정 상세에서 참석/불참을 등록할 수 있습니다. 관리자는 참석 현황과 미응답자 목록을 확인합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">🏷️</div>
+            <h3>카테고리 분류</h3>
+            <p>행사, 회의, 교육, 휴일, 기타로 구분됩니다. 캘린더에 색상별로 표시됩니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">📊</div>
+            <h3>참석 통계</h3>
+            <p>로컬 회원 기준 참석률이 막대 그래프로 표시됩니다. CSV 다운로드도 가능합니다.</p>
+        </div>
+    </div>
+
+    <div class="screenshot-area">
+        <div style="font-size:40px;margin-bottom:8px">📅</div>
+        <div class="screenshot-label">캘린더 + 일정 상세 + 참석 현황 스크린샷</div>
+    </div>
+    <span class="page-number">6</span>
+</div>
+
+<!-- ==================== 05. 회원 ==================== -->
+<div class="page content-page">
+    <div class="section-badge">05</div>
+    <div class="section-title">회원 목록 & 프로필</div>
+    <div class="section-subtitle">우리 로컬 회원들의 정보를 조회하고, 즐겨찾기로 자주 연락하는 회원을 관리하세요.</div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-icon">👤</div>
+            <h3>회원 목록</h3>
+            <p>소속 로컬 회원이 기본으로 표시됩니다. 업종/직책 필터로 원하는 회원을 빠르게 찾을 수 있습니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">⭐</div>
+            <h3>즐겨찾기</h3>
+            <p>자주 연락하는 회원을 별표로 즐겨찾기 등록하면 상단에 고정됩니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">📞</div>
+            <h3>바로 전화</h3>
+            <p>회원 카드의 전화 아이콘을 탭하면 바로 전화를 걸 수 있습니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">🌐</div>
+            <h3>타 로컬 보기</h3>
+            <p>"타로컬 보기" 체크박스를 켜면 전국 JC 회원을 검색할 수 있습니다.</p>
+        </div>
+    </div>
+
+    <div class="screenshot-row">
+        <div class="screenshot-area">
+            <div style="font-size:36px;margin-bottom:8px">👥</div>
+            <div class="screenshot-label">회원 목록</div>
+        </div>
+        <div class="screenshot-area">
+            <div style="font-size:36px;margin-bottom:8px">👤</div>
+            <div class="screenshot-label">회원 프로필 상세</div>
+        </div>
+    </div>
+    <span class="page-number">7</span>
+</div>
+
+<!-- ==================== 06. 회의 ==================== -->
+<div class="page content-page">
+    <div class="section-badge">06</div>
+    <div class="section-title">회의 관리</div>
+    <div class="section-subtitle">회의 일정 등록부터 참석 확인, 안건 투표, 회의록 관리까지 한 곳에서.</div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-icon">🏛️</div>
+            <h3>회의 등록</h3>
+            <p>관리자가 회의를 생성하고, 회원들에게 참석 확인을 요청합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">🗳️</div>
+            <h3>안건 투표</h3>
+            <p>회의 안건에 대해 찬성/반대/기권 투표를 실시간으로 진행합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">📄</div>
+            <h3>회의록 PDF</h3>
+            <p>회의록을 PDF로 업로드하고, 회원들이 바로 열람할 수 있습니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">📊</div>
+            <h3>참석 관리</h3>
+            <p>참석/불참/미응답 현황을 실시간으로 확인합니다.</p>
+        </div>
+    </div>
+
+    <div class="screenshot-area">
+        <div style="font-size:40px;margin-bottom:8px">🏛️</div>
+        <div class="screenshot-label">회의 상세 + 투표 + 회의록 스크린샷</div>
+    </div>
+    <span class="page-number">8</span>
+</div>
+
+<!-- ==================== 07. 소모임 ==================== -->
+<div class="page content-page">
+    <div class="section-badge">07</div>
+    <div class="section-title">소모임</div>
+    <div class="section-subtitle">관심사가 같은 회원들끼리 소모임을 만들어 게시판과 일정을 운영하세요. 타 로컬 회원도 초대 가능!</div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-icon">🤝</div>
+            <h3>소모임 만들기</h3>
+            <p>누구나 소모임을 만들 수 있습니다. 이름과 소개를 입력하면 바로 생성됩니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">✉️</div>
+            <h3>멤버 초대</h3>
+            <p>우리 로컬뿐 아니라 타 로컬 회원도 초대할 수 있습니다. 초대 알림이 전송됩니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">📋</div>
+            <h3>전용 게시판</h3>
+            <p>소모임 전용 게시판에서 자유롭게 소통합니다. 이미지 첨부, 댓글이 가능합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">📅</div>
+            <h3>전용 일정</h3>
+            <p>소모임만의 일정을 등록할 수 있습니다. 메인 캘린더에도 보라색으로 통합 표시됩니다.</p>
+        </div>
+    </div>
+
+    <div class="screenshot-area">
+        <div style="font-size:40px;margin-bottom:8px">💬</div>
+        <div class="screenshot-label">소모임 목록 + 상세 + 게시판/일정 스크린샷</div>
+    </div>
+    <span class="page-number">9</span>
+</div>
+
+<!-- ==================== 08. JC 지도 ==================== -->
+<div class="page content-page">
+    <div class="section-badge">08</div>
+    <div class="section-title">JC 지도</div>
+    <div class="section-subtitle">회원들의 사업장 위치를 지도에서 확인하세요. 터치하면 프로필로 이동합니다.</div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-icon">📍</div>
+            <h3>사업장 마커</h3>
+            <p>회원의 회사 주소가 지도에 마커로 표시됩니다. 마커를 탭하면 이름, 회사, 업종, 연락처가 팝업됩니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">🔍</div>
+            <h3>통합 검색</h3>
+            <p>회원명, 업종, 로컬명으로 검색하면 해당 마커로 자동 이동합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">🌏</div>
+            <h3>전국 보기</h3>
+            <p>"모두보기" 체크박스를 켜면 전국 JC 회원의 사업장을 한눈에 볼 수 있습니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">📱</div>
+            <h3>내 위치</h3>
+            <p>"내 위치" 버튼으로 현재 위치를 확인하고, 주변 회원 사업장을 탐색합니다.</p>
+        </div>
+    </div>
+
+    <div class="screenshot-area">
+        <div style="font-size:40px;margin-bottom:8px">🗺️</div>
+        <div class="screenshot-label">JC 지도 스크린샷 (마커 + 검색 + 팝업)</div>
+    </div>
+    <span class="page-number">10</span>
+</div>
+
+<!-- ==================== 09. 조직도 & 기타 ==================== -->
+<div class="page content-page">
+    <div class="section-badge">09</div>
+    <div class="section-title">로컬조직도 & 기타 메뉴</div>
+    <div class="section-subtitle">사이드 메뉴(≡)에서 접근할 수 있는 추가 기능들입니다.</div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-icon">🏢</div>
+            <h3>로컬조직도</h3>
+            <p>우리 로컬의 조직 구조를 한눈에 확인합니다. 회장단, 운영위원회 등 그룹별 인원 배치를 볼 수 있습니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">🎯</div>
+            <h3>JC 비전 & 목표</h3>
+            <p>JC의 비전과 목표를 확인합니다. 전국 공통 콘텐츠입니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">📜</div>
+            <h3>정관</h3>
+            <p>로컬의 정관을 열람합니다. 파일 다운로드도 가능합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">🌐</div>
+            <h3>포털 (타 로컬 방문)</h3>
+            <p>다른 로컬의 공개 정보를 둘러볼 수 있습니다.</p>
+        </div>
+    </div>
+
+    <div class="highlight-box">
+        <h4>개인정보처리방침</h4>
+        <p>사이드 메뉴 하단에서 개인정보처리방침을 확인할 수 있습니다. 회원 정보는 안전하게 관리됩니다.</p>
+    </div>
+    <span class="page-number">11</span>
+</div>
+
+<!-- ==================== 10. 프로필 & 설정 ==================== -->
+<div class="page content-page">
+    <div class="section-badge">10</div>
+    <div class="section-title">내 프로필 & 설정</div>
+    <div class="section-subtitle">내 정보를 관리하고, 앱 설정을 변경하세요.</div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-icon">👤</div>
+            <h3>프로필 수정</h3>
+            <p>이름, 연락처, 주소, 직장 정보를 수정합니다. 프로필 사진도 변경 가능합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">🔔</div>
+            <h3>알림 설정</h3>
+            <p>푸시 알림 수신 여부를 설정합니다. 공지, 일정, 게시글 알림을 개별 관리합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">🔒</div>
+            <h3>비밀번호 변경</h3>
+            <p>현재 비밀번호 확인 후 새 비밀번호로 변경합니다.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-icon">📱</div>
+            <h3>전화번호 공개 범위</h3>
+            <p>내 연락처를 같은 로컬 / 같은 지구 / 전체 중 선택하여 공개합니다.</p>
+        </div>
+    </div>
+
+    <div class="screenshot-row">
+        <div class="screenshot-area">
+            <div style="font-size:36px;margin-bottom:8px">👤</div>
+            <div class="screenshot-label">내 프로필</div>
+        </div>
+        <div class="screenshot-area">
+            <div style="font-size:36px;margin-bottom:8px">⚙️</div>
+            <div class="screenshot-label">설정 화면</div>
+        </div>
+    </div>
+    <span class="page-number">12</span>
+</div>
+
+<!-- ==================== 뒷표지 ==================== -->
+<div class="page back-cover">
+    <h2>JC 회원관리 앱</h2>
+    <p>우리 로컬의 소통과 관리를 더 스마트하게</p>
+    <p style="margin-top:8px;font-size:13px;opacity:0.5">문의사항은 로컬 관리자에게 연락하세요</p>
+
+    <div class="qr-placeholder">
+        QR코드<br>삽입 위치
+    </div>
+
+    <p style="font-size:12px;opacity:0.4;margin-top:20px">&copy; 2026 JC Korea. All rights reserved.</p>
+</div>
+
+</body>
+</html>

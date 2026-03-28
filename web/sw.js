@@ -1,6 +1,6 @@
 // 영등포 JC — Service Worker (Push Notifications + Offline Cache)
 
-var CACHE_NAME = 'jc-v2';
+var CACHE_NAME = 'jc-v3';
 var STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -54,18 +54,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 정적 리소스: 캐시 우선 + 백그라운드 업데이트
+  // 정적 리소스: 캐시 우선 + 백그라운드 업데이트 (stale-while-revalidate)
   if (url.origin === self.location.origin) {
     event.respondWith(
       caches.match(event.request).then(cached => {
         const fetchPromise = fetch(event.request).then(response => {
           if (response.ok) {
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
           }
           return response;
-        }).catch(() => cached);
+        }).catch(() => {
+          return cached;
+        });
 
-        return cached || fetchPromise;
+        return cached ? cached.clone() : fetchPromise;
       })
     );
     return;
@@ -86,11 +89,14 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  // data.data.url (서버 payload 구조) 또는 data.url (직접 전달) 모두 지원
+  var targetUrl = (data.data && data.data.url) ? data.data.url : (data.url || '/');
+
   const options = {
     body: data.body,
     icon: '/image/icon-192.png',
     badge: '/image/badge-72.png',
-    data: { url: data.url || '/' },
+    data: { url: targetUrl },
     vibrate: [100, 50, 100],
     tag: data.tag || 'jc-notification',
     renotify: true

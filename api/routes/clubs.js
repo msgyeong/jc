@@ -262,15 +262,27 @@ router.post('/:clubId/invite', authenticate, async (req, res) => {
                     [clubId, targetId, userId]
                 );
                 if (result.rows.length > 0) {
+                    // 새 초대 성공
                     invited++;
-                    // push 알림 발송
-                    sendPushToUser(targetId, {
-                        title: '소모임 초대',
-                        body: `${inviterName}님이 "${clubName}" 소모임에 초대했습니다`,
-                        type: 'club_invite',
-                        data: { clubId }
-                    }).catch(() => {});
+                } else {
+                    // 이미 존재 — pending이면 알림만 재발송
+                    const existing = await query(
+                        "SELECT status FROM club_members WHERE club_id = $1 AND user_id = $2",
+                        [clubId, targetId]
+                    );
+                    if (existing.rows.length > 0 && existing.rows[0].status === 'pending') {
+                        invited++;
+                    } else {
+                        continue; // 이미 accepted — 스킵
+                    }
                 }
+                // push 알림 발송 (신규 + pending 재발송 모두)
+                sendPushToUser(targetId, {
+                    title: '소모임 초대',
+                    body: `${inviterName}님이 "${clubName}" 소모임에 초대했습니다`,
+                    type: 'club_invite',
+                    data: { clubId, url: '/#clubs' }
+                }).catch(() => {});
             } catch (_) { /* 이미 멤버 */ }
         }
 

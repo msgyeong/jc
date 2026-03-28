@@ -462,9 +462,18 @@ function handleCreatePost() {
     const titleEl = document.getElementById('post-create-title');
     const contentEl = document.getElementById('post-create-content');
     const pinnedEl = document.getElementById('post-create-is-pinned');
+    const bannerEl = document.getElementById('post-create-is-banner');
+    const fileInput = document.getElementById('post-create-image-input');
     if (titleEl) titleEl.value = '';
     if (contentEl) contentEl.value = '';
     if (pinnedEl) pinnedEl.checked = false;
+    if (bannerEl) bannerEl.checked = false;
+    if (fileInput) fileInput.value = '';
+    // 이미지 리스트 DOM 직접 초기화
+    const imgList = document.getElementById('post-create-images-list');
+    if (imgList) imgList.innerHTML = '';
+    const imgCount = document.getElementById('post-create-images-count');
+    if (imgCount) imgCount.textContent = '(0/' + MAX_POST_IMAGES + ')';
 
     navigateToScreen('post-create');
 }

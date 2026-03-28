@@ -114,6 +114,8 @@ var _routes = {
     'club-detail':  { init: function() { if (typeof loadClubDetailScreen === 'function') loadClubDetailScreen(); } },
     'club-create':  { init: function() { if (typeof initClubCreateForm === 'function') initClubCreateForm(); } },
     'club-invite':  { init: function() { if (typeof loadClubInviteScreen === 'function') loadClubInviteScreen(); } },
+    'club-post-form': { init: function() { if (typeof initClubPostForm === 'function') initClubPostForm(); } },
+    'club-schedule-form': { init: function() { if (typeof initClubScheduleForm === 'function') initClubScheduleForm(); } },
     'member-detail': {},
     'meeting-records': { init: function() { if (typeof loadMeetingRecordsScreen === 'function') loadMeetingRecordsScreen(); } }
 };

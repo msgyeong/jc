@@ -8656,6 +8656,11 @@ a.sns-badge:hover {
 }
 .gb-form-half {
     flex: 1;
+    min-width: 0;
+}
+.gb-form-half input[type="datetime-local"] {
+    width: 100%;
+    font-size: 13px;
 }
 
 /* 일정 탭 그룹 일정 뱃지 */

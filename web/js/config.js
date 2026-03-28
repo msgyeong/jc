@@ -1,6 +1,6 @@
 // 앱 설정
 const CONFIG = {
-    APP_NAME: '영등포 JC',
+    APP_NAME: 'JC',
     // 로컬 테스트: localhost:3000 사용, Railway 배포: /api 사용
     API_BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3000/api' 

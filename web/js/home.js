@@ -1,9 +1,21 @@
 // 홈 화면 기능 (Railway API 연동)
 
+// 사용자 소속 조직명 가져오기
+function getOrgName() {
+    try {
+        var user = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : JSON.parse(localStorage.getItem('user_info') || 'null');
+        return (user && user.org_name) ? user.org_name : 'JC';
+    } catch (_) { return 'JC'; }
+}
+
 // 홈 화면 데이터 로드
 async function loadHomeData() {
     console.log('🏠 홈 화면 데이터 로드 시작');
-    
+
+    // 앱 바 타이틀을 조직명으로 설정
+    var titleEl = document.querySelector('#home-screen .app-bar-title');
+    if (titleEl) titleEl.textContent = getOrgName();
+
     try {
         // 공지사항 요약 로드
         await loadNoticeSummary();
@@ -173,7 +185,7 @@ async function loadBannerSummary() {
         if (banners.length === 0) {
             banners.push({
                 gradient: 'linear-gradient(135deg, #1E3A5F 0%, #3D6B99 100%)',
-                title: '영등포 JC',
+                title: getOrgName(),
                 subtitle: '회원관리 커뮤니티 앱에 오신 것을 환영합니다',
                 cta: '둘러보기'
             });
@@ -245,7 +257,7 @@ async function loadBannerSummary() {
         // API 실패 시 기본 배너
         if (banners.length === 0) {
             banners.push(
-                { gradient: 'linear-gradient(135deg, #1E3A5F 0%, #3D6B99 100%)', title: '영등포 JC', subtitle: '회원관리 커뮤니티 앱에 오신 것을 환영합니다', cta: '둘러보기' },
+                { gradient: 'linear-gradient(135deg, #1E3A5F 0%, #3D6B99 100%)', title: getOrgName(), subtitle: '회원관리 커뮤니티 앱에 오신 것을 환영합니다', cta: '둘러보기' },
                 { gradient: 'linear-gradient(135deg, #162D4A 0%, #2D5F8A 100%)', title: '일정 확인', subtitle: '다가오는 모임과 행사 일정을 확인하세요', cta: '일정 보기', action: "switchTab('schedules')" },
                 { gradient: 'linear-gradient(135deg, #1E3A5F 0%, #6B9BC3 100%)', title: '회원 소통', subtitle: '공지사항과 게시판을 통해 소식을 나누세요', cta: '게시판 가기', action: "switchTab('posts')" }
             );

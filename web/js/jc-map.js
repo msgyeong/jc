@@ -4,6 +4,15 @@ var jcMap = null;
 var jcMapMarkers = [];
 var myLocationMarker = null;
 var myLocationCircle = null;
+var jcMapShowAll = false;
+var jcMapSearchTimeout = null;
+
+function getMapUserOrgId() {
+    try {
+        var user = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : JSON.parse(localStorage.getItem('user_info') || 'null');
+        return (user && user.org_id) ? user.org_id : null;
+    } catch (_) { return null; }
+}
 
 async function loadJcMapScreen() {
     var loadingEl = document.getElementById('jc-map-loading');
@@ -25,7 +34,6 @@ async function loadJcMapScreen() {
         }
 
         // 지도 화면을 fixed 오버레이로 표시
-        var screen = document.getElementById('jc-map-screen');
         if (screen) {
             screen.style.position = 'fixed';
             screen.style.top = '0';
@@ -40,6 +48,7 @@ async function loadJcMapScreen() {
         if (contentEl) {
             contentEl.style.width = '100%';
             contentEl.style.height = 'calc(100vh - 56px)';
+            contentEl.style.position = 'relative';
         }
         mapContainer.style.width = '100%';
         mapContainer.style.height = '100%';
@@ -56,6 +65,37 @@ async function loadJcMapScreen() {
             attribution: '&copy; OpenStreetMap',
             maxZoom: 19
         }).addTo(jcMap);
+
+        // 검색 + 필터 UI 삽입
+        var existingControls = contentEl ? contentEl.querySelector('.jc-map-controls') : null;
+        if (!existingControls && contentEl) {
+            var controlsDiv = document.createElement('div');
+            controlsDiv.className = 'jc-map-controls';
+            controlsDiv.style.cssText = 'position:absolute;top:8px;left:8px;right:8px;z-index:1000;display:flex;gap:6px;align-items:center';
+            controlsDiv.innerHTML =
+                '<input type="text" id="jc-map-search" placeholder="회원명/업종/로컬명 검색" style="flex:1;height:38px;border:1px solid #D1D5DB;border-radius:8px;padding:0 12px;font-size:13px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.1)">'
+                + '<label style="display:flex;align-items:center;gap:4px;background:#fff;padding:4px 10px;border-radius:8px;font-size:12px;white-space:nowrap;border:1px solid #D1D5DB;box-shadow:0 2px 6px rgba(0,0,0,0.1);cursor:pointer">'
+                + '<input type="checkbox" id="jc-map-show-all" style="accent-color:#1F4FD8">'
+                + '<span>모두보기</span></label>';
+            contentEl.appendChild(controlsDiv);
+
+            // 이벤트 바인딩
+            var searchInput = document.getElementById('jc-map-search');
+            if (searchInput) {
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(jcMapSearchTimeout);
+                    jcMapSearchTimeout = setTimeout(function () { loadMapMembers(); }, 400);
+                });
+            }
+            var showAllCheck = document.getElementById('jc-map-show-all');
+            if (showAllCheck) {
+                showAllCheck.checked = jcMapShowAll;
+                showAllCheck.addEventListener('change', function () {
+                    jcMapShowAll = this.checked;
+                    loadMapMembers();
+                });
+            }
+        }
 
         // 내 위치 버튼
         var existingBtn = mapContainer.parentElement.querySelector('.jc-map-loc-btn');
@@ -79,12 +119,39 @@ async function loadJcMapScreen() {
 
         if (loadingEl) loadingEl.style.display = 'none';
 
-        // 기존 마커 제거
-        jcMapMarkers.forEach(function (m) { jcMap.removeLayer(m); });
-        jcMapMarkers = [];
+        // 회원 마커 로드
+        await loadMapMembers();
 
-        // 회원 데이터 로드
-        var res = await apiClient.request('/map/members');
+    } catch (err) {
+        if (loadingEl) {
+            loadingEl.style.display = 'block';
+            loadingEl.textContent = '지도 로드 실패: ' + (err.message || '');
+        }
+    }
+}
+
+async function loadMapMembers() {
+    if (!jcMap) return;
+    var loadingEl = document.getElementById('jc-map-loading');
+
+    // 기존 마커 제거
+    jcMapMarkers.forEach(function (m) { jcMap.removeLayer(m); });
+    jcMapMarkers = [];
+
+    // 쿼리 파라미터 빌드
+    var params = [];
+    if (!jcMapShowAll) {
+        var orgId = getMapUserOrgId();
+        if (orgId) params.push('org_id=' + encodeURIComponent(orgId));
+    }
+    var searchEl = document.getElementById('jc-map-search');
+    var searchVal = searchEl ? searchEl.value.trim() : '';
+    if (searchVal) params.push('search=' + encodeURIComponent(searchVal));
+
+    var url = '/map/members' + (params.length > 0 ? '?' + params.join('&') : '');
+
+    try {
+        var res = await apiClient.request(url);
         if (!res.success) return;
         var members = res.data || [];
 
@@ -95,6 +162,7 @@ async function loadJcMapScreen() {
             }
             return;
         }
+        if (loadingEl) loadingEl.style.display = 'none';
 
         var bounds = L.latLngBounds();
 
@@ -110,6 +178,7 @@ async function loadJcMapScreen() {
 
             var popup = '<div style="min-width:180px;font-size:13px;line-height:1.5">'
                 + '<div style="font-size:15px;font-weight:700;margin-bottom:4px">' + escapeHtml(m.name) + '</div>';
+            if (m.org_name) popup += '<div style="color:#2563EB;font-size:12px;margin-bottom:2px">' + escapeHtml(m.org_name) + '</div>';
             if (m.company) popup += '<div>' + escapeHtml(m.company) + (m.position ? ' / ' + escapeHtml(m.position) : '') + '</div>';
             if (industry) popup += '<div style="color:#6B7280">' + escapeHtml(industry) + '</div>';
             if (m.business_address) popup += '<div style="color:#6B7280;margin-top:4px">📍 ' + escapeHtml(m.business_address) + '</div>';
@@ -126,12 +195,8 @@ async function loadJcMapScreen() {
         if (members.length > 0) {
             jcMap.fitBounds(bounds, { padding: [30, 30] });
         }
-
     } catch (err) {
-        if (loadingEl) {
-            loadingEl.style.display = 'block';
-            loadingEl.textContent = '지도 로드 실패: ' + (err.message || '');
-        }
+        console.error('Map members load error:', err);
     }
 }
 

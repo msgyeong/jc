@@ -9,16 +9,38 @@ const { authenticate } = require('../middleware/auth');
  */
 router.get('/members', authenticate, async (req, res) => {
     try {
+        const { org_id, search } = req.query;
+        const conditions = [
+            'u.status = \'active\'',
+            'u.role != \'super_admin\'',
+            'u.map_visible = true',
+            'u.business_lat IS NOT NULL',
+            'u.business_lng IS NOT NULL'
+        ];
+        const params = [];
+
+        // org_id 필터 (기본: 로그인 유저의 org)
+        if (org_id) {
+            params.push(org_id);
+            conditions.push(`u.org_id = $${params.length}`);
+        }
+
+        // 검색어 필터 (로컬명/회원명/업종)
+        if (search && search.trim()) {
+            params.push(`%${search.trim()}%`);
+            const idx = params.length;
+            conditions.push(`(u.name ILIKE $${idx} OR u.company ILIKE $${idx} OR u.industry ILIKE $${idx} OR u.industry_detail ILIKE $${idx} OR o.name ILIKE $${idx})`);
+        }
+
         const result = await query(
-            `SELECT id, name, company, position, department, industry, industry_detail,
-                    phone, work_phone, profile_image, business_address,
-                    business_lat, business_lng, website
-             FROM users
-             WHERE status = 'active'
-               AND role != 'super_admin'
-               AND map_visible = true
-               AND business_lat IS NOT NULL
-               AND business_lng IS NOT NULL`
+            `SELECT u.id, u.name, u.company, u.position, u.department, u.industry, u.industry_detail,
+                    u.phone, u.work_phone, u.profile_image, u.business_address,
+                    u.business_lat, u.business_lng, u.website, u.org_id,
+                    o.name as org_name
+             FROM users u
+             LEFT JOIN organizations o ON o.id = u.org_id
+             WHERE ${conditions.join(' AND ')}`,
+            params
         );
         res.json({ success: true, data: result.rows });
     } catch (error) {

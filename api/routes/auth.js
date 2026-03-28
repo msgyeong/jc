@@ -193,7 +193,11 @@ router.post('/login', async (req, res) => {
 
         // 사용자 조회
         const result = await query(
-            'SELECT id, email, password_hash, name, role, status, profile_image, org_id FROM users WHERE email = $1',
+            `SELECT u.id, u.email, u.password_hash, u.name, u.role, u.status, u.profile_image, u.org_id,
+                    o.name as org_name
+             FROM users u
+             LEFT JOIN organizations o ON o.id = u.org_id
+             WHERE u.email = $1`,
             [email.toLowerCase()]
         );
 
@@ -263,6 +267,7 @@ router.post('/login', async (req, res) => {
                 status: user.status,
                 profile_image: user.profile_image,
                 org_id: user.org_id,
+                org_name: user.org_name || null,
                 can_post_notice: ['super_admin', 'admin'].includes(user.role || '')
             }
         });
@@ -282,7 +287,11 @@ router.post('/login', async (req, res) => {
 router.get('/me', authenticate, async (req, res) => {
     try {
         const result = await query(
-            'SELECT id, email, name, phone, address, role, status, profile_image, created_at FROM users WHERE id = $1',
+            `SELECT u.id, u.email, u.name, u.phone, u.address, u.role, u.status, u.profile_image, u.created_at, u.org_id,
+                    o.name as org_name
+             FROM users u
+             LEFT JOIN organizations o ON o.id = u.org_id
+             WHERE u.id = $1`,
             [req.user.userId]
         );
 

@@ -258,7 +258,7 @@ function showEditProfileForm() {
                     <h3 class="info-section-title">사업 PR</h3>
                     <div class="form-group"><label>한 줄 PR</label><input type="text" id="edit-one-line-pr" value="${escapeHtml(p.one_line_pr || p.business_headline || '')}" placeholder="예: 프리미엄 IT 서비스" maxlength="100"></div>
                     <div class="form-group"><label>주요 서비스</label><textarea id="edit-service-description" rows="4" placeholder="사업 소개, 주요 서비스, 상품 등을 자유롭게 입력하세요" maxlength="500" style="resize:vertical">${escapeHtml(p.service_description || p.business_description || '')}</textarea></div>
-                    <div class="form-group"><label>사업장 주소</label><input type="text" id="edit-biz-address" value="${escapeHtml(p.business_address || '')}" placeholder="사업장 주소"></div>
+                    <div class="form-group"><label>사업장 주소</label><div style="display:flex;gap:6px"><input type="text" id="edit-biz-address" value="${escapeHtml(p.business_address || '')}" placeholder="사업장 주소" style="flex:1"><button type="button" class="btn btn-outline btn-sm" onclick="openBizAddressSearch()" style="white-space:nowrap">주소 검색</button></div></div>
                     <div class="form-group">
                         <label>SNS 링크</label>
                         <div id="sns-links-container">
@@ -366,6 +366,23 @@ async function handleProfileEditSubmit(event) {
     if (errorEl) { errorEl.classList.remove('show'); errorEl.textContent = ''; }
 
     try {
+        // 사업장 주소가 변경되었으면 좌표 자동 변환
+        if (data.business_address) {
+            try {
+                var geoRes = await apiClient.request('/map/geocode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: data.business_address })
+                });
+                if (geoRes.success && geoRes.data && geoRes.data.lat && geoRes.data.lng) {
+                    data.business_lat = geoRes.data.lat;
+                    data.business_lng = geoRes.data.lng;
+                }
+            } catch (_geoErr) {
+                console.warn('사업장 주소 좌표 변환 실패 (무시):', _geoErr);
+            }
+        }
+
         const result = await apiClient.updateProfile(data);
         if (result.success) {
             profileLoaded = false;
@@ -556,6 +573,21 @@ function ensureUrl(url) {
 }
 
 function handleEditProfile() { showEditProfileForm(); }
+
+// 사업장 주소 검색 (다음 우편번호 API)
+function openBizAddressSearch() {
+    if (typeof daum !== 'undefined' && daum.Postcode) {
+        new daum.Postcode({
+            oncomplete: function(data) {
+                var addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
+                var el = document.getElementById('edit-biz-address');
+                if (el) el.value = addr;
+            }
+        }).open();
+    } else {
+        alert('주소 검색 서비스를 불러올 수 없습니다.');
+    }
+}
 
 // ========== 프로필 편집 이탈 경고 ==========
 var _profileEditing = false;

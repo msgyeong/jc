@@ -388,7 +388,7 @@ async function loadMeetingMinutes(meetingId) {
             el.innerHTML = '<div style="color:var(--text-secondary);font-size:14px">등록된 회의록이 없습니다</div>';
             return;
         }
-        el.innerHTML = minutes.map(m => `<a href="/api/meetings/minutes/${m.id}" target="_blank"
+        el.innerHTML = minutes.map(m => `<a href="#" onclick="event.preventDefault();openMinutesPdf(${m.id})"
             style="display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--border-color);border-radius:8px;margin-bottom:8px;text-decoration:none;color:var(--text-primary)">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <div>
@@ -398,5 +398,25 @@ async function loadMeetingMinutes(meetingId) {
         </a>`).join('');
     } catch (_) {
         el.innerHTML = '회의록을 불러올 수 없습니다';
+    }
+}
+
+// 회의록 PDF를 인증 토큰 포함하여 열기
+async function openMinutesPdf(minuteId) {
+    try {
+        var token = localStorage.getItem('auth_token');
+        var baseURL = (window.apiClient && window.apiClient.baseURL) || '/api';
+        var res = await fetch(baseURL + '/meetings/minutes/' + minuteId, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error('PDF 로드 실패');
+        var blob = await res.blob();
+        var url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        // 메모리 해제 (10분 후)
+        setTimeout(function() { URL.revokeObjectURL(url); }, 600000);
+    } catch (err) {
+        console.error('Open minutes PDF error:', err);
+        showToast('회의록을 열 수 없습니다', 'error');
     }
 }

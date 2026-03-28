@@ -217,7 +217,7 @@ function switchClubTab(tab) {
     // FAB 동작 변경
     var fab = document.getElementById('club-action-btn');
     if (fab) {
-        fab.onclick = tab === 'schedules' ? showClubScheduleForm : showClubPostForm;
+        fab.onclick = tab === 'schedules' ? function() { showClubScheduleForm(); } : function() { showClubPostForm(); };
         fab.style.display = tab === 'members' ? 'none' : '';
     }
 
@@ -598,6 +598,12 @@ function initClubScheduleForm() {
     // 매번 새로 바인딩 (이전 리스너 제거 후)
     var newForm = form.cloneNode(true);
     form.parentNode.replaceChild(newForm, form);
+    // cloneNode 후 필드 재초기화
+    if (!_editingClubScheduleId) {
+        var fields = ['cs-title','cs-description','cs-location','cs-start-date','cs-end-date'];
+        fields.forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+        var catEl = document.getElementById('cs-category'); if (catEl) catEl.value = 'meeting';
+    }
     newForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         var title = document.getElementById('cs-title').value.trim();

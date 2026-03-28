@@ -629,7 +629,7 @@ function initClubScheduleForm() {
                 newForm.reset();
                 history.back();
             } else {
-                showToast(res.message || '일정 등록에 실패했습니다', 'error');
+                showToast((res.detail || res.error || res.message || '일정 등록에 실패했습니다'), 'error');
             }
         } catch (err) {
             console.error('Club schedule create error:', err);

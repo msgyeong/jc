@@ -676,7 +676,7 @@ router.post('/:clubId/schedules', authenticate, async (req, res) => {
         res.json({ success: true, schedule: result.rows[0] });
     } catch (error) {
         console.error('Club schedule create error:', error);
-        res.status(500).json({ success: false, error: '일정 생성에 실패했습니다.' });
+        res.status(500).json({ success: false, error: '일정 생성에 실패했습니다.', detail: error.message });
     }
 });
 

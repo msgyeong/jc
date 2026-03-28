@@ -26,8 +26,8 @@
     --background-color: #FFFFFF;
     --bg-secondary: #F9FAFB;
     --text-primary: #111827;
-    --text-secondary: #6B7280;
-    --text-hint: #9CA3AF;
+    --text-secondary: #4B5563;  /* WCAG AA: 7:1 on white */
+    --text-hint: #6B7280;      /* WCAG AA: 5.0:1 on white */
     --text-disabled: #D1D5DB;
     --border-color: #E5E7EB;
     --border-light: #F3F4F6;
@@ -186,6 +186,18 @@ html {
     to { opacity: 1; }
 }
 
+/* 방향별 슬라이드 전환 */
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.screen.slide-forward { animation: slideInLeft 0.25s ease; }
+.screen.slide-back { animation: slideInRight 0.25s ease; }
+
 /* ==================== 앱바 — v2.0 흰색 배경 + border ==================== */
 .app-bar {
     height: var(--appbar-height);
@@ -282,6 +294,11 @@ html {
     margin: 0 auto;
 }
 
+/* 의미적 제목 계층: h1=24px(페이지), h2=20px(섹션), h3=17px(서브) */
+.screen h1, .app-bar-title { font-size: 17px; font-weight: 600; line-height: 1.3; }
+.screen h2, .section-title { font-size: 18px; font-weight: 700; line-height: 1.35; }
+.screen h3, .info-section-title { font-size: 16px; font-weight: 600; line-height: 1.4; }
+
 .section-title {
     font-size: 18px;
     font-weight: 700;
@@ -358,7 +375,7 @@ html {
     box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.06);
 }
 
-/* 전역 input/select 최소 높이 통일 */
+/* 전역 input/select/textarea 최소 높이 통일 (터치 타겟 44px 보장) */
 .screen-content input[type="text"],
 .screen-content input[type="email"],
 .screen-content input[type="password"],
@@ -366,7 +383,9 @@ html {
 .screen-content input[type="number"],
 .screen-content input[type="date"],
 .screen-content input[type="time"],
-.screen-content select {
+.screen-content input[type="url"],
+.screen-content select,
+.screen-content textarea {
     min-height: var(--input-height);
     box-sizing: border-box;
 }
@@ -892,6 +911,20 @@ input::-ms-clear {
     justify-content: center;
     padding: var(--spacing-sm) 0;
 }
+.banner-counter {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+    z-index: 2;
+}
 
 .banner-indicator {
     width: 8px;
@@ -1068,6 +1101,57 @@ input::-ms-clear {
 }
 
 /* ==================== 검색 바 ==================== */
+/* 앱바 아이콘 버튼 */
+.app-bar-icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+.app-bar-icon-btn:active { background: var(--bg-secondary); }
+
+/* 게시판 검색 바 */
+.post-search-bar {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    gap: 8px;
+    background: var(--background-color);
+    border-bottom: 1px solid var(--border-color);
+}
+.post-search-bar input {
+    flex: 1;
+    height: 38px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 0 16px;
+    font-size: 14px;
+    font-family: var(--font-family);
+    outline: none;
+    transition: border-color 0.2s;
+}
+.post-search-bar input:focus { border-color: var(--primary-color); }
+.post-search-close {
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: var(--text-hint);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .search-bar {
     padding: var(--spacing-md);
     background-color: white;
@@ -2746,6 +2830,10 @@ input[type="date"]:focus {
 .cal-day:not(.empty):hover {
     background: var(--background-color);
 }
+.cal-day:not(.empty):active {
+    background: var(--primary-light);
+    transform: scale(0.95);
+}
 
 .cal-day-num {
     font-size: 14px;
@@ -3135,6 +3223,25 @@ input[type="date"]:focus {
 .avatar-camera-btn svg {
     width: 14px;
     height: 14px;
+}
+/* 프로필 사진 편집 힌트 */
+.profile-avatar-xl:hover .avatar-photo-hint,
+.profile-avatar-xl:active .avatar-photo-hint { opacity: 1; }
+.avatar-photo-hint {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+    padding: 4px 0;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    border-radius: 0 0 50% 50%;
+    pointer-events: none;
 }
 
 .profile-hero-name {
@@ -4014,6 +4121,45 @@ input[type="date"]:focus {
     to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
 }
 .toast--exit { animation: toastOut 0.3s ease forwards; }
+/* 여러 toast 동시 표시 시 세로 간격 */
+.toast:nth-last-of-type(2) { top: 120px; }
+.toast:nth-last-of-type(3) { top: 168px; }
+
+/* ==================== 이미지 업로드 프로그레스 ==================== */
+.post-form-image-item.uploading { opacity: 0.6; }
+.image-upload-progress {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: inherit;
+}
+.image-upload-progress .loading-spinner {
+    width: 24px;
+    height: 24px;
+}
+
+/* ==================== 이미지 에러 placeholder ==================== */
+.pc-thumb--broken,
+.img-broken {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    min-height: 60px;
+}
+.pc-thumb--broken::after,
+.img-broken::after {
+    content: '';
+    width: 32px;
+    height: 32px;
+    opacity: 0.3;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='1.5'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpath d='M21 15l-5-5L5 21'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
 
 /* ==================== 스켈레톤 로딩 ==================== */
 .skeleton {
@@ -4762,7 +4908,21 @@ input[type="date"]:focus {
 }
 .nav-badge.visible { display: block; }
 
-/* ==================== 반응형 추가 ==================== */
+/* ==================== 태블릿 반응형 ==================== */
+@media (min-width: 481px) and (max-width: 768px) {
+    #app { max-width: 560px; }
+    .banner-carousel { height: 200px; }
+    .post-form-images-list { grid-template-columns: repeat(4, 1fr); }
+    .cal-day-num { font-size: 15px; }
+    .empty-state { min-height: 280px; }
+}
+@media (min-width: 769px) {
+    #app { max-width: 640px; }
+    .banner-carousel { height: 220px; }
+    .empty-state { min-height: 320px; }
+}
+
+/* ==================== 소형 기기 반응형 ==================== */
 @media (max-width: 479px) {
     .banner-carousel { height: 140px; }
     .banner-slide .banner-title { font-size: 16px; }
@@ -4789,6 +4949,12 @@ input[type="date"]:focus {
     .schedule-form-submit { height: 44px; font-size: 15px; }
     .schedule-info-row svg { width: 14px; height: 14px; }
     .schedule-info-text { font-size: 13px; }
+    /* 멤버 필터 세로 정렬 */
+    .member-filters-row { flex-direction: column; }
+    .member-filters-row select,
+    .member-filters-row .industry-filter-inline { width: 100%; }
+    /* 하단 탭 라벨 축소 */
+    .nav-label { font-size: 9px; }
 }
 
 /* ========== M-12: 일정 첨부 섹션 ========== */
@@ -5908,6 +6074,107 @@ a.sns-badge:hover {
     background: none; border: 1px solid var(--border-color); border-radius: 8px;
     color: var(--color-primary, #1E3A5F); font-size: 13px; font-weight: 500;
     padding: 6px 14px; cursor: pointer; margin-top: 4px;
+}
+
+/* ==================== Step Indicator (비밀번호 찾기 등) ==================== */
+.step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 16px 24px 8px;
+}
+.step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--border-color);
+    color: var(--text-hint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+.step-dot.active {
+    background: var(--primary-color);
+    color: #fff;
+}
+.step-dot.done {
+    background: var(--success-color);
+    color: #fff;
+}
+.step-line {
+    flex: 1;
+    max-width: 48px;
+    height: 2px;
+    background: var(--border-color);
+    transition: background 0.3s ease;
+}
+.step-line.done {
+    background: var(--success-color);
+}
+
+/* ==================== 비밀번호 강도 미터 ==================== */
+.password-strength {
+    margin-top: 8px;
+    display: none;
+}
+.password-strength.visible { display: block; }
+.password-strength-bar {
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+.password-strength-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 2px;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+.password-strength-fill[data-level="weak"] { width: 25%; background: #DC2626; }
+.password-strength-fill[data-level="fair"] { width: 50%; background: #F59E0B; }
+.password-strength-fill[data-level="good"] { width: 75%; background: #2563EB; }
+.password-strength-fill[data-level="strong"] { width: 100%; background: #16A34A; }
+.password-requirements {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+}
+.password-requirements li {
+    font-size: 12px;
+    color: var(--text-hint);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.password-requirements li::before {
+    content: '';
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text-hint);
+    display: inline-block;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+.password-requirements li.pass {
+    color: var(--success-color);
+}
+.password-requirements li.pass::before {
+    border-color: var(--success-color);
+    background: var(--success-color);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M3 7l3 3 5-5'/%3E%3C/svg%3E");
+    background-size: 10px;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 /* 이용약관/개인정보 처리방침 */
@@ -7261,7 +7528,7 @@ a.sns-badge:hover {
     }
 }
 
-/* ==================== 조직도 리뉴얼 ==================== */
+/* ==================== 로컬조직도 리뉴얼 ==================== */
 
 .oc-loading, .oc-empty, .oc-error {
     text-align: center;
@@ -7696,7 +7963,7 @@ a.sns-badge:hover {
     border-top-color: var(--success-color);
 }
 
-/* ========== 조직도 게시판 버튼 ========== */
+/* ========== 로컬조직도 게시판 버튼 ========== */
 .oc-board-btn {
     display: flex;
     align-items: center;

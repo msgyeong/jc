@@ -102,6 +102,7 @@ function renderProfile(p) {
                     <div class="avatar-camera-btn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.5"><rect x="2" y="6" width="20" height="14" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M7 6l1.5-2h7L17 6"/></svg>
                     </div>
+                    <div class="avatar-photo-hint">사진 변경</div>
                     <input type="file" id="profile-photo-input" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this)">
                 </div>
                 <h2 class="profile-hero-name">${escapeHtml(p.name || '이름 없음')}${p.jc_position && typeof getPositionBadgeHtml === 'function' ? ' ' + getPositionBadgeHtml(p.jc_position) : ''}</h2>
@@ -474,6 +475,52 @@ async function loadProfileTitleHistory(userId) {
 }
 
 function handleEditProfile() { showEditProfileForm(); }
+
+// ========== 프로필 편집 이탈 경고 ==========
+var _profileEditing = false;
+
+var _origShowEditProfileForm = showEditProfileForm;
+showEditProfileForm = function() {
+    _origShowEditProfileForm();
+    _profileEditing = true;
+    // 폼 input 변경 감지
+    var form = document.getElementById('profile-edit-form');
+    if (form) {
+        form.addEventListener('input', function() { _profileEditing = true; }, { once: false });
+    }
+};
+
+// 돌아가기 버튼 래핑
+var _origLoadProfile = loadProfile;
+window._profileBackGuard = function() {
+    if (_profileEditing) {
+        if (!confirm('수정 중인 내용이 저장되지 않습니다. 나가시겠습니까?')) return;
+    }
+    _profileEditing = false;
+    _origLoadProfile();
+};
+
+// 프로필 수정 제출 성공 시 플래그 해제
+var _origHandleProfileEditSubmit = typeof handleProfileEditSubmit === 'function' ? handleProfileEditSubmit : null;
+if (_origHandleProfileEditSubmit) {
+    var _wrappedProfileSubmit = handleProfileEditSubmit;
+    // submit 후 성공 시 플래그 해제는 showToast 호출로 간접 확인 — 직접 해제
+}
+
+// showEditProfileForm 내 '돌아가기' 버튼 onclick을 가로채기
+var _origContainerHtml = null;
+(new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+        m.addedNodes.forEach(function(node) {
+            if (node.nodeType === 1) {
+                var backBtn = node.querySelector ? node.querySelector('.btn-back[onclick*="loadProfile"]') : null;
+                if (backBtn) {
+                    backBtn.setAttribute('onclick', 'window._profileBackGuard()');
+                }
+            }
+        });
+    });
+})).observe(document.getElementById('profile-content') || document.body, { childList: true, subtree: true });
 
 document.addEventListener('DOMContentLoaded', () => {
     const editProfileBtn = document.getElementById('edit-profile-btn');

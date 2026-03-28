@@ -18,27 +18,37 @@ let currentUser = null;
 // 로그인 폼 유효성 검사
 function validateLoginForm() {
     clearAllErrors();
-    
+
     let isValid = true;
-    
-    const email = document.getElementById('login-email').value.trim();
+    let firstErrorField = null;
+
+    const emailEl = document.getElementById('login-email');
+    const email = emailEl.value.trim();
     if (!email) {
         showError('email-error', '이메일을 입력하세요.');
         isValid = false;
+        if (!firstErrorField) firstErrorField = emailEl;
     } else if (!validateEmail(email)) {
         showError('email-error', '올바른 이메일 형식이 아닙니다.');
         isValid = false;
+        if (!firstErrorField) firstErrorField = emailEl;
     }
-    
-    const password = document.getElementById('login-password').value;
+
+    const passwordEl = document.getElementById('login-password');
+    const password = passwordEl.value;
     if (!password) {
         showError('password-error', '비밀번호를 입력하세요.');
         isValid = false;
+        if (!firstErrorField) firstErrorField = passwordEl;
     } else if (password.length < 8) {
         showError('password-error', '비밀번호는 8자 이상이어야 합니다.');
         isValid = false;
+        if (!firstErrorField) firstErrorField = passwordEl;
     }
-    
+
+    // 첫 번째 에러 필드로 포커스 이동
+    if (firstErrorField) firstErrorField.focus();
+
     return isValid;
 }
 

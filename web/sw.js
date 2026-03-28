@@ -1,15 +1,75 @@
-// 영등포 JC — Service Worker (Push Notifications)
+// 영등포 JC — Service Worker (Push Notifications + Offline Cache)
 
-// Install: activate immediately
+var CACHE_NAME = 'jc-v2';
+var STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/styles/main.css',
+  '/js/app.js',
+  '/js/api-client.js',
+  '/js/auth.js',
+  '/js/navigation.js',
+  '/js/utils.js',
+  '/js/home.js',
+  '/js/posts.js',
+  '/js/schedules.js',
+  '/js/members.js',
+  '/js/profile.js',
+  '/js/signup.js',
+  '/manifest.json'
+];
+
+// Install: 정적 리소스 프리캐시 + 즉시 활성화
 self.addEventListener('install', (event) => {
   console.log('[SW] Install');
-  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting())
+  );
 });
 
-// Activate: claim all clients
+// Activate: 이전 캐시 정리 + 클라이언트 제어
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activate');
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
+
+// Fetch: API=네트워크 우선, 정적=캐시 우선(stale-while-revalidate)
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // API 요청은 네트워크 우선
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(event.request).catch(() =>
+        new Response(JSON.stringify({ success: false, error: '오프라인 상태입니다.' }), {
+          headers: { 'Content-Type': 'application/json' }
+        })
+      )
+    );
+    return;
+  }
+
+  // 정적 리소스: 캐시 우선 + 백그라운드 업데이트
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        const fetchPromise = fetch(event.request).then(response => {
+          if (response.ok) {
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+          }
+          return response;
+        }).catch(() => cached);
+
+        return cached || fetchPromise;
+      })
+    );
+    return;
+  }
 });
 
 // Push: show notification

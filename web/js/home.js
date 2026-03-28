@@ -250,7 +250,8 @@ async function loadBannerSummary() {
             </div>
             ${banners.length > 1 ? `<div class="banner-indicators">
                 ${banners.map((_, i) => `<span class="banner-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="배너 ${i+1}으로 이동"></span>`).join('')}
-            </div>` : ''}
+            </div>
+            <div class="banner-counter" id="banner-counter">1 / ${banners.length}</div>` : ''}
         </div>
     `;
 
@@ -274,6 +275,8 @@ function initBannerCarousel(total) {
         bannerCurrentIndex = ((index % total) + total) % total;
         track.style.transform = `translateX(-${bannerCurrentIndex * 100}%)`;
         dots.forEach((d, i) => d.classList.toggle('active', i === bannerCurrentIndex));
+        var counter = document.getElementById('banner-counter');
+        if (counter) counter.textContent = (bannerCurrentIndex + 1) + ' / ' + total;
     }
 
     // 자동 전환

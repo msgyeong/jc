@@ -1,4 +1,4 @@
-// 콘텐츠 관리 (조직도, JC 비전·목표, 직책 업무, JC 지도, 정관)
+// 콘텐츠 관리 (로컬조직도, JC 비전·목표, 직책 업무, JC 지도, 정관)
 
 // 화면 이름 → content_type 매핑
 var CONTENT_TYPE_MAP = {
@@ -145,7 +145,7 @@ function renderContentView(screen, screenName, contentType, pageTitle, data, isA
                     'alt="' + escapeHtml(pageTitle) + '" ' +
                     'style="width:100%;display:block;cursor:pointer;" ' +
                     'onclick="openContentImageFullscreen(this.src)" ' +
-                    'onerror="this.parentElement.style.display=\'none\'">' +
+                    'onerror="this.onerror=null;this.style.display=\'none\';this.parentElement.classList.add(\'img-broken\')">' +
             '</div>';
         }
 
@@ -290,7 +290,7 @@ function renderContentEditor(container, screenName, contentType, pageTitle, data
                 ? '<div id="content-current-image" style="margin-bottom:8px;position:relative;display:inline-block;">' +
                     '<img src="' + (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api') + '/content/' + contentType + '/image?t=' + Date.now() + '" ' +
                         'style="max-width:200px;border-radius:8px;border:1px solid #E5E7EB;" ' +
-                        'onerror="this.parentElement.style.display=\'none\'">' +
+                        'onerror="this.onerror=null;this.style.display=\'none\';this.parentElement.classList.add(\'img-broken\')">' +
                     '<button onclick="removeContentImage(\'' + contentType + '\')" ' +
                         'style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;">x</button>' +
                   '</div>'

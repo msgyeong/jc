@@ -1,4 +1,4 @@
-// 그룹 게시판 (조직도 그룹별 전용 게시판)
+// 그룹 게시판 (로컬조직도 그룹별 전용 게시판)
 
 var _currentGroupBoardId = null;
 var _currentGroupBoardName = '';

@@ -477,7 +477,7 @@ router.get('/my-schedules/all', authenticate, async (req, res) => {
 
 /**
  * GET /api/group-board/my-groups
- * 내가 속한 조직도 그룹 목록 (게시판 접근용)
+ * 내가 속한 로컬조직도 그룹 목록 (게시판 접근용)
  */
 router.get('/my-groups/list', authenticate, async (req, res) => {
     try {

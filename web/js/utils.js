@@ -208,22 +208,31 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// ========== 토스트 알림 ==========
+// ========== 토스트 알림 (큐잉 — 최대 3개 동시 표시) ==========
+var _toastQueue = [];
+var _toastMaxVisible = 3;
+
 function showToast(message, type = 'success') {
-    const existing = document.querySelector('.toast');
-    if (existing) existing.remove();
     const iconMap = {
         success: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>',
         error: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
         info: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
     };
-    const toast = document.createElement('div');
+
+    // 최대 개수 초과 시 가장 오래된 것 즉시 제거
+    var existing = document.querySelectorAll('.toast');
+    if (existing.length >= _toastMaxVisible) {
+        existing[0].remove();
+    }
+
+    var toast = document.createElement('div');
     toast.className = 'toast toast--' + type;
     toast.innerHTML = (iconMap[type] || '') + '<span>' + escapeHtml(message) + '</span>';
     document.body.appendChild(toast);
-    setTimeout(() => {
+
+    setTimeout(function() {
         toast.classList.add('toast--exit');
-        setTimeout(() => toast.remove(), 300);
+        setTimeout(function() { toast.remove(); }, 300);
     }, 3000);
 }
 
@@ -273,6 +282,29 @@ function renderSkeleton(type) {
         for (let i = 0; i < 4; i++) {
             html += '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #F3F4F6"><div class="skeleton skeleton--avatar"></div><div style="flex:1"><div class="skeleton skeleton--title" style="width:' + (60 + i * 5) + '%"></div><div class="skeleton skeleton--text" style="width:' + (70 + i * 3) + '%"></div></div></div>';
         }
+        return html;
+    }
+    if (type === 'grid') {
+        var html = '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:12px">';
+        for (var i = 0; i < 4; i++) {
+            html += '<div style="border-radius:12px;overflow:hidden"><div class="skeleton" style="height:100px;width:100%"></div><div style="padding:8px"><div class="skeleton skeleton--title" style="width:' + (60 + i * 8) + '%"></div><div class="skeleton skeleton--text" style="width:' + (50 + i * 5) + '%"></div></div></div>';
+        }
+        html += '</div>';
+        return html;
+    }
+    if (type === 'member') {
+        var html = '';
+        for (var i = 0; i < 5; i++) {
+            html += '<div style="display:flex;gap:12px;padding:12px 16px;align-items:center"><div class="skeleton skeleton--circle" style="width:44px;height:44px;flex-shrink:0"></div><div style="flex:1"><div class="skeleton skeleton--title" style="width:' + (40 + i * 10) + '%"></div><div class="skeleton skeleton--text" style="width:' + (55 + i * 5) + '%"></div></div></div>';
+        }
+        return html;
+    }
+    if (type === 'calendar') {
+        var html = '<div style="padding:16px"><div class="skeleton" style="height:24px;width:30%;margin:0 auto 16px"></div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">';
+        for (var i = 0; i < 35; i++) {
+            html += '<div class="skeleton" style="aspect-ratio:1;border-radius:8px"></div>';
+        }
+        html += '</div></div>';
         return html;
     }
     return '<div style="padding:24px;text-align:center"><div class="loading-spinner"></div></div>';

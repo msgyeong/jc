@@ -76,17 +76,24 @@ function navigateTo(path) {
 }
 
 // 화면 전환
+var _lastScreenName = '';
 function navigateToScreen(screenName) {
     console.log('📱 화면 전환:', screenName);
-    
+
     // 모든 화면 숨기기
     document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
+        screen.classList.remove('active', 'slide-forward', 'slide-back');
     });
 
     // 선택한 화면 표시
     const targetScreen = document.getElementById(`${screenName}-screen`);
     if (targetScreen) {
+        // 방향 감지: 상세화면(detail/create/edit)으로 이동 시 forward, 돌아올 때 back
+        var isForward = /detail|create|edit|signup|forgot|settings|notification/.test(screenName);
+        var isBack = /home|posts|schedules|members|login|profile|meetings/.test(screenName) && /detail|create|edit|signup|forgot|settings|notification/.test(_lastScreenName);
+        if (isForward) targetScreen.classList.add('slide-forward');
+        else if (isBack) targetScreen.classList.add('slide-back');
+        _lastScreenName = screenName;
         targetScreen.classList.add('active');
         
         // 화면별 추가 처리
@@ -101,12 +108,15 @@ function navigateToScreen(screenName) {
                 form.reset();
             }
             clearAllErrors();
+            // 첫 번째 입력 필드에 자동 포커스
+            setTimeout(function() { var el = document.getElementById('login-email'); if (el) el.focus(); }, 100);
         } else if (screenName === 'signup') {
             const form = document.getElementById('signup-form');
             if (form) {
                 form.reset();
             }
             clearAllErrors();
+            setTimeout(function() { var el = document.getElementById('signup-org'); if (el) el.focus(); }, 100);
         } else if (screenName === 'forgot-password') {
             // Step 1으로 리셋
             resetForgotPasswordToStep1();
@@ -117,6 +127,7 @@ function navigateToScreen(screenName) {
             const setForm = document.getElementById('forgot-set-password-form');
             if (setForm) setForm.reset();
             clearAllErrors();
+            setTimeout(function() { var el = document.getElementById('forgot-email'); if (el) el.focus(); }, 100);
         } else if (screenName === 'admin') {
             // 관리자 페이지 초기화
             if (typeof initAdminPage === 'function') {
@@ -485,6 +496,7 @@ async function handleForgotPassword(event) {
             // Step 1 숨기고 Step 2 표시
             document.getElementById('forgot-step1').style.display = 'none';
             document.getElementById('forgot-step2').style.display = 'block';
+            updateForgotStepIndicator(2);
         }
     } catch (error) {
         if (error.code === 'TOKEN_EXPIRED') {
@@ -531,6 +543,7 @@ async function handleForgotVerify(event) {
             // 본인확인 통과 → Step 3 (새 비밀번호 입력) 표시
             document.getElementById('forgot-step2').style.display = 'none';
             document.getElementById('forgot-step3').style.display = 'block';
+            updateForgotStepIndicator(3);
         }
     } catch (error) {
         if (error.code === 'TOKEN_EXPIRED') {
@@ -581,6 +594,7 @@ async function handleForgotSetPassword(event) {
         if (result.success) {
             document.getElementById('forgot-step3').style.display = 'none';
             document.getElementById('forgot-password-result').style.display = 'block';
+            updateForgotStepIndicator(0);
             _forgotResetToken = null;
         }
     } catch (error) {
@@ -595,6 +609,24 @@ async function handleForgotSetPassword(event) {
     }
 }
 
+// 비밀번호 찾기 Step Indicator 업데이트
+function updateForgotStepIndicator(currentStep) {
+    var dots = document.querySelectorAll('#forgot-step-indicator .step-dot');
+    var lines = document.querySelectorAll('#forgot-step-indicator .step-line');
+    dots.forEach(function(dot, i) {
+        var step = i + 1;
+        dot.classList.remove('active', 'done');
+        if (step < currentStep) dot.classList.add('done');
+        else if (step === currentStep) dot.classList.add('active');
+    });
+    lines.forEach(function(line, i) {
+        line.classList.toggle('done', i + 1 < currentStep);
+    });
+    // indicator 표시/숨김
+    var indicator = document.getElementById('forgot-step-indicator');
+    if (indicator) indicator.style.display = currentStep > 0 ? 'flex' : 'none';
+}
+
 // 비밀번호 찾기 화면을 Step 1으로 리셋
 function resetForgotPasswordToStep1() {
     _forgotResetToken = null;
@@ -602,6 +634,7 @@ function resetForgotPasswordToStep1() {
     document.getElementById('forgot-step2').style.display = 'none';
     document.getElementById('forgot-step3').style.display = 'none';
     document.getElementById('forgot-password-result').style.display = 'none';
+    updateForgotStepIndicator(1);
     const birthInput = document.getElementById('forgot-birth');
     const answerInput = document.getElementById('forgot-answer');
     const newPwInput = document.getElementById('forgot-new-password');

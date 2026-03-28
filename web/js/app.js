@@ -27,6 +27,8 @@ console.log('⏰ 시간:', new Date().toLocaleString('ko-KR'));
         if (id === 'meetings-screen' && typeof loadMeetingsScreen === 'function') return loadMeetingsScreen;
         if (id === 'org-chart-screen' && typeof loadOrgChartScreen === 'function') return loadOrgChartScreen;
         if (id === 'group-board-screen' && typeof loadGroupBoardScreen === 'function') return loadGroupBoardScreen;
+        if (id === 'clubs-screen' && typeof loadClubsScreen === 'function') return loadClubsScreen;
+        if (id === 'club-detail-screen' && typeof loadClubDetailScreen === 'function') return loadClubDetailScreen;
         return null;
     }
 
@@ -243,6 +245,62 @@ function setupViewAllButtons() {
         });
     });
 }
+
+// ========== 전역 Escape 키 — 다이얼로그/오버레이 닫기 ==========
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+
+    // 1) .dialog-overlay.show 닫기
+    var overlay = document.querySelector('.dialog-overlay.show');
+    if (overlay) {
+        overlay.classList.remove('show');
+        e.preventDefault();
+        return;
+    }
+
+    // 2) .search-overlay 닫기
+    var searchOverlay = document.querySelector('.search-overlay.active');
+    if (searchOverlay) {
+        searchOverlay.classList.remove('active');
+        e.preventDefault();
+        return;
+    }
+
+    // 3) .image-viewer-overlay 닫기
+    var imageViewer = document.querySelector('.image-viewer-overlay');
+    if (imageViewer && imageViewer.style.display !== 'none') {
+        imageViewer.style.display = 'none';
+        e.preventDefault();
+        return;
+    }
+});
+
+// ========== 다이얼로그 포커스 트랩 ==========
+(function setupDialogFocusTrap() {
+    document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Tab') return;
+        var overlay = document.querySelector('.dialog-overlay.show');
+        if (!overlay) return;
+
+        var focusables = overlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusables.length === 0) return;
+
+        var first = focusables[0];
+        var last = focusables[focusables.length - 1];
+
+        if (e.shiftKey) {
+            if (document.activeElement === first) {
+                last.focus();
+                e.preventDefault();
+            }
+        } else {
+            if (document.activeElement === last) {
+                first.focus();
+                e.preventDefault();
+            }
+        }
+    });
+})();
 
 // 디버그 정보 출력 (개발 모드)
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {

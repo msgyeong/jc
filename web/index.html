@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영등포 JC - 회원관리 앱</title>
     <!-- Build: 2026-02-06 v2.1 -->
-    <link rel="stylesheet" href="styles/main.css?v=20260319b">
+    <link rel="stylesheet" href="styles/main.css?v=20260328a" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="styles/main.css?v=20260328a"></noscript>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FFFFFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,6 +18,20 @@
     <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Critical CSS: 첫 페인트에 필요한 최소 스타일 인라인 -->
+    <style>
+    :root{--primary-color:#1E3A5F;--background-color:#FFFFFF;--text-primary:#111827;--appbar-height:56px;--font-family:'Pretendard','Noto Sans KR',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:var(--font-family);background:#F9FAFB;color:var(--text-primary);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    #app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--background-color);position:relative}
+    .screen{display:none;flex-direction:column;width:100%;min-height:100vh}
+    .screen.active{display:flex}
+    #splash-screen{background-color:var(--background-color);display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .splash-content{text-align:center}
+    .splash-content .logo{max-width:180px;height:auto}
+    .loading-spinner{width:32px;height:32px;border:3px solid #E5E7EB;border-top-color:var(--primary-color);border-radius:50%;animation:spin .8s linear infinite;margin:16px auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
     <!-- FOUC 방지: 다크모드/글꼴 크기 즉시 적용 -->
     <script>
     (function() {
@@ -65,7 +80,7 @@
                                 placeholder="8자 이상 입력"
                                 required
                             >
-                            <button type="button" class="toggle-password" data-target="login-password">
+                            <button type="button" class="toggle-password" data-target="login-password" aria-label="비밀번호 표시/숨김">
                                 <span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
                             </button>
                         </div>
@@ -100,12 +115,21 @@
         <!-- 비밀번호 찾기 화면 -->
         <div id="forgot-password-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="navigateToScreen('login')">
+                <button class="back-button" onclick="navigateToScreen('login')" aria-label="뒤로 가기">
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">비밀번호 찾기</h1>
             </div>
             <div class="screen-content">
+                <!-- 단계 표시 -->
+                <div class="step-indicator" id="forgot-step-indicator">
+                    <div class="step-dot active" data-step="1"><span>1</span></div>
+                    <div class="step-line"></div>
+                    <div class="step-dot" data-step="2"><span>2</span></div>
+                    <div class="step-line"></div>
+                    <div class="step-dot" data-step="3"><span>3</span></div>
+                </div>
+
                 <!-- Step 1: 이메일 + 이름 입력 -->
                 <div id="forgot-step1">
                     <div class="info-box">
@@ -247,7 +271,7 @@
         <!-- 회원가입 화면 (간소화 버전) -->
         <div id="signup-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="navigateToScreen('login')">
+                <button class="back-button" onclick="navigateToScreen('login')" aria-label="뒤로 가기">
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">회원가입</h1>
@@ -298,9 +322,21 @@
                                 required
                                 minlength="8"
                             >
-                            <button type="button" class="toggle-password" data-target="signup-password">
+                            <button type="button" class="toggle-password" data-target="signup-password" aria-label="비밀번호 표시/숨김">
                                 <span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
                             </button>
+                        </div>
+                        <!-- 비밀번호 강도 미터 -->
+                        <div class="password-strength" id="password-strength">
+                            <div class="password-strength-bar">
+                                <div class="password-strength-fill" id="password-strength-fill"></div>
+                            </div>
+                            <ul class="password-requirements" id="password-requirements">
+                                <li data-rule="length">8자 이상</li>
+                                <li data-rule="upper">대문자 포함</li>
+                                <li data-rule="number">숫자 포함</li>
+                                <li data-rule="special">특수문자 포함</li>
+                            </ul>
                         </div>
                         <span class="error-message" id="signup-password-error"></span>
                     </div>
@@ -316,7 +352,7 @@
                                 placeholder="비밀번호 재입력"
                                 required
                             >
-                            <button type="button" class="toggle-password" data-target="signup-password-confirm">
+                            <button type="button" class="toggle-password" data-target="signup-password-confirm" aria-label="비밀번호 표시/숨김">
                                 <span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
                             </button>
                         </div>
@@ -737,7 +773,14 @@
         <div id="posts-screen" class="screen">
             <div class="app-bar app-bar--with-tabs">
                 <h1 class="app-bar-title">게시판</h1>
-                <button class="fab" id="create-post-btn">+</button>
+                <button class="app-bar-icon-btn" id="post-search-toggle" aria-label="게시글 검색">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
+                <button class="fab" id="create-post-btn" aria-label="새 게시글 작성">+</button>
+            </div>
+            <div class="post-search-bar" id="post-search-bar" style="display:none">
+                <input type="text" id="post-search-input" placeholder="게시글 검색..." aria-label="게시글 검색">
+                <button class="post-search-close" id="post-search-close" aria-label="검색 닫기">&times;</button>
             </div>
             <div class="board-tabs">
                 <button class="board-tab active" data-category="notice">공지 게시판</button>
@@ -776,7 +819,7 @@
         <!-- 게시글 상세 화면 -->
         <div id="post-detail-screen" class="screen">
             <div class="app-bar">
-                <button type="button" class="back-button" id="post-detail-back">
+                <button type="button" class="back-button" id="post-detail-back" aria-label="뒤로 가기"
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">게시글</h1>
@@ -791,7 +834,7 @@
         <!-- 게시글 수정 화면 -->
         <div id="post-edit-screen" class="screen">
             <div class="app-bar">
-                <button type="button" class="back-button" id="post-edit-back">
+                <button type="button" class="back-button" id="post-edit-back" aria-label="뒤로 가기"
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">글 수정</h1>
@@ -840,7 +883,7 @@
         <!-- 게시글 작성 화면 -->
         <div id="post-create-screen" class="screen">
             <div class="app-bar">
-                <button type="button" class="back-button" id="post-create-back">
+                <button type="button" class="back-button" id="post-create-back" aria-label="뒤로 가기"
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">글쓰기</h1>
@@ -909,7 +952,7 @@
         <div id="notices-screen" class="screen">
             <div class="app-bar">
                 <h1 class="app-bar-title">공지사항</h1>
-                <button class="fab" id="create-notice-btn" style="display: none;">+</button>
+                <button class="fab" id="create-notice-btn" style="display: none;" aria-label="새 공지사항 작성">+</button>
             </div>
             <div class="screen-content with-bottom-nav">
                 <div class="notice-list" id="notice-list">
@@ -945,14 +988,14 @@
             <div class="app-bar">
                 <h1 class="app-bar-title">일정</h1>
                 <button class="app-bar-action-pill" id="schedule-today-btn" title="오늘">오늘</button>
-                <button class="fab" id="create-schedule-btn" style="display: none;">+</button>
+                <button class="fab" id="create-schedule-btn" style="display: none;" aria-label="새 일정 작성">+</button>
             </div>
             <div class="screen-content with-bottom-nav">
                 <div class="calendar-container" id="calendar-container">
                     <div class="calendar-header">
-                        <button class="calendar-nav-btn" id="cal-prev">&lt;</button>
+                        <button class="calendar-nav-btn" id="cal-prev" aria-label="이전 달">&lt;</button>
                         <h2 class="calendar-title" id="cal-title"></h2>
-                        <button class="calendar-nav-btn" id="cal-next">&gt;</button>
+                        <button class="calendar-nav-btn" id="cal-next" aria-label="다음 달">&gt;</button>
                     </div>
                     <div class="calendar-weekdays">
                         <span class="cal-weekday sun">일</span>
@@ -1091,18 +1134,18 @@
         <!-- 사이드 메뉴 콘텐츠 화면들 -->
         <div id="org-chart-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
-                <h1 class="app-bar-title">조직도</h1>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
+                <h1 class="app-bar-title">로컬조직도</h1>
             </div>
             <div class="screen-content" id="org-chart-content">
-                <div class="content-placeholder">관리자가 조직도 이미지를 업로드하면 여기에 표시됩니다.</div>
+                <div class="content-placeholder">관리자가 로컬조직도를 등록하면 여기에 표시됩니다.</div>
             </div>
         </div>
 
         <!-- 그룹 게시판 화면 -->
         <div id="group-board-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title" id="group-board-title">그룹 게시판</h1>
                 <button class="gb-fab" id="create-group-post-btn" style="display:none;" onclick="showGroupPostForm()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1116,7 +1159,7 @@
         <!-- 그룹 게시글 상세 화면 -->
         <div id="group-post-detail-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">게시글</h1>
             </div>
             <div class="screen-content" id="group-post-detail-content">
@@ -1126,7 +1169,7 @@
         <!-- 그룹 게시글 작성/수정 화면 -->
         <div id="group-post-form-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title" id="group-post-form-title">게시글 작성</h1>
             </div>
             <div class="screen-content">
@@ -1156,7 +1199,7 @@
         <!-- 그룹 일정 작성 화면 -->
         <div id="group-schedule-form-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">일정 추가</h1>
             </div>
             <div class="screen-content">
@@ -1200,7 +1243,7 @@
         <!-- 소모임 목록 화면 -->
         <div id="clubs-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">소모임</h1>
                 <button class="gb-fab" onclick="showClubCreateForm()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1214,7 +1257,7 @@
         <!-- 소모임 상세 화면 -->
         <div id="club-detail-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title" id="club-detail-title">소모임</h1>
                 <button class="gb-fab" id="club-action-btn" style="display:none;" onclick="showClubPostForm()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1227,7 +1270,7 @@
         <!-- 소모임 게시글 상세 -->
         <div id="club-post-detail-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">게시글</h1>
             </div>
             <div class="screen-content" id="club-post-detail-content">
@@ -1237,7 +1280,7 @@
         <!-- 소모임 게시글 작성/수정 -->
         <div id="club-post-form-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title" id="club-post-form-title">게시글 작성</h1>
             </div>
             <div class="screen-content">
@@ -1267,7 +1310,7 @@
         <!-- 소모임 일정 작성 -->
         <div id="club-schedule-form-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">일정 추가</h1>
             </div>
             <div class="screen-content">
@@ -1311,7 +1354,7 @@
         <!-- 소모임 생성 -->
         <div id="club-create-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">소모임 만들기</h1>
             </div>
             <div class="screen-content">
@@ -1332,7 +1375,7 @@
         <!-- 소모임 멤버 초대 -->
         <div id="club-invite-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">멤버 초대</h1>
             </div>
             <div class="screen-content">
@@ -1349,7 +1392,7 @@
         <!-- 회원 프로필 상세 (타인) -->
         <div id="member-detail-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">프로필</h1>
             </div>
             <div class="screen-content" id="member-detail-content">
@@ -1359,7 +1402,7 @@
         <!-- 개인정보처리방침 -->
         <div id="privacy-policy-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">개인정보처리방침</h1>
             </div>
             <div class="screen-content" style="padding:16px">
@@ -1429,7 +1472,7 @@
 
         <div id="jc-vision-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">JC 비전·목표</h1>
             </div>
             <div class="screen-content" id="jc-vision-content">
@@ -1438,7 +1481,7 @@
         </div>
         <div id="jc-roles-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">직책 업무</h1>
             </div>
             <div class="screen-content" id="jc-roles-content">
@@ -1447,7 +1490,7 @@
         </div>
         <div id="jc-map-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">JC 지도</h1>
             </div>
             <div id="jc-map-content" style="position:relative;height:calc(100vh - 56px);width:100%">
@@ -1457,7 +1500,7 @@
         </div>
         <div id="jc-charter-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">정관</h1>
             </div>
             <div class="screen-content" id="jc-charter-content">
@@ -1466,7 +1509,7 @@
         </div>
         <div id="meeting-records-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()"><span class="icon">←</span></button>
+                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">회의록</h1>
             </div>
             <div class="screen-content" id="meeting-records-content">
@@ -1477,7 +1520,7 @@
         <!-- 포털 (타 로컬 방문) -->
         <div id="portal-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="switchTab('home')"><span class="icon">←</span></button>
+                <button class="back-button" onclick="switchTab('home')" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">JC 포털</h1>
             </div>
             <div class="screen-content" id="portal-content">
@@ -1488,7 +1531,7 @@
         <!-- 로컬 관리 화면 -->
         <div id="admin-manage-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="switchTab('home')"><span class="icon">←</span></button>
+                <button class="back-button" onclick="switchTab('home')" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">로컬 관리</h1>
             </div>
             <div class="screen-content" id="admin-manage-content">
@@ -1499,7 +1542,7 @@
         <!-- 내 프로필 화면 -->
         <div id="profile-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="switchTab('home')"><span class="icon">←</span></button>
+                <button class="back-button" onclick="switchTab('home')" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">내 프로필</h1>
             </div>
             <div class="screen-content">
@@ -1512,7 +1555,7 @@
         <!-- 알림 센터 화면 -->
         <div id="notifications-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="closeNotificationCenter()">
+                <button class="back-button" onclick="closeNotificationCenter()" aria-label="뒤로 가기">
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">알림</h1>
@@ -1550,7 +1593,7 @@
         <!-- 알림 설정 화면 -->
         <div id="notification-settings-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="navigateToScreen('profile'); loadProfile();">
+                <button class="back-button" onclick="navigateToScreen('profile'); loadProfile();" aria-label="뒤로 가기">
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">알림 설정</h1>
@@ -1587,7 +1630,7 @@
         <!-- 앱 관리 허브 화면 -->
         <div id="admin-hub-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="handleAdminHubBack()">
+                <button class="back-button" onclick="handleAdminHubBack()" aria-label="뒤로 가기">
                     <span class="icon">&larr;</span>
                 </button>
                 <h1 class="app-bar-title">앱 관리</h1>
@@ -1599,7 +1642,7 @@
         <!-- 회원 승인 대기 화면 -->
         <div id="pending-members-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="handlePendingMembersBack()">
+                <button class="back-button" onclick="handlePendingMembersBack()" aria-label="뒤로 가기">
                     <span class="icon">&larr;</span>
                 </button>
                 <h1 class="app-bar-title">회원 승인 대기</h1>
@@ -1611,7 +1654,7 @@
         <!-- 긴급 푸시 발송 화면 -->
         <div id="push-send-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="handlePushSendBack()">
+                <button class="back-button" onclick="handlePushSendBack()" aria-label="뒤로 가기">
                     <span class="icon">&larr;</span>
                 </button>
                 <h1 class="app-bar-title">긴급 푸시 발송</h1>
@@ -1623,7 +1666,7 @@
         <!-- 공지 관리 화면 -->
         <div id="notice-manage-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="handleNoticeManageBack()">
+                <button class="back-button" onclick="handleNoticeManageBack()" aria-label="뒤로 가기">
                     <span class="icon">&larr;</span>
                 </button>
                 <h1 class="app-bar-title">공지 관리</h1>
@@ -1636,7 +1679,7 @@
         <!-- 공지 작성/수정 화면 -->
         <div id="notice-edit-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="handleNoticeEditBack()">
+                <button class="back-button" onclick="handleNoticeEditBack()" aria-label="뒤로 가기">
                     <span class="icon">&larr;</span>
                 </button>
                 <h1 class="app-bar-title" id="notice-edit-title">새 공지 작성</h1>
@@ -1648,7 +1691,7 @@
         <!-- 게시글 관리 화면 -->
         <div id="post-manage-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="handlePostManageBack()">
+                <button class="back-button" onclick="handlePostManageBack()" aria-label="뒤로 가기">
                     <span class="icon">&larr;</span>
                 </button>
                 <h1 class="app-bar-title">게시글 관리</h1>
@@ -1660,7 +1703,7 @@
         <!-- 일정 관리 화면 -->
         <div id="schedule-manage-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="handleScheduleManageBack()">
+                <button class="back-button" onclick="handleScheduleManageBack()" aria-label="뒤로 가기">
                     <span class="icon">&larr;</span>
                 </button>
                 <h1 class="app-bar-title">일정 관리</h1>
@@ -1672,7 +1715,7 @@
         <!-- 환경설정 화면 (이슈 #9) -->
         <div id="settings-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="navigateToScreen('profile'); loadProfile();">
+                <button class="back-button" onclick="navigateToScreen('profile'); loadProfile();" aria-label="뒤로 가기">
                     <span class="icon">&larr;</span>
                 </button>
                 <h1 class="app-bar-title">환경설정</h1>
@@ -1683,7 +1726,7 @@
         </div>
 
         <!-- 뒤로가기 확인 모달 (이슈 #10) -->
-        <div id="exit-confirm-dialog" class="dialog-overlay" onclick="closeExitDialog()">
+        <div id="exit-confirm-dialog" class="dialog-overlay" role="dialog" aria-modal="true" aria-label="앱 종료 확인" onclick="closeExitDialog()">
             <div class="dialog" onclick="event.stopPropagation()">
                 <div class="dialog-title">앱을 종료하시겠습니까?</div>
                 <div class="dialog-body"></div>
@@ -1697,7 +1740,7 @@
         <!-- 관리자 페이지 (admin/super_admin 전용) -->
         <div id="admin-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="navigateTo('/home')">
+                <button class="back-button" onclick="navigateTo('/home')" aria-label="뒤로 가기">
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">관리자 페이지</h1>

@@ -90,7 +90,7 @@ function createPostCard(post) {
         : '';
 
     const thumbnailHtml = firstImage
-        ? `<div class="pc-thumb"><img src="${firstImage}" alt="" onerror="this.parentElement.style.display='none'"></div>`
+        ? `<div class="pc-thumb"><img src="${firstImage}" alt="" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('pc-thumb--broken')"></div>`
         : '';
 
     const nBadgeHtml = unread
@@ -221,8 +221,10 @@ function renderPostFormImages(containerId, urls, onRemove, previewUrls) {
     var displayUrls = previewUrls && previewUrls.length > 0 ? previewUrls : list;
     el.innerHTML = list.map((url, idx) => {
         var displaySrc = (displayUrls[idx] || url);
-        return `<div class="post-form-image-item" data-index="${idx}">
+        var isUploading = url === '__uploading__';
+        return `<div class="post-form-image-item${isUploading ? ' uploading' : ''}" data-index="${idx}">
             <img src="${escapeHtml(displaySrc)}" alt="첨부" class="post-form-image-thumb" onerror="this.parentElement.classList.add('thumb-error')">
+            ${isUploading ? '<div class="image-upload-progress"><div class="loading-spinner"></div></div>' : ''}
             <button type="button" class="post-form-image-remove" data-index="${idx}" aria-label="제거">&times;</button>
         </div>`;
     }).join('');
@@ -687,7 +689,7 @@ function renderPostDetail(post) {
         imagesHtml = `<div class="post-image-gallery" id="post-gallery-${post.id}">
             <div class="gallery-track">
                 ${images.map((url, i) =>
-                    `<div class="gallery-slide"><img src="${String(url).replace(/"/g, '&quot;')}" alt="첨부 ${i+1}" class="gallery-image" onerror="this.parentElement.style.display='none'" onclick="openFullscreenViewer('${String(url).replace(/'/g, "\\'")}')" loading="lazy"></div>`
+                    `<div class="gallery-slide"><img src="${String(url).replace(/"/g, '&quot;')}" alt="첨부 ${i+1}" class="gallery-image" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('img-broken')" onclick="openFullscreenViewer('${String(url).replace(/'/g, "\\'")}')" loading="lazy"></div>`
                 ).join('')}
             </div>
             ${images.length > 1 ? `<div class="gallery-dots">${images.map((_, i) => `<span class="gallery-dot${i === 0 ? ' active' : ''}" data-idx="${i}"></span>`).join('')}</div>
@@ -1276,5 +1278,58 @@ function initPostGallery(postId) {
         if (Math.abs(deltaX) > 50) goTo(current + (deltaX < 0 ? 1 : -1));
     });
 }
+
+// ========== 게시판 검색 기능 ==========
+(function setupPostSearch() {
+    document.addEventListener('DOMContentLoaded', function() {
+        var toggleBtn = document.getElementById('post-search-toggle');
+        var searchBar = document.getElementById('post-search-bar');
+        var searchInput = document.getElementById('post-search-input');
+        var closeBtn = document.getElementById('post-search-close');
+        if (!toggleBtn || !searchBar || !searchInput) return;
+
+        toggleBtn.addEventListener('click', function() {
+            var visible = searchBar.style.display !== 'none';
+            searchBar.style.display = visible ? 'none' : 'flex';
+            if (!visible) searchInput.focus();
+            else { searchInput.value = ''; filterPostCards(''); }
+        });
+
+        if (closeBtn) closeBtn.addEventListener('click', function() {
+            searchBar.style.display = 'none';
+            searchInput.value = '';
+            filterPostCards('');
+        });
+
+        searchInput.addEventListener('input', debounce(function() {
+            filterPostCards(searchInput.value.trim().toLowerCase());
+        }, 200));
+    });
+
+    function filterPostCards(query) {
+        var cards = document.querySelectorAll('#post-list .post-card');
+        var visibleCount = 0;
+        cards.forEach(function(card) {
+            var title = (card.querySelector('.pc-title') || {}).textContent || '';
+            var author = (card.querySelector('.pc-author') || {}).textContent || '';
+            var match = !query || title.toLowerCase().includes(query) || author.toLowerCase().includes(query);
+            card.style.display = match ? '' : 'none';
+            if (match) visibleCount++;
+        });
+        // 검색 결과 없음 표시
+        var container = document.getElementById('post-list');
+        var noResult = container.querySelector('.post-search-empty');
+        if (query && visibleCount === 0) {
+            if (!noResult) {
+                noResult = document.createElement('div');
+                noResult.className = 'post-search-empty';
+                noResult.innerHTML = renderEmptyState('search', '"' + query + '" 검색 결과가 없습니다');
+                container.appendChild(noResult);
+            }
+        } else if (noResult) {
+            noResult.remove();
+        }
+    }
+})();
 
 console.log('✅ Posts 모듈 로드 완료 (서브탭 + 카드 재디자인)');

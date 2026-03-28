@@ -1,4 +1,4 @@
-// 조직도 관리 (리뉴얼 디자인)
+// 로컬조직도 관리 (리뉴얼 디자인)
 
 var DEFAULT_AVATAR_SVG_OC = '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="15" r="6" fill="#A0C4E8"/><ellipse cx="20" cy="32" rx="11" ry="8" fill="#A0C4E8"/></svg>';
 
@@ -29,7 +29,7 @@ async function loadOrgChartScreen() {
         }
 
         if (groups.length === 0) {
-            html += '<div class="oc-empty">조직도가 아직 등록되지 않았습니다.</div>';
+            html += '<div class="oc-empty">로컬조직도가 아직 등록되지 않았습니다.</div>';
         } else {
             groups.forEach(function(g) {
                 html += renderOrgGroup(g, isManager);
@@ -45,7 +45,7 @@ async function loadOrgChartScreen() {
 
         container.innerHTML = html;
     } catch (err) {
-        container.innerHTML = '<div class="oc-error">' + escapeHtml(err.message || '조직도를 불러올 수 없습니다.') + '</div>';
+        container.innerHTML = '<div class="oc-error">' + escapeHtml(err.message || '로컬조직도를 불러올 수 없습니다.') + '</div>';
     }
 }
 

@@ -9,7 +9,7 @@ function isManagerRole(role) {
 
 /**
  * GET /api/orgchart
- * 조직도 조회 (그룹 + 멤버)
+ * 로컬조직도 조회 (그룹 + 멤버)
  */
 router.get('/', authenticate, async (req, res) => {
     try {
@@ -41,7 +41,7 @@ router.get('/', authenticate, async (req, res) => {
         });
     } catch (error) {
         console.error('Orgchart get error:', error);
-        res.status(500).json({ success: false, error: '조직도를 불러올 수 없습니다.' });
+        res.status(500).json({ success: false, error: '로컬조직도를 불러올 수 없습니다.' });
     }
 });
 

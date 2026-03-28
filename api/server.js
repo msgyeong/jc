@@ -263,7 +263,7 @@ app.listen(PORT, async () => {
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lat DOUBLE PRECISION").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_lng DOUBLE PRECISION").catch(() => {});
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS business_address VARCHAR(500)").catch(() => {});
-    // 조직도 테이블
+    // 로컬조직도 테이블
     dbQuery(`CREATE TABLE IF NOT EXISTS orgchart_groups (
         id SERIAL PRIMARY KEY, org_id INTEGER REFERENCES organizations(id),
         name VARCHAR(100) NOT NULL, sort_order INTEGER DEFAULT 0,
@@ -311,7 +311,7 @@ app.listen(PORT, async () => {
         created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
     )`).catch(() => {});
 
-    // 사이트 콘텐츠 테이블 (조직도, 비전, 직책업무, 지도, 정관)
+    // 사이트 콘텐츠 테이블 (로컬조직도, 비전, 직책업무, 지도, 정관)
     dbQuery(`CREATE TABLE IF NOT EXISTS site_content (
         id SERIAL PRIMARY KEY,
         org_id INTEGER REFERENCES organizations(id),

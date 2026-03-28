@@ -3,44 +3,56 @@
 // 회원가입 폼 유효성 검사
 function validateSignupForm() {
     clearAllErrors();
-    
+
     let isValid = true;
-    
+    let firstErrorField = null;
+
     // 이메일 검증
-    const email = document.getElementById('signup-email').value.trim();
+    const emailEl = document.getElementById('signup-email');
+    const email = emailEl.value.trim();
     if (!email) {
         showError('signup-email-error', '이메일을 입력하세요.');
         isValid = false;
+        if (!firstErrorField) firstErrorField = emailEl;
     } else if (!validateEmail(email)) {
         showError('signup-email-error', '올바른 이메일 형식이 아닙니다.');
         isValid = false;
+        if (!firstErrorField) firstErrorField = emailEl;
     }
-    
+
     // 비밀번호 검증
-    const password = document.getElementById('signup-password').value;
+    const passwordEl = document.getElementById('signup-password');
+    const password = passwordEl.value;
     if (!password) {
         showError('signup-password-error', '비밀번호를 입력하세요.');
         isValid = false;
+        if (!firstErrorField) firstErrorField = passwordEl;
     } else if (password.length < 8) {
         showError('signup-password-error', '비밀번호는 8자 이상이어야 합니다.');
         isValid = false;
+        if (!firstErrorField) firstErrorField = passwordEl;
     }
-    
+
     // 비밀번호 확인 검증
-    const passwordConfirm = document.getElementById('signup-password-confirm').value;
+    const passwordConfirmEl = document.getElementById('signup-password-confirm');
+    const passwordConfirm = passwordConfirmEl.value;
     if (!passwordConfirm) {
         showError('signup-password-confirm-error', '비밀번호 확인을 입력하세요.');
         isValid = false;
+        if (!firstErrorField) firstErrorField = passwordConfirmEl;
     } else if (password !== passwordConfirm) {
         showError('signup-password-confirm-error', '비밀번호가 일치하지 않습니다.');
         isValid = false;
+        if (!firstErrorField) firstErrorField = passwordConfirmEl;
     }
-    
+
     // 이름 검증
-    const name = document.getElementById('signup-name').value.trim();
+    const nameEl = document.getElementById('signup-name');
+    const name = nameEl.value.trim();
     if (!name) {
         showError('signup-name-error', '이름을 입력하세요.');
         isValid = false;
+        if (!firstErrorField) firstErrorField = nameEl;
     }
     
     // 주민등록번호 검증 (분할 입력)
@@ -105,6 +117,9 @@ function validateSignupForm() {
         showError('agree-privacy-error', '개인정보 수집 및 이용에 동의해주세요.');
         isValid = false;
     }
+
+    // 첫 번째 에러 필드로 포커스 이동
+    if (firstErrorField) firstErrorField.focus();
 
     return isValid;
 }
@@ -666,5 +681,46 @@ async function loadOrgList() {
     }
 }
 loadOrgList();
+
+// ========== 비밀번호 강도 미터 ==========
+(function setupPasswordStrength() {
+    var pwInput = document.getElementById('signup-password');
+    if (!pwInput) return;
+
+    pwInput.addEventListener('input', function() {
+        var val = this.value;
+        var container = document.getElementById('password-strength');
+        var fill = document.getElementById('password-strength-fill');
+        var items = document.querySelectorAll('#password-requirements li');
+
+        if (!container || !fill) return;
+
+        // 표시/숨김
+        container.classList.toggle('visible', val.length > 0);
+
+        // 규칙 체크
+        var rules = {
+            length: val.length >= 8,
+            upper: /[A-Z]/.test(val),
+            number: /[0-9]/.test(val),
+            special: /[^A-Za-z0-9]/.test(val)
+        };
+
+        var passed = 0;
+        items.forEach(function(li) {
+            var rule = li.getAttribute('data-rule');
+            if (rules[rule]) {
+                li.classList.add('pass');
+                passed++;
+            } else {
+                li.classList.remove('pass');
+            }
+        });
+
+        // 강도 레벨
+        var levels = ['', 'weak', 'fair', 'good', 'strong'];
+        fill.setAttribute('data-level', levels[passed] || '');
+    });
+})();
 
 console.log('✅ Signup 모듈 로드 완료 (Railway API)');

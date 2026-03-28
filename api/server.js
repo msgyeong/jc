@@ -386,12 +386,14 @@ app.listen(PORT, async () => {
     )`).catch(() => {});
 
     // 배너 광고 테이블 (029_banners)
-    dbQuery(`CREATE TABLE IF NOT EXISTS banners (
-        id SERIAL PRIMARY KEY, title VARCHAR(200) NOT NULL, description TEXT,
-        image_url TEXT, link_url TEXT, is_active BOOLEAN DEFAULT true,
-        sort_order INTEGER DEFAULT 0, created_by INTEGER REFERENCES users(id),
-        created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
-    )`).catch(() => {});
+    try {
+        await dbQuery(`CREATE TABLE IF NOT EXISTS banners (
+            id SERIAL PRIMARY KEY, title VARCHAR(200) NOT NULL, description TEXT,
+            image_url TEXT, link_url TEXT, is_active BOOLEAN DEFAULT true,
+            sort_order INTEGER DEFAULT 0, created_by INTEGER REFERENCES users(id),
+            member_id INTEGER, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
+        )`);
+    } catch (_) {}
 
     // soft delete 컬럼 추가 (028_soft_delete_columns)
     dbQuery(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL`).catch(() => {});

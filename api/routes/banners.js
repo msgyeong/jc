@@ -39,7 +39,11 @@ router.get('/', async (req, res) => {
         return res.json({ success: true, data: { banners: result.rows } });
     } catch (err) {
         console.error('Get banners error:', err);
-        return res.status(500).json({ success: false, error: '배너 목록 조회 중 오류가 발생했습니다.' });
+        // 테이블 미존재 시 빈 배열 반환
+        if (err.message && err.message.includes('does not exist')) {
+            return res.json({ success: true, data: { banners: [] } });
+        }
+        return res.status(500).json({ success: false, error: '배너 목록 조회 중 오류가 발생했습니다.', detail: err.message });
     }
 });
 

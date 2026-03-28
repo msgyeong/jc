@@ -394,10 +394,10 @@ app.listen(PORT, async () => {
     )`).catch(() => {});
 
     // soft delete 컬럼 추가 (028_soft_delete_columns)
-    await query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL`).catch(() => {});
-    await query(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL`).catch(() => {});
-    await query(`CREATE INDEX IF NOT EXISTS idx_posts_deleted_at ON posts (deleted_at) WHERE deleted_at IS NULL`).catch(() => {});
-    await query(`CREATE INDEX IF NOT EXISTS idx_schedules_deleted_at ON schedules (deleted_at) WHERE deleted_at IS NULL`).catch(() => {});
+    dbQuery(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL`).catch(() => {});
+    dbQuery(`ALTER TABLE schedules ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL`).catch(() => {});
+    dbQuery(`CREATE INDEX IF NOT EXISTS idx_posts_deleted_at ON posts (deleted_at) WHERE deleted_at IS NULL`).catch(() => {});
+    dbQuery(`CREATE INDEX IF NOT EXISTS idx_schedules_deleted_at ON schedules (deleted_at) WHERE deleted_at IS NULL`).catch(() => {});
 
     // 소모임 테이블 (030_clubs)
     dbQuery(`CREATE TABLE IF NOT EXISTS clubs (

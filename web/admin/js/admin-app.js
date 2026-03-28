@@ -42,7 +42,7 @@ const AdminAPI = (() => {
             showLogin();
             throw new Error(data.message || '인증 오류');
         }
-        if (!res.ok) throw new Error(data.message || '요청 실패');
+        if (!res.ok) throw new Error(data.detail || data.error || data.message || '요청 실패 (' + res.status + ')');
         return data;
     }
 
@@ -348,7 +348,7 @@ window.addEventListener('load', function() {
         const userInfo = localStorage.getItem('user_info');
         try {
             const user = JSON.parse(userInfo);
-            if (user && ['admin', 'super_admin'].includes(user.role)) {
+            if (user && ['admin', 'super_admin', 'local_admin'].includes(user.role)) {
                 AdminAPI.setToken(localStorage.getItem('auth_token'));
                 AdminAPI.setUser(user);
             }

@@ -98,7 +98,7 @@ router.post('/admin', authenticate, requireRole(['admin', 'super_admin']), async
         return res.json({ success: true, data: { banner: result.rows[0] } });
     } catch (err) {
         console.error('Create banner error:', err);
-        return res.status(500).json({ success: false, error: '배너 등록 중 오류가 발생했습니다.' });
+        return res.status(500).json({ success: false, error: '배너 등록 중 오류가 발생했습니다.', detail: err.message });
     }
 });
 

@@ -246,16 +246,8 @@ app.listen(PORT, async () => {
     console.log(`  - GET    /api/notifications`);
     console.log('='.repeat(50));
 
-    // [임시] admin 비밀번호 리셋 → admin1234
-    const { query: dbQuery } = require('./config/database');
-    const bcrypt = require('bcryptjs');
-    bcrypt.hash('admin1234', 10).then(hash => {
-        dbQuery('UPDATE users SET password_hash = $1 WHERE email = $2', [hash, 'admin@jc.com'])
-            .then(() => console.log('✅ admin@jc.com 비밀번호 리셋 완료: admin1234'))
-            .catch(err => console.error('❌ admin 비밀번호 리셋 실패:', err));
-    });
-
     // 자동 마이그레이션 (신규 컬럼)
+    const { query: dbQuery } = require('./config/database');
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS website VARCHAR(500)").catch(() => {});
     dbQuery("ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_banner BOOLEAN DEFAULT false").catch(() => {});
     // 사업 PR 컬럼 (029_business_pr)

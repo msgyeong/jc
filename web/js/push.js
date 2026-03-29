@@ -11,8 +11,20 @@ async function initPush() {
   }
 
   try {
-    swRegistration = await navigator.serviceWorker.register('/sw.js');
+    swRegistration = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
     console.log('[Push] SW 등록 완료');
+
+    // 새 SW 감지 → 즉시 활성화
+    swRegistration.addEventListener('updatefound', () => {
+      const newWorker = swRegistration.installing;
+      if (newWorker) {
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'activated') {
+            console.log('[SW] 새 버전 활성화됨');
+          }
+        });
+      }
+    });
 
     // SW 메시지 수신 (알림 클릭 → 화면 이동)
     navigator.serviceWorker.addEventListener('message', (event) => {

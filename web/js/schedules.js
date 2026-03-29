@@ -678,7 +678,11 @@ async function submitScheduleComment(scheduleId) {
             body: JSON.stringify({ content })
         });
         if (res.success) {
+            if (input) input.value = '';
+            if (sendBtn) sendBtn.disabled = true;
             loadScheduleComments(scheduleId);
+        } else {
+            if (sendBtn) sendBtn.disabled = false;
         }
     } catch (e) {
         if (sendBtn) sendBtn.disabled = false;
@@ -881,6 +885,7 @@ function renderScheduleForm(data = {}) {
                                     <input type="date" class="schedule-form-input date-input" id="sf-vote-deadline-date">
                                     <input type="time" class="schedule-form-input time-input" id="sf-vote-deadline-time">
                                 </div>
+                                <div class="schedule-form-error" id="sf-vote-deadline-error" style="display:none"></div>
                             </div>
                         </div>
                     </div>
@@ -990,6 +995,21 @@ function validateScheduleForm() {
         valid = false;
     }
 
+    // 참석 투표 마감일 검증
+    const voteToggle = document.getElementById('sf-vote-toggle');
+    if (voteToggle && voteToggle.classList.contains('active') && startDatetime) {
+        const deadlineDate = document.getElementById('sf-vote-deadline-date')?.value;
+        const deadlineTime = document.getElementById('sf-vote-deadline-time')?.value || '23:59';
+        if (deadlineDate) {
+            const deadlineFull = deadlineDate + 'T' + deadlineTime;
+            if (deadlineFull > startDatetime) {
+                showScheduleFormError('sf-vote-deadline-date', 'sf-vote-deadline-error', '투표 마감일은 일정 시작 전이어야 합니다');
+                if (!firstError) firstError = 'sf-vote-deadline-date';
+                valid = false;
+            }
+        }
+    }
+
     if (location && location.length > 200) {
         showScheduleFormError('sf-location', 'sf-location-error', '장소는 200자 이내로 입력해주세요');
         if (!firstError) firstError = 'sf-location';
@@ -1035,9 +1055,10 @@ async function handleScheduleFormSubmit(e) {
         if (!res.success) {
             return;
         }
-        calSelectedDate = startDate;
-        calYear = new Date(startDate).getFullYear();
-        calMonth = new Date(startDate).getMonth();
+        const startDateStr = startDatetime.split('T')[0];
+        calSelectedDate = startDateStr;
+        calYear = new Date(startDateStr).getFullYear();
+        calMonth = new Date(startDateStr).getMonth();
         await loadMonthSchedules();
         backToScheduleList();
     } catch (err) {

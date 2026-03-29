@@ -286,7 +286,10 @@ async function handleWithdraw() {
             if (errorEl) { errorEl.textContent = result.message || '탈퇴 처리에 실패했습니다.'; errorEl.classList.add('show'); }
         }
     } catch (err) {
-        if (errorEl) { errorEl.textContent = err.message || '탈퇴 처리 중 오류가 발생했습니다.'; errorEl.classList.add('show'); }
+        console.error('탈퇴 오류 상세:', err);
+        var msg = '탈퇴 처리 중 오류가 발생했습니다.';
+        if (err && err.message) msg = err.message;
+        if (errorEl) { errorEl.textContent = msg; errorEl.classList.add('show'); }
     } finally {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '회원 탈퇴하기'; }
     }

@@ -1,21 +1,7 @@
 // 영등포 JC — Service Worker (Push Notifications + Offline Cache)
 
-var CACHE_NAME = 'jc-v3';
+var CACHE_NAME = 'jc-v5';
 var STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/styles/main.css',
-  '/js/app.js',
-  '/js/api-client.js',
-  '/js/auth.js',
-  '/js/navigation.js',
-  '/js/utils.js',
-  '/js/home.js',
-  '/js/posts.js',
-  '/js/schedules.js',
-  '/js/members.js',
-  '/js/profile.js',
-  '/js/signup.js',
   '/manifest.json'
 ];
 
@@ -54,21 +40,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 정적 리소스: 캐시 우선 + 백그라운드 업데이트 (stale-while-revalidate)
+  // 정적 리소스: 네트워크 우선 (캐시는 오프라인 폴백용)
   if (url.origin === self.location.origin) {
     event.respondWith(
-      caches.match(event.request).then(cached => {
-        const fetchPromise = fetch(event.request).then(response => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          }
-          return response;
-        }).catch(() => {
-          return cached;
-        });
-
-        return cached ? cached.clone() : fetchPromise;
+      fetch(event.request).then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => {
+        return caches.match(event.request);
       })
     );
     return;

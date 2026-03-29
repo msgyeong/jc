@@ -6,6 +6,16 @@ const { sendPushToAll, sendPushToUser } = require('../utils/pushSender');
 const { createScheduledNotifications } = require('../cron/notification-scheduler');
 const commentService = require('../services/comment-service');
 const attendanceService = require('../services/attendance-service');
+const likeService = require('../services/like-service');
+
+// 게시글 좋아요 config
+const postLikeConfig = {
+    likeTable: 'likes',
+    userColumn: 'user_id',
+    fkColumn: 'post_id',
+    parentTable: 'posts',
+    countColumn: 'likes_count'
+};
 
 // 게시글 댓글 config
 const postCommentConfig = {
@@ -221,49 +231,15 @@ router.post('/:postId/comments/:commentId/like', authenticate, async (req, res) 
 });
 
 /**
- * POST /api/posts/:id/like
- * 공감 토글 (테이블 likes: user_id, post_id)
+ * POST /api/posts/:id/like — like-service 위임
  */
 router.post('/:id/like', authenticate, async (req, res) => {
     try {
-        const { id: postId } = req.params;
-        const userId = req.user.userId;
-
-        const result = await transaction(async (client) => {
-            const existing = await client.query(
-                'SELECT id FROM likes WHERE user_id = $1 AND post_id = $2 FOR UPDATE',
-                [userId, postId]
-            );
-            let liked;
-            if (existing.rows.length > 0) {
-                await client.query('DELETE FROM likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
-                liked = false;
-            } else {
-                await client.query(
-                    'INSERT INTO likes (user_id, post_id, created_at) VALUES ($1, $2, NOW()) ON CONFLICT (user_id, post_id) DO NOTHING',
-                    [userId, postId]
-                );
-                liked = true;
-            }
-            const countResult = await client.query(
-                'SELECT COUNT(*) FROM likes WHERE post_id = $1',
-                [postId]
-            );
-            const likes_count = parseInt(countResult.rows[0]?.count || 0, 10);
-            await client.query(
-                'UPDATE posts SET likes_count = $1, updated_at = NOW() WHERE id = $2',
-                [likes_count, postId]
-            );
-            return { liked, likes_count };
-        });
-
+        const result = await likeService.toggleLike(postLikeConfig, req.params.id, req.user.userId, true);
         return res.json({ success: true, liked: result.liked, likes_count: result.likes_count });
     } catch (err) {
         console.error('Toggle like error:', err);
-        return res.status(500).json({
-            success: false,
-            message: '공감 처리에 실패했습니다.'
-        });
+        return res.status(500).json({ success: false, message: '공감 처리에 실패했습니다.' });
     }
 });
 

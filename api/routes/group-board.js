@@ -5,6 +5,16 @@ const { authenticate } = require('../middleware/auth');
 const { sendPushToUser } = require('../utils/pushSender');
 const commentService = require('../services/comment-service');
 const attendanceService = require('../services/attendance-service');
+const likeService = require('../services/like-service');
+
+// 그룹 게시글 좋아요 config
+const groupLikeConfig = {
+    likeTable: 'group_post_likes',
+    userColumn: 'user_id',
+    fkColumn: 'post_id',
+    parentTable: 'group_posts',
+    countColumn: 'likes_count'
+};
 
 // 그룹 게시판 댓글 config
 const groupCommentConfig = {
@@ -446,12 +456,9 @@ router.get('/:groupId/posts/:postId/attendance', authenticate, async (req, res) 
     }
 });
 
-// ========== 그룹 게시글 좋아요 ==========
+// ========== 그룹 게시글 좋아요 — like-service 위임 ==========
 
-/**
- * POST /api/group-board/:groupId/posts/:postId/like
- * 좋아요 토글
- */
+/** POST /api/group-board/:groupId/posts/:postId/like */
 router.post('/:groupId/posts/:postId/like', authenticate, async (req, res) => {
     try {
         const groupId = parseInt(req.params.groupId);
@@ -463,29 +470,8 @@ router.post('/:groupId/posts/:postId/like', authenticate, async (req, res) => {
             return res.status(403).json({ success: false, error: '권한이 없습니다.' });
         }
 
-        // likes 테이블에서 group_post_id 컬럼이 없을 수 있으므로 별도 테이블 사용
-        let existing;
-        try {
-            existing = await query('SELECT id FROM group_post_likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
-        } catch (catchErr) {
-            console.error("[group_post_likes]", catchErr.message);
-            existing = { rows: [] };
-        }
-
-        let liked;
-        if (existing.rows.length > 0) {
-            await query('DELETE FROM group_post_likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
-            liked = false;
-        } else {
-            await query('INSERT INTO group_post_likes (user_id, post_id) VALUES ($1, $2)', [userId, postId]);
-            liked = true;
-        }
-
-        const countRes = await query('SELECT COUNT(*) FROM group_post_likes WHERE post_id = $1', [postId]);
-        const likes_count = parseInt(countRes.rows[0].count);
-        await query('UPDATE group_posts SET likes_count = $1 WHERE id = $2', [likes_count, postId]);
-
-        res.json({ success: true, liked, likes_count });
+        const result = await likeService.toggleLike(groupLikeConfig, postId, userId, false);
+        res.json({ success: true, liked: result.liked, likes_count: result.likes_count });
     } catch (error) {
         console.error('Group post like error:', error);
         res.status(500).json({ success: false, error: '좋아요 처리에 실패했습니다.' });

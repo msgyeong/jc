@@ -1490,6 +1490,7 @@ input::-ms-clear {
 /* ==================== 게시글 상세 ==================== */
 .post-detail {
     padding: 0;
+    padding-bottom: 70px;
 }
 
 .post-detail-header {
@@ -1509,18 +1510,18 @@ input::-ms-clear {
     flex: 1;
 }
 
-/* 작성자 아바타 */
+/* 작성자 아바타 (카카오톡 스타일 둥근 사각형) */
 .author-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     object-fit: cover;
     flex-shrink: 0;
 }
 .author-avatar-placeholder {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     background: var(--primary-light);
     color: var(--primary-color);
     display: flex;
@@ -1736,21 +1737,61 @@ input::-ms-clear {
     margin-top: 2px;
 }
 
-.post-detail-comment-form {
+/* 댓글 입력 바 (네이버카페 스타일) */
+.post-comment-bar {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
-    align-items: flex-end;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0 0;
 }
-
-.post-detail-comment-form textarea {
+.post-comment-input {
     flex: 1;
-    min-width: 120px;
-    padding: var(--spacing-sm);
+    height: 40px;
+    padding: 0 14px;
     border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
+    border-radius: 20px;
     font-family: inherit;
     font-size: 14px;
+    background: #F9FAFB;
+    outline: none;
+}
+.post-comment-input:focus {
+    border-color: var(--primary-color);
+    background: #fff;
+}
+.post-comment-input::placeholder {
+    color: #9CA3AF;
+}
+.post-comment-send {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+}
+.post-comment-send:active {
+    opacity: 0.8;
+}
+
+/* 댓글 비어있을 때 작게 */
+.post-detail-comments-list.comments-empty {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.comments-empty-text {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0;
+    padding: 12px 0;
 }
 
 .post-detail-meta .btn-like {
@@ -2641,7 +2682,7 @@ input[type="date"]:focus {
 .pc-avatar {
     width: 32px;
     height: 32px;
-    border-radius: 50%;
+    border-radius: 10px;
     background-color: var(--primary-light);
     display: flex;
     align-items: center;

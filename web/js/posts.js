@@ -617,10 +617,8 @@ function showPostDetailScreen(postId) {
             }
         });
 
-        document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
-        detailScreen.classList.add('active');
-
-        if (typeof pushRoute === 'function') pushRoute('post-detail', { postId: postId });
+        // navigateToScreen 사용하여 _currentScreen 정상 관리
+        navigateToScreen('post-detail');
 
         // 상세 로드 (API 호출 → read_status INSERT) → 완료 후 뱃지 갱신
         loadPostDetail(postId).then(function() {
@@ -670,8 +668,10 @@ async function loadCommentsForPost(postId) {
                     <div class="comment-date">${formatRelativeTime(c.created_at)}</div>
                 </div>
             `).join('');
+            listEl.classList.remove('comments-empty');
         } else {
-            listEl.innerHTML = renderEmptyState('chat', '댓글이 없습니다', '첫 댓글을 남겨보세요');
+            listEl.innerHTML = '<p class="comments-empty-text">댓글이 없습니다</p>';
+            listEl.classList.add('comments-empty');
         }
     } catch (_) {
         listEl.innerHTML = renderErrorState('댓글을 불러올 수 없습니다', null, `loadCommentsForPost(${postId})`);
@@ -791,9 +791,9 @@ function renderPostDetail(post) {
             <div class="post-detail-comments">
                 <h4>댓글</h4>
                 <div class="post-detail-comments-list" id="post-detail-comments-list"></div>
-                <form class="post-detail-comment-form" id="post-detail-comment-form" data-post-id="${post.id}">
-                    <textarea name="content" placeholder="댓글을 입력하세요" rows="2" maxlength="1000"></textarea>
-                    <button type="submit" class="btn btn-primary btn-sm">등록</button>
+                <form class="post-comment-bar" id="post-detail-comment-form" data-post-id="${post.id}">
+                    <input type="text" name="content" class="post-comment-input" placeholder="댓글을 남겨보세요" maxlength="1000" autocomplete="off">
+                    <button type="submit" class="post-comment-send" aria-label="등록"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
                 </form>
             </div>
         </article>
@@ -1281,13 +1281,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     document.addEventListener('submit', (e) => {
-        const form = e.target.closest('.post-detail-comment-form');
+        const form = e.target.closest('.post-comment-bar');
         if (form) {
             e.preventDefault();
             const postId = form.dataset.postId;
             const contentEl = form.querySelector('[name="content"]');
             if (postId && contentEl) {
                 handlePostCommentSubmit(postId, contentEl.value);
+                contentEl.value = '';
             }
         }
     });

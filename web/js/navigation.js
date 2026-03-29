@@ -116,6 +116,7 @@ var _routes = {
     'club-invite':  { init: function() { if (typeof loadClubInviteScreen === 'function') loadClubInviteScreen(); } },
     'club-post-form': { init: function() { if (typeof initClubPostForm === 'function') initClubPostForm(); } },
     'club-schedule-form': { init: function() { if (typeof initClubScheduleForm === 'function') initClubScheduleForm(); } },
+    'post-detail':   { nav: 'posts', showNav: true },
     'member-detail': {},
     'meeting-records': { init: function() { if (typeof loadMeetingRecordsScreen === 'function') loadMeetingRecordsScreen(); } }
 };

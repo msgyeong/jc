@@ -667,11 +667,8 @@ router.post('/find-email', async (req, res) => {
         if (result.rows.length === 0) {
             return res.json({ success: true, found: false, message: '일치하는 계정을 찾을 수 없습니다.' });
         }
-        // 이메일 일부 마스킹 (abc@test.com → a**@test.com)
         const email = result.rows[0].email;
-        const [local, domain] = email.split('@');
-        const masked = local[0] + '*'.repeat(Math.max(local.length - 1, 1)) + '@' + domain;
-        res.json({ success: true, found: true, email: masked });
+        res.json({ success: true, found: true, email });
     } catch (error) {
         console.error('Find email error:', error);
         res.status(500).json({ success: false, message: '이메일 찾기 중 오류가 발생했습니다.' });

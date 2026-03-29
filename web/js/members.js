@@ -543,15 +543,14 @@ async function performGlobalSearch(q) {
 // ========== 회원 상세 화면 ==========
 
 async function showMemberDetailScreen(memberId) {
-    const screen = document.getElementById('members-screen');
-    const container = document.getElementById('member-list');
-    if (!screen || !container) return;
-
     // 검색 오버레이 닫기
     closeMemberSearchOverlay();
 
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    screen.classList.add('active');
+    // 올바른 화면 전환 (navigateToScreen 사용)
+    navigateToScreen('member-detail');
+
+    const container = document.getElementById('member-detail-content') || document.getElementById('member-list');
+    if (!container) return;
     container.innerHTML = renderSkeleton('list');
 
     try {
@@ -628,7 +627,7 @@ async function loadTitleHistory(userId, containerId) {
 }
 
 function backToMemberList() {
-    loadMembersScreen();
+    navigateToScreen('members', { back: true });
 }
 
 // ========== 유틸리티 ==========

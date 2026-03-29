@@ -122,7 +122,7 @@ var _routes = {
     'club-post-form': { init: function() { if (typeof initClubPostForm === 'function') initClubPostForm(); } },
     'club-schedule-form': { init: function() { if (typeof initClubScheduleForm === 'function') initClubScheduleForm(); } },
     'post-detail':   { nav: 'posts', showNav: true },
-    'member-detail': {},
+    'member-detail': { nav: 'members', showNav: true },
     'meeting-records': { init: function() { if (typeof loadMeetingRecordsScreen === 'function') loadMeetingRecordsScreen(); } }
 };
 
@@ -140,8 +140,9 @@ function navigateToScreen(screenName, opts) {
     opts = opts || {};
     var route = _routes[screenName] || {};
 
-    // 동일 화면 재진입 방지 (탭 클릭 등)
-    if (_currentScreen === screenName && !opts.force) return;
+    // 동일 탭 재클릭 방지 (단, detail/create/edit 화면은 항상 진입 허용)
+    var isDetailScreen = /detail|create|edit/.test(screenName);
+    if (_currentScreen === screenName && !opts.force && !isDetailScreen) return;
 
     // ─── 방향 결정 (스택 기반) ───
     var isBack = opts.back || false;

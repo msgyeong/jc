@@ -55,6 +55,7 @@ body { font-family:'Noto Sans KR','Segoe UI',sans-serif; background:#f0f2f5; col
 .section-icon { font-size:20px; }
 .section-badge { font-size:11px; padding:2px 8px; border-radius:10px; background:#e5e7eb; color:#6b7280; }
 .section-badge.has-fail { background:#FEE2E2; color:#DC2626; }
+.section-badge.all-pass { background:#D1FAE5; color:#059669; }
 .section-toggle { font-size:18px; color:#9ca3af; transition:transform .2s; }
 .section-toggle.collapsed { transform:rotate(-90deg); }
 .section-body { padding:0; }
@@ -152,7 +153,10 @@ body { font-family:'Noto Sans KR','Segoe UI',sans-serif; background:#f0f2f5; col
   </div>
   <div class="progress-bar">
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="progress-text" id="progressText">테스트 진행률: 0%</div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="progress-text" id="progressText">테스트 진행률: 0%</div>
+      <div id="autoSaveIndicator" style="font-size:11px;opacity:.5;transition:opacity .3s">항목별 자동 저장</div>
+    </div>
   </div>
 </div>
 
@@ -1206,20 +1210,26 @@ function renderTests() {
     sectionEl.className = 'section';
     sectionEl.dataset.sectionId = section.id;
 
-    // 실패 카운트
+    // 카운트
     const failCount = section.tests.filter(t => getResult(t.id).status === 'fail').length;
     const doneCount = section.tests.filter(t => getResult(t.id).status !== 'none').length;
+    const allDone = doneCount === section.tests.length;
+    const sectionComplete = allDone && failCount === 0;
+
+    // 완료된 섹션은 접기
+    const collapsed = allDone ? true : false;
+    const statusIcon = sectionComplete ? '✅' : (failCount > 0 ? '🐛' : (doneCount > 0 ? '🔄' : '⬜'));
 
     sectionEl.innerHTML = `
       <div class="section-header" onclick="toggleSection('${section.id}')">
         <div class="section-title">
           <span class="section-icon">${section.icon}</span>
           ${section.title}
-          <span class="section-badge ${failCount > 0 ? 'has-fail' : ''}">${doneCount}/${section.tests.length}${failCount > 0 ? ' | 🐛' + failCount : ''}</span>
+          <span class="section-badge ${failCount > 0 ? 'has-fail' : (sectionComplete ? 'all-pass' : '')}">${statusIcon} ${doneCount}/${section.tests.length}${failCount > 0 ? ' | 🐛' + failCount : ''}</span>
         </div>
-        <span class="section-toggle" id="toggle-${section.id}">▼</span>
+        <span class="section-toggle ${collapsed ? 'collapsed' : ''}" id="toggle-${section.id}">▼</span>
       </div>
-      <div class="section-body" id="body-${section.id}">
+      <div class="section-body ${collapsed ? 'collapsed' : ''}" id="body-${section.id}">
         ${section.tests.map((t, i) => renderTestItem(t, i + 1)).join('')}
       </div>
     `;
@@ -1291,11 +1301,23 @@ function setStatus(id, status) {
   renderTests();
   updateStats();
   applyFilter();
+  showAutoSaved();
 }
 
 function updateIssue(id, text) {
   getResult(id).issue = text;
   saveToStorage();
+  showAutoSaved();
+}
+
+// 자동 저장 표시
+function showAutoSaved() {
+  const el = document.getElementById('autoSaveIndicator');
+  if (!el) return;
+  el.textContent = '✅ 자동 저장됨 ' + new Date().toLocaleTimeString('ko-KR');
+  el.style.opacity = '1';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.style.opacity = '.5'; }, 2000);
 }
 
 function setSeverity(id, sev) {

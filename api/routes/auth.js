@@ -658,9 +658,11 @@ router.post('/find-email', async (req, res) => {
     try {
         const { name, phone } = req.body;
         if (!name || !phone) return res.status(400).json({ success: false, message: '이름과 전화번호를 입력해주세요.' });
+        // 하이픈 제거 후 비교 — 숫자만 추출
+        const phoneDigits = phone.trim().replace(/\D/g, '');
         const result = await query(
-            "SELECT email FROM users WHERE name = $1 AND phone = $2 AND status != 'withdrawn'",
-            [name.trim(), phone.trim()]
+            "SELECT email FROM users WHERE name = $1 AND REGEXP_REPLACE(phone, '[^0-9]', '', 'g') = $2 AND status != 'withdrawn'",
+            [name.trim(), phoneDigits]
         );
         if (result.rows.length === 0) {
             return res.json({ success: true, found: false, message: '일치하는 계정을 찾을 수 없습니다.' });

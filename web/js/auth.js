@@ -268,9 +268,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// 전화번호 자동 하이픈 포매팅
+function formatPhoneInput(input) {
+    let v = input.value.replace(/\D/g, '');
+    if (v.length > 11) v = v.substring(0, 11);
+    if (v.length >= 8) {
+        input.value = v.replace(/(\d{3})(\d{4})(\d+)/, '$1-$2-$3');
+    } else if (v.length >= 4) {
+        input.value = v.replace(/(\d{3})(\d+)/, '$1-$2');
+    } else {
+        input.value = v;
+    }
+}
+
 // 아이디(이메일) 찾기
 function showFindEmailScreen() {
     navigateToScreen('find-email');
+    // 전화번호 입력 이벤트 바인딩
+    setTimeout(() => {
+        const phoneInput = document.getElementById('find-email-phone');
+        if (phoneInput && !phoneInput._formatted) {
+            phoneInput._formatted = true;
+            phoneInput.addEventListener('input', () => formatPhoneInput(phoneInput));
+        }
+    }, 100);
 }
 
 async function handleFindEmail() {

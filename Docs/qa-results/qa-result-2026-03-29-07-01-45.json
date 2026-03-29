@@ -1,0 +1,1243 @@
+{
+  "version": "2.0",
+  "app": "JC 회원관리 커뮤니티 앱",
+  "tester": "사장님",
+  "timestamp": "2026-03-29T07:01:45.927Z",
+  "date": "2026. 3. 29.",
+  "summary": {
+    "total": 122,
+    "pass": 18,
+    "fail": 31,
+    "skip": 4,
+    "untested": 69,
+    "passRate": "15%"
+  },
+  "results": {
+    "AUTH-001": {
+      "section": "인증 & 로그인",
+      "title": "정상 로그인",
+      "status": "fail",
+      "issue": "관리자 로그인 했을 때는 원래 대시보드로 첫 화면이 뜨는게 맞는지 확인할 것. 공동개발자에게 확인할 것. 일반회원계정으로 로그인 잘 됨.",
+      "severity": null,
+      "screenshotCount": 1
+    },
+    "AUTH-002": {
+      "section": "인증 & 로그인",
+      "title": "잘못된 비밀번호 로그인",
+      "status": "fail",
+      "issue": "5회 연속 실패 했는데 계정 잠금 또는 경고가 확인 되지는 않았다.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "AUTH-003": {
+      "section": "인증 & 로그인",
+      "title": "존재하지 않는 이메일 로그인",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "AUTH-004": {
+      "section": "인증 & 로그인",
+      "title": "빈 필드 로그인 시도",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "AUTH-005": {
+      "section": "인증 & 로그인",
+      "title": "로그인 유지 (Remember Me)",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "AUTH-006": {
+      "section": "인증 & 로그인",
+      "title": "로그아웃",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "AUTH-007": {
+      "section": "인증 & 로그인",
+      "title": "비밀번호 찾기 — 1단계",
+      "status": "fail",
+      "issue": "통과인데, 의견 남길 것이 있어서 쓰는거야. 비밀번호 찾기는 있는데, 만약에 아이디를 까먹었으면 어떻게 해? 아이디 찾기가 없어.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "AUTH-008": {
+      "section": "인증 & 로그인",
+      "title": "비밀번호 찾기 — 2~3단계",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "AUTH-009": {
+      "section": "인증 & 로그인",
+      "title": "토큰 만료 시 동작",
+      "status": "skip",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "AUTH-010": {
+      "section": "인증 & 로그인",
+      "title": "SQL 인젝션 방어 테스트",
+      "status": "skip",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SIGNUP-001": {
+      "section": "회원가입",
+      "title": "회원가입 전체 흐름",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SIGNUP-002": {
+      "section": "회원가입",
+      "title": "이메일 중복 체크",
+      "status": "fail",
+      "issue": "문제는 아니야. 그런데, 이메일 중복 여부를 이메일 입력할 때 \"중복 확인\" 할 수 있게 변경하는 것 검토.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SIGNUP-003": {
+      "section": "회원가입",
+      "title": "필수 입력값 검증",
+      "status": "fail",
+      "issue": "주민번호 앞 7자리 입력하잖아. 그런데 내가 580858-1 이라고 쳤거든? 그것에 대한 에러가 안뜸. 8월58일 이란 것은 없음.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SIGNUP-004": {
+      "section": "회원가입",
+      "title": "프로필 사진 업로드 & 크롭",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SIGNUP-005": {
+      "section": "회원가입",
+      "title": "SNS 링크 유효성",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "HOME-001": {
+      "section": "홈 화면",
+      "title": "홈 화면 로딩",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "HOME-002": {
+      "section": "홈 화면",
+      "title": "공지사항 요약 표시",
+      "status": "fail",
+      "issue": "통과야. 문제는 없음. 기타 의견 : 등록된 공지가 없거나 일정이 없을 때의 빈 칸이 너무 넓음. 보여줄 것이 없는데 굳이 이렇게 칸이 넓을 필요가 없음.",
+      "severity": null,
+      "screenshotCount": 1
+    },
+    "HOME-003": {
+      "section": "홈 화면",
+      "title": "배너 캐러셀",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "HOME-004": {
+      "section": "홈 화면",
+      "title": "일정 요약",
+      "status": "fail",
+      "issue": "통과야. 문제는 없음. 기타 의견 : 등록된 공지가 없거나 일정이 없을 때의 빈 칸이 너무 넓음. 보여줄 것이 없는데 굳이 이렇게 칸이 넓을 필요가 없음. 공지 칸 길이가 조금 짧으면 화면 스크롤을 내리지 않아도 일정까지도 한눈에 보이겠는데, 굳이 내려야 하니까 손 가서 안좋다.",
+      "severity": null,
+      "screenshotCount": 1
+    },
+    "HOME-005": {
+      "section": "홈 화면",
+      "title": "Pull-to-Refresh",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "POST-001": {
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시판 목록 진입 & 탭 전환",
+      "status": "fail",
+      "issue": "자유게시판은 뭐고, Q&A 탭은 뭐냐?",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "POST-002": {
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시글 작성 (텍스트만)",
+      "status": "pass",
+      "issue": "게시글 등록이 안된다.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "POST-003": {
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시글 작성 (이미지 포함)",
+      "status": "fail",
+      "issue": "이미지 첨부해서 등록하는데, 게시글 등록 안된다.",
+      "severity": null,
+      "screenshotCount": 1
+    },
+    "POST-004": {
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시글 상세 보기",
+      "status": "fail",
+      "issue": "게시글 작성 후, 게시글 상세 보기 시도하는데, 상세 보기 실행 안됨. 캐시 삭제를 하니까 상세 보기 된다.",
+      "severity": null,
+      "screenshotCount": 1
+    },
+    "POST-005": {
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시글 수정",
+      "status": "fail",
+      "issue": "게시글 상세화면 진입이 안되서 수정을 시도할 수 없음. 캐시 삭제해서 수정함. 그런데, 내용 입력 박스의 ui가 다른 입력 ui 창 포멧과 다르다.",
+      "severity": null,
+      "screenshotCount": 1
+    },
+    "POST-006": {
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시글 삭제",
+      "status": "fail",
+      "issue": "게시글 상세화면 진입이 안되서 삭제를 시도할 수 없음. 캐시 삭제를 통해 상세 보기 성공했고, 삭제됨.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "POST-007": {
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "댓글 작성 & 삭제",
+      "status": "fail",
+      "issue": "게시글 상세화면 진입이 안되서 수정을 시도할 수 없음. 캐시 삭제 해서 됐는데, 댓글 작성/삭제됨.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "POST-008": {
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "좋아요 기능",
+      "status": "fail",
+      "issue": "게시글 상세화면 진입이 안되서 수정을 시도할 수 없음. 캐시 삭제해서 상세보기 진행했고, 좋아요 기능됨.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "POST-009": {
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "고정 공지 (관리자)",
+      "status": "skip",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "POST-010": {
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "무한 스크롤 & 페이지네이션",
+      "status": "fail",
+      "issue": "니가 테스트 게시글을 50개 정도 만들어줘. 그걸로 테스트 하게. 테스트 로컬에 해주면 된다.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "POST-011": {
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "XSS 방어 테스트",
+      "status": "skip",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "POST-012": {
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시글 검색",
+      "status": "fail",
+      "issue": "게시판에 검색 아이콘 없음.",
+      "severity": null,
+      "screenshotCount": 2
+    },
+    "SCHED-001": {
+      "section": "일정 관리",
+      "title": "캘린더 화면 진입",
+      "status": "fail",
+      "issue": "목업 일정 월마다 몇개씩 해놔. 나중에 다시 확인해보자.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SCHED-002": {
+      "section": "일정 관리",
+      "title": "월 이동",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SCHED-003": {
+      "section": "일정 관리",
+      "title": "특정 날짜 클릭 → 일정 목록",
+      "status": "fail",
+      "issue": "목업 일정 월마다 몇개씩 해놔. 나중에 다시 확인해보자.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SCHED-004": {
+      "section": "일정 관리",
+      "title": "일정 등록 (관리자)",
+      "status": "fail",
+      "issue": "일반회원에게 일정에 + 버튼이 있어. 관리자 아니고, 일정을 등록할 수 없는 권한 회원은 + 버튼 빼라. 그리고 일정등록 시, '일정 등록' 버튼을 눌렀는데도 화면이 일정 화면으로 넘어가지도 않음. 그리고 일정보다 이전 일정으로 '시작 날짜, 종료 날짜' 설정이 되는 문제가 있음. 참석 투표 설정 시, '마감일'이 등록일 이전임에도 설정이 됨. 또한, 새 일정 등록할 때, 새 일정의 등록 일자가 나오도록 되어야 함.",
+      "severity": null,
+      "screenshotCount": 2
+    },
+    "SCHED-005": {
+      "section": "일정 관리",
+      "title": "일정 수정 & 삭제 (관리자)",
+      "status": "fail",
+      "issue": "수정 완료 버튼에서 일정 화면으로 넘어가지 않음. ",
+      "severity": "critical",
+      "screenshotCount": 1
+    },
+    "SCHED-006": {
+      "section": "일정 관리",
+      "title": "일정 댓글",
+      "status": "fail",
+      "issue": "일정 댓글 등록 안됨. ",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SCHED-007": {
+      "section": "일정 관리",
+      "title": "일정 출석 체크",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SCHED-008": {
+      "section": "일정 관리",
+      "title": "일정 카테고리 색상 확인",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MEM-001": {
+      "section": "회원 목록 & 검색",
+      "title": "회원 목록 진입",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MEM-002": {
+      "section": "회원 목록 & 검색",
+      "title": "회원 검색",
+      "status": "fail",
+      "issue": "회원검색 기능 없음.",
+      "severity": null,
+      "screenshotCount": 1
+    },
+    "MEM-003": {
+      "section": "회원 목록 & 검색",
+      "title": "회원 필터 — 업종별",
+      "status": "fail",
+      "issue": "'업종 : 전체', '직책: 전체' 드롭 다운 안눌림.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MEM-004": {
+      "section": "회원 목록 & 검색",
+      "title": "회원 필터 — 직책별",
+      "status": "fail",
+      "issue": "'업종 : 전체', '직책: 전체' 드롭 다운 안눌림.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MEM-005": {
+      "section": "회원 목록 & 검색",
+      "title": "회원 상세 정보",
+      "status": "fail",
+      "issue": "회원 클릭했는데, 안눌리고, 상세 정보 보기도 안됨.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MEM-006": {
+      "section": "회원 목록 & 검색",
+      "title": "즐겨찾기 회원",
+      "status": "fail",
+      "issue": "즐겨찾기 버튼 안눌림. 회원 즐겨찾기 안됨.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MEM-007": {
+      "section": "회원 목록 & 검색",
+      "title": "타 로컬 회원 보기 토글",
+      "status": "fail",
+      "issue": "타 로컬 보기 체크 안됨.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "PROF-001": {
+      "section": "프로필 관리",
+      "title": "내 프로필 보기",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "PROF-002": {
+      "section": "프로필 관리",
+      "title": "프로필 수정",
+      "status": "fail",
+      "issue": "프로필 화면에 \"편집\" 버튼 없음. 혹시 밑에 ' 내 정보 수정' 버튼이라면, 이것 보다는 우측 상단에 편집 이라는 글씨를 눌러서 수정하는 것이 나음.",
+      "severity": null,
+      "screenshotCount": 1
+    },
+    "PROF-003": {
+      "section": "프로필 관리",
+      "title": "프로필 사진 변경",
+      "status": "fail",
+      "issue": "되긴 했어. 웹앱을 끄고 다시 켜니까 됐어. 왠지 앞에도 이런 경우가 많았는데, 그 이유가 캐시가 쌓이면 실행이 안되는 현상이 매우 많은 것 같음.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "PROF-004": {
+      "section": "프로필 관리",
+      "title": "SNS 링크 수정",
+      "status": "fail",
+      "issue": "스크린샷 첨부가 안된다. sns가 인스타인지 패이스북인지 알 수가 없이 아이디만 뜬다. 그리고 url 은 https://를 입력하지 않으면 등록이 안된다.",
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "PROF-005": {
+      "section": "프로필 관리",
+      "title": "비밀번호 변경",
+      "status": "pass",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "PROF-006": {
+      "section": "프로필 관리",
+      "title": "회원 탈퇴",
+      "status": "fail",
+      "issue": "스크린샷 첨부가 안된다. 탈퇴 안됨. 탈퇴 진행하면 하단에 '회원 탈퇴 처리 중 오류가 발생했습니다.' 라고 뜬다.",
+      "severity": null,
+      "screenshotCount": 1
+    },
+    "CLUB-001": {
+      "section": "소모임",
+      "title": "소모임 목록 보기",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "CLUB-002": {
+      "section": "소모임",
+      "title": "소모임 생성",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "CLUB-003": {
+      "section": "소모임",
+      "title": "소모임 상세 & 멤버 관리",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "CLUB-004": {
+      "section": "소모임",
+      "title": "소모임 초대 수락/거절",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "CLUB-005": {
+      "section": "소모임",
+      "title": "소모임 게시글 작성 & 읽기",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "CLUB-006": {
+      "section": "소모임",
+      "title": "소모임 일정 관리",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "CLUB-007": {
+      "section": "소모임",
+      "title": "소모임 초대 재발송",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ORG-001": {
+      "section": "로컬조직도 & 그룹 게시판",
+      "title": "조직도 보기",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ORG-002": {
+      "section": "로컬조직도 & 그룹 게시판",
+      "title": "그룹 생성/수정/삭제 (관리자)",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ORG-003": {
+      "section": "로컬조직도 & 그룹 게시판",
+      "title": "그룹 멤버 추가/제거 (관리자)",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ORG-004": {
+      "section": "로컬조직도 & 그룹 게시판",
+      "title": "그룹 게시판",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ORG-005": {
+      "section": "로컬조직도 & 그룹 게시판",
+      "title": "그룹 일정",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MEET-001": {
+      "section": "회의 관리",
+      "title": "회의 목록 보기",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MEET-002": {
+      "section": "회의 관리",
+      "title": "회의 등록 (관리자)",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MEET-003": {
+      "section": "회의 관리",
+      "title": "회의 상세 & 출석",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MEET-004": {
+      "section": "회의 관리",
+      "title": "회의록(PDF) 열기",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MEET-005": {
+      "section": "회의 관리",
+      "title": "회의 투표 기능",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MAP-001": {
+      "section": "JC 지도",
+      "title": "지도 화면 진입",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MAP-002": {
+      "section": "JC 지도",
+      "title": "내 위치 표시",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MAP-003": {
+      "section": "JC 지도",
+      "title": "회원 검색 & 필터",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MAP-004": {
+      "section": "JC 지도",
+      "title": "마커 클릭 → 회원 정보",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MAP-005": {
+      "section": "JC 지도",
+      "title": "줌 & 전체 보기",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "NOTI-001": {
+      "section": "알림",
+      "title": "알림 센터 진입",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "NOTI-002": {
+      "section": "알림",
+      "title": "알림 클릭 → 해당 페이지 이동",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "NOTI-003": {
+      "section": "알림",
+      "title": "전체 읽음 처리",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "NOTI-004": {
+      "section": "알림",
+      "title": "알림 배지 카운트",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SET-001": {
+      "section": "환경설정",
+      "title": "글자 크기 변경",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SET-002": {
+      "section": "환경설정",
+      "title": "캐시 삭제",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SET-003": {
+      "section": "환경설정",
+      "title": "이용약관 & 개인정보처리방침",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SET-004": {
+      "section": "환경설정",
+      "title": "앱 버전 표시",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "CONT-001": {
+      "section": "콘텐츠 (비전/역할/정관)",
+      "title": "JC 비전 페이지",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "CONT-002": {
+      "section": "콘텐츠 (비전/역할/정관)",
+      "title": "JC 역할 페이지",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "CONT-003": {
+      "section": "콘텐츠 (비전/역할/정관)",
+      "title": "JC 정관 페이지",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ADM-001": {
+      "section": "관리자 콘솔",
+      "title": "관리자 콘솔 진입",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ADM-002": {
+      "section": "관리자 콘솔",
+      "title": "회원 승인/거절",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ADM-003": {
+      "section": "관리자 콘솔",
+      "title": "회원 역할 변경",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ADM-004": {
+      "section": "관리자 콘솔",
+      "title": "회원 비밀번호 초기화 (관리자)",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ADM-005": {
+      "section": "관리자 콘솔",
+      "title": "회원 CSV 내보내기",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ADM-006": {
+      "section": "관리자 콘솔",
+      "title": "로컬별 회원 필터 (총관리자)",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ADM-007": {
+      "section": "관리자 콘솔",
+      "title": "배너 관리",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ADM-008": {
+      "section": "관리자 콘솔",
+      "title": "공지사항 관리",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ADM-009": {
+      "section": "관리자 콘솔",
+      "title": "일정 관리",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ADM-010": {
+      "section": "관리자 콘솔",
+      "title": "푸시 알림 발송",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "ADM-011": {
+      "section": "관리자 콘솔",
+      "title": "감사 로그 확인",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "UI-001": {
+      "section": "UI/UX 공통",
+      "title": "하단 네비게이션 동작",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "UI-002": {
+      "section": "UI/UX 공통",
+      "title": "사이드 메뉴 (햄버거)",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "UI-003": {
+      "section": "UI/UX 공통",
+      "title": "로딩 상태 표시",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "UI-004": {
+      "section": "UI/UX 공통",
+      "title": "빈 상태 UI",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "UI-005": {
+      "section": "UI/UX 공통",
+      "title": "에러 상태 UI",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "UI-006": {
+      "section": "UI/UX 공통",
+      "title": "모바일 반응형",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "UI-007": {
+      "section": "UI/UX 공통",
+      "title": "스크롤 복원",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "UI-008": {
+      "section": "UI/UX 공통",
+      "title": "디자인 시스템 일관성",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "UI-009": {
+      "section": "UI/UX 공통",
+      "title": "PWA 동작",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "UI-010": {
+      "section": "UI/UX 공통",
+      "title": "뒤로 가기 동작",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MT-001": {
+      "section": "멀티테넌트 (로컬 분리)",
+      "title": "로컬별 데이터 격리 — 게시판",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MT-002": {
+      "section": "멀티테넌트 (로컬 분리)",
+      "title": "로컬별 데이터 격리 — 일정",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MT-003": {
+      "section": "멀티테넌트 (로컬 분리)",
+      "title": "로컬별 데이터 격리 — 회의록",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MT-004": {
+      "section": "멀티테넌트 (로컬 분리)",
+      "title": "로컬별 회원 목록",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "MT-005": {
+      "section": "멀티테넌트 (로컬 분리)",
+      "title": "local_admin 권한 범위",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "PERF-001": {
+      "section": "성능 & 안정성",
+      "title": "초기 로딩 속도",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "PERF-002": {
+      "section": "성능 & 안정성",
+      "title": "페이지 전환 속도",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "PERF-003": {
+      "section": "성능 & 안정성",
+      "title": "이미지 로딩",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "PERF-004": {
+      "section": "성능 & 안정성",
+      "title": "동시 다중 요청",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "PERF-005": {
+      "section": "성능 & 안정성",
+      "title": "서비스 워커 캐시",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SEC-001": {
+      "section": "보안",
+      "title": "비인증 API 접근 차단",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SEC-002": {
+      "section": "보안",
+      "title": "타인 데이터 수정 차단",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SEC-003": {
+      "section": "보안",
+      "title": "관리자 API 권한 체크",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SEC-004": {
+      "section": "보안",
+      "title": "파일 업로드 제한",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    },
+    "SEC-005": {
+      "section": "보안",
+      "title": "Rate Limiting 확인",
+      "status": "none",
+      "issue": null,
+      "severity": null,
+      "screenshotCount": 0
+    }
+  },
+  "issues": [
+    {
+      "id": "AUTH-001",
+      "section": "인증 & 로그인",
+      "title": "정상 로그인",
+      "severity": "unknown",
+      "description": "관리자 로그인 했을 때는 원래 대시보드로 첫 화면이 뜨는게 맞는지 확인할 것. 공동개발자에게 확인할 것. 일반회원계정으로 로그인 잘 됨.",
+      "screenshotCount": 1
+    },
+    {
+      "id": "AUTH-002",
+      "section": "인증 & 로그인",
+      "title": "잘못된 비밀번호 로그인",
+      "severity": "unknown",
+      "description": "5회 연속 실패 했는데 계정 잠금 또는 경고가 확인 되지는 않았다.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "AUTH-007",
+      "section": "인증 & 로그인",
+      "title": "비밀번호 찾기 — 1단계",
+      "severity": "unknown",
+      "description": "통과인데, 의견 남길 것이 있어서 쓰는거야. 비밀번호 찾기는 있는데, 만약에 아이디를 까먹었으면 어떻게 해? 아이디 찾기가 없어.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "SIGNUP-002",
+      "section": "회원가입",
+      "title": "이메일 중복 체크",
+      "severity": "unknown",
+      "description": "문제는 아니야. 그런데, 이메일 중복 여부를 이메일 입력할 때 \"중복 확인\" 할 수 있게 변경하는 것 검토.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "SIGNUP-003",
+      "section": "회원가입",
+      "title": "필수 입력값 검증",
+      "severity": "unknown",
+      "description": "주민번호 앞 7자리 입력하잖아. 그런데 내가 580858-1 이라고 쳤거든? 그것에 대한 에러가 안뜸. 8월58일 이란 것은 없음.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "HOME-002",
+      "section": "홈 화면",
+      "title": "공지사항 요약 표시",
+      "severity": "unknown",
+      "description": "통과야. 문제는 없음. 기타 의견 : 등록된 공지가 없거나 일정이 없을 때의 빈 칸이 너무 넓음. 보여줄 것이 없는데 굳이 이렇게 칸이 넓을 필요가 없음.",
+      "screenshotCount": 1
+    },
+    {
+      "id": "HOME-004",
+      "section": "홈 화면",
+      "title": "일정 요약",
+      "severity": "unknown",
+      "description": "통과야. 문제는 없음. 기타 의견 : 등록된 공지가 없거나 일정이 없을 때의 빈 칸이 너무 넓음. 보여줄 것이 없는데 굳이 이렇게 칸이 넓을 필요가 없음. 공지 칸 길이가 조금 짧으면 화면 스크롤을 내리지 않아도 일정까지도 한눈에 보이겠는데, 굳이 내려야 하니까 손 가서 안좋다.",
+      "screenshotCount": 1
+    },
+    {
+      "id": "POST-001",
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시판 목록 진입 & 탭 전환",
+      "severity": "unknown",
+      "description": "자유게시판은 뭐고, Q&A 탭은 뭐냐?",
+      "screenshotCount": 0
+    },
+    {
+      "id": "POST-003",
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시글 작성 (이미지 포함)",
+      "severity": "unknown",
+      "description": "이미지 첨부해서 등록하는데, 게시글 등록 안된다.",
+      "screenshotCount": 1
+    },
+    {
+      "id": "POST-004",
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시글 상세 보기",
+      "severity": "unknown",
+      "description": "게시글 작성 후, 게시글 상세 보기 시도하는데, 상세 보기 실행 안됨. 캐시 삭제를 하니까 상세 보기 된다.",
+      "screenshotCount": 1
+    },
+    {
+      "id": "POST-005",
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시글 수정",
+      "severity": "unknown",
+      "description": "게시글 상세화면 진입이 안되서 수정을 시도할 수 없음. 캐시 삭제해서 수정함. 그런데, 내용 입력 박스의 ui가 다른 입력 ui 창 포멧과 다르다.",
+      "screenshotCount": 1
+    },
+    {
+      "id": "POST-006",
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시글 삭제",
+      "severity": "unknown",
+      "description": "게시글 상세화면 진입이 안되서 삭제를 시도할 수 없음. 캐시 삭제를 통해 상세 보기 성공했고, 삭제됨.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "POST-007",
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "댓글 작성 & 삭제",
+      "severity": "unknown",
+      "description": "게시글 상세화면 진입이 안되서 수정을 시도할 수 없음. 캐시 삭제 해서 됐는데, 댓글 작성/삭제됨.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "POST-008",
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "좋아요 기능",
+      "severity": "unknown",
+      "description": "게시글 상세화면 진입이 안되서 수정을 시도할 수 없음. 캐시 삭제해서 상세보기 진행했고, 좋아요 기능됨.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "POST-010",
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "무한 스크롤 & 페이지네이션",
+      "severity": "unknown",
+      "description": "니가 테스트 게시글을 50개 정도 만들어줘. 그걸로 테스트 하게. 테스트 로컬에 해주면 된다.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "POST-012",
+      "section": "게시판 (공지/자유/Q&A)",
+      "title": "게시글 검색",
+      "severity": "unknown",
+      "description": "게시판에 검색 아이콘 없음.",
+      "screenshotCount": 2
+    },
+    {
+      "id": "SCHED-001",
+      "section": "일정 관리",
+      "title": "캘린더 화면 진입",
+      "severity": "unknown",
+      "description": "목업 일정 월마다 몇개씩 해놔. 나중에 다시 확인해보자.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "SCHED-003",
+      "section": "일정 관리",
+      "title": "특정 날짜 클릭 → 일정 목록",
+      "severity": "unknown",
+      "description": "목업 일정 월마다 몇개씩 해놔. 나중에 다시 확인해보자.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "SCHED-004",
+      "section": "일정 관리",
+      "title": "일정 등록 (관리자)",
+      "severity": "unknown",
+      "description": "일반회원에게 일정에 + 버튼이 있어. 관리자 아니고, 일정을 등록할 수 없는 권한 회원은 + 버튼 빼라. 그리고 일정등록 시, '일정 등록' 버튼을 눌렀는데도 화면이 일정 화면으로 넘어가지도 않음. 그리고 일정보다 이전 일정으로 '시작 날짜, 종료 날짜' 설정이 되는 문제가 있음. 참석 투표 설정 시, '마감일'이 등록일 이전임에도 설정이 됨. 또한, 새 일정 등록할 때, 새 일정의 등록 일자가 나오도록 되어야 함.",
+      "screenshotCount": 2
+    },
+    {
+      "id": "SCHED-005",
+      "section": "일정 관리",
+      "title": "일정 수정 & 삭제 (관리자)",
+      "severity": "critical",
+      "description": "수정 완료 버튼에서 일정 화면으로 넘어가지 않음. ",
+      "screenshotCount": 1
+    },
+    {
+      "id": "SCHED-006",
+      "section": "일정 관리",
+      "title": "일정 댓글",
+      "severity": "unknown",
+      "description": "일정 댓글 등록 안됨. ",
+      "screenshotCount": 0
+    },
+    {
+      "id": "MEM-002",
+      "section": "회원 목록 & 검색",
+      "title": "회원 검색",
+      "severity": "unknown",
+      "description": "회원검색 기능 없음.",
+      "screenshotCount": 1
+    },
+    {
+      "id": "MEM-003",
+      "section": "회원 목록 & 검색",
+      "title": "회원 필터 — 업종별",
+      "severity": "unknown",
+      "description": "'업종 : 전체', '직책: 전체' 드롭 다운 안눌림.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "MEM-004",
+      "section": "회원 목록 & 검색",
+      "title": "회원 필터 — 직책별",
+      "severity": "unknown",
+      "description": "'업종 : 전체', '직책: 전체' 드롭 다운 안눌림.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "MEM-005",
+      "section": "회원 목록 & 검색",
+      "title": "회원 상세 정보",
+      "severity": "unknown",
+      "description": "회원 클릭했는데, 안눌리고, 상세 정보 보기도 안됨.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "MEM-006",
+      "section": "회원 목록 & 검색",
+      "title": "즐겨찾기 회원",
+      "severity": "unknown",
+      "description": "즐겨찾기 버튼 안눌림. 회원 즐겨찾기 안됨.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "MEM-007",
+      "section": "회원 목록 & 검색",
+      "title": "타 로컬 회원 보기 토글",
+      "severity": "unknown",
+      "description": "타 로컬 보기 체크 안됨.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "PROF-002",
+      "section": "프로필 관리",
+      "title": "프로필 수정",
+      "severity": "unknown",
+      "description": "프로필 화면에 \"편집\" 버튼 없음. 혹시 밑에 ' 내 정보 수정' 버튼이라면, 이것 보다는 우측 상단에 편집 이라는 글씨를 눌러서 수정하는 것이 나음.",
+      "screenshotCount": 1
+    },
+    {
+      "id": "PROF-003",
+      "section": "프로필 관리",
+      "title": "프로필 사진 변경",
+      "severity": "unknown",
+      "description": "되긴 했어. 웹앱을 끄고 다시 켜니까 됐어. 왠지 앞에도 이런 경우가 많았는데, 그 이유가 캐시가 쌓이면 실행이 안되는 현상이 매우 많은 것 같음.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "PROF-004",
+      "section": "프로필 관리",
+      "title": "SNS 링크 수정",
+      "severity": "unknown",
+      "description": "스크린샷 첨부가 안된다. sns가 인스타인지 패이스북인지 알 수가 없이 아이디만 뜬다. 그리고 url 은 https://를 입력하지 않으면 등록이 안된다.",
+      "screenshotCount": 0
+    },
+    {
+      "id": "PROF-006",
+      "section": "프로필 관리",
+      "title": "회원 탈퇴",
+      "severity": "unknown",
+      "description": "스크린샷 첨부가 안된다. 탈퇴 안됨. 탈퇴 진행하면 하단에 '회원 탈퇴 처리 중 오류가 발생했습니다.' 라고 뜬다.",
+      "screenshotCount": 1
+    }
+  ]
+}

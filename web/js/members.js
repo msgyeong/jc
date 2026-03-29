@@ -440,7 +440,9 @@ function deleteGroup(groupId) {
     if (!confirm('이 그룹을 삭제할까요?')) return;
     apiClient.request('/member-groups/' + groupId, { method: 'DELETE' })
         .then(res => {
+            if (res.success) { loadMembersScreen(); }
         })
+        .catch(err => { console.error('그룹 삭제 실패:', err); });
 }
 
 function removeFromGroup(groupId, memberId) {

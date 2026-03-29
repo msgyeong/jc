@@ -606,167 +606,20 @@ async function loadLinkedNotice(linkedPostId) {
     }
 }
 
-// ========== 일정 댓글 ==========
+// ========== 일정 댓글 — CommentComponent 위임 ==========
 
-async function loadScheduleComments(scheduleId) {
-    const section = document.getElementById('schedule-comments-section');
-    if (!section) return;
-    try {
-        const res = await apiClient.request('/schedules/' + scheduleId + '/comments');
-        const comments = (res.data && res.data.items) || res.comments || (res.data && res.data.comments) || [];
-        const count = comments.length;
+var _scheduleCommentComponent = null;
 
-        const userInfo = typeof currentUser !== 'undefined' ? currentUser : JSON.parse(localStorage.getItem('user_info') || 'null');
-        const myId = userInfo ? userInfo.id : null;
-
-        let commentsHtml = '';
-        if (count === 0) {
-            commentsHtml = '<div style="text-align:center;padding:24px 0;color:#9CA3AF;font-size:14px">아직 댓글이 없습니다. 첫 댓글을 작성해보세요!</div>';
-        } else {
-            // 부모/대댓글 분리
-            const allComments = [];
-            comments.forEach(c => {
-                const name = c.author_name || (c.author && c.author.name) || '회원';
-                const authorId = c.author_id || (c.author && c.author.id);
-                allComments.push({ ...c, author_name: name, author_id: authorId });
-                if (c.replies && c.replies.length > 0) {
-                    c.replies.forEach(r => {
-                        const rName = r.author_name || (r.author && r.author.name) || '회원';
-                        const rAuthorId = r.author_id || (r.author && r.author.id);
-                        allComments.push({ ...r, author_name: rName, author_id: rAuthorId, _isReply: true });
-                    });
-                }
-            });
-
-            commentsHtml = allComments.map(c => {
-                const isMe = myId && Number(c.author_id) === Number(myId);
-                const isReply = c._isReply || !!c.parent_id;
-                const liked = c.liked ? 'liked' : '';
-                const likeCount = c.likes_count || 0;
-                return `<div class="comment-item ${isReply ? 'comment-reply' : ''}" data-comment-id="${c.id}">
-                    <div class="comment-header">
-                        <span class="comment-author">${escapeHtml(c.author_name)}</span>
-                        <span class="comment-date">${typeof formatRelativeTime === 'function' ? formatRelativeTime(c.created_at) : ''}</span>
-                    </div>
-                    <div class="comment-content">${escapeHtml(c.content)}</div>
-                    <div class="comment-actions-row">
-                        <button class="comment-like-btn ${liked}" onclick="toggleScheduleCommentLike(${scheduleId},${c.id},this)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="${liked ? '#DC2626' : 'none'}" stroke="${liked ? '#DC2626' : '#9CA3AF'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                            <span class="comment-like-count">${likeCount > 0 ? likeCount : ''}</span>
-                        </button>
-                        ${!isReply ? `<button class="comment-reply-btn" onclick="showScheduleReplyInput(${scheduleId},${c.id},this)">답글</button>` : ''}
-                        ${isMe ? `<button class="comment-delete-btn" onclick="deleteScheduleComment(${scheduleId},${c.id})">삭제</button>` : ''}
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        section.innerHTML = `
-            <div class="schedule-detail-section">
-                <div class="schedule-detail-section-title">댓글 <span class="count">(${count})</span></div>
-                <div class="schedule-detail-divider"></div>
-                <div id="schedule-comments-list">${commentsHtml}</div>
-                <div class="comment-input-bar">
-                    <input class="comment-input" id="schedule-comment-input" placeholder="댓글을 입력하세요..." maxlength="500">
-                    <button class="comment-send-btn" id="schedule-comment-send" disabled onclick="submitScheduleComment(${scheduleId})">
-                        <svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
-                    </button>
-                </div>
-            </div>
-        `;
-
-        const input = document.getElementById('schedule-comment-input');
-        const sendBtn = document.getElementById('schedule-comment-send');
-        if (input && sendBtn) {
-            input.addEventListener('input', () => {
-                sendBtn.disabled = !input.value.trim();
-            });
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey && input.value.trim()) {
-                    e.preventDefault();
-                    submitScheduleComment(scheduleId);
-                }
-            });
-        }
-    } catch (_) {
-        // 댓글 API가 없을 수 있음 — 섹션 숨김
-        section.innerHTML = '';
-    }
-}
-
-async function submitScheduleComment(scheduleId) {
-    const input = document.getElementById('schedule-comment-input');
-    const content = input?.value?.trim();
-    if (!content) return;
-    const sendBtn = document.getElementById('schedule-comment-send');
-    if (sendBtn) sendBtn.disabled = true;
-    try {
-        const res = await apiClient.request('/schedules/' + scheduleId + '/comments', {
-            method: 'POST',
-            body: JSON.stringify({ content })
-        });
-        if (res.success) {
-            if (input) input.value = '';
-            if (sendBtn) sendBtn.disabled = true;
-            loadScheduleComments(scheduleId);
-        } else {
-            if (sendBtn) sendBtn.disabled = false;
-        }
-    } catch (e) {
-        if (sendBtn) sendBtn.disabled = false;
-    }
-}
-
-// 일정 댓글 좋아요
-async function toggleScheduleCommentLike(scheduleId, commentId, btn) {
-    if (btn.disabled) return;
-    btn.disabled = true;
-    try {
-        const res = await apiClient.request('/schedules/' + scheduleId + '/comments/' + commentId + '/like', { method: 'POST' });
-        if (res.success) {
-            const svg = btn.querySelector('svg path');
-            const countEl = btn.querySelector('.comment-like-count');
-            if (res.liked) { svg.setAttribute('fill','#DC2626'); svg.setAttribute('stroke','#DC2626'); btn.classList.add('liked'); }
-            else { svg.setAttribute('fill','none'); svg.setAttribute('stroke','#9CA3AF'); btn.classList.remove('liked'); }
-            if (countEl) countEl.textContent = res.likes_count > 0 ? res.likes_count : '';
-        }
-    } catch(e) {}
-    btn.disabled = false;
-}
-
-// 일정 댓글 답글 입력
-function showScheduleReplyInput(scheduleId, parentId, btn) {
-    document.querySelectorAll('.reply-input-bar').forEach(el => el.remove());
-    const item = btn.closest('.comment-item');
-    const bar = document.createElement('div');
-    bar.className = 'reply-input-bar';
-    bar.innerHTML = `<input type="text" class="comment-input" placeholder="답글 입력..." maxlength="500" style="font-size:13px">
-        <button type="button" class="comment-send-btn" onclick="submitScheduleReply(${scheduleId},${parentId},this)"><svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg></button>`;
-    item.after(bar);
-    const input = bar.querySelector('input');
-    input.focus();
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitScheduleReply(scheduleId, parentId, bar.querySelector('button')); } });
-}
-
-async function submitScheduleReply(scheduleId, parentId, btn) {
-    const bar = btn.closest('.reply-input-bar');
-    const content = bar.querySelector('input').value.trim();
-    if (!content) return;
-    btn.disabled = true;
-    try {
-        await apiClient.request('/schedules/' + scheduleId + '/comments', { method: 'POST', body: JSON.stringify({ content, parent_id: parentId }) });
-        bar.remove();
-        await loadScheduleComments(scheduleId);
-    } catch(e) { btn.disabled = false; }
-}
-
-// 일정 댓글 삭제
-async function deleteScheduleComment(scheduleId, commentId) {
-    if (!confirm('댓글을 삭제하시겠습니까?')) return;
-    try {
-        await apiClient.request('/schedules/' + scheduleId + '/comments/' + commentId, { method: 'DELETE' });
-        await loadScheduleComments(scheduleId);
-    } catch(e) {}
+function loadScheduleComments(scheduleId) {
+    _scheduleCommentComponent = new CommentComponent({
+        apiBase: '/schedules/' + scheduleId + '/comments',
+        likeApiBase: '/schedules/' + scheduleId + '/comments',
+        containerId: 'schedule-comments-section',
+        showLikes: true,
+        showReplies: true,
+        showInput: true
+    });
+    _scheduleCommentComponent.load();
 }
 
 // ========== 참석 투표 (schedule_attendance API) ==========

@@ -317,82 +317,30 @@ async function openClubPostDetail(postId) {
             + '<button class="btn btn-secondary btn-sm" onclick="editClubPost(' + p.id + ')">수정</button>'
             + '<button class="btn btn-secondary btn-sm" onclick="deleteClubPost(' + p.id + ')">삭제</button></div>' : '';
 
-        var commentsHtml = '<div class="gb-comments-section"><h4 class="gb-comments-title">댓글 ' + comments.length + '개</h4>';
-        var topLevel = comments.filter(function(c) { return !c.parent_id; });
-        topLevel.forEach(function(c) {
-            commentsHtml += renderClubComment(c, false);
-            var replies = comments.filter(function(r) { return r.parent_id === c.id; });
-            replies.forEach(function(r) { commentsHtml += renderClubComment(r, true); });
-        });
-        commentsHtml += '</div>';
-
-        // 댓글 입력
-        var commentForm = '<div class="gb-comment-form">'
-            + '<input type="text" id="club-comment-input" placeholder="댓글을 입력하세요" class="gb-comment-input">'
-            + '<button class="btn btn-primary btn-sm" onclick="submitClubComment(' + p.id + ')">등록</button></div>';
-
+        // 댓글: CommentComponent 위임용 컨테이너
         container.innerHTML = '<div class="gb-post-detail">'
             + '<div class="gb-post-author"><span class="gb-author-name">' + escapeHtml(p.author_name) + '</span>'
             + '<span class="gb-post-date">' + formatRelativeTime(p.created_at) + '</span></div>'
             + '<h2 class="gb-post-detail-title">' + escapeHtml(p.title) + '</h2>'
             + '<div class="gb-post-body">' + escapeHtml(p.content || '').replace(/\n/g, '<br>') + '</div>'
-            + images + actionBtns + commentsHtml + commentForm + '</div>';
+            + images + actionBtns
+            + '<div id="club-post-comments-section"></div></div>';
+
+        // CommentComponent로 댓글 렌더링
+        new CommentComponent({
+            apiBase: '/clubs/' + _currentClubId + '/posts/' + p.id + '/comments',
+            likeApiBase: null,
+            containerId: 'club-post-comments-section',
+            showLikes: false,
+            showReplies: true,
+            showInput: true
+        }).load();
     } catch (err) {
         container.innerHTML = '<div class="error-state">게시글을 불러올 수 없습니다.</div>';
     }
 }
 
-function renderClubComment(c, isReply) {
-    var isAuthor = currentUser && c.author_id === currentUser.id;
-    var replyBtn = !isReply ? '<button class="gb-reply-btn" onclick="showClubReplyInput(' + c.id + ')">답글</button>' : '';
-    var deleteBtn = isAuthor ? '<button class="gb-reply-btn" onclick="deleteClubComment(' + c.post_id + ',' + c.id + ')">삭제</button>' : '';
-
-    return '<div class="gb-comment' + (isReply ? ' gb-comment-reply' : '') + '">'
-        + '<div class="gb-comment-author">' + escapeHtml(c.author_name) + ' <span class="gb-comment-date">' + formatRelativeTime(c.created_at) + '</span></div>'
-        + '<div class="gb-comment-content">' + escapeHtml(c.content) + '</div>'
-        + '<div class="gb-comment-actions">' + replyBtn + deleteBtn + '</div>'
-        + '<div id="club-reply-input-' + c.id + '" style="display:none" class="gb-reply-form">'
-        + '<input type="text" placeholder="답글 입력" class="gb-comment-input">'
-        + '<button class="btn btn-primary btn-sm" onclick="submitClubReply(' + c.post_id + ',' + c.id + ')">등록</button></div>'
-        + '</div>';
-}
-
-function showClubReplyInput(commentId) {
-    var el = document.getElementById('club-reply-input-' + commentId);
-    if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
-}
-
-async function submitClubComment(postId) {
-    var input = document.getElementById('club-comment-input');
-    if (!input || !input.value.trim()) return;
-    try {
-        await apiClient.request('/clubs/' + _currentClubId + '/posts/' + postId + '/comments', {
-            method: 'POST', body: JSON.stringify({ content: input.value.trim() })
-        });
-        openClubPostDetail(postId);
-    } catch (_) {}
-}
-
-async function submitClubReply(postId, parentId) {
-    var container = document.getElementById('club-reply-input-' + parentId);
-    if (!container) return;
-    var input = container.querySelector('input');
-    if (!input || !input.value.trim()) return;
-    try {
-        await apiClient.request('/clubs/' + _currentClubId + '/posts/' + postId + '/comments', {
-            method: 'POST', body: JSON.stringify({ content: input.value.trim(), parent_id: parentId })
-        });
-        openClubPostDetail(postId);
-    } catch (_) {}
-}
-
-async function deleteClubComment(postId, commentId) {
-    if (!confirm('댓글을 삭제하시겠습니까?')) return;
-    try {
-        await apiClient.request('/clubs/' + _currentClubId + '/posts/' + postId + '/comments/' + commentId, { method: 'DELETE' });
-        openClubPostDetail(postId);
-    } catch (_) {}
-}
+/* 레거시 댓글 함수 제거됨 — CommentComponent가 대체 */
 
 // ========== 게시글 작성/수정 ==========
 

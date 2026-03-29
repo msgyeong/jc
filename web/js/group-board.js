@@ -224,27 +224,21 @@ async function openGroupPostDetail(postId) {
             + '<span class="gb-stat-text">조회 ' + (post.views || 0) + ' · 댓글 ' + (post.comments_count || 0) + '</span>'
             + '</div>';
 
-        // 댓글
-        html += '<div class="gb-comments">';
-        html += '<h3 class="gb-comments-title">댓글 ' + comments.length + '</h3>';
+        // 댓글: CommentComponent 위임용 컨테이너
+        html += '<div id="gb-post-comments-section"></div>';
 
-        var topComments = comments.filter(function(c) { return !c.parent_id; });
-        topComments.forEach(function(c) {
-            html += renderGroupComment(c, userInfo);
-            var replies = comments.filter(function(r) { return r.parent_id === c.id; });
-            replies.forEach(function(r) {
-                html += renderGroupComment(r, userInfo, true);
-            });
-        });
-
-        // 댓글 입력
-        html += '<div class="gb-comment-input">';
-        html += '<input type="text" id="gb-comment-text" class="gb-comment-input-field" placeholder="댓글 입력">';
-        html += '<button class="gb-comment-submit-btn" data-action="submit-comment" data-post-id="' + post.id + '">등록</button>';
-        html += '</div>';
-
-        html += '</div></article>';
+        html += '</article>';
         container.innerHTML = html;
+
+        // CommentComponent로 댓글 렌더링
+        new CommentComponent({
+            apiBase: '/group-board/' + _currentGroupBoardId + '/posts/' + post.id + '/comments',
+            likeApiBase: '/group-board/' + _currentGroupBoardId + '/comments',
+            containerId: 'gb-post-comments-section',
+            showLikes: true,
+            showReplies: true,
+            showInput: true
+        }).load();
 
         // 참석 확인 로드
         if (post.attendance_enabled) {
@@ -255,20 +249,9 @@ async function openGroupPostDetail(postId) {
     }
 }
 
-// renderGroupComment → card-components.js의 renderComment 위임
-function renderGroupComment(c, userInfo, isReply) {
-    var isAuthor = userInfo && c.author_id === userInfo.id;
-    var isAdmin = userInfo && ['admin', 'super_admin'].includes(userInfo.role);
-    return renderComment(c, {
-        isReply: isReply,
-        canDelete: isAuthor || isAdmin,
-        showLike: true,
-        replyAction: 'show-reply',
-        deleteAction: 'delete-comment'
-    });
-}
+/* 레거시 댓글/좋아요 함수 제거됨 — CommentComponent가 대체 */
 
-// ========== 좋아요 ==========
+// ========== 좋아요 (게시글 좋아요는 유지) ==========
 
 async function toggleGroupPostLike(postId, btn) {
     if (!_currentGroupBoardId || btn.disabled) return;
@@ -289,56 +272,11 @@ async function toggleGroupPostLike(postId, btn) {
     btn.disabled = false;
 }
 
-async function toggleGroupCommentLike(commentId, btn) {
-    if (!_currentGroupBoardId || btn.disabled) return;
-    btn.disabled = true;
-    try {
-        var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/comments/' + commentId + '/like', { method: 'POST' });
-        if (res.success) {
-            var countEl = btn.querySelector('.gb-comment-likes-num');
-            if (countEl) countEl.textContent = res.likes_count || 0;
-        }
-    } catch (_) {}
-    btn.disabled = false;
-}
-
 function formatFullDate(dateStr) {
     if (!dateStr) return '';
     var d = new Date(dateStr);
     return d.getFullYear() + '.' + (d.getMonth() + 1) + '.' + d.getDate() + ' ' +
         String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-}
-
-// ========== 댓글 CRUD ==========
-
-async function submitGroupComment(postId) {
-    var textarea = document.getElementById('gb-comment-text');
-    if (!textarea || !textarea.value.trim()) return;
-    try {
-        await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/comments', {
-            method: 'POST', body: JSON.stringify({ content: textarea.value.trim() })
-        });
-        openGroupPostDetail(postId);
-    } catch (err) { alert('댓글 작성에 실패했습니다.'); }
-}
-
-async function submitGroupReply(postId, parentId) {
-    var textarea = document.getElementById('reply-text-' + parentId);
-    if (!textarea || !textarea.value.trim()) return;
-    try {
-        await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/comments', {
-            method: 'POST', body: JSON.stringify({ content: textarea.value.trim(), parent_id: parentId })
-        });
-        openGroupPostDetail(postId);
-    } catch (err) { alert('답글 작성에 실패했습니다.'); }
-}
-
-async function deleteGroupComment(postId, commentId) {
-    if (!confirm('이 댓글을 삭제하시겠습니까?')) return;
-    try {
-        await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/comments/' + commentId, { method: 'DELETE' });
-        openGroupPostDetail(postId);
-    } catch (err) { alert('댓글 삭제에 실패했습니다.'); }
 }
 
 // ========== 게시글 작성/수정 (공지 게시판 포맷) ==========
@@ -559,16 +497,9 @@ document.addEventListener('DOMContentLoaded', function() {
             switch (action) {
                 case 'edit-post': showGroupPostForm(parseInt(postId)); break;
                 case 'delete-post': deleteGroupPost(parseInt(postId)); break;
-                case 'submit-comment': submitGroupComment(parseInt(postId)); break;
-                case 'submit-reply':
-                    submitGroupReply(parseInt(postId), parseInt(btn.getAttribute('data-parent-id'))); break;
-                case 'show-reply':
-                    var el = document.getElementById('reply-input-' + commentId);
-                    if (el) { el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
-                    break;
-                case 'delete-comment': deleteGroupComment(parseInt(postId), parseInt(commentId)); break;
                 case 'toggle-like': toggleGroupPostLike(parseInt(postId), btn); break;
-                case 'like-comment': toggleGroupCommentLike(parseInt(commentId), btn); break;
+                // 댓글 관련 action(submit-comment, show-reply, delete-comment, like-comment)은
+                // CommentComponent가 자체 이벤트 위임으로 처리
             }
         });
     }

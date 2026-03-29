@@ -8976,3 +8976,29 @@ a.sns-badge:hover {
 .cc-reply-bar { display: flex; gap: 8px; padding: 8px 0 8px 36px; align-items: center; }
 .cc-reply-input { height: 36px; font-size: 13px; }
 .cc-reply-send { width: 36px; height: 36px; }
+
+/* ==================== AttendanceComponent (ac-*) 통합 스타일 ==================== */
+.ac-section { margin-top: 16px; padding: 20px; background: #F8FAFC; border-radius: var(--radius-md, 12px); border: 1px solid var(--border-color, #E2E8F0); }
+.ac-title { font-size: 16px; font-weight: 700; color: var(--text-primary, #0F172A); margin: 0 0 16px; }
+
+.ac-buttons { display: flex; gap: 10px; margin-bottom: 16px; }
+.ac-vote-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 8px; border: 1.5px solid var(--border-color, #E2E8F0); border-radius: var(--radius-md, 12px); background: white; cursor: pointer; transition: all 0.2s; }
+.ac-vote-btn:hover { border-color: var(--primary-color, #2563EB); background: #F0F5FF; }
+.ac-vote-btn.ac-selected.ac-attend { border-color: #2563EB; background: #DBEAFE; color: #1D4ED8; }
+.ac-vote-btn.ac-selected.ac-absent { border-color: #EF4444; background: #FEE2E2; color: #DC2626; }
+.ac-vote-icon { font-size: 20px; font-weight: 700; }
+.ac-vote-label { font-size: 13px; font-weight: 600; }
+.ac-vote-count { font-size: 18px; font-weight: 700; color: var(--text-primary, #0F172A); }
+
+.ac-progress { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #E2E8F0; }
+.ac-progress-attend { background: #2563EB; transition: width 0.3s; }
+.ac-progress-absent { background: #EF4444; transition: width 0.3s; }
+.ac-progress-no-response { background: #F59E0B; transition: width 0.3s; }
+.ac-progress-label { margin-top: 8px; font-size: 13px; color: var(--text-secondary, #64748B); text-align: right; }
+
+.ac-group { margin-bottom: 10px; margin-top: 12px; }
+.ac-group-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block; }
+.ac-group-label.ac-group-attend { color: #2563EB; }
+.ac-group-label.ac-group-absent { color: #DC2626; }
+.ac-group-label.ac-group-no-response { color: #9CA3AF; }
+.ac-group-names { font-size: 14px; color: var(--text-primary); line-height: 1.6; }

@@ -1025,76 +1025,24 @@ async function loadLinkedScheduleForPost(post) {
     } catch (_) { container.innerHTML = ''; }
 }
 
-// ── 게시글 참석 UI ──
-async function loadPostAttendance(post) {
-    const container = document.getElementById('post-attendance-container');
+// ── 게시글 참석 UI — AttendanceComponent 위임 ──
+function loadPostAttendance(post) {
+    var container = document.getElementById('post-attendance-container');
     if (!container) return;
-    // attendance_enabled가 false이고 linked_schedule_id도 없으면 참석 UI 없음
     if (!post.attendance_enabled && !post.linked_schedule_id) {
         container.innerHTML = '';
         return;
     }
-    try {
-        const res = await apiClient.request('/posts/' + post.id + '/attendance/summary');
-        if (!res.success) { container.innerHTML = ''; return; }
-        const d = res.data;
-        const myStatus = d.my_status;
-        container.innerHTML = `
-            <div class="attendance-section">
-                <div class="attendance-section-title">참석 여부</div>
-                <div class="attendance-summary-row">
-                    <span class="attendance-count-badge attend">참석 ${d.attending}</span>
-                    <span class="attendance-count-badge absent">불참 ${d.not_attending}</span>
-                </div>
-                <div class="attendance-buttons">
-                    <button type="button" class="attendance-btn${myStatus === 'attending' ? ' active-attending' : ''}" onclick="submitPostAttendance('attending', ${post.id})">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 참석
-                    </button>
-                    <button type="button" class="attendance-btn${myStatus === 'not_attending' ? ' active-not-attending' : ''}" onclick="submitPostAttendance('not_attending', ${post.id})">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> 불참
-                    </button>
-                </div>
-                <div id="post-attendee-list"></div>
-            </div>
-        `;
-        loadPostAttendeeList(post.id);
-    } catch (_) { container.innerHTML = ''; }
+    new AttendanceComponent({
+        apiBase: '/posts/' + post.id + '/attendance',
+        containerId: 'post-attendance-container',
+        showProgressBar: false,
+        showAttendeeList: true,
+        showNoResponse: false
+    }).load();
 }
 
-async function submitPostAttendance(status, postId) {
-    try {
-        const res = await apiClient.request('/posts/' + postId + '/attendance', {
-            method: 'POST',
-            body: JSON.stringify({ status: status })
-        });
-        if (res.success) {
-            // 다시 로드
-            const postRes = await apiClient.getPost(postId);
-            if (postRes.success && postRes.post) loadPostAttendance(postRes.post);
-        }
-    } catch (e) {
-    }
-}
-
-async function loadPostAttendeeList(postId) {
-    const container = document.getElementById('post-attendee-list');
-    if (!container) return;
-    try {
-        const res = await apiClient.request('/posts/' + postId + '/attendance/details');
-        if (!res.success) return;
-        const d = res.data;
-        let html = '';
-        if (d.attending && d.attending.length > 0) {
-            html += '<div class="attendee-group"><span class="attendee-group-label attendee-attend">참석 (' + d.attending.length + ')</span>';
-            html += '<div class="attendee-group-names">' + d.attending.map(a => escapeHtml(a.name || '알 수 없음')).join(', ') + '</div></div>';
-        }
-        if (d.not_attending && d.not_attending.length > 0) {
-            html += '<div class="attendee-group"><span class="attendee-group-label attendee-absent">불참 (' + d.not_attending.length + ')</span>';
-            html += '<div class="attendee-group-names">' + d.not_attending.map(a => escapeHtml(a.name || '알 수 없음')).join(', ') + '</div></div>';
-        }
-        container.innerHTML = html;
-    } catch (_) {}
-}
+function submitPostAttendance() {} // 레거시 호환 — AttendanceComponent가 처리
 
 // ── 게시글 작성: 참석 토글 + Push 알림 설정 ──
 let postCreateAttendanceEnabled = false;

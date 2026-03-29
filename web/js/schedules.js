@@ -622,70 +622,21 @@ function loadScheduleComments(scheduleId) {
     _scheduleCommentComponent.load();
 }
 
-// ========== 참석 투표 (schedule_attendance API) ==========
+// ========== 참석 투표 — AttendanceComponent 위임 ==========
 
-var _currentAttendanceScheduleId = null;
-
-async function loadAttendanceVote(scheduleId) {
-    const section = document.getElementById('attendance-section');
-    if (!section) return;
-    _currentAttendanceScheduleId = scheduleId;
-
-    try {
-        const res = await apiClient.request('/schedules/' + scheduleId + '/attendance/summary');
-        if (!res.success || !res.data) { section.innerHTML = ''; return; }
-
-        const { attending, not_attending, no_response, total_members, my_status } = res.data;
-        const voted = attending + not_attending;
-
-        const attendPct = total_members > 0 ? (attending / total_members * 100) : 0;
-        const absentPct = total_members > 0 ? (not_attending / total_members * 100) : 0;
-        const noRespPct = total_members > 0 ? (no_response / total_members * 100) : 0;
-
-        section.innerHTML = `
-            <div class="attendance-section">
-                <div class="attendance-header">
-                    <h3 class="attendance-title">참석 여부</h3>
-                </div>
-                <div class="attendance-vote-buttons">
-                    <button class="vote-btn vote-attend${my_status === 'attending' ? ' selected' : ''}" onclick="submitAttendance('attending', ${scheduleId})">
-                        <span class="vote-icon" style="color:var(--color-primary)">&#10003;</span>
-                        <span class="vote-label">참석</span>
-                        <span class="vote-count">${attending}</span>
-                    </button>
-                    <button class="vote-btn vote-absent${my_status === 'not_attending' ? ' selected' : ''}" onclick="submitAttendance('not_attending', ${scheduleId})">
-                        <span class="vote-icon" style="color:#EF4444">&#10007;</span>
-                        <span class="vote-label">불참</span>
-                        <span class="vote-count">${not_attending}</span>
-                    </button>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-attend" style="width:${attendPct}%"></div>
-                    <div class="progress-absent" style="width:${absentPct}%"></div>
-                    <div class="progress-undecided" style="width:${noRespPct}%"></div>
-                </div>
-                <div class="progress-labels">응답 ${voted}명 / 전체 ${total_members}명 (미응답 ${no_response}명)</div>
-            </div>
-        `;
-    } catch (e) {
-        section.innerHTML = '';
-    }
+function loadAttendanceVote(scheduleId) {
+    new AttendanceComponent({
+        apiBase: '/schedules/' + scheduleId + '/attendance',
+        containerId: 'attendance-section',
+        showProgressBar: true,
+        showAttendeeList: false,
+        showNoResponse: true
+    }).load();
 }
 
-async function submitAttendance(status, scheduleId) {
-    var sid = scheduleId || _currentAttendanceScheduleId;
-    if (!sid) return;
-    try {
-        const res = await apiClient.request('/schedules/' + sid + '/attendance', {
-            method: 'POST',
-            body: JSON.stringify({ status: status })
-        });
-        if (res.success) {
-            loadAttendanceVote(sid);
-            loadAttendeeList(sid);
-        }
-    } catch (e) {
-    }
+// 기존 호환용 (상세 화면에서 호출)
+function submitAttendance(status, scheduleId) {
+    loadAttendanceVote(scheduleId);
 }
 
 // ========== 목록 복귀 ==========

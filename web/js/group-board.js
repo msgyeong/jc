@@ -369,38 +369,16 @@ async function deleteGroupPost(postId) {
 
 // getCurrentUserSafe → utils.js로 통합됨
 
-// ========== 참석 확인 ==========
+// ========== 참석 확인 — AttendanceComponent 위임 ==========
 
-async function loadGpAttendance(postId) {
-    var el = document.getElementById('gp-attendance-container');
-    if (!el) return;
-    try {
-        var res = await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/attendance');
-        if (!res.success) return;
-        var d = res.data;
-        el.innerHTML = ''
-            + '<div class="attendance-section">'
-            + '<div class="attendance-section-title">참석 여부</div>'
-            + '<div class="attendance-summary-row">'
-            + '<span class="attendance-count-badge attend">참석 ' + d.attending + '</span>'
-            + '<span class="attendance-count-badge absent">불참 ' + d.not_attending + '</span>'
-            + '</div>'
-            + '<div class="attendance-buttons">'
-            + '<button type="button" class="attendance-btn' + (d.my_status === 'attending' ? ' active-attending' : '') + '" onclick="submitGpAttendance(\'attending\',' + postId + ')">'
-            + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 참석</button>'
-            + '<button type="button" class="attendance-btn' + (d.my_status === 'not_attending' ? ' active-not-attending' : '') + '" onclick="submitGpAttendance(\'not_attending\',' + postId + ')">'
-            + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> 불참</button>'
-            + '</div></div>';
-    } catch (_) {}
-}
-
-async function submitGpAttendance(status, postId) {
-    try {
-        await apiClient.request('/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/attendance', {
-            method: 'POST', body: JSON.stringify({ status: status })
-        });
-        loadGpAttendance(postId);
-    } catch (_) { alert('참석 처리에 실패했습니다.'); }
+function loadGpAttendance(postId) {
+    new AttendanceComponent({
+        apiBase: '/group-board/' + _currentGroupBoardId + '/posts/' + postId + '/attendance',
+        containerId: 'gp-attendance-container',
+        showProgressBar: false,
+        showAttendeeList: false,
+        showNoResponse: false
+    }).load();
 }
 
 function renderGpAttendanceToggle() {

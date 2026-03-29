@@ -14,15 +14,28 @@ async function initPush() {
     swRegistration = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
     console.log('[Push] SW 등록 완료');
 
-    // 새 SW 감지 → 즉시 활성화
+    // 새 SW 감지 → 즉시 활성화 + 자동 리로드
     swRegistration.addEventListener('updatefound', () => {
       const newWorker = swRegistration.installing;
       if (newWorker) {
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'activated') {
-            console.log('[SW] 새 버전 활성화됨');
+            console.log('[SW] 새 버전 활성화됨 — 페이지 새로고침');
+            window.location.reload();
           }
         });
+      }
+    });
+
+    // 페이지 로드 시 SW 업데이트 확인
+    swRegistration.update().catch(() => {});
+
+    // 새 SW가 컨트롤 인계 시 리로드 (controllerchange)
+    var _swReloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!_swReloading) {
+        _swReloading = true;
+        window.location.reload();
       }
     });
 

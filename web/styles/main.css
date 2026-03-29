@@ -3137,6 +3137,8 @@ input[type="date"]:focus {
     font-weight: 700;
 }
 
+.cal-birthday { font-size: 10px; line-height: 1; display: block; margin-top: -2px; }
+
 .cal-dots {
     display: flex;
     gap: 3px;

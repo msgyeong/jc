@@ -8,7 +8,7 @@ const CATEGORY_LABELS = {
     event: '행사', meeting: '회의', training: '교육', holiday: '휴일', other: '기타'
 };
 const CATEGORY_COLORS = {
-    event: '#2563EB', meeting: '#F59E0B', training: '#059669', holiday: '#DC2626', other: '#6B7280'
+    event: '#2563EB', meeting: '#F59E0B', training: '#059669', holiday: '#DC2626', birthday: '#EC4899', other: '#6B7280'
 };
 const CATEGORY_BADGE_CLASS = {
     event: 'badge-event', meeting: 'badge-meeting', training: 'badge-training', holiday: 'badge-holiday', other: 'badge-other'
@@ -52,6 +52,12 @@ async function loadMonthSchedules() {
         const result = await apiClient.getSchedulesByMonth(calYear, calMonth + 1);
         const schedules = result.schedules || (result.data && (result.data.schedules || result.data.items)) || [];
         calSchedules = (result.success && Array.isArray(schedules)) ? schedules : [];
+
+        // 생일 회원 병합 (캘린더에 케이크 이모티콘 표시)
+        var birthdays = result.birthdays || [];
+        birthdays.forEach(function(b) {
+            calSchedules.push(b);
+        });
 
         // 내가 속한 그룹 일정 병합 (그룹 멤버만 볼 수 있음)
         try {
@@ -102,12 +108,14 @@ function renderCalendar() {
 
     const eventDates = new Set();
     const eventCategoriesByDate = {};
+    const birthdayDates = new Set();
     calSchedules.forEach(s => {
         const d = (s.start_date || '').split('T')[0];
         if (d) {
             eventDates.add(d);
             if (!eventCategoriesByDate[d]) eventCategoriesByDate[d] = new Set();
             eventCategoriesByDate[d].add(s.category || 'other');
+            if (s.is_birthday) birthdayDates.add(d);
         }
     });
 
@@ -119,24 +127,30 @@ function renderCalendar() {
         const isToday = dateStr === todayStr;
         const isSelected = dateStr === calSelectedDate;
         const hasEvent = eventDates.has(dateStr);
+        const hasBirthday = birthdayDates.has(dateStr);
         const dayOfWeek = new Date(calYear, calMonth, d).getDay();
 
         let classes = 'cal-day';
         if (isToday) classes += ' today';
         if (isSelected) classes += ' selected';
         if (hasEvent) classes += ' has-event';
+        if (hasBirthday) classes += ' has-birthday';
         if (dayOfWeek === 0) classes += ' sun';
         if (dayOfWeek === 6) classes += ' sat';
 
+        let birthdayEmoji = hasBirthday ? '<span class="cal-birthday">🎂</span>' : '';
+
         let dots = '';
         if (hasEvent) {
-            const cats = Array.from(eventCategoriesByDate[dateStr] || []).slice(0, 3);
-            dots = '<div class="cal-dots">' + cats.map(c =>
-                `<span class="cal-dot" style="background:${CATEGORY_COLORS[c] || '#6B7280'}"></span>`
-            ).join('') + '</div>';
+            const cats = Array.from(eventCategoriesByDate[dateStr] || []).filter(c => c !== 'birthday').slice(0, 3);
+            if (cats.length > 0) {
+                dots = '<div class="cal-dots">' + cats.map(c =>
+                    `<span class="cal-dot" style="background:${CATEGORY_COLORS[c] || '#6B7280'}"></span>`
+                ).join('') + '</div>';
+            }
         }
 
-        html += `<div class="${classes}" data-date="${dateStr}"><span class="cal-day-num">${d}</span>${dots}</div>`;
+        html += `<div class="${classes}" data-date="${dateStr}"><span class="cal-day-num">${d}</span>${birthdayEmoji}${dots}</div>`;
     }
 
     gridEl.innerHTML = html;

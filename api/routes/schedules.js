@@ -72,9 +72,36 @@ router.get('/', authenticate, async (req, res) => {
 
         const result = await query(sqlQuery, params);
 
+        // 생일 회원 조회 (월별 캘린더 요청 시)
+        let birthdays = [];
+        if (year && month) {
+            try {
+                const bdayResult = await query(
+                    `SELECT id, name, birth_date, profile_image
+                     FROM users
+                     WHERE EXTRACT(MONTH FROM birth_date) = $1
+                       AND status = 'active'
+                       AND birth_date IS NOT NULL
+                     ORDER BY EXTRACT(DAY FROM birth_date)`,
+                    [month]
+                );
+                birthdays = bdayResult.rows.map(u => ({
+                    id: 'bday-' + u.id,
+                    title: u.name + '님 생일 🎂',
+                    start_date: year + '-' + String(month).padStart(2, '0') + '-' + String(new Date(u.birth_date).getDate()).padStart(2, '0') + 'T00:00:00',
+                    category: 'birthday',
+                    is_birthday: true,
+                    member_id: u.id,
+                    member_name: u.name,
+                    member_image: u.profile_image
+                }));
+            } catch (e) { console.error('Birthday query error:', e.message); }
+        }
+
         res.json({
             success: true,
             schedules: result.rows,
+            birthdays: birthdays,
             total: result.rows.length
         });
     } catch (error) {

@@ -409,7 +409,7 @@ const TEST_DATA = [
       title: '댓글 작성 & 삭제',
       steps: ['게시글 상세 진입', '댓글 입력란에 "테스트 댓글" 입력', '등록 버튼 클릭', '댓글 표시 확인', '내 댓글 삭제 시도'],
       expected: '댓글 등록 즉시 반영, 삭제 시 사라짐',
-      pattern: '빈 댓글 등록 시도 / 아주 긴 댓글(500자+) / 특수문자(<script>alert(1)</script>) 입력'
+      pattern: '빈 댓글 등록 시도 / 아주 긴 댓글(500자+) / 특수문자(&lt;script&gt;alert(1)&lt;/script&gt;) 입력'
     },
     {
       id: 'POST-008',
@@ -434,7 +434,7 @@ const TEST_DATA = [
     {
       id: 'POST-011',
       title: 'XSS 방어 테스트',
-      steps: ['게시글 제목에 <script>alert("XSS")</script> 입력', '내용에 <img src=x onerror=alert(1)> 입력', '등록 후 상세 페이지 확인'],
+      steps: ['게시글 제목에 &lt;script&gt;alert("XSS")&lt;/script&gt; 입력', '내용에 &lt;img src=x onerror=alert(1)&gt; 입력', '등록 후 상세 페이지 확인'],
       expected: 'HTML 태그가 이스케이프되어 텍스트로 표시, 스크립트 실행 안 됨',
     },
     {

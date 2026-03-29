@@ -86,6 +86,7 @@ body { font-family:'Noto Sans KR','Segoe UI',sans-serif; background:#f0f2f5; col
 .test-btn.btn-fail.active { background:#DC2626; color:#fff; }
 .test-btn.btn-skip { color:#9CA3AF; }
 .test-btn.btn-skip.active { background:#9CA3AF; color:#fff; }
+.test-btn.btn-note.active { background:#7C3AED; color:#fff; border-color:#7C3AED; }
 
 /* Issue Area */
 .issue-area { margin-top:10px; display:none; }
@@ -1257,10 +1258,11 @@ function renderTestItem(test, num) {
             <button class="test-btn btn-pass ${result.status === 'pass' ? 'active' : ''}" onclick="setStatus('${test.id}','pass')">✅ 통과</button>
             <button class="test-btn btn-fail ${result.status === 'fail' ? 'active' : ''}" onclick="setStatus('${test.id}','fail')">❌ 실패</button>
             <button class="test-btn btn-skip ${result.status === 'skip' ? 'active' : ''}" onclick="setStatus('${test.id}','skip')">⏭ 건너뜀</button>
+            <button class="test-btn btn-note ${result.hasNote ? 'active' : ''}" onclick="toggleNote('${test.id}')" style="color:#7C3AED;border-color:#7C3AED">💬 기타의견</button>
           </div>
 
-          <div class="issue-area ${result.status === 'fail' || result.status === 'pass' ? 'visible' : ''}" id="issue-${test.id}">
-            <textarea class="issue-textarea" placeholder="발견된 문제를 상세히 적어주세요...&#10;예: 어떤 화면에서, 어떤 조작을 했을 때, 어떤 결과가 나왔는지"
+          <div class="issue-area ${result.status === 'fail' || result.status === 'pass' || result.hasNote ? 'visible' : ''}" id="issue-${test.id}">
+            <textarea class="issue-textarea" placeholder="의견, 개선 제안, 발견된 문제 등 자유롭게 적어주세요..."
               oninput="updateIssue('${test.id}', this.value)">${result.issue || ''}</textarea>
             <div class="issue-severity">
               <span style="font-size:12px;color:#6b7280;">심각도:</span>
@@ -1271,14 +1273,20 @@ function renderTestItem(test, num) {
             </div>
             <div class="screenshot-area">
               <label class="screenshot-btn" for="file-${test.id}">
-                📷 스크린샷 첨부
+                📷 사진 첨부
                 <input type="file" id="file-${test.id}" accept="image/*" multiple style="display:none" onchange="addScreenshots('${test.id}', this)">
               </label>
-              <span style="font-size:11px;color:#9ca3af;margin-left:8px;">또는 Ctrl+V로 클립보드 붙여넣기</span>
+              <label class="screenshot-btn" for="video-${test.id}" style="margin-left:4px">
+                🎬 동영상 첨부
+                <input type="file" id="video-${test.id}" accept="video/*" style="display:none" onchange="addVideo('${test.id}', this)">
+              </label>
+              <span style="font-size:11px;color:#9ca3af;margin-left:8px;">Ctrl+V = 클립보드 붙여넣기</span>
               <div class="screenshot-preview" id="preview-${test.id}">
                 ${(result.screenshots || []).map((s, i) => `
-                  <div class="screenshot-thumb" onclick="openLightbox('${s}')">
-                    <img src="${s}" alt="screenshot">
+                  <div class="screenshot-thumb" onclick="${s.startsWith('data:video') ? '' : "openLightbox('" + s + "')"}">
+                    ${s.startsWith('data:video')
+                      ? '<video src="' + s + '" style="width:100%;height:100%;object-fit:cover" muted></video><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px">▶</div>'
+                      : '<img src="' + s + '" alt="screenshot">'}
                     <button class="screenshot-remove" onclick="event.stopPropagation();removeScreenshot('${test.id}',${i})">×</button>
                   </div>
                 `).join('')}
@@ -1308,6 +1316,46 @@ function updateIssue(id, text) {
   getResult(id).issue = text;
   saveToStorage();
   showAutoSaved();
+}
+
+function toggleNote(id) {
+  const result = getResult(id);
+  result.hasNote = !result.hasNote;
+  saveToStorage();
+  renderTests();
+  updateStats();
+  applyFilter();
+  showAutoSaved();
+  // 열렸으면 textarea에 포커스
+  if (result.hasNote) {
+    setTimeout(() => {
+      const ta = document.querySelector(`#issue-${id} .issue-textarea`);
+      if (ta) ta.focus();
+    }, 50);
+  }
+}
+
+// 동영상 첨부
+function addVideo(id, input) {
+  const result = getResult(id);
+  if (!result.screenshots) result.screenshots = [];
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 50 * 1024 * 1024) {
+    showToast('동영상은 50MB 이하만 가능합니다', 'error');
+    input.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    result.screenshots.push(e.target.result);
+    saveToStorage();
+    renderScreenshots(id);
+    showToast('동영상 첨부 완료', 'success');
+    showAutoSaved();
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
 }
 
 // 자동 저장 표시
@@ -1361,12 +1409,47 @@ function renderScreenshots(id) {
   const result = getResult(id);
   const preview = document.getElementById(`preview-${id}`);
   if (!preview) return;
-  preview.innerHTML = (result.screenshots || []).map((s, i) => `
-    <div class="screenshot-thumb" onclick="openLightbox('${s}')">
-      <img src="${s}" alt="screenshot">
+  preview.innerHTML = (result.screenshots || []).map((s, i) => {
+    const isVideo = s.startsWith('data:video');
+    return `
+    <div class="screenshot-thumb" ${isVideo ? `onclick="playVideo('${id}',${i})"` : `onclick="openLightbox('${s}')"`}>
+      ${isVideo
+        ? `<video src="${s}" style="width:100%;height:100%;object-fit:cover" muted></video><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:20px;background:rgba(0,0,0,.5);color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center">▶</div>`
+        : `<img src="${s}" alt="screenshot">`}
       <button class="screenshot-remove" onclick="event.stopPropagation();removeScreenshot('${id}',${i})">×</button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
+}
+
+function playVideo(testId, idx) {
+  const result = getResult(testId);
+  const src = result.screenshots[idx];
+  if (!src) return;
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lightboxImg');
+  img.style.display = 'none';
+  let vid = document.getElementById('lightboxVideo');
+  if (!vid) {
+    vid = document.createElement('video');
+    vid.id = 'lightboxVideo';
+    vid.controls = true;
+    vid.autoplay = true;
+    vid.style.cssText = 'max-width:90%;max-height:90%;border-radius:8px';
+    img.parentNode.insertBefore(vid, img);
+  }
+  vid.src = src;
+  vid.style.display = '';
+  lb.classList.add('active');
+}
+
+// 라이트박스 닫을 때 동영상 정지
+const _origCloseLightbox = closeLightbox;
+closeLightbox = function() {
+  const vid = document.getElementById('lightboxVideo');
+  if (vid) { vid.pause(); vid.style.display = 'none'; }
+  const img = document.getElementById('lightboxImg');
+  if (img) img.style.display = '';
+  document.getElementById('lightbox').classList.remove('active');
 }
 
 // Ctrl+V 클립보드 붙여넣기 — 가장 최근 열린 이슈 영역에 첨부

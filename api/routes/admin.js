@@ -3272,4 +3272,65 @@ router.post('/cleanup-all-data', authenticate, requireRole('super_admin'), async
     }
 });
 
+/**
+ * POST /api/admin/reset-data
+ * 전체 초기화 (admin 3명 제외 회원 삭제 + 모든 게시글/일정/댓글 삭제)
+ * super_admin 전용
+ */
+router.post('/reset-data', authenticate, requireRole('super_admin'), async (req, res) => {
+    try {
+        const KEEP_IDS = [1, 38, 39]; // 총관리자, 경민수, 김우연
+        const K = '(1, 38, 39)';
+        const results = {};
+
+        // 1. 콘텐츠 연관 데이터 삭제
+        const contentTables = [
+            'comments', 'likes', 'post_likes', 'post_reads', 'post_attendance', 'post_images',
+            'read_status', 'schedule_attendance', 'notice_attendance',
+            'attendance_votes', 'attendance_config',
+            'club_post_comments', 'club_post_reads', 'club_posts', 'club_schedules',
+            'group_comment_likes', 'group_post_comments', 'group_post_likes',
+            'group_post_reads', 'group_post_attendance', 'group_posts', 'group_schedules',
+            'meeting_vote_responses', 'meeting_votes', 'meeting_minutes', 'meeting_attendance', 'meetings'
+        ];
+        for (const table of contentTables) {
+            try { await query(`DELETE FROM ${table}`); } catch(e) {}
+        }
+
+        // 2. 게시글/공지/일정 삭제
+        const postsDel = await query('DELETE FROM posts');
+        const noticesDel = await query('DELETE FROM notices');
+        const schedDel = await query('DELETE FROM schedules');
+        results.posts = postsDel.rowCount;
+        results.notices = noticesDel.rowCount;
+        results.schedules = schedDel.rowCount;
+
+        // 3. 회원 연관 데이터 삭제 (보존 3명 제외)
+        const memberTables = [
+            'club_members', 'clubs',
+            'mobile_admin_log', 'mobile_admin_permissions',
+            'audit_log', 'push_send_log', 'notification_log', 'scheduled_notifications',
+            'sessions', 'push_subscriptions', 'notification_settings', 'user_settings',
+            'favorites', 'member_activities', 'member_group_items', 'member_groups',
+            'orgchart_members', 'position_history', 'title_history', 'site_content'
+        ];
+        for (const table of memberTables) {
+            try { await query(`DELETE FROM ${table}`); } catch(e) {}
+        }
+
+        // 4. 회원 삭제 (보존 3명 제외)
+        const usersDel = await query(`DELETE FROM users WHERE id NOT IN ${K}`);
+        results.users = usersDel.rowCount;
+
+        res.json({
+            success: true,
+            message: `초기화 완료: 게시글 ${results.posts}개, 공지 ${results.notices}개, 일정 ${results.schedules}개 삭제, 회원 ${results.users}명 삭제`,
+            data: results
+        });
+    } catch (error) {
+        console.error('Reset data error:', error);
+        res.status(500).json({ success: false, message: '초기화 중 오류: ' + error.message });
+    }
+});
+
 module.exports = router;

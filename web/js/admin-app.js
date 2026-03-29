@@ -131,6 +131,20 @@ function renderAdminHubContent() {
             + '</div>' + chevron + '</div>';
     }
 
+    // super_admin 전용: 전체 초기화 버튼
+    var userInfo = typeof currentUser !== 'undefined' ? currentUser : JSON.parse(localStorage.getItem('user_info') || 'null');
+    if (userInfo && userInfo.role === 'super_admin') {
+        html += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border-color)">'
+            + '<div class="admin-hub-card" onclick="confirmResetData()" style="border-color:#DC2626">'
+            + '<div class="admin-hub-card-icon" style="background:#FEE2E2;color:#DC2626">'
+            + '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>'
+            + '</div>'
+            + '<div class="admin-hub-card-body">'
+            + '<div class="admin-hub-card-title" style="color:#DC2626">전체 데이터 초기화</div>'
+            + '<div class="admin-hub-card-desc">관리자 3명 제외 모든 회원/게시글/일정 삭제</div>'
+            + '</div>' + chevron + '</div></div>';
+    }
+
     if (!html) {
         html = '<div class="admin-hub-empty">관리 권한이 없습니다.</div>';
     }
@@ -1191,6 +1205,28 @@ async function localAdminChangeRole(memberId, newRole, name) {
 
 function handleAdminManageBack() {
     switchTab('home');
+}
+
+// ========== 전체 데이터 초기화 (super_admin 전용) ==========
+
+function confirmResetData() {
+    if (!confirm('정말로 전체 데이터를 초기화하시겠습니까?\n\n관리자 3명(총관리자, 경민수, 김우연)을 제외한 모든 회원, 게시글, 일정이 삭제됩니다.\n\n이 작업은 되돌릴 수 없습니다.')) return;
+    if (!confirm('마지막 확인입니다.\n\n정말 삭제하시겠습니까?')) return;
+    executeResetData();
+}
+
+async function executeResetData() {
+    try {
+        var res = await apiClient.request('/admin/reset-data', { method: 'POST' });
+        if (res.success) {
+            alert('초기화 완료!\n\n' + res.message);
+            renderAdminHubContent();
+        } else {
+            alert('초기화 실패: ' + (res.message || '알 수 없는 오류'));
+        }
+    } catch (e) {
+        alert('초기화 중 오류: ' + e.message);
+    }
 }
 
 console.log('Admin-App module loaded');

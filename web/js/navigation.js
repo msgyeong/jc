@@ -76,10 +76,15 @@ function navigateTo(path) {
 }
 
 // 화면 전환
-// ========== 라우터 (기초 교체 2단계) ==========
+// ========== 라우터 (Phase 3 개선) ==========
 // nav: 탭 활성화, showNav: 네비바 표시, init: 진입, leave: 이탈 정리, noHistory: pushState 안함
-var _currentScreen = null; // 현재 활성 화면 이름
+var _currentScreen = null;
 var _lastScreenName = '';
+var _navStack = []; // 네비게이션 스택 — forward/back 방향 판단용
+var _screenCache = {}; // 화면 캐싱 — 뒤로가기 시 깜빡임 방지
+
+// 목록 화면 = 스택 초기화 대상 (탭 네비로 이동 시)
+var _tabScreens = ['home', 'posts', 'schedules', 'members', 'meetings', 'profile'];
 
 var _routes = {
     'home':         { nav: 'home',      showNav: true,  init: function() { if (typeof updateUserDisplay === 'function') updateUserDisplay(); loadHomeData(); updateNavBadges(); } },
@@ -131,55 +136,118 @@ function pushRoute(screenName, extraState) {
     history.pushState(state, '', '#' + screenName);
 }
 
-function navigateToScreen(screenName) {
-    console.log('📱 화면 전환:', screenName);
+function navigateToScreen(screenName, opts) {
+    opts = opts || {};
+    var route = _routes[screenName] || {};
 
-    // 이전 화면 leave 콜백 호출 (상태 정리 — 동일 화면 재진입도 포함)
+    // 동일 화면 재진입 방지 (탭 클릭 등)
+    if (_currentScreen === screenName && !opts.force) return;
+
+    // ─── 방향 결정 (스택 기반) ───
+    var isBack = opts.back || false;
+    var isTabSwitch = _tabScreens.indexOf(screenName) >= 0;
+
+    if (!isBack && !isTabSwitch) {
+        // 상세/생성/편집 화면으로 전진
+        _navStack.push(screenName);
+    } else if (isBack && _navStack.length > 0) {
+        _navStack.pop();
+    } else if (isTabSwitch) {
+        // 탭 전환 시 스택 초기화
+        _navStack = [screenName];
+    }
+
+    // ─── 이전 화면 처리 ───
+    var prevScreen = _currentScreen ? document.getElementById(_currentScreen + '-screen') : null;
     if (_currentScreen) {
         var prevRoute = _routes[_currentScreen];
         if (prevRoute && prevRoute.leave) {
             try { prevRoute.leave(); } catch (e) { console.error('Screen leave error:', _currentScreen, e); }
         }
+
+        // 이전 화면 슬라이드 아웃 애니메이션
+        if (prevScreen && _currentScreen !== screenName) {
+            var outClass = isBack ? 'slide-out-right' : (isTabSwitch ? '' : 'slide-out-left');
+            if (outClass) {
+                prevScreen.classList.add(outClass);
+                (function(el, cls) {
+                    setTimeout(function() {
+                        el.classList.remove('active', cls);
+                    }, 200);
+                })(prevScreen, outClass);
+            } else {
+                prevScreen.classList.remove('active', 'slide-forward', 'slide-back');
+            }
+        }
     }
+
     _currentScreen = screenName;
 
-    // 모든 화면 숨기기
-    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active', 'slide-forward', 'slide-back'); });
+    // ─── 이전 화면이 아닌 다른 모든 화면 숨기기 ───
+    document.querySelectorAll('.screen').forEach(function(s) {
+        var id = s.id.replace('-screen', '');
+        if (id !== screenName && id !== (_lastScreenName || '')) {
+            s.classList.remove('active', 'slide-forward', 'slide-back', 'slide-out-left', 'slide-out-right');
+        }
+    });
 
-    // 공유 하단 네비바 표시/숨김
-    var route = _routes[screenName] || {};
+    // ─── 하단 네비바 ───
     var sharedNav = document.getElementById('shared-bottom-nav');
     if (sharedNav) {
         sharedNav.style.display = route.showNav ? '' : 'none';
     }
 
-    // 선택한 화면 표시
+    // ─── 새 화면 표시 ───
     var targetScreen = document.getElementById(screenName + '-screen');
     if (targetScreen) {
-        // 방향 감지: 상세화면(detail/create/edit)으로 이동 시 forward, 돌아올 때 back
-        var isForward = /detail|create|edit|signup|forgot|settings|notification/.test(screenName);
-        var isBack = /home|posts|schedules|members|login|profile|meetings/.test(screenName) && /detail|create|edit|signup|forgot|settings|notification/.test(_lastScreenName);
-        if (isForward) targetScreen.classList.add('slide-forward');
-        else if (isBack) targetScreen.classList.add('slide-back');
+        // 슬라이드 방향 적용
+        var inClass = '';
+        if (!isTabSwitch) {
+            inClass = isBack ? 'slide-back' : 'slide-forward';
+        }
+
+        // 약간의 딜레이로 이전 화면 아웃과 겹침 효과
+        var delay = (prevScreen && !isTabSwitch) ? 50 : 0;
+        setTimeout(function() {
+            targetScreen.classList.remove('slide-forward', 'slide-back', 'slide-out-left', 'slide-out-right');
+            if (inClass) targetScreen.classList.add(inClass);
+            targetScreen.classList.add('active');
+
+            // 애니메이션 클래스 정리
+            if (inClass) {
+                setTimeout(function() {
+                    targetScreen.classList.remove(inClass);
+                }, 250);
+            }
+        }, delay);
+
         _lastScreenName = screenName;
-        targetScreen.classList.add('active');
 
         // 탭 활성화
         if (route.nav) updateNavigation(route.nav);
 
-        // 화면 초기화 함수 호출
+        // 화면 초기화
         if (route.init) {
             try { route.init(); } catch (err) { console.error('Screen init error:', screenName, err); }
         }
 
-        // history pushState (인증 화면 제외)
+        // pushState
         if (!route.noHistory) {
             pushRoute(screenName);
         }
-
-        console.log('✅ 화면 전환 완료:', screenName);
     } else {
-        console.error('❌ 화면을 찾을 수 없음:', screenName);
+        console.error('Screen not found:', screenName);
+    }
+}
+
+// 뒤로가기 헬퍼
+function goBack() {
+    if (_navStack.length > 1) {
+        _navStack.pop();
+        var prev = _navStack[_navStack.length - 1];
+        navigateToScreen(prev, { back: true });
+    } else {
+        history.back();
     }
 }
 
@@ -330,48 +398,12 @@ async function _updateNavBadgesNow() {
 
 // 탭 전환 함수
 async function switchTab(tab) {
-    console.log('📱 탭 전환:', tab);
-
-    // 이전 화면 leave 콜백 호출
-    if (_currentScreen && _currentScreen !== tab) {
-        var prevRoute = _routes[_currentScreen];
-        if (prevRoute && prevRoute.leave) {
-            try { prevRoute.leave(); } catch (e) { console.error('Tab leave error:', _currentScreen, e); }
-        }
+    // 일정 탭: 상세 플래그 해제
+    if (tab === 'schedules') {
+        if (typeof _scheduleDetailActive !== 'undefined') _scheduleDetailActive = false;
     }
-    _currentScreen = tab;
-
-    // 공유 하단 네비바 표시 + 네비게이션 활성화 업데이트
-    var sharedNav = document.getElementById('shared-bottom-nav');
-    if (sharedNav) sharedNav.style.display = '';
-    updateNavigation(tab);
-
-    // 화면 전환
-    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
-    var targetScreen = document.getElementById(tab + '-screen');
-    if (targetScreen) {
-        targetScreen.classList.add('active');
-
-        // 일정 탭: 상세 플래그 해제 (loadSchedulesScreen의 init에서 목록 복원)
-        if (tab === 'schedules') {
-            if (typeof _scheduleDetailActive !== 'undefined') _scheduleDetailActive = false;
-        }
-
-        // 라우트 초기화 함수 실행
-        var route = _routes[tab];
-        if (route && route.init) {
-            try { await route.init(); } catch (err) { console.error('Tab init error:', tab, err); }
-        }
-    } else {
-        console.error('알 수 없는 탭:', tab);
-    }
-
-    // history pushState
-    if (!window._navPopstate) {
-        history.pushState({ screen: tab, tab: tab }, '', '#' + tab);
-    }
-
-    console.log('✅ 탭 전환 완료:', tab);
+    // 탭 전환은 navigateToScreen에 위임 (스택 초기화 + 애니메이션 없음)
+    navigateToScreen(tab, { force: tab === _currentScreen });
 }
 
 // 회원가입 관련 이벤트 설정
@@ -689,7 +721,7 @@ window.addEventListener('popstate', function(e) {
         } else if (state.tab) {
             switchTab(state.tab);
         } else {
-            navigateToScreen(state.screen);
+            navigateToScreen(state.screen, { back: true });
         }
 
         window._navPopstate = false;

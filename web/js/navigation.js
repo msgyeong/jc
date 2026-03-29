@@ -82,7 +82,7 @@ var _currentScreen = null; // 현재 활성 화면 이름
 var _lastScreenName = '';
 
 var _routes = {
-    'home':         { nav: 'home',      showNav: true,  init: function() { if (typeof updateUserDisplay === 'function') updateUserDisplay(); loadHomeData(); } },
+    'home':         { nav: 'home',      showNav: true,  init: function() { if (typeof updateUserDisplay === 'function') updateUserDisplay(); loadHomeData(); updateNavBadges(); } },
     'posts':        { nav: 'posts',     showNav: true,  init: function() { if (typeof loadPostsScreen === 'function') loadPostsScreen(); } },
     'schedules':    { nav: 'schedules', showNav: true,
         init: function() { if (typeof loadSchedulesScreen === 'function') loadSchedulesScreen(); },

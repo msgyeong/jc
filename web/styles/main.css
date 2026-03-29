@@ -303,7 +303,7 @@ html {
 .signup-avatar-preview {
     width: 80px;
     height: 80px;
-    border-radius: 16px;
+    border-radius: 30%;
     background: #F3F4F6;
     overflow: hidden;
     display: flex;
@@ -1381,7 +1381,7 @@ input::-ms-clear {
 .member-avatar {
     width: 56px;
     height: 56px;
-    border-radius: 50%;
+    border-radius: 30%;
     background-color: var(--secondary-color);
     display: flex;
     align-items: center;
@@ -1514,14 +1514,14 @@ input::-ms-clear {
 .author-avatar {
     width: 40px;
     height: 40px;
-    border-radius: 12px;
+    border-radius: 30%;
     object-fit: cover;
     flex-shrink: 0;
 }
 .author-avatar-placeholder {
     width: 40px;
     height: 40px;
-    border-radius: 12px;
+    border-radius: 30%;
     background: var(--primary-light);
     color: var(--primary-color);
     display: flex;
@@ -1839,7 +1839,7 @@ input::-ms-clear {
 .profile-avatar-large {
     width: 120px;
     height: 120px;
-    border-radius: 50%;
+    border-radius: 30%;
     background-color: white;
     display: flex;
     align-items: center;
@@ -2026,7 +2026,7 @@ input::-ms-clear {
 .user-avatar {
     width: 60px;
     height: 60px;
-    border-radius: 50%;
+    border-radius: 30%;
     overflow: hidden;
     flex-shrink: 0;
 }
@@ -2682,7 +2682,7 @@ input[type="date"]:focus {
 .pc-avatar {
     width: 32px;
     height: 32px;
-    border-radius: 10px;
+    border-radius: 30%;
     background-color: var(--primary-light);
     display: flex;
     align-items: center;
@@ -3315,7 +3315,7 @@ input[type="date"]:focus {
 .member-avatar-v2 {
     width: 48px;
     height: 48px;
-    border-radius: 50%;
+    border-radius: 30%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3462,7 +3462,7 @@ input[type="date"]:focus {
 .profile-avatar-xl {
     width: 80px;
     height: 80px;
-    border-radius: 50%;
+    border-radius: 30%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -3480,7 +3480,7 @@ input[type="date"]:focus {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 50%;
+    border-radius: 30%;
 }
 
 /* 카메라 버튼 오버레이 (카카오톡 스타일) */
@@ -4460,7 +4460,7 @@ input[type="date"]:focus {
 .skeleton--circle { border-radius: 50%; }
 .skeleton--text { height: 14px; margin-bottom: 8px; }
 .skeleton--title { height: 20px; width: 60%; margin-bottom: 12px; }
-.skeleton--avatar { width: 40px; height: 40px; border-radius: 50%; }
+.skeleton--avatar { width: 40px; height: 40px; border-radius: 30%; }
 .skeleton--bar { height: 8px; border-radius: 4px; }
 
 /* ==================== 빈 상태 (개선) ==================== */
@@ -4810,7 +4810,7 @@ input[type="date"]:focus {
 .schedule-comment-avatar {
     width: 32px;
     height: 32px;
-    border-radius: 50%;
+    border-radius: 30%;
     background: #DBEAFE;
     color: #2563EB;
     font-size: 13px;
@@ -7476,7 +7476,7 @@ a.sns-badge:hover {
 .me-avatar {
     width: 48px;
     height: 48px;
-    border-radius: 50%;
+    border-radius: 30%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -7940,7 +7940,7 @@ a.sns-badge:hover {
 .oc-avatar {
     width: 40px;
     height: 40px;
-    border-radius: 50%;
+    border-radius: 30%;
     flex-shrink: 0;
     overflow: hidden;
     object-fit: cover;
@@ -8063,7 +8063,7 @@ a.sns-badge:hover {
 .oc-result-avatar {
     width: 36px;
     height: 36px;
-    border-radius: 50%;
+    border-radius: 30%;
     flex-shrink: 0;
     overflow: hidden;
     display: flex;

@@ -336,15 +336,30 @@ router.get('/:id/comments', authenticate, async (req, res) => {
         const { id: scheduleId } = req.params;
         const userId = req.user.userId;
 
-        const result = await query(
-            `SELECT c.id, c.author_id, c.content, c.parent_id, c.is_deleted, c.created_at,
-                    u.name as author_name, u.profile_image as author_image, u.position as author_position
-             FROM comments c
-             LEFT JOIN users u ON c.author_id = u.id
-             WHERE c.schedule_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
-             ORDER BY c.created_at ASC`,
-            [scheduleId]
-        );
+        let result;
+        try {
+            result = await query(
+                `SELECT c.id, c.author_id, c.content, c.parent_id, c.is_deleted, c.created_at,
+                        u.name as author_name, u.profile_image as author_image, u.position as author_position,
+                        COALESCE((SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id), 0)::int as likes_count,
+                        EXISTS(SELECT 1 FROM comment_likes cl WHERE cl.comment_id = c.id AND cl.user_id = $2) as liked
+                 FROM comments c
+                 LEFT JOIN users u ON c.author_id = u.id
+                 WHERE c.schedule_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
+                 ORDER BY c.created_at ASC`,
+                [scheduleId, userId]
+            );
+        } catch (e) {
+            result = await query(
+                `SELECT c.id, c.author_id, c.content, c.parent_id, c.is_deleted, c.created_at,
+                        u.name as author_name, u.profile_image as author_image, u.position as author_position
+                 FROM comments c
+                 LEFT JOIN users u ON c.author_id = u.id
+                 WHERE c.schedule_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
+                 ORDER BY c.created_at ASC`,
+                [scheduleId]
+            );
+        }
 
         // 대댓글 구조화
         const topLevel = [];
@@ -509,6 +524,35 @@ router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
     } catch (error) {
         console.error('Delete schedule comment error:', error);
         res.status(500).json({ success: false, message: '댓글 삭제에 실패했습니다.' });
+    }
+});
+
+/**
+ * POST /api/schedules/:id/comments/:commentId/like
+ * 일정 댓글 좋아요 토글
+ */
+router.post('/:id/comments/:commentId/like', authenticate, async (req, res) => {
+    try {
+        const { commentId } = req.params;
+        const userId = req.user.userId;
+        await query(`CREATE TABLE IF NOT EXISTS comment_likes (
+            id SERIAL PRIMARY KEY, comment_id INTEGER NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(comment_id, user_id)
+        )`).catch(() => {});
+        const existing = await query('SELECT id FROM comment_likes WHERE comment_id = $1 AND user_id = $2', [commentId, userId]);
+        let liked;
+        if (existing.rows.length > 0) {
+            await query('DELETE FROM comment_likes WHERE comment_id = $1 AND user_id = $2', [commentId, userId]);
+            liked = false;
+        } else {
+            await query('INSERT INTO comment_likes (comment_id, user_id) VALUES ($1, $2)', [commentId, userId]);
+            liked = true;
+        }
+        const cnt = await query('SELECT COUNT(*) FROM comment_likes WHERE comment_id = $1', [commentId]);
+        res.json({ success: true, liked, likes_count: parseInt(cnt.rows[0].count, 10) });
+    } catch (err) {
+        console.error('Schedule comment like error:', err);
+        res.status(500).json({ success: false, message: '좋아요 처리 실패' });
     }
 });
 

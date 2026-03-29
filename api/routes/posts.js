@@ -140,21 +140,23 @@ router.get('/', authenticate, async (req, res) => {
 router.get('/:id/comments', authenticate, async (req, res) => {
     try {
         const { id: postId } = req.params;
+        const userId = req.user.userId;
         let result;
         try {
             result = await query(
                 `SELECT c.id, c.author_id, c.content, c.parent_id, c.is_deleted, c.created_at,
-                        u.name as author_name, u.profile_image as author_image
+                        u.name as author_name, u.profile_image as author_image,
+                        COALESCE((SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id), 0)::int as likes_count,
+                        EXISTS(SELECT 1 FROM comment_likes cl WHERE cl.comment_id = c.id AND cl.user_id = $2) as liked
                  FROM comments c
                  LEFT JOIN users u ON c.author_id = u.id
                  WHERE c.post_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
                  ORDER BY c.created_at ASC`,
-                [postId]
+                [postId, userId]
             );
         } catch (e) {
-            // 프로덕션 DB에 is_deleted, parent_id 컬럼이 없을 수 있음
             result = await query(
-                `SELECT c.id, c.author_id, c.content, c.created_at,
+                `SELECT c.id, c.author_id, c.content, c.parent_id, c.created_at,
                         u.name as author_name, u.profile_image as author_image
                  FROM comments c
                  LEFT JOIN users u ON c.author_id = u.id
@@ -297,6 +299,40 @@ router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
     } catch (err) {
         console.error('Delete comment error:', err);
         return res.status(500).json({ success: false, message: '댓글 삭제에 실패했습니다.' });
+    }
+});
+
+/**
+ * POST /api/posts/:postId/comments/:commentId/like
+ * 댓글 좋아요 토글
+ */
+router.post('/:postId/comments/:commentId/like', authenticate, async (req, res) => {
+    try {
+        const { commentId } = req.params;
+        const userId = req.user.userId;
+        // comment_likes 테이블 자동 생성
+        await query(`CREATE TABLE IF NOT EXISTS comment_likes (
+            id SERIAL PRIMARY KEY,
+            comment_id INTEGER NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE(comment_id, user_id)
+        )`).catch(() => {});
+        const existing = await query('SELECT id FROM comment_likes WHERE comment_id = $1 AND user_id = $2', [commentId, userId]);
+        let liked;
+        if (existing.rows.length > 0) {
+            await query('DELETE FROM comment_likes WHERE comment_id = $1 AND user_id = $2', [commentId, userId]);
+            liked = false;
+        } else {
+            await query('INSERT INTO comment_likes (comment_id, user_id) VALUES ($1, $2)', [commentId, userId]);
+            liked = true;
+        }
+        const countResult = await query('SELECT COUNT(*) FROM comment_likes WHERE comment_id = $1', [commentId]);
+        const likes_count = parseInt(countResult.rows[0].count, 10);
+        res.json({ success: true, liked, likes_count });
+    } catch (err) {
+        console.error('Comment like error:', err);
+        res.status(500).json({ success: false, message: '좋아요 처리 실패' });
     }
 });
 

@@ -660,14 +660,23 @@ async function loadCommentsForPost(postId) {
 
     try {
         const result = await apiClient.getPostComments(postId);
+        const userInfo = typeof currentUser !== 'undefined' ? currentUser : JSON.parse(localStorage.getItem('user_info') || 'null');
+        const myId = userInfo ? userInfo.id : null;
+
         if (result.success && result.comments && result.comments.length > 0) {
-            listEl.innerHTML = result.comments.map(c => `
-                <div class="comment-item">
-                    <div class="comment-author">${escapeHtml(c.author_name || '알 수 없음')}</div>
-                    <div class="comment-content">${escapeHtml(c.content || '')}</div>
-                    <div class="comment-date">${formatRelativeTime(c.created_at)}</div>
-                </div>
-            `).join('');
+            // 부모-자식 분리
+            const parents = result.comments.filter(c => !c.parent_id);
+            const replies = result.comments.filter(c => c.parent_id);
+
+            listEl.innerHTML = parents.map(c => {
+                const childComments = replies.filter(r => r.parent_id === c.id);
+                const isMe = myId && Number(c.author_id) === Number(myId);
+                return renderCommentItem(c, postId, isMe, false) +
+                    childComments.map(r => {
+                        const isReplyMe = myId && Number(r.author_id) === Number(myId);
+                        return renderCommentItem(r, postId, isReplyMe, true);
+                    }).join('');
+            }).join('');
             listEl.classList.remove('comments-empty');
         } else {
             listEl.innerHTML = '<p class="comments-empty-text">댓글이 없습니다</p>';
@@ -676,6 +685,92 @@ async function loadCommentsForPost(postId) {
     } catch (_) {
         listEl.innerHTML = renderErrorState('댓글을 불러올 수 없습니다', null, `loadCommentsForPost(${postId})`);
     }
+}
+
+function renderCommentItem(c, postId, isMe, isReply) {
+    const liked = c.liked ? 'liked' : '';
+    const likeCount = c.likes_count || 0;
+    return `
+        <div class="comment-item ${isReply ? 'comment-reply' : ''}" data-comment-id="${c.id}">
+            <div class="comment-header">
+                <span class="comment-author">${escapeHtml(c.author_name || '알 수 없음')}</span>
+                <span class="comment-date">${formatRelativeTime(c.created_at)}</span>
+            </div>
+            <div class="comment-content">${escapeHtml(c.content || '')}</div>
+            <div class="comment-actions-row">
+                <button class="comment-like-btn ${liked}" onclick="toggleCommentLike(${postId},${c.id},this)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="${liked ? '#DC2626' : 'none'}" stroke="${liked ? '#DC2626' : '#9CA3AF'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    <span class="comment-like-count">${likeCount > 0 ? likeCount : ''}</span>
+                </button>
+                ${!isReply ? `<button class="comment-reply-btn" onclick="showReplyInput(${postId},${c.id},this)">답글</button>` : ''}
+                ${isMe ? `<button class="comment-delete-btn" onclick="handleCommentDelete(${postId},${c.id})">삭제</button>` : ''}
+            </div>
+        </div>`;
+}
+
+// 답글 입력창 표시
+function showReplyInput(postId, parentId, btn) {
+    // 기존 답글 입력창 제거
+    document.querySelectorAll('.reply-input-bar').forEach(el => el.remove());
+    const commentItem = btn.closest('.comment-item');
+    const bar = document.createElement('div');
+    bar.className = 'reply-input-bar';
+    bar.innerHTML = `<input type="text" class="post-comment-input" placeholder="답글을 입력하세요..." maxlength="500" style="font-size:13px">
+        <button type="button" class="post-comment-send" onclick="submitReply(${postId},${parentId},this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>`;
+    commentItem.after(bar);
+    bar.querySelector('input').focus();
+    bar.querySelector('input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); submitReply(postId, parentId, bar.querySelector('button')); }
+    });
+}
+
+async function submitReply(postId, parentId, btn) {
+    const bar = btn.closest('.reply-input-bar');
+    const input = bar.querySelector('input');
+    const content = input.value.trim();
+    if (!content) return;
+    btn.disabled = true;
+    try {
+        await apiClient.request(`/posts/${postId}/comments`, {
+            method: 'POST',
+            body: JSON.stringify({ content, parent_id: parentId })
+        });
+        bar.remove();
+        await loadCommentsForPost(postId);
+    } catch (e) { btn.disabled = false; }
+}
+
+// 댓글 좋아요 토글
+async function toggleCommentLike(postId, commentId, btn) {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    try {
+        const res = await apiClient.request(`/posts/${postId}/comments/${commentId}/like`, { method: 'POST' });
+        if (res.success) {
+            const svg = btn.querySelector('svg path');
+            const countEl = btn.querySelector('.comment-like-count');
+            if (res.liked) {
+                svg.setAttribute('fill', '#DC2626');
+                svg.setAttribute('stroke', '#DC2626');
+                btn.classList.add('liked');
+            } else {
+                svg.setAttribute('fill', 'none');
+                svg.setAttribute('stroke', '#9CA3AF');
+                btn.classList.remove('liked');
+            }
+            if (countEl) countEl.textContent = res.likes_count > 0 ? res.likes_count : '';
+        }
+    } catch (e) {}
+    btn.disabled = false;
+}
+
+// 댓글 삭제
+async function handleCommentDelete(postId, commentId) {
+    if (!confirm('댓글을 삭제하시겠습니까?')) return;
+    try {
+        await apiClient.request(`/posts/${postId}/comments/${commentId}`, { method: 'DELETE' });
+        await loadCommentsForPost(postId);
+    } catch (e) {}
 }
 
 // ── 공감 토글 ──

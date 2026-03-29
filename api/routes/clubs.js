@@ -3,6 +3,17 @@ const router = express.Router();
 const { query } = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 const { sendPushToUser } = require('../utils/pushSender');
+const commentService = require('../services/comment-service');
+
+// 소모임 댓글 config
+const clubCommentConfig = {
+    commentTable: 'club_post_comments',
+    fkColumn: 'post_id',
+    parentTable: 'club_posts',
+    updateCommentCount: true,
+    commentLikeTable: null,  // 소모임은 댓글 좋아요 미지원
+    push: null               // 소모임 댓글은 푸시 미발송
+};
 
 /**
  * 소모임 멤버십 확인
@@ -577,7 +588,7 @@ router.delete('/:clubId/posts/:postId', authenticate, async (req, res) => {
     }
 });
 
-// ========== 소모임 댓글 ==========
+// ========== 소모임 댓글 — comment-service 위임 ==========
 
 /**
  * POST /api/clubs/:clubId/posts/:postId/comments
@@ -593,31 +604,9 @@ router.post('/:clubId/posts/:postId/comments', authenticate, async (req, res) =>
             return res.status(403).json({ success: false, error: '소모임 멤버만 댓글을 작성할 수 있습니다.' });
         }
 
-        const { content, parent_id } = req.body;
-        if (!content || !content.trim()) {
-            return res.status(400).json({ success: false, error: '댓글 내용을 입력하세요.' });
-        }
-
-        // 대대댓글 방지
-        if (parent_id) {
-            const parent = await query('SELECT parent_id FROM club_post_comments WHERE id = $1', [parent_id]);
-            if (parent.rows.length > 0 && parent.rows[0].parent_id) {
-                return res.status(400).json({ success: false, error: '대대댓글은 지원하지 않습니다.' });
-            }
-        }
-
-        const result = await query(
-            `INSERT INTO club_post_comments (post_id, author_id, content, parent_id)
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [postId, userId, content.trim(), parent_id || null]
-        );
-
-        await query(
-            'UPDATE club_posts SET comments_count = (SELECT COUNT(*) FROM club_post_comments WHERE post_id = $1 AND is_deleted = false) WHERE id = $1',
-            [postId]
-        );
-
-        res.json({ success: true, comment: result.rows[0] });
+        const result = await commentService.createComment(clubCommentConfig, postId, userId, req.body.content, req.body.parent_id);
+        if (result.error) return res.status(result.status).json({ success: false, error: result.message });
+        res.json({ success: true, comment: result.comment });
     } catch (error) {
         console.error('Club comment error:', error);
         res.status(500).json({ success: false, error: '댓글 작성에 실패했습니다.' });
@@ -634,6 +623,7 @@ router.delete('/:clubId/posts/:postId/comments/:commentId', authenticate, async 
         const userId = req.user.userId;
         const clubId = parseInt(req.params.clubId);
 
+        // 소모임은 자체 권한 체계 사용 (club admin)
         const comment = await query('SELECT author_id FROM club_post_comments WHERE id = $1', [commentId]);
         if (comment.rows.length === 0) {
             return res.status(404).json({ success: false, error: '댓글을 찾을 수 없습니다.' });
@@ -643,9 +633,10 @@ router.delete('/:clubId/posts/:postId/comments/:commentId', authenticate, async 
             return res.status(403).json({ success: false, error: '삭제 권한이 없습니다.' });
         }
 
-        await query('UPDATE club_post_comments SET is_deleted = true WHERE id = $1', [commentId]);
+        // 소모임 삭제는 자체 권한 검증 후 서비스의 내부 로직만 사용
+        await query('UPDATE club_post_comments SET is_deleted = true, updated_at = NOW() WHERE id = $1', [commentId]);
         await query(
-            'UPDATE club_posts SET comments_count = (SELECT COUNT(*) FROM club_post_comments WHERE post_id = $1 AND is_deleted = false) WHERE id = $1',
+            'UPDATE club_posts SET comments_count = (SELECT COUNT(*) FROM club_post_comments WHERE post_id = $1 AND is_deleted = false), updated_at = NOW() WHERE id = $1',
             [postId]
         );
 

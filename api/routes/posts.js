@@ -4,6 +4,22 @@ const { query, transaction } = require('../config/database');
 const { authenticate, requireRole, addOrgFilter } = require('../middleware/auth');
 const { sendPushToAll, sendPushToUser } = require('../utils/pushSender');
 const { createScheduledNotifications } = require('../cron/notification-scheduler');
+const commentService = require('../services/comment-service');
+
+// 게시글 댓글 config
+const postCommentConfig = {
+    commentTable: 'comments',
+    fkColumn: 'post_id',
+    parentTable: 'posts',
+    updateCommentCount: true,
+    commentLikeTable: 'comment_likes',
+    push: {
+        getAuthorQuery: 'SELECT author_id, title FROM posts WHERE id = $1',
+        authorIdColumn: 'author_id',
+        urlTemplate: '/#posts/{id}',
+        dataKey: 'post_id'
+    }
+};
 
 /**
  * 공지사항 게시판(category=notice) 작성 가능 여부: super_admin, admin만
@@ -134,124 +150,42 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 /**
- * GET /api/posts/:id/comments
- * 댓글 목록 (테이블 comments 필요: id, author_id, post_id, content, created_at, author_name 등)
+ * GET /api/posts/:id/comments — comment-service 위임
  */
 router.get('/:id/comments', authenticate, async (req, res) => {
     try {
         const { id: postId } = req.params;
         const userId = req.user.userId;
-        let result;
-        try {
-            result = await query(
-                `SELECT c.id, c.author_id, c.content, c.parent_id, c.is_deleted, c.created_at,
-                        u.name as author_name, u.profile_image as author_image,
-                        COALESCE((SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id), 0)::int as likes_count,
-                        EXISTS(SELECT 1 FROM comment_likes cl WHERE cl.comment_id = c.id AND cl.user_id = $2) as liked
-                 FROM comments c
-                 LEFT JOIN users u ON c.author_id = u.id
-                 WHERE c.post_id = $1 AND (c.is_deleted = false OR c.is_deleted IS NULL)
-                 ORDER BY c.created_at ASC`,
-                [postId, userId]
-            );
-        } catch (e) {
-            result = await query(
-                `SELECT c.id, c.author_id, c.content, c.parent_id, c.created_at,
-                        u.name as author_name, u.profile_image as author_image
-                 FROM comments c
-                 LEFT JOIN users u ON c.author_id = u.id
-                 WHERE c.post_id = $1
-                 ORDER BY c.created_at ASC`,
-                [postId]
-            );
-        }
-        return res.json({ success: true, comments: result.rows || [] });
+        const data = await commentService.listComments(postCommentConfig, postId, userId);
+        // posts는 기존 호환성을 위해 flat 배열로 반환
+        return res.json({ success: true, comments: data.flat || [] });
     } catch (err) {
         console.error('Get comments error:', err);
-        return res.status(500).json({
-            success: false,
-            message: '댓글 목록 조회에 실패했습니다.'
-        });
+        return res.status(500).json({ success: false, message: '댓글 목록 조회에 실패했습니다.' });
     }
 });
 
 /**
- * POST /api/posts/:id/comments
- * 댓글 작성 (테이블 comments: author_id, post_id, content)
+ * POST /api/posts/:id/comments — comment-service 위임
  */
 router.post('/:id/comments', authenticate, async (req, res) => {
     try {
         const { id: postId } = req.params;
         const { content, parent_id } = req.body || {};
-        const authorId = req.user.userId;
-        if (!content || !String(content).trim()) {
-            return res.status(400).json({
-                success: false,
-                message: '댓글 내용을 입력해주세요.'
-            });
-        }
-        try {
-            await query(
-                `INSERT INTO comments (author_id, post_id, content, parent_id)
-                 VALUES ($1, $2, $3, $4)`,
-                [authorId, postId, String(content).trim(), parent_id || null]
-            );
-        } catch (e) {
-            // parent_id 컬럼이 없을 경우 폴백
-            await query(
-                `INSERT INTO comments (author_id, post_id, content)
-                 VALUES ($1, $2, $3)`,
-                [authorId, postId, String(content).trim()]
-            );
-        }
-        let countResult;
-        try {
-            countResult = await query(
-                'SELECT COUNT(*) FROM comments WHERE post_id = $1 AND (is_deleted = false OR is_deleted IS NULL)',
-                [postId]
-            );
-        } catch (e) {
-            countResult = await query(
-                'SELECT COUNT(*) FROM comments WHERE post_id = $1',
-                [postId]
-            );
-        }
-        const comments_count = parseInt(countResult.rows[0]?.count || 0, 10);
-        await query(
-            'UPDATE posts SET comments_count = $1, updated_at = NOW() WHERE id = $2',
-            [comments_count, postId]
-        );
-        // N-05 댓글 알림: 게시글 작성자에게 발송 (본인 제외)
-        try {
-            const postResult = await query('SELECT author_id, title FROM posts WHERE id = $1', [postId]);
-            if (postResult.rows.length > 0) {
-                const postAuthorId = postResult.rows[0].author_id;
-                if (postAuthorId !== authorId) {
-                    const commenterResult = await query('SELECT name FROM users WHERE id = $1', [authorId]);
-                    const commenterName = commenterResult.rows[0]?.name || '회원';
-                    sendPushToUser(postAuthorId, {
-                        title: '\uD83D\uDCAC \uC0C8 \uB313\uAE00',
-                        body: `${commenterName}님이 댓글을 남겼습니다: ${String(content).trim().substring(0, 50)}`,
-                        data: { url: `/#posts/${postId}`, post_id: parseInt(postId) },
-                        type: 'N-05'
-                    }).catch(e => console.error('[Push] N-05 발송 에러:', e.message));
-                }
-            }
-        } catch (catchErr) { console.error("[silent-catch]", catchErr.message); }
+        const userId = req.user.userId;
 
-        return res.json({ success: true, message: '댓글이 등록되었습니다.', comments_count });
+        const result = await commentService.createComment(postCommentConfig, postId, userId, content, parent_id);
+        if (result.error) return res.status(result.status).json({ success: false, message: result.message });
+
+        return res.json({ success: true, message: '댓글이 등록되었습니다.', comments_count: result.comments_count });
     } catch (err) {
         console.error('Create comment error:', err);
-        return res.status(500).json({
-            success: false,
-            message: '댓글 등록에 실패했습니다.'
-        });
+        return res.status(500).json({ success: false, message: '댓글 등록에 실패했습니다.' });
     }
 });
 
 /**
- * DELETE /api/posts/:id/comments/:commentId
- * 댓글 삭제 (soft delete)
+ * DELETE /api/posts/:id/comments/:commentId — comment-service 위임
  */
 router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
     try {
@@ -259,43 +193,10 @@ router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
         const userId = req.user.userId;
         const userRole = req.user.role;
 
-        const commentResult = await query(
-            'SELECT author_id FROM comments WHERE id = $1 AND post_id = $2',
-            [commentId, postId]
-        );
-        if (commentResult.rows.length === 0) {
-            return res.status(404).json({ success: false, message: '댓글을 찾을 수 없습니다.' });
-        }
+        const result = await commentService.deleteComment(postCommentConfig, commentId, postId, userId, userRole);
+        if (result.error) return res.status(result.status).json({ success: false, message: result.message });
 
-        const isAuthor = Number(commentResult.rows[0].author_id) === Number(userId);
-        const isAdmin = userRole && ['super_admin', 'admin'].includes(userRole);
-        if (!isAuthor && !isAdmin) {
-            return res.status(403).json({ success: false, message: '댓글 삭제 권한이 없습니다.' });
-        }
-
-        try {
-            await query('UPDATE comments SET is_deleted = true WHERE id = $1', [commentId]);
-        } catch (e) {
-            // is_deleted 컬럼이 없으면 실제 삭제
-            await query('DELETE FROM comments WHERE id = $1', [commentId]);
-        }
-
-        let countResult;
-        try {
-            countResult = await query(
-                'SELECT COUNT(*) FROM comments WHERE post_id = $1 AND (is_deleted = false OR is_deleted IS NULL)',
-                [postId]
-            );
-        } catch (e) {
-            countResult = await query(
-                'SELECT COUNT(*) FROM comments WHERE post_id = $1',
-                [postId]
-            );
-        }
-        const comments_count = parseInt(countResult.rows[0]?.count || 0, 10);
-        await query('UPDATE posts SET comments_count = $1, updated_at = NOW() WHERE id = $2', [comments_count, postId]);
-
-        return res.json({ success: true, message: '댓글이 삭제되었습니다.', comments_count });
+        return res.json({ success: true, message: '댓글이 삭제되었습니다.', comments_count: result.comments_count });
     } catch (err) {
         console.error('Delete comment error:', err);
         return res.status(500).json({ success: false, message: '댓글 삭제에 실패했습니다.' });
@@ -303,33 +204,15 @@ router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
 });
 
 /**
- * POST /api/posts/:postId/comments/:commentId/like
- * 댓글 좋아요 토글
+ * POST /api/posts/:postId/comments/:commentId/like — comment-service 위임
  */
 router.post('/:postId/comments/:commentId/like', authenticate, async (req, res) => {
     try {
         const { commentId } = req.params;
         const userId = req.user.userId;
-        // comment_likes 테이블 자동 생성
-        await query(`CREATE TABLE IF NOT EXISTS comment_likes (
-            id SERIAL PRIMARY KEY,
-            comment_id INTEGER NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
-            user_id INTEGER NOT NULL,
-            created_at TIMESTAMP DEFAULT NOW(),
-            UNIQUE(comment_id, user_id)
-        )`).catch(() => {});
-        const existing = await query('SELECT id FROM comment_likes WHERE comment_id = $1 AND user_id = $2', [commentId, userId]);
-        let liked;
-        if (existing.rows.length > 0) {
-            await query('DELETE FROM comment_likes WHERE comment_id = $1 AND user_id = $2', [commentId, userId]);
-            liked = false;
-        } else {
-            await query('INSERT INTO comment_likes (comment_id, user_id) VALUES ($1, $2)', [commentId, userId]);
-            liked = true;
-        }
-        const countResult = await query('SELECT COUNT(*) FROM comment_likes WHERE comment_id = $1', [commentId]);
-        const likes_count = parseInt(countResult.rows[0].count, 10);
-        res.json({ success: true, liked, likes_count });
+        const result = await commentService.toggleCommentLike(postCommentConfig, commentId, userId);
+        if (result.error) return res.status(result.status).json({ success: false, message: result.message });
+        res.json({ success: true, liked: result.liked, likes_count: result.likes_count });
     } catch (err) {
         console.error('Comment like error:', err);
         res.status(500).json({ success: false, message: '좋아요 처리 실패' });

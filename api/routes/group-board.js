@@ -3,6 +3,17 @@ const router = express.Router();
 const { query } = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 const { sendPushToUser } = require('../utils/pushSender');
+const commentService = require('../services/comment-service');
+
+// 그룹 게시판 댓글 config
+const groupCommentConfig = {
+    commentTable: 'group_post_comments',
+    fkColumn: 'post_id',
+    parentTable: 'group_posts',
+    updateCommentCount: true,
+    commentLikeTable: 'group_comment_likes',
+    push: null  // 그룹 게시판 댓글은 푸시 미발송
+};
 
 /**
  * 그룹 멤버십 확인 미들웨어
@@ -357,7 +368,7 @@ router.delete('/:groupId/posts/:postId', authenticate, async (req, res) => {
 
 /**
  * POST /api/group-board/:groupId/posts/:postId/comments
- * 그룹 게시글 댓글 작성 (멤버만)
+ * 그룹 게시글 댓글 작성 (멤버만) — comment-service 위임
  */
 router.post('/:groupId/posts/:postId/comments', authenticate, async (req, res) => {
     try {
@@ -370,32 +381,9 @@ router.post('/:groupId/posts/:postId/comments', authenticate, async (req, res) =
             return res.status(403).json({ success: false, error: '이 그룹의 멤버만 댓글을 작성할 수 있습니다.' });
         }
 
-        const { content, parent_id } = req.body;
-        if (!content || !content.trim()) {
-            return res.status(400).json({ success: false, error: '댓글 내용을 입력하세요.' });
-        }
-
-        // 대대댓글 방지
-        if (parent_id) {
-            const parent = await query('SELECT parent_id FROM group_post_comments WHERE id = $1', [parent_id]);
-            if (parent.rows.length > 0 && parent.rows[0].parent_id) {
-                return res.status(400).json({ success: false, error: '대대댓글은 지원하지 않습니다.' });
-            }
-        }
-
-        const result = await query(
-            `INSERT INTO group_post_comments (post_id, author_id, content, parent_id)
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [postId, userId, content.trim(), parent_id || null]
-        );
-
-        // 댓글 수 업데이트
-        await query(
-            'UPDATE group_posts SET comments_count = (SELECT COUNT(*) FROM group_post_comments WHERE post_id = $1 AND is_deleted = false) WHERE id = $1',
-            [postId]
-        );
-
-        res.json({ success: true, comment: result.rows[0] });
+        const result = await commentService.createComment(groupCommentConfig, postId, userId, req.body.content, req.body.parent_id);
+        if (result.error) return res.status(result.status).json({ success: false, error: result.message });
+        res.json({ success: true, comment: result.comment });
     } catch (error) {
         console.error('Group post comment error:', error);
         res.status(500).json({ success: false, error: '댓글 작성에 실패했습니다.' });
@@ -404,28 +392,17 @@ router.post('/:groupId/posts/:postId/comments', authenticate, async (req, res) =
 
 /**
  * DELETE /api/group-board/:groupId/posts/:postId/comments/:commentId
- * 댓글 삭제 (작성자 또는 관리자)
+ * 댓글 삭제 — comment-service 위임
  */
 router.delete('/:groupId/posts/:postId/comments/:commentId', authenticate, async (req, res) => {
     try {
         const postId = parseInt(req.params.postId);
         const commentId = parseInt(req.params.commentId);
         const userId = req.user.userId;
+        const userRole = req.user.role;
 
-        const comment = await query('SELECT author_id FROM group_post_comments WHERE id = $1', [commentId]);
-        if (comment.rows.length === 0) {
-            return res.status(404).json({ success: false, error: '댓글을 찾을 수 없습니다.' });
-        }
-        if (comment.rows[0].author_id !== userId && !isManagerRole(req.user.role)) {
-            return res.status(403).json({ success: false, error: '삭제 권한이 없습니다.' });
-        }
-
-        await query('UPDATE group_post_comments SET is_deleted = true WHERE id = $1', [commentId]);
-        await query(
-            'UPDATE group_posts SET comments_count = (SELECT COUNT(*) FROM group_post_comments WHERE post_id = $1 AND is_deleted = false) WHERE id = $1',
-            [postId]
-        );
-
+        const result = await commentService.deleteComment(groupCommentConfig, commentId, postId, userId, userRole);
+        if (result.error) return res.status(result.status).json({ success: false, error: result.message });
         res.json({ success: true });
     } catch (error) {
         console.error('Group comment delete error:', error);
@@ -542,34 +519,15 @@ router.post('/:groupId/posts/:postId/like', authenticate, async (req, res) => {
 
 /**
  * POST /api/group-board/:groupId/comments/:commentId/like
- * 댓글 좋아요 토글
+ * 댓글 좋아요 토글 — comment-service 위임
  */
 router.post('/:groupId/comments/:commentId/like', authenticate, async (req, res) => {
     try {
         const commentId = parseInt(req.params.commentId);
         const userId = req.user.userId;
-
-        let existing;
-        try {
-            existing = await query('SELECT id FROM group_comment_likes WHERE user_id = $1 AND comment_id = $2', [userId, commentId]);
-        } catch (catchErr) {
-            console.error("[group_comment_likes]", catchErr.message);
-            existing = { rows: [] };
-        }
-
-        let liked;
-        if (existing.rows.length > 0) {
-            await query('DELETE FROM group_comment_likes WHERE user_id = $1 AND comment_id = $2', [userId, commentId]);
-            liked = false;
-        } else {
-            await query('INSERT INTO group_comment_likes (user_id, comment_id) VALUES ($1, $2)', [userId, commentId]);
-            liked = true;
-        }
-
-        const countRes = await query('SELECT COUNT(*) FROM group_comment_likes WHERE comment_id = $1', [commentId]);
-        const likes_count = parseInt(countRes.rows[0].count);
-
-        res.json({ success: true, liked, likes_count });
+        const result = await commentService.toggleCommentLike(groupCommentConfig, commentId, userId);
+        if (result.error) return res.status(result.status).json({ success: false, error: result.message });
+        res.json({ success: true, liked: result.liked, likes_count: result.likes_count });
     } catch (error) {
         console.error('Group comment like error:', error);
         res.status(500).json({ success: false, error: '좋아요 처리에 실패했습니다.' });

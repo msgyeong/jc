@@ -654,8 +654,8 @@ function loadClubMembersList(members) {
         var roleTag = m.role === 'owner' ? '<span class="club-role-tag owner">개설자</span>'
             : m.role === 'admin' ? '<span class="club-role-tag admin">관리자</span>' : '';
         var avatar = m.profile_image
-            ? '<img src="' + m.profile_image + '" class="member-card-v2-avatar">'
-            : '<div class="member-card-v2-avatar member-avatar-default">' + escapeHtml(m.name).charAt(0) + '</div>';
+            ? '<img src="' + m.profile_image + '" class="club-member-avatar">'
+            : '<div class="club-member-avatar club-member-avatar-default">' + escapeHtml(m.name).charAt(0) + '</div>';
         html += '<div class="club-member-card" onclick="navigateToScreen(\'member-detail\');loadMemberDetail(' + m.user_id + ')">'
             + avatar
             + '<div class="club-member-info">'

@@ -4473,6 +4473,20 @@ input[type="date"]:focus {
 }
 .empty-state-cta:active { background: #1D4ED8; }
 
+/* 홈 화면 빈 상태 compact */
+.home-section .empty-state {
+    padding: 20px 16px;
+    min-height: auto;
+}
+.home-section .empty-state-icon {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 8px;
+}
+.home-section .empty-state-title {
+    font-size: 13px;
+}
+
 /* ==================== 풀 에러 상태 ==================== */
 .error-state {
     display: flex;

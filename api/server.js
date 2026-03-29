@@ -246,8 +246,42 @@ app.listen(PORT, async () => {
     console.log(`  - GET    /api/notifications`);
     console.log('='.repeat(50));
 
-    // 자동 마이그레이션 (신규 컬럼)
+    // [임시] 테스트 데이터 생성 — 게시글 50개 + 월별 일정
     const { query: dbQuery } = require('./config/database');
+    (async () => {
+        try {
+            // 이미 생성됐는지 체크
+            const check = await dbQuery("SELECT COUNT(*) as cnt FROM posts WHERE title LIKE '테스트 게시글%'");
+            if (parseInt(check.rows[0].cnt) >= 30) { console.log('✅ 테스트 데이터 이미 존재'); return; }
+            // 게시글 50개
+            const categories = ['general', 'general', 'general', 'qna', 'general'];
+            const titles = ['회의 참석 안내','주간 보고','신규 프로젝트 제안','질문입니다','행사 후기','업무 공유','아이디어 제안','건의사항','공유합니다','감사 인사'];
+            for (let i = 1; i <= 50; i++) {
+                const t = titles[i % titles.length] + ' #' + i;
+                const c = categories[i % categories.length];
+                const d = new Date(2026, 2, Math.max(1, 29 - Math.floor(i/2)));
+                await dbQuery("INSERT INTO posts (title, content, category, author_id, org_id, created_at) VALUES ($1,$2,$3,$4,$5,$6)",
+                    [t, '테스트 게시글 내용 ' + i + '. 이것은 QA 테스트용 데이터입니다.', c, 38, 1, d.toISOString()]);
+            }
+            console.log('✅ 테스트 게시글 50개 생성 완료');
+            // 월별 일정 (3~6월, 월 3개씩)
+            const schedCats = ['event','meeting','training'];
+            const schedTitles = ['정기 모임','이사회','교육 세미나','워크숍','봉사활동','특별 행사'];
+            for (let month = 3; month <= 6; month++) {
+                for (let j = 0; j < 3; j++) {
+                    const day = 5 + j * 10;
+                    const st = new Date(2026, month - 1, day, 14, 0);
+                    const en = new Date(2026, month - 1, day, 17, 0);
+                    const ti = schedTitles[(month + j) % schedTitles.length] + ' (' + month + '월)';
+                    await dbQuery("INSERT INTO schedules (title, description, category, start_date, end_date, location, created_by, org_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+                        [ti, '테스트 일정입니다.', schedCats[j], st.toISOString(), en.toISOString(), '영등포 JC 사무실', 38, 1]);
+                }
+            }
+            console.log('✅ 월별 테스트 일정 12개 생성 완료');
+        } catch (e) { console.error('테스트 데이터 생성 실패:', e.message); }
+    })();
+
+    // 자동 마이그레이션 (신규 컬럼)
     dbQuery("ALTER TABLE users ADD COLUMN IF NOT EXISTS website VARCHAR(500)").catch(() => {});
     dbQuery("ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_banner BOOLEAN DEFAULT false").catch(() => {});
     // 사업 PR 컬럼 (029_business_pr)

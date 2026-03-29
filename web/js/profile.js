@@ -74,10 +74,11 @@ function renderSnsBadges(snsLinks) {
         var handle = sns.handle || '';
         var url = handle.startsWith('http') ? handle : (info.urlPrefix ? info.urlPrefix + handle.replace(/^@/, '') : handle);
         var hasUrl = url && (url.startsWith('http') || url.startsWith('//'));
+        var displayText = info.label + ': ' + handle;
         if (hasUrl) {
-            return '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener" class="sns-badge" title="' + escapeHtml(info.label) + '">' + info.icon + ' ' + escapeHtml(handle) + '</a>';
+            return '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener" class="sns-badge" title="' + escapeHtml(info.label) + '">' + info.icon + ' ' + escapeHtml(displayText) + '</a>';
         }
-        return '<span class="sns-badge">' + info.icon + ' ' + escapeHtml(handle) + '</span>';
+        return '<span class="sns-badge">' + info.icon + ' ' + escapeHtml(displayText) + '</span>';
     }).join(' ');
 }
 
@@ -88,6 +89,13 @@ function renderProfile(p) {
 
     return `
         <div class="profile-v2">
+            <!-- 편집 버튼 (우측 상단) -->
+            <div style="display:flex;justify-content:flex-end;padding:12px 16px 0">
+                <button onclick="showEditProfileForm()" style="background:none;border:1px solid var(--border-color,#e5e7eb);border-radius:8px;padding:6px 14px;font-size:13px;color:var(--primary-color,#1F4FD8);cursor:pointer;display:flex;align-items:center;gap:4px">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                    편집
+                </button>
+            </div>
             <!-- 프로필 히어로 -->
             <div class="profile-hero">
                 <div class="profile-avatar-xl" style="background:#DBEAFE; position:relative; cursor:pointer" onclick="document.getElementById('profile-photo-input').click()">
@@ -299,7 +307,7 @@ function renderSnsRow(type, handle, idx) {
     }).join('');
     return '<div class="sns-edit-row" data-idx="' + idx + '" style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
         '<select class="sns-type-select" style="flex:0 0 120px;height:40px;border:1px solid #D1D5DB;border-radius:8px;padding:0 8px;font-size:14px">' + optHtml + '</select>' +
-        '<input type="text" class="sns-handle-input" value="' + escapeHtml(handle) + '" placeholder="@계정명 또는 URL" style="flex:1;height:40px;border:1px solid #D1D5DB;border-radius:8px;padding:0 12px;font-size:14px">' +
+        '<input type="text" class="sns-handle-input" value="' + escapeHtml(handle) + '" placeholder="@계정명 또는 URL (https:// 자동 추가)" style="flex:1;height:40px;border:1px solid #D1D5DB;border-radius:8px;padding:0 12px;font-size:14px">' +
         '<button type="button" class="btn-icon-delete" onclick="removeSnsRow(this)" style="flex:0 0 36px;height:36px;border:none;background:#FEE2E2;color:#DC2626;border-radius:8px;cursor:pointer;font-size:16px" title="삭제">&times;</button>' +
         '</div>';
 }
@@ -324,7 +332,13 @@ function collectSnsLinks() {
     rows.forEach(function(row) {
         var type = row.querySelector('.sns-type-select').value;
         var handle = row.querySelector('.sns-handle-input').value.trim();
-        if (handle) links.push({ type: type, handle: handle });
+        if (handle) {
+            // URL처럼 보이면 https:// 자동 추가
+            if (handle.includes('.') && !handle.startsWith('http') && !handle.startsWith('@')) {
+                handle = 'https://' + handle;
+            }
+            links.push({ type: type, handle: handle });
+        }
     });
     return links;
 }

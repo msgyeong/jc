@@ -635,6 +635,48 @@ router.post('/logout', authenticate, (req, res) => {
 });
 
 /**
+ * POST /api/auth/check-email
+ * 이메일 중복 확인
+ */
+router.post('/check-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ success: false, message: '이메일을 입력해주세요.' });
+        const result = await query('SELECT id FROM users WHERE email = $1 AND status != $2', [email.toLowerCase(), 'withdrawn']);
+        res.json({ success: true, available: result.rows.length === 0 });
+    } catch (error) {
+        console.error('Check email error:', error);
+        res.status(500).json({ success: false, message: '중복 확인 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * POST /api/auth/find-email
+ * 아이디(이메일) 찾기 — 이름 + 전화번호로 조회
+ */
+router.post('/find-email', async (req, res) => {
+    try {
+        const { name, phone } = req.body;
+        if (!name || !phone) return res.status(400).json({ success: false, message: '이름과 전화번호를 입력해주세요.' });
+        const result = await query(
+            "SELECT email FROM users WHERE name = $1 AND phone = $2 AND status != 'withdrawn'",
+            [name.trim(), phone.trim()]
+        );
+        if (result.rows.length === 0) {
+            return res.json({ success: true, found: false, message: '일치하는 계정을 찾을 수 없습니다.' });
+        }
+        // 이메일 일부 마스킹 (abc@test.com → a**@test.com)
+        const email = result.rows[0].email;
+        const [local, domain] = email.split('@');
+        const masked = local[0] + '*'.repeat(Math.max(local.length - 1, 1)) + '@' + domain;
+        res.json({ success: true, found: true, email: masked });
+    } catch (error) {
+        console.error('Find email error:', error);
+        res.status(500).json({ success: false, message: '이메일 찾기 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
  * POST /api/auth/withdraw
  * 회원 탈퇴 (soft delete)
  */

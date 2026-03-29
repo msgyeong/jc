@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영등포 JC - 회원관리 앱</title>
     <!-- Build: 2026-02-06 v2.1 -->
-    <link rel="stylesheet" href="styles/main.css?v=20260329b" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="styles/main.css?v=20260329b"></noscript>
+    <link rel="stylesheet" href="styles/main.css?v=20260329c" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="styles/main.css?v=20260329c"></noscript>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FFFFFF">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -103,11 +103,40 @@
                     </button>
 
                     <div class="secondary-links">
+                        <button type="button" class="link-button" onclick="showFindEmailScreen()">아이디 찾기</button>
+                        <span class="divider">|</span>
                         <button type="button" class="link-button" id="forgot-password-link">비밀번호 찾기</button>
                         <span class="divider">|</span>
                         <button type="button" class="link-button" id="signup-link">회원가입</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- 아이디 찾기 화면 -->
+        <div id="find-email-screen" class="screen">
+            <div class="app-bar">
+                <button class="back-button" onclick="navigateToScreen('login')" aria-label="뒤로 가기">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <h1 class="app-bar-title">아이디 찾기</h1>
+            </div>
+            <div class="form-container" style="padding:24px">
+                <p style="font-size:14px;color:#6B7280;margin-bottom:20px">가입 시 등록한 이름과 전화번호를 입력하세요.</p>
+                <div class="form-group">
+                    <label for="find-email-name">이름</label>
+                    <input type="text" id="find-email-name" placeholder="이름 입력">
+                </div>
+                <div class="form-group">
+                    <label for="find-email-phone">전화번호</label>
+                    <input type="tel" id="find-email-phone" placeholder="010-1234-5678">
+                </div>
+                <span class="error-message" id="find-email-error"></span>
+                <div id="find-email-result" style="display:none;padding:16px;background:#F0FDF4;border-radius:12px;margin-top:12px;text-align:center">
+                    <div style="font-size:14px;color:#059669;font-weight:600;margin-bottom:4px">가입된 이메일</div>
+                    <div id="find-email-value" style="font-size:18px;font-weight:700;color:#1a1a1a"></div>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="handleFindEmail()" style="margin-top:16px;width:100%;height:48px;border-radius:8px">이메일 찾기</button>
             </div>
         </div>
 
@@ -309,12 +338,16 @@
                         <label for="signup-email">
                             이메일 <span class="required-badge">필수</span>
                         </label>
-                        <input 
-                            type="email" 
-                            id="signup-email" 
-                            placeholder="example@email.com"
-                            required
-                        >
+                        <div style="display:flex;gap:8px">
+                            <input
+                                type="email"
+                                id="signup-email"
+                                placeholder="example@email.com"
+                                required
+                                style="flex:1"
+                            >
+                            <button type="button" id="email-check-btn" onclick="checkEmailDuplicate()" style="flex:0 0 auto;height:48px;padding:0 14px;border:1px solid #1F4FD8;border-radius:8px;background:#fff;color:#1F4FD8;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">중복 확인</button>
+                        </div>
                         <span class="help-text">소문자로 입력해주세요</span>
                         <span class="error-message" id="signup-email-error"></span>
                     </div>
@@ -718,7 +751,7 @@
                     </div>
 
                     <!-- 공지사항 요약 -->
-                    <section class="content-section">
+                    <section class="content-section home-section">
                         <div class="section-header">
                             <h2>공지사항</h2>
                             <button class="view-all-btn" onclick="switchTab('posts'); setTimeout(()=>switchBoardTab('notice'),100)">전체 보기 →</button>
@@ -729,7 +762,7 @@
                     </section>
 
                     <!-- 다가오는 일정 -->
-                    <section class="content-section">
+                    <section class="content-section home-section">
                         <div class="section-header">
                             <h2>다가오는 일정</h2>
                             <button class="view-all-btn" data-navigate="schedules">전체 보기 →</button>
@@ -1704,33 +1737,33 @@
     </nav>
 
     <!-- 앱 스크립트 -->
-    <script src="js/config.js?v=20260329b"></script>
-    <script src="js/api-client.js?v=20260329b"></script>
-    <script src="js/utils.js?v=20260329b"></script>
-    <script src="js/auth.js?v=20260329b"></script>
-    <script src="js/signup.js?v=20260329b"></script>
-    <script src="js/home.js?v=20260329b"></script>
-    <script src="js/card-components.js?v=20260329b"></script>
-    <script src="js/posts.js?v=20260329b"></script>
-    <script src="js/notices.js?v=20260329b"></script>
-    <script src="js/schedules.js?v=20260329b"></script>
-    <script src="js/chosung.js?v=20260329b"></script>
-    <script src="js/members.js?v=20260329b"></script>
-    <script src="js/profile.js?v=20260329b"></script>
-    <script src="js/admin.js?v=20260329b"></script>
-    <script src="js/push.js?v=20260329b"></script>
-    <script src="js/notifications.js?v=20260329b"></script>
-    <script src="js/notification-settings.js?v=20260329b"></script>
-    <script src="js/settings.js?v=20260329b"></script>
-    <script src="js/meetings.js?v=20260329b"></script>
-    <script src="js/portal.js?v=20260329b"></script>
-    <script src="js/admin-app.js?v=20260329b"></script>
-    <script src="js/content.js?v=20260329b"></script>
-    <script src="js/orgchart.js?v=20260329b"></script>
-    <script src="js/group-board.js?v=20260329b"></script>
-    <script src="js/clubs.js?v=20260329b"></script>
-    <script src="js/jc-map.js?v=20260329b"></script>
-    <script src="js/navigation.js?v=20260329b"></script>
-    <script src="js/app.js?v=20260329b"></script>
+    <script src="js/config.js?v=20260329c"></script>
+    <script src="js/api-client.js?v=20260329c"></script>
+    <script src="js/utils.js?v=20260329c"></script>
+    <script src="js/auth.js?v=20260329c"></script>
+    <script src="js/signup.js?v=20260329c"></script>
+    <script src="js/home.js?v=20260329c"></script>
+    <script src="js/card-components.js?v=20260329c"></script>
+    <script src="js/posts.js?v=20260329c"></script>
+    <script src="js/notices.js?v=20260329c"></script>
+    <script src="js/schedules.js?v=20260329c"></script>
+    <script src="js/chosung.js?v=20260329c"></script>
+    <script src="js/members.js?v=20260329c"></script>
+    <script src="js/profile.js?v=20260329c"></script>
+    <script src="js/admin.js?v=20260329c"></script>
+    <script src="js/push.js?v=20260329c"></script>
+    <script src="js/notifications.js?v=20260329c"></script>
+    <script src="js/notification-settings.js?v=20260329c"></script>
+    <script src="js/settings.js?v=20260329c"></script>
+    <script src="js/meetings.js?v=20260329c"></script>
+    <script src="js/portal.js?v=20260329c"></script>
+    <script src="js/admin-app.js?v=20260329c"></script>
+    <script src="js/content.js?v=20260329c"></script>
+    <script src="js/orgchart.js?v=20260329c"></script>
+    <script src="js/group-board.js?v=20260329c"></script>
+    <script src="js/clubs.js?v=20260329c"></script>
+    <script src="js/jc-map.js?v=20260329c"></script>
+    <script src="js/navigation.js?v=20260329c"></script>
+    <script src="js/app.js?v=20260329c"></script>
 </body>
 </html>

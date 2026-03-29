@@ -198,6 +198,24 @@ function validateSignupForm() {
     } else if (ssnBack.length !== 1 || !/^[1-4]$/.test(ssnBack)) {
         showError('signup-ssn-error', '성별 1자리를 입력하세요 (1~4).');
         isValid = false;
+    } else {
+        // 날짜 유효성 검증
+        const mm = parseInt(ssnFront.substring(2, 4), 10);
+        const dd = parseInt(ssnFront.substring(4, 6), 10);
+        if (mm < 1 || mm > 12 || dd < 1 || dd > 31) {
+            showError('signup-ssn-error', '유효하지 않은 생년월일입니다.');
+            isValid = false;
+        } else {
+            // 월별 일수 체크
+            const yy = parseInt(ssnFront.substring(0, 2), 10);
+            const century = (ssnBack === '1' || ssnBack === '2') ? 1900 : 2000;
+            const fullYear = century + yy;
+            const maxDay = new Date(fullYear, mm, 0).getDate();
+            if (dd > maxDay) {
+                showError('signup-ssn-error', `${mm}월은 최대 ${maxDay}일까지입니다.`);
+                isValid = false;
+            }
+        }
     }
     
     // 휴대폰 검증
@@ -815,5 +833,33 @@ loadOrgList();
         fill.setAttribute('data-level', levels[passed] || '');
     });
 })();
+
+// 이메일 중복 확인
+async function checkEmailDuplicate() {
+    const emailEl = document.getElementById('signup-email');
+    const email = (emailEl?.value || '').trim().toLowerCase();
+    const btn = document.getElementById('email-check-btn');
+    if (!email || !validateEmail(email)) {
+        showError('signup-email-error', '올바른 이메일을 입력하세요.');
+        return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = '확인 중...'; }
+    try {
+        const res = await apiClient.request('/auth/check-email', {
+            method: 'POST',
+            body: JSON.stringify({ email })
+        });
+        if (res.available) {
+            const errEl = document.getElementById('signup-email-error');
+            if (errEl) { errEl.textContent = '사용 가능한 이메일입니다.'; errEl.style.color = '#059669'; errEl.style.display = 'block'; }
+        } else {
+            showError('signup-email-error', '이미 가입된 이메일입니다.');
+        }
+    } catch (err) {
+        showError('signup-email-error', err.message || '중복 확인 실패');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '중복 확인'; }
+    }
+}
 
 console.log('✅ Signup 모듈 로드 완료 (Railway API)');

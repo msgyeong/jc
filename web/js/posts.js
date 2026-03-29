@@ -524,6 +524,15 @@ async function handlePostCreateSubmit(e) {
         }
     }
 
+    // 이미지 업로드 중이면 대기
+    if (postCreateImageUrls.some(u => u === '__uploading__')) {
+        if (errorEl) {
+            errorEl.textContent = '이미지 업로드 중입니다. 잠시 후 다시 시도해주세요.';
+            errorEl.classList.add('show');
+        }
+        return;
+    }
+
     submitBtn.disabled = true;
     submitBtn.textContent = '등록 중...';
     try {

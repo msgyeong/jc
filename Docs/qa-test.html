@@ -1249,7 +1249,7 @@ function renderTestItem(test, num) {
             <button class="test-btn btn-skip ${result.status === 'skip' ? 'active' : ''}" onclick="setStatus('${test.id}','skip')">⏭ 건너뜀</button>
           </div>
 
-          <div class="issue-area ${result.status === 'fail' ? 'visible' : ''}" id="issue-${test.id}">
+          <div class="issue-area ${result.status === 'fail' || result.status === 'pass' ? 'visible' : ''}" id="issue-${test.id}">
             <textarea class="issue-textarea" placeholder="발견된 문제를 상세히 적어주세요...&#10;예: 어떤 화면에서, 어떤 조작을 했을 때, 어떤 결과가 나왔는지"
               oninput="updateIssue('${test.id}', this.value)">${result.issue || ''}</textarea>
             <div class="issue-severity">
@@ -1347,12 +1347,27 @@ function renderScreenshots(id) {
   `).join('');
 }
 
-// Ctrl+V 클립보드 붙여넣기
-document.addEventListener('paste', (e) => {
-  const activeIssue = document.querySelector('.issue-area.visible .issue-textarea:focus');
-  if (!activeIssue) return;
+// Ctrl+V 클립보드 붙여넣기 — 가장 최근 열린 이슈 영역에 첨부
+let lastActiveTestId = null;
 
-  const testId = activeIssue.closest('.test-item')?.dataset.testId;
+// 이슈 영역 클릭 시 활성 테스트 ID 추적
+document.addEventListener('click', (e) => {
+  const issueArea = e.target.closest('.issue-area.visible');
+  if (issueArea) {
+    const testItem = issueArea.closest('.test-item');
+    if (testItem) lastActiveTestId = testItem.dataset.testId;
+  }
+});
+
+document.addEventListener('paste', (e) => {
+  // textarea 포커스 또는 최근 활성 이슈 영역
+  let testId = null;
+  const focusedTextarea = document.activeElement?.closest?.('.test-item');
+  if (focusedTextarea) {
+    testId = focusedTextarea.dataset.testId;
+  } else {
+    testId = lastActiveTestId;
+  }
   if (!testId) return;
 
   const items = e.clipboardData?.items;
@@ -1369,6 +1384,7 @@ document.addEventListener('paste', (e) => {
         result.screenshots.push(ev.target.result);
         saveToStorage();
         renderScreenshots(testId);
+        showToast(`스크린샷 첨부 완료 (${testId})`, 'success');
       };
       reader.readAsDataURL(file);
     }

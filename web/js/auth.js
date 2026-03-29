@@ -268,4 +268,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// 아이디(이메일) 찾기
+function showFindEmailScreen() {
+    navigateToScreen('find-email');
+}
+
+async function handleFindEmail() {
+    const name = (document.getElementById('find-email-name')?.value || '').trim();
+    const phone = (document.getElementById('find-email-phone')?.value || '').trim();
+    const errorEl = document.getElementById('find-email-error');
+    const resultEl = document.getElementById('find-email-result');
+
+    if (!name || !phone) {
+        if (errorEl) { errorEl.textContent = '이름과 전화번호를 모두 입력해주세요.'; errorEl.style.display = 'block'; }
+        return;
+    }
+    if (errorEl) { errorEl.style.display = 'none'; }
+    if (resultEl) resultEl.style.display = 'none';
+
+    try {
+        const res = await apiClient.request('/auth/find-email', {
+            method: 'POST',
+            body: JSON.stringify({ name, phone })
+        });
+        if (res.found) {
+            if (resultEl) { resultEl.style.display = 'block'; }
+            document.getElementById('find-email-value').textContent = res.email;
+        } else {
+            if (errorEl) { errorEl.textContent = '일치하는 계정을 찾을 수 없습니다.'; errorEl.style.display = 'block'; }
+        }
+    } catch (err) {
+        if (errorEl) { errorEl.textContent = err.message || '이메일 찾기 중 오류'; errorEl.style.display = 'block'; }
+    }
+}
+
 console.log('✅ Auth 모듈 로드 완료 (Railway API)');

@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JC 앱 QA 테스트 도구 v2</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans KR','Segoe UI',sans-serif; background:#f0f2f5; color:#1a1a1a; line-height:1.6; }
+
+/* Header */
+.header { position:sticky; top:0; z-index:100; background:linear-gradient(135deg,#1F4FD8,#2563EB); color:#fff; padding:16px 24px; box-shadow:0 2px 12px rgba(0,0,0,.15); }
+.header h1 { font-size:20px; font-weight:700; }
+.header .subtitle { font-size:13px; opacity:.85; margin-top:2px; }
+.header-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+.header-actions button { padding:8px 16px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn-save { background:#F59E0B; color:#fff; }
+.btn-save:hover { background:#D97706; }
+.btn-export { background:#fff; color:#1F4FD8; }
+.btn-export:hover { background:#EEF2FF; }
+.btn-reset { background:rgba(255,255,255,.15); color:#fff; }
+.btn-reset:hover { background:rgba(255,255,255,.25); }
+.btn-collapse { background:rgba(255,255,255,.15); color:#fff; }
+
+/* Progress */
+.progress-bar { margin-top:12px; }
+.progress-track { height:8px; background:rgba(255,255,255,.2); border-radius:4px; overflow:hidden; }
+.progress-fill { height:100%; background:#34D399; border-radius:4px; transition:width .3s; }
+.progress-text { font-size:12px; margin-top:4px; opacity:.9; }
+
+/* Stats */
+.stats-row { display:flex; gap:12px; padding:16px 24px; background:#fff; border-bottom:1px solid #e5e7eb; flex-wrap:wrap; }
+.stat-card { flex:1; min-width:100px; text-align:center; padding:8px; background:#f8fafc; border-radius:8px; }
+.stat-num { font-size:22px; font-weight:700; }
+.stat-label { font-size:11px; color:#6b7280; }
+.stat-total .stat-num { color:#1F4FD8; }
+.stat-pass .stat-num { color:#059669; }
+.stat-fail .stat-num { color:#DC2626; }
+.stat-skip .stat-num { color:#9CA3AF; }
+.stat-issue .stat-num { color:#F59E0B; }
+
+/* Filter */
+.filter-bar { padding:12px 24px; background:#fff; border-bottom:1px solid #e5e7eb; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.filter-bar select, .filter-bar input { padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; }
+.filter-bar input { flex:1; min-width:200px; }
+.filter-btn { padding:6px 14px; border:1px solid #d1d5db; border-radius:6px; background:#fff; cursor:pointer; font-size:12px; }
+.filter-btn.active { background:#1F4FD8; color:#fff; border-color:#1F4FD8; }
+
+/* Sections */
+.container { max-width:1100px; margin:0 auto; padding:16px; }
+.section { background:#fff; border-radius:12px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.08); overflow:hidden; }
+.section-header { padding:16px 20px; background:#f8fafc; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none; }
+.section-header:hover { background:#f1f5f9; }
+.section-title { font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.section-icon { font-size:20px; }
+.section-badge { font-size:11px; padding:2px 8px; border-radius:10px; background:#e5e7eb; color:#6b7280; }
+.section-badge.has-fail { background:#FEE2E2; color:#DC2626; }
+.section-toggle { font-size:18px; color:#9ca3af; transition:transform .2s; }
+.section-toggle.collapsed { transform:rotate(-90deg); }
+.section-body { padding:0; }
+.section-body.collapsed { display:none; }
+
+/* Test Item */
+.test-item { border-bottom:1px solid #f3f4f6; padding:16px 20px; transition:background .15s; }
+.test-item:last-child { border-bottom:none; }
+.test-item:hover { background:#fafbfc; }
+.test-item.status-pass { border-left:3px solid #059669; }
+.test-item.status-fail { border-left:3px solid #DC2626; background:#FFF5F5; }
+.test-item.status-skip { border-left:3px solid #D1D5DB; opacity:.7; }
+.test-row { display:flex; align-items:flex-start; gap:12px; }
+.test-number { font-size:11px; color:#9ca3af; font-weight:600; min-width:36px; padding-top:2px; }
+.test-content { flex:1; }
+.test-title { font-size:14px; font-weight:600; margin-bottom:2px; }
+.test-steps { font-size:13px; color:#4b5563; margin:6px 0; padding-left:16px; }
+.test-steps li { margin:3px 0; }
+.test-expected { font-size:12px; color:#059669; background:#F0FDF4; padding:6px 10px; border-radius:6px; margin:6px 0; }
+.test-pattern { font-size:12px; color:#7C3AED; background:#F5F3FF; padding:6px 10px; border-radius:6px; margin:6px 0; }
+.test-pattern::before { content:"🔄 패턴 변형: "; font-weight:600; }
+.test-actions { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.test-btn { padding:5px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:12px; cursor:pointer; background:#fff; transition:all .15s; }
+.test-btn:hover { background:#f3f4f6; }
+.test-btn.btn-pass { color:#059669; border-color:#059669; }
+.test-btn.btn-pass.active { background:#059669; color:#fff; }
+.test-btn.btn-fail { color:#DC2626; border-color:#DC2626; }
+.test-btn.btn-fail.active { background:#DC2626; color:#fff; }
+.test-btn.btn-skip { color:#9CA3AF; }
+.test-btn.btn-skip.active { background:#9CA3AF; color:#fff; }
+
+/* Issue Area */
+.issue-area { margin-top:10px; display:none; }
+.issue-area.visible { display:block; }
+.issue-textarea { width:100%; min-height:80px; padding:10px 12px; border:1px solid #FCA5A5; border-radius:8px; font-size:13px; resize:vertical; font-family:inherit; background:#FFF5F5; }
+.issue-textarea:focus { outline:none; border-color:#DC2626; box-shadow:0 0 0 3px rgba(220,38,38,.1); }
+.issue-severity { margin-top:6px; display:flex; gap:6px; align-items:center; }
+.severity-btn { padding:4px 10px; border:1px solid #d1d5db; border-radius:4px; font-size:11px; cursor:pointer; background:#fff; }
+.severity-btn.sev-critical.active { background:#DC2626; color:#fff; border-color:#DC2626; }
+.severity-btn.sev-major.active { background:#F59E0B; color:#fff; border-color:#F59E0B; }
+.severity-btn.sev-minor.active { background:#3B82F6; color:#fff; border-color:#3B82F6; }
+.severity-btn.sev-cosmetic.active { background:#8B5CF6; color:#fff; border-color:#8B5CF6; }
+
+/* Screenshot */
+.screenshot-area { margin-top:8px; }
+.screenshot-btn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; background:#f3f4f6; border:1px dashed #d1d5db; border-radius:6px; cursor:pointer; font-size:12px; color:#6b7280; }
+.screenshot-btn:hover { background:#e5e7eb; }
+.screenshot-preview { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.screenshot-thumb { position:relative; width:120px; height:80px; border-radius:6px; overflow:hidden; border:1px solid #e5e7eb; cursor:pointer; }
+.screenshot-thumb img { width:100%; height:100%; object-fit:cover; }
+.screenshot-remove { position:absolute; top:2px; right:2px; width:20px; height:20px; background:rgba(0,0,0,.6); color:#fff; border:none; border-radius:50%; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+/* Lightbox */
+.lightbox { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.85); z-index:1000; align-items:center; justify-content:center; }
+.lightbox.active { display:flex; }
+.lightbox img { max-width:90%; max-height:90%; border-radius:8px; }
+.lightbox-close { position:absolute; top:20px; right:20px; color:#fff; font-size:30px; cursor:pointer; background:none; border:none; }
+
+/* Toast */
+.toast { position:fixed; bottom:24px; right:24px; padding:12px 20px; border-radius:8px; color:#fff; font-size:14px; font-weight:500; z-index:200; transform:translateY(80px); opacity:0; transition:all .3s; }
+.toast.visible { transform:translateY(0); opacity:1; }
+.toast.success { background:#059669; }
+.toast.info { background:#2563EB; }
+.toast.error { background:#DC2626; }
+
+/* Summary Panel */
+.summary-panel { background:#fff; border-radius:12px; padding:20px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.summary-title { font-size:16px; font-weight:700; margin-bottom:12px; }
+.issue-list-item { padding:8px 12px; margin:4px 0; border-radius:6px; font-size:13px; display:flex; gap:8px; align-items:flex-start; }
+.issue-list-item.critical { background:#FEF2F2; border-left:3px solid #DC2626; }
+.issue-list-item.major { background:#FFFBEB; border-left:3px solid #F59E0B; }
+.issue-list-item.minor { background:#EFF6FF; border-left:3px solid #3B82F6; }
+.issue-list-item.cosmetic { background:#F5F3FF; border-left:3px solid #8B5CF6; }
+
+@media(max-width:768px){
+  .header-actions { flex-direction:column; }
+  .stats-row { flex-wrap:wrap; }
+  .stat-card { min-width:80px; }
+  .test-row { flex-direction:column; }
+  .test-number { min-width:auto; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>JC 앱 QA 테스트 도구 v2</h1>
+  <div class="subtitle">영등포 JC 회원관리 커뮤니티 앱 — 종합 품질 테스트</div>
+  <div class="header-actions">
+    <button class="btn-save" onclick="saveResults()">💾 저장 (JSON)</button>
+    <button class="btn-export" onclick="exportMarkdown()">📋 마크다운 내보내기</button>
+    <button class="btn-export" onclick="loadResults()">📂 이전 결과 불러오기</button>
+    <button class="btn-collapse" onclick="toggleAllSections()">📁 전체 접기/펼치기</button>
+    <button class="btn-reset" onclick="resetAll()">🔄 초기화</button>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">테스트 진행률: 0%</div>
+  </div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card stat-total"><div class="stat-num" id="statTotal">0</div><div class="stat-label">전체</div></div>
+  <div class="stat-card stat-pass"><div class="stat-num" id="statPass">0</div><div class="stat-label">통과</div></div>
+  <div class="stat-card stat-fail"><div class="stat-num" id="statFail">0</div><div class="stat-label">실패</div></div>
+  <div class="stat-card stat-skip"><div class="stat-num" id="statSkip">0</div><div class="stat-label">건너뜀</div></div>
+  <div class="stat-card stat-issue"><div class="stat-num" id="statIssue">0</div><div class="stat-label">이슈</div></div>
+</div>
+
+<div class="filter-bar">
+  <select id="filterSection" onchange="applyFilter()">
+    <option value="all">전체 섹션</option>
+  </select>
+  <select id="filterStatus" onchange="applyFilter()">
+    <option value="all">전체 상태</option>
+    <option value="none">미테스트</option>
+    <option value="pass">통과</option>
+    <option value="fail">실패</option>
+    <option value="skip">건너뜀</option>
+  </select>
+  <input type="text" id="filterSearch" placeholder="테스트 검색..." oninput="applyFilter()">
+  <button class="filter-btn" onclick="showIssueSummary()">🐛 이슈 요약</button>
+</div>
+
+<div class="container" id="testContainer"></div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <img id="lightboxImg" src="">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// QA 테스트 시나리오 데이터 정의
+// ═══════════════════════════════════════════════════
+
+const TEST_DATA = [
+// ──────────────────────────────────────────────────
+// 1. 인증 & 로그인
+// ──────────────────────────────────────────────────
+{
+  id: 'auth',
+  icon: '🔐',
+  title: '인증 & 로그인',
+  tests: [
+    {
+      id: 'AUTH-001',
+      title: '정상 로그인',
+      steps: ['앱 접속 → 로그인 화면 확인', '이메일: admin@jc.com / 비밀번호: admin1234 입력', '로그인 버튼 클릭'],
+      expected: '홈 화면으로 이동, 상단에 조직명 표시',
+      pattern: '일반 회원 계정으로도 로그인 시도'
+    },
+    {
+      id: 'AUTH-002',
+      title: '잘못된 비밀번호 로그인',
+      steps: ['이메일: admin@jc.com 입력', '비밀번호: wrongpassword 입력', '로그인 버튼 클릭'],
+      expected: '에러 메시지 표시 (인라인), 홈으로 이동하지 않음',
+      pattern: '5회 연속 실패 → 계정 잠금 또는 경고 확인'
+    },
+    {
+      id: 'AUTH-003',
+      title: '존재하지 않는 이메일 로그인',
+      steps: ['이메일: nobody@test.com 입력', '아무 비밀번호 입력', '로그인 버튼 클릭'],
+      expected: '적절한 에러 메시지 (이메일 존재 여부를 노출하지 않는 것이 보안상 좋음)',
+    },
+    {
+      id: 'AUTH-004',
+      title: '빈 필드 로그인 시도',
+      steps: ['이메일, 비밀번호 모두 비운 채 로그인 클릭', '이메일만 입력하고 로그인 클릭', '비밀번호만 입력하고 로그인 클릭'],
+      expected: '각 경우 적절한 유효성 검사 메시지 표시',
+    },
+    {
+      id: 'AUTH-005',
+      title: '로그인 유지 (Remember Me)',
+      steps: ['로그인 화면에서 "로그인 유지" 체크', '로그인 성공', '브라우저 탭 닫고 다시 접속'],
+      expected: '재접속 시 자동 로그인 유지',
+      pattern: '체크 해제 후 로그인 → 탭 닫고 재접속 시 로그인 화면 표시'
+    },
+    {
+      id: 'AUTH-006',
+      title: '로그아웃',
+      steps: ['로그인 상태에서 프로필 탭 이동', '설정(환경설정) 진입', '로그아웃 버튼 클릭'],
+      expected: '로그인 화면으로 이동, 이전 페이지 접근 불가',
+    },
+    {
+      id: 'AUTH-007',
+      title: '비밀번호 찾기 — 1단계',
+      steps: ['로그인 화면 → "비밀번호 찾기" 클릭', '이름과 이메일 입력', '다음 버튼 클릭'],
+      expected: '존재하는 계정이면 2단계로 이동, 없으면 에러 메시지',
+      pattern: '이름은 맞고 이메일 틀린 경우 / 이메일 맞고 이름 틀린 경우'
+    },
+    {
+      id: 'AUTH-008',
+      title: '비밀번호 찾기 — 2~3단계',
+      steps: ['1단계 통과 후 생년월일 + 보안질문 답변 입력', '올바른 답변 입력 → 3단계 진입', '새 비밀번호 입력 (8자 이상) + 확인', '변경 완료 후 새 비밀번호로 로그인'],
+      expected: '비밀번호 변경 성공, 새 비밀번호로 로그인 가능',
+      pattern: '잘못된 생년월일 입력 / 보안질문 오답 입력 시 에러 확인'
+    },
+    {
+      id: 'AUTH-009',
+      title: '토큰 만료 시 동작',
+      steps: ['로그인 후 개발자 도구(F12)로 localStorage의 token 삭제', '아무 페이지 이동 시도'],
+      expected: '로그인 화면으로 리다이렉트',
+    },
+    {
+      id: 'AUTH-010',
+      title: 'SQL 인젝션 방어 테스트',
+      steps: ["이메일 필드에 ' OR 1=1 -- 입력", "비밀번호에 ' OR 1=1 -- 입력", '로그인 시도'],
+      expected: '로그인 실패, 에러 메시지 표시 (SQL 에러 노출 없어야 함)',
+      pattern: "이메일에 \"; DROP TABLE members;-- 입력"
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 2. 회원가입
+// ──────────────────────────────────────────────────
+{
+  id: 'signup',
+  icon: '📝',
+  title: '회원가입',
+  tests: [
+    {
+      id: 'SIGNUP-001',
+      title: '회원가입 전체 흐름',
+      steps: ['로그인 화면 → "회원가입" 버튼 클릭', '조직(로컬) 선택', '기본 정보 입력: 이름, 이메일, 전화번호, 생년월일', '비밀번호 설정 (8자 이상)', '프로필 사진 업로드 (선택)', '직장 정보 입력: 회사명, 직책, 부서, 회사전화', '업종 카테고리 선택', 'SNS 링크 입력 (선택)', '가입 완료 버튼'],
+      expected: '가입 완료 메시지, "승인 대기 중" 안내 표시',
+    },
+    {
+      id: 'SIGNUP-002',
+      title: '이메일 중복 체크',
+      steps: ['회원가입 진행', '이미 가입된 이메일 입력 (예: admin@jc.com)', '다음 단계 진행 시도'],
+      expected: '이메일 중복 에러 메시지 표시, 진행 차단',
+    },
+    {
+      id: 'SIGNUP-003',
+      title: '필수 입력값 검증',
+      steps: ['이름 비우고 다음 시도', '이메일 형식 잘못 입력 (예: abc, abc@, @test.com)', '전화번호 형식 틀리게 입력', '비밀번호 7자 이하 입력'],
+      expected: '각 필드마다 명확한 에러 메시지 인라인 표시',
+      pattern: '한 글자씩 입력하며 실시간 유효성 검사 확인'
+    },
+    {
+      id: 'SIGNUP-004',
+      title: '프로필 사진 업로드 & 크롭',
+      steps: ['사진 업로드 버튼 클릭', '갤러리에서 이미지 선택', '크롭 영역 조정', '확인 버튼'],
+      expected: '미리보기에 크롭된 사진 표시',
+      pattern: '매우 큰 이미지(10MB+) / 매우 작은 이미지 / 지원 안 되는 형식(gif, bmp)'
+    },
+    {
+      id: 'SIGNUP-005',
+      title: 'SNS 링크 유효성',
+      steps: ['인스타그램 필드에 URL이 아닌 텍스트 입력', '유튜브 필드에 올바른 URL 입력', '블로그 필드에 한글 URL 입력'],
+      expected: '잘못된 형식에 경고 또는 자동 보정',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 3. 홈 화면
+// ──────────────────────────────────────────────────
+{
+  id: 'home',
+  icon: '🏠',
+  title: '홈 화면',
+  tests: [
+    {
+      id: 'HOME-001',
+      title: '홈 화면 로딩',
+      steps: ['로그인 성공 후 홈 화면 도달', '조직명, 공지사항 요약, 일정 요약, 배너 확인'],
+      expected: '모든 영역이 데이터와 함께 정상 로딩',
+    },
+    {
+      id: 'HOME-002',
+      title: '공지사항 요약 표시',
+      steps: ['홈 화면에서 공지사항 영역 확인', '고정 공지 하이라이트 확인', 'NEW 배지 표시 확인', '댓글/좋아요 수 표시 확인'],
+      expected: '최근 7일 내 공지 최대 5개 표시, 고정 공지 상단',
+      pattern: '공지가 없는 경우 빈 상태 UI 확인'
+    },
+    {
+      id: 'HOME-003',
+      title: '배너 캐러셀',
+      steps: ['홈 화면 배너 영역 확인', '좌우 스와이프 또는 자동 슬라이드 확인', '배너 클릭 시 링크 이동 확인'],
+      expected: '배너 정상 표시, 클릭 시 올바른 페이지 이동',
+      pattern: '배너가 1개일 때 / 0개일 때 / 5개 이상일 때'
+    },
+    {
+      id: 'HOME-004',
+      title: '일정 요약',
+      steps: ['홈 화면에서 다가오는 일정 영역 확인', '일정 항목 클릭'],
+      expected: '3일 이내 일정 표시, 클릭 시 일정 상세로 이동',
+    },
+    {
+      id: 'HOME-005',
+      title: 'Pull-to-Refresh',
+      steps: ['홈 화면에서 아래로 당기기(스와이프)', '또는 브라우저 새로고침'],
+      expected: '최신 데이터로 새로고침',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 4. 게시판 (공지/자유/Q&A)
+// ──────────────────────────────────────────────────
+{
+  id: 'posts',
+  icon: '📋',
+  title: '게시판 (공지/자유/Q&A)',
+  tests: [
+    {
+      id: 'POST-001',
+      title: '게시판 목록 진입 & 탭 전환',
+      steps: ['하단 네비게이션 "게시판" 탭 클릭', '공지사항 / 자유게시판 / Q&A 탭 전환', '각 탭의 게시글 목록 확인'],
+      expected: '각 카테고리별 게시글 목록 정상 로딩, 탭 전환 시 목록 갱신',
+      pattern: '빠르게 탭을 연속 전환했을 때 데이터 꼬임 없는지'
+    },
+    {
+      id: 'POST-002',
+      title: '게시글 작성 (텍스트만)',
+      steps: ['"+" 버튼 클릭 → 게시글 작성 폼', '카테고리 선택 (자유게시판)', '제목 입력: "테스트 게시글"', '내용 입력: "이것은 QA 테스트입니다"', '등록 버튼 클릭'],
+      expected: '게시글 등록 성공, 목록에 새 글 표시',
+    },
+    {
+      id: 'POST-003',
+      title: '게시글 작성 (이미지 포함)',
+      steps: ['게시글 작성 폼 진입', '이미지 첨부 버튼 클릭', '이미지 1~3장 선택', '미리보기 확인', '등록 버튼 클릭'],
+      expected: '이미지 미리보기 정상, 등록 후 상세에서 이미지 표시',
+      pattern: '이미지 8장(최대) 첨부 / 이미지만 있고 내용 없이 등록 시도'
+    },
+    {
+      id: 'POST-004',
+      title: '게시글 상세 보기',
+      steps: ['게시글 목록에서 아무 글 클릭', '제목, 내용, 작성자, 날짜, 이미지 확인', '조회수 증가 확인'],
+      expected: '모든 정보 정상 표시, 이미지 클릭 시 확대',
+    },
+    {
+      id: 'POST-005',
+      title: '게시글 수정',
+      steps: ['내가 작성한 게시글 상세 진입', '수정 버튼 클릭', '제목/내용 변경', '저장'],
+      expected: '수정된 내용 반영, 목록에서도 업데이트',
+      pattern: '다른 사람이 쓴 글에서 수정 버튼 노출 여부 (노출되면 안 됨)'
+    },
+    {
+      id: 'POST-006',
+      title: '게시글 삭제',
+      steps: ['내가 작성한 게시글 상세 진입', '삭제 버튼 클릭', '확인 팝업에서 삭제 확인'],
+      expected: '게시글 삭제 후 목록으로 이동, 삭제된 글 안 보임',
+    },
+    {
+      id: 'POST-007',
+      title: '댓글 작성 & 삭제',
+      steps: ['게시글 상세 진입', '댓글 입력란에 "테스트 댓글" 입력', '등록 버튼 클릭', '댓글 표시 확인', '내 댓글 삭제 시도'],
+      expected: '댓글 등록 즉시 반영, 삭제 시 사라짐',
+      pattern: '빈 댓글 등록 시도 / 아주 긴 댓글(500자+) / 특수문자(<script>alert(1)</script>) 입력'
+    },
+    {
+      id: 'POST-008',
+      title: '좋아요 기능',
+      steps: ['게시글 상세에서 좋아요(♥) 버튼 클릭', '좋아요 수 증가 확인', '다시 클릭하여 좋아요 취소'],
+      expected: '토글 동작, 숫자 실시간 반영',
+      pattern: '빠르게 연타했을 때 숫자 꼬임 없는지'
+    },
+    {
+      id: 'POST-009',
+      title: '고정 공지 (관리자)',
+      steps: ['관리자 계정으로 공지사항 작성', '고정(핀) 옵션 활성화 후 등록', '공지사항 목록에서 고정 표시 확인'],
+      expected: '고정 공지가 목록 최상단에 표시',
+    },
+    {
+      id: 'POST-010',
+      title: '무한 스크롤 & 페이지네이션',
+      steps: ['게시글이 20개 이상인 카테고리 진입', '아래로 스크롤', '추가 게시글 로딩 확인'],
+      expected: '20개 단위로 추가 로딩, 로딩 인디케이터 표시',
+      pattern: '빠르게 스크롤 시 중복 로딩 없는지 / 마지막 페이지에서 더 이상 로딩 안 하는지'
+    },
+    {
+      id: 'POST-011',
+      title: 'XSS 방어 테스트',
+      steps: ['게시글 제목에 <script>alert("XSS")</script> 입력', '내용에 <img src=x onerror=alert(1)> 입력', '등록 후 상세 페이지 확인'],
+      expected: 'HTML 태그가 이스케이프되어 텍스트로 표시, 스크립트 실행 안 됨',
+    },
+    {
+      id: 'POST-012',
+      title: '게시글 검색',
+      steps: ['게시판 상단 검색 아이콘/영역 확인', '키워드 입력하여 검색', '결과 확인'],
+      expected: '제목/내용에 키워드가 포함된 게시글만 필터링',
+      pattern: '존재하지 않는 키워드 검색 → 빈 결과 UI / 한글 초성 검색 / 특수문자 검색'
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 5. 일정 관리
+// ──────────────────────────────────────────────────
+{
+  id: 'schedules',
+  icon: '📅',
+  title: '일정 관리',
+  tests: [
+    {
+      id: 'SCHED-001',
+      title: '캘린더 화면 진입',
+      steps: ['하단 네비게이션 "일정" 탭 클릭', '현재 월 캘린더 표시 확인', '일정이 있는 날짜에 점/배지 확인'],
+      expected: '캘린더 정상 렌더링, 일정 있는 날짜 표시',
+    },
+    {
+      id: 'SCHED-002',
+      title: '월 이동',
+      steps: ['이전 월(◀) 버튼 클릭', '다음 월(▶) 버튼 클릭', '여러 번 연속 클릭'],
+      expected: '월 전환 시 해당 월 일정 로딩',
+      pattern: '12월 → 1월 넘어갈 때 연도 변경 확인'
+    },
+    {
+      id: 'SCHED-003',
+      title: '특정 날짜 클릭 → 일정 목록',
+      steps: ['일정이 있는 날짜 클릭', '해당 날짜의 일정 목록 확인', '일정 항목 클릭 → 상세 보기'],
+      expected: '날짜별 일정 목록 표시, 카테고리 색상 구분',
+      pattern: '일정 없는 날짜 클릭 → 빈 상태 메시지'
+    },
+    {
+      id: 'SCHED-004',
+      title: '일정 등록 (관리자)',
+      steps: ['관리자 계정으로 로그인', '"+" 버튼 → 일정 등록', '제목, 카테고리(행사/회의/교육 등), 날짜/시간, 장소 입력', '등록 버튼 클릭'],
+      expected: '일정 등록 성공, 캘린더에 반영',
+    },
+    {
+      id: 'SCHED-005',
+      title: '일정 수정 & 삭제 (관리자)',
+      steps: ['등록한 일정 상세 진입', '수정 버튼 → 내용 변경 → 저장', '삭제 버튼 → 확인 → 삭제'],
+      expected: '수정/삭제 정상 동작, 캘린더 반영',
+    },
+    {
+      id: 'SCHED-006',
+      title: '일정 댓글',
+      steps: ['일정 상세에서 댓글 입력', '등록 후 표시 확인', '삭제 시도'],
+      expected: '댓글 CRUD 정상 동작',
+    },
+    {
+      id: 'SCHED-007',
+      title: '일정 출석 체크',
+      steps: ['출석 기능이 있는 일정 상세 진입', '출석 체크 버튼 클릭', '참석 회원 수 확인'],
+      expected: '출석 체크 반영, 참석자 수 업데이트',
+    },
+    {
+      id: 'SCHED-008',
+      title: '일정 카테고리 색상 확인',
+      steps: ['행사, 회의, 교육, 공휴일, 기타 카테고리의 일정 각각 확인'],
+      expected: '카테고리별 다른 색상 표시',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 6. 회원 목록
+// ──────────────────────────────────────────────────
+{
+  id: 'members',
+  icon: '👥',
+  title: '회원 목록 & 검색',
+  tests: [
+    {
+      id: 'MEM-001',
+      title: '회원 목록 진입',
+      steps: ['하단 네비게이션 "회원" 탭 클릭', '회원 목록 로딩 확인', '프로필 사진, 이름, 직책 표시 확인'],
+      expected: '회원 목록 정상 표시, 50명 단위 페이지네이션',
+    },
+    {
+      id: 'MEM-002',
+      title: '회원 검색',
+      steps: ['검색창에 회원 이름 입력', '결과 확인', '검색어 지우기'],
+      expected: '실시간 검색 결과 표시, 지우면 전체 목록 복원',
+      pattern: '존재하지 않는 이름 / 한 글자만 / 공백만 입력'
+    },
+    {
+      id: 'MEM-003',
+      title: '회원 필터 — 업종별',
+      steps: ['필터 영역에서 업종 카테고리 선택', '해당 업종 회원만 표시 확인'],
+      expected: '선택한 업종의 회원만 필터링',
+    },
+    {
+      id: 'MEM-004',
+      title: '회원 필터 — 직책별',
+      steps: ['필터 영역에서 직책 선택', '해당 직책 회원만 표시 확인'],
+      expected: '선택한 직책의 회원만 필터링',
+      pattern: '업종 + 직책 복합 필터링'
+    },
+    {
+      id: 'MEM-005',
+      title: '회원 상세 정보',
+      steps: ['회원 목록에서 회원 클릭', '상세 정보 확인: 사진, 이름, 이메일, 전화, 회사, 부서, 직책, 업종, SNS'],
+      expected: '모든 정보 정상 표시, SNS 링크 클릭 가능',
+    },
+    {
+      id: 'MEM-006',
+      title: '즐겨찾기 회원',
+      steps: ['회원 상세에서 즐겨찾기(★) 버튼 클릭', '즐겨찾기 목록 확인', '즐겨찾기 해제'],
+      expected: '즐겨찾기 토글 동작, 목록 반영',
+    },
+    {
+      id: 'MEM-007',
+      title: '타 로컬 회원 보기 토글',
+      steps: ['회원 목록에서 "타 로컬 보기" 토글 확인', '토글 ON → 전체 조직 회원 표시', '토글 OFF → 내 로컬만'],
+      expected: '토글에 따라 회원 범위 변경',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 7. 프로필 관리
+// ──────────────────────────────────────────────────
+{
+  id: 'profile',
+  icon: '👤',
+  title: '프로필 관리',
+  tests: [
+    {
+      id: 'PROF-001',
+      title: '내 프로필 보기',
+      steps: ['하단 네비게이션 "프로필" 탭 클릭', '사진, 이름, 조직, 역할, 직장정보, SNS 확인'],
+      expected: '모든 개인정보 정상 표시',
+    },
+    {
+      id: 'PROF-002',
+      title: '프로필 수정',
+      steps: ['프로필 화면에서 "편집" 버튼 클릭', '이름, 전화번호, 회사명 등 수정', '저장 버튼 클릭'],
+      expected: '변경사항 즉시 반영',
+      pattern: '필수 필드를 비우고 저장 시도 / 특수문자 이름'
+    },
+    {
+      id: 'PROF-003',
+      title: '프로필 사진 변경',
+      steps: ['프로필 사진 영역 클릭', '새 사진 선택', '크롭 후 저장'],
+      expected: '사진 변경 즉시 반영, 다른 페이지(회원목록 등)에서도 업데이트',
+    },
+    {
+      id: 'PROF-004',
+      title: 'SNS 링크 수정',
+      steps: ['프로필 편집 → SNS 영역', '인스타그램/유튜브/블로그 URL 입력 또는 수정', '저장'],
+      expected: '링크 저장 및 표시, 클릭 시 해당 페이지 이동',
+    },
+    {
+      id: 'PROF-005',
+      title: '비밀번호 변경',
+      steps: ['환경설정 → 비밀번호 변경', '현재 비밀번호 입력', '새 비밀번호 + 확인 입력', '변경 버튼'],
+      expected: '변경 성공 메시지, 새 비밀번호로 재로그인 가능',
+      pattern: '현재 비밀번호 틀리게 입력 / 새 비밀번호 7자 이하 / 확인 불일치'
+    },
+    {
+      id: 'PROF-006',
+      title: '회원 탈퇴',
+      steps: ['환경설정 → 회원 탈퇴', '확인 팝업 또는 비밀번호 재입력', '탈퇴 완료'],
+      expected: '탈퇴 후 로그인 불가, 로그인 화면으로 이동',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 8. 소모임
+// ──────────────────────────────────────────────────
+{
+  id: 'clubs',
+  icon: '🎯',
+  title: '소모임',
+  tests: [
+    {
+      id: 'CLUB-001',
+      title: '소모임 목록 보기',
+      steps: ['사이드 메뉴 → "소모임" 클릭', '소모임 목록 확인', '각 소모임 이름, 멤버 수, 미읽은 글 배지 확인'],
+      expected: '내가 속한 소모임 목록 표시',
+      pattern: '소모임이 없는 경우 빈 상태 UI'
+    },
+    {
+      id: 'CLUB-002',
+      title: '소모임 생성',
+      steps: ['"+" 버튼 → 소모임 만들기', '이름, 설명 입력', '멤버 초대 (선택)', '생성 버튼 클릭'],
+      expected: '소모임 생성 성공, 목록에 표시',
+      pattern: '이름 없이 생성 시도 / 아주 긴 이름(50자+)'
+    },
+    {
+      id: 'CLUB-003',
+      title: '소모임 상세 & 멤버 관리',
+      steps: ['소모임 클릭 → 상세 진입', '멤버 목록 확인', '새 멤버 초대 시도', '멤버 삭제(방장만) 시도'],
+      expected: '멤버 목록 표시, 초대/삭제 정상 동작',
+    },
+    {
+      id: 'CLUB-004',
+      title: '소모임 초대 수락/거절',
+      steps: ['다른 사람이 나를 소모임에 초대', '알림 또는 소모임 목록에서 초대 확인', '수락 또는 거절 버튼 클릭'],
+      expected: '수락 시 멤버로 추가, 거절 시 초대 사라짐',
+    },
+    {
+      id: 'CLUB-005',
+      title: '소모임 게시글 작성 & 읽기',
+      steps: ['소모임 상세 → 게시글 탭', '게시글 작성 (제목/내용/이미지)', '등록 후 목록에서 확인', '상세 보기'],
+      expected: '소모임 내에서만 보이는 게시글 CRUD',
+    },
+    {
+      id: 'CLUB-006',
+      title: '소모임 일정 관리',
+      steps: ['소모임 상세 → 일정 탭', '일정 등록 (제목/날짜/장소)', '일정 수정/삭제'],
+      expected: '소모임 전용 일정 CRUD',
+    },
+    {
+      id: 'CLUB-007',
+      title: '소모임 초대 재발송',
+      steps: ['소모임 멤버 관리에서 대기 중인 초대 확인', '재발송 버튼 클릭'],
+      expected: '초대 재발송 성공 메시지',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 9. 로컬조직도 & 그룹 게시판
+// ──────────────────────────────────────────────────
+{
+  id: 'orgchart',
+  icon: '🏛️',
+  title: '로컬조직도 & 그룹 게시판',
+  tests: [
+    {
+      id: 'ORG-001',
+      title: '조직도 보기',
+      steps: ['사이드 메뉴 → "로컬조직도" 클릭', '그룹 목록 확인', '각 그룹의 멤버 수 확인'],
+      expected: '조직 구조 정상 표시',
+    },
+    {
+      id: 'ORG-002',
+      title: '그룹 생성/수정/삭제 (관리자)',
+      steps: ['관리자 계정으로 그룹 추가 버튼 클릭', '그룹명 입력 → 생성', '그룹명 수정', '그룹 삭제'],
+      expected: 'CRUD 정상 동작',
+    },
+    {
+      id: 'ORG-003',
+      title: '그룹 멤버 추가/제거 (관리자)',
+      steps: ['그룹 선택 → 멤버 관리', '회원 검색 → 추가', '기존 멤버 제거'],
+      expected: '멤버 추가/제거 반영, 멤버 수 업데이트',
+    },
+    {
+      id: 'ORG-004',
+      title: '그룹 게시판',
+      steps: ['사이드 메뉴 → "그룹 게시판" 클릭', '내가 속한 그룹의 게시글 확인', '게시글 작성/댓글/좋아요'],
+      expected: '그룹별 게시글 CRUD 정상',
+    },
+    {
+      id: 'ORG-005',
+      title: '그룹 일정',
+      steps: ['그룹 게시판에서 일정 탭 확인', '그룹 일정 등록/수정/삭제'],
+      expected: '그룹 전용 일정 관리',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 10. 회의 관리
+// ──────────────────────────────────────────────────
+{
+  id: 'meetings',
+  icon: '🤝',
+  title: '회의 관리',
+  tests: [
+    {
+      id: 'MEET-001',
+      title: '회의 목록 보기',
+      steps: ['사이드 메뉴 → "회의" 클릭', '회의 목록 확인 (유형, 상태, 날짜)'],
+      expected: '회의 목록 정상 표시',
+      pattern: '회의가 없는 경우 빈 상태 UI'
+    },
+    {
+      id: 'MEET-002',
+      title: '회의 등록 (관리자)',
+      steps: ['회의 등록 버튼 클릭', '유형(정기/이사회/총회 등), 제목, 일시, 장소 입력', '등록'],
+      expected: '회의 등록 성공, 목록에 표시',
+    },
+    {
+      id: 'MEET-003',
+      title: '회의 상세 & 출석',
+      steps: ['회의 클릭 → 상세 보기', '출석 체크 기능 확인', '참석/불참 선택'],
+      expected: '출석 현황 표시, 체크 반영',
+    },
+    {
+      id: 'MEET-004',
+      title: '회의록(PDF) 열기',
+      steps: ['회의록이 첨부된 회의 상세 진입', '회의록 보기/다운로드 버튼 클릭'],
+      expected: 'PDF 파일 정상 열림 (인증 토큰 포함)',
+    },
+    {
+      id: 'MEET-005',
+      title: '회의 투표 기능',
+      steps: ['투표가 있는 회의 상세 진입', '투표 항목 선택', '투표 결과 확인'],
+      expected: '투표 정상 동작, 결과 표시',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 11. JC 지도
+// ──────────────────────────────────────────────────
+{
+  id: 'map',
+  icon: '🗺️',
+  title: 'JC 지도',
+  tests: [
+    {
+      id: 'MAP-001',
+      title: '지도 화면 진입',
+      steps: ['사이드 메뉴 → "지도" 클릭', '지도 로딩 확인', '회원 마커 표시 확인'],
+      expected: '지도 정상 렌더링, 회원 위치 마커 표시',
+    },
+    {
+      id: 'MAP-002',
+      title: '내 위치 표시',
+      steps: ['위치 권한 허용', '"내 위치" 버튼 클릭', '현재 위치로 지도 이동'],
+      expected: '내 위치 마커 표시, 지도 센터 이동',
+      pattern: '위치 권한 거부 시 적절한 안내 메시지'
+    },
+    {
+      id: 'MAP-003',
+      title: '회원 검색 & 필터',
+      steps: ['검색창에 회원 이름 입력', '업종/로컬별 필터 사용', '결과 확인'],
+      expected: '검색/필터에 맞는 회원만 마커 표시',
+    },
+    {
+      id: 'MAP-004',
+      title: '마커 클릭 → 회원 정보',
+      steps: ['지도의 회원 마커 클릭', '팝업 또는 하단 시트에서 회원 정보 확인', '상세 보기 이동'],
+      expected: '회원 기본 정보 표시, 상세 페이지 연결',
+    },
+    {
+      id: 'MAP-005',
+      title: '줌 & 전체 보기',
+      steps: ['핀치 줌 또는 +/- 버튼', '"전체 보기" 버튼 클릭'],
+      expected: '줌 조작 원활, 전체 보기 시 모든 마커 포함',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 12. 알림
+// ──────────────────────────────────────────────────
+{
+  id: 'notifications',
+  icon: '🔔',
+  title: '알림',
+  tests: [
+    {
+      id: 'NOTI-001',
+      title: '알림 센터 진입',
+      steps: ['상단 알림 아이콘 클릭', '알림 목록 확인', '읽지 않은 알림 구분 확인'],
+      expected: '알림 목록 정상 표시, 미읽음 알림 하이라이트',
+    },
+    {
+      id: 'NOTI-002',
+      title: '알림 클릭 → 해당 페이지 이동',
+      steps: ['게시글 관련 알림 클릭', '해당 게시글 상세로 이동 확인'],
+      expected: '알림의 대상 페이지로 정확히 이동',
+      pattern: '일정/댓글/소모임 등 다양한 유형 알림 클릭'
+    },
+    {
+      id: 'NOTI-003',
+      title: '전체 읽음 처리',
+      steps: ['"모두 읽음" 버튼 클릭', '모든 알림 읽음 상태 확인', '미읽음 배지 사라짐 확인'],
+      expected: '전체 읽음 처리 성공',
+    },
+    {
+      id: 'NOTI-004',
+      title: '알림 배지 카운트',
+      steps: ['미읽은 알림이 있는 상태에서 상단 배지 숫자 확인', '알림 읽은 후 숫자 감소 확인'],
+      expected: '배지 숫자가 실시간 반영',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 13. 환경설정
+// ──────────────────────────────────────────────────
+{
+  id: 'settings',
+  icon: '⚙️',
+  title: '환경설정',
+  tests: [
+    {
+      id: 'SET-001',
+      title: '글자 크기 변경',
+      steps: ['환경설정 → 글자 크기', '작게/보통/크게/매우크게 선택', '앱 전체 텍스트 크기 변경 확인'],
+      expected: '선택한 크기에 따라 전체 텍스트 크기 변경',
+    },
+    {
+      id: 'SET-002',
+      title: '캐시 삭제',
+      steps: ['환경설정 → 데이터 관리 → 캐시 삭제', '확인 팝업 → 삭제'],
+      expected: '캐시 삭제 성공, 앱 정상 동작 유지',
+    },
+    {
+      id: 'SET-003',
+      title: '이용약관 & 개인정보처리방침',
+      steps: ['환경설정 → 이용약관 클릭', '내용 표시 확인', '개인정보처리방침 클릭', '내용 표시 확인'],
+      expected: '각 문서 정상 표시',
+    },
+    {
+      id: 'SET-004',
+      title: '앱 버전 표시',
+      steps: ['환경설정 하단에서 버전 정보 확인'],
+      expected: '현재 버전 번호 표시',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 14. 콘텐츠 페이지
+// ──────────────────────────────────────────────────
+{
+  id: 'content',
+  icon: '📖',
+  title: '콘텐츠 (비전/역할/정관)',
+  tests: [
+    {
+      id: 'CONT-001',
+      title: 'JC 비전 페이지',
+      steps: ['사이드 메뉴 → "비전" 클릭', '콘텐츠 로딩 확인'],
+      expected: '비전 페이지 정상 표시, 이미지/텍스트 포함',
+    },
+    {
+      id: 'CONT-002',
+      title: 'JC 역할 페이지',
+      steps: ['사이드 메뉴 → "역할" 클릭', '콘텐츠 로딩 확인'],
+      expected: '역할 페이지 정상 표시',
+    },
+    {
+      id: 'CONT-003',
+      title: 'JC 정관 페이지',
+      steps: ['사이드 메뉴 → "정관" 클릭', '콘텐츠 로딩 확인'],
+      expected: '정관 페이지 정상 표시',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 15. 관리자 콘솔
+// ──────────────────────────────────────────────────
+{
+  id: 'admin',
+  icon: '🛡️',
+  title: '관리자 콘솔',
+  tests: [
+    {
+      id: 'ADM-001',
+      title: '관리자 콘솔 진입',
+      steps: ['관리자 계정으로 로그인', '사이드 메뉴 → "관리자" 클릭', '대시보드 확인'],
+      expected: '관리자 대시보드 표시 (주요 지표, 최근 활동)',
+      pattern: '일반 회원 계정으로 관리자 메뉴 접근 시도 → 접근 차단'
+    },
+    {
+      id: 'ADM-002',
+      title: '회원 승인/거절',
+      steps: ['관리자 → 회원 관리', '가입 대기(pending) 회원 확인', '승인 버튼 클릭', '(별도 회원) 거절 버튼 클릭'],
+      expected: '승인 → 상태 active, 거절 → 상태 rejected',
+    },
+    {
+      id: 'ADM-003',
+      title: '회원 역할 변경',
+      steps: ['회원 관리에서 특정 회원 선택', '역할 변경 (member → local_admin 등)', '저장'],
+      expected: '역할 변경 반영, 해당 회원의 권한 즉시 변경',
+    },
+    {
+      id: 'ADM-004',
+      title: '회원 비밀번호 초기화 (관리자)',
+      steps: ['회원 관리에서 특정 회원 선택', '비밀번호 리셋 버튼 클릭', '임시 비밀번호 확인'],
+      expected: '리셋 성공, 임시 비밀번호로 해당 회원 로그인 가능',
+    },
+    {
+      id: 'ADM-005',
+      title: '회원 CSV 내보내기',
+      steps: ['회원 관리 → CSV 내보내기 버튼 클릭'],
+      expected: 'CSV 파일 다운로드, 데이터 정확성 확인',
+    },
+    {
+      id: 'ADM-006',
+      title: '로컬별 회원 필터 (총관리자)',
+      steps: ['총관리자(super_admin) 계정으로 로그인', '회원 관리에서 로컬 필터 선택', '해당 로컬 회원만 표시 확인'],
+      expected: '로컬별 필터링 정상 동작',
+    },
+    {
+      id: 'ADM-007',
+      title: '배너 관리',
+      steps: ['관리자 → 배너 관리', '새 배너 추가 (이미지 업로드, 링크 URL)', '배너 순서 변경', '배너 활성/비활성 토글', '배너 삭제'],
+      expected: 'CRUD 정상, 홈 화면 배너에 즉시 반영',
+    },
+    {
+      id: 'ADM-008',
+      title: '공지사항 관리',
+      steps: ['관리자 → 공지 관리', '공지 작성/수정/삭제', '고정 설정'],
+      expected: '공지 CRUD 정상, 앱 공지사항에 반영',
+    },
+    {
+      id: 'ADM-009',
+      title: '일정 관리',
+      steps: ['관리자 → 일정 관리', '일정 추가/수정/삭제', '출석 현황 확인'],
+      expected: '일정 CRUD 정상',
+    },
+    {
+      id: 'ADM-010',
+      title: '푸시 알림 발송',
+      steps: ['관리자 → 푸시 알림', '대상 선택, 제목, 내용 입력', '발송 버튼 클릭'],
+      expected: '푸시 발송 성공, 발송 기록 확인',
+    },
+    {
+      id: 'ADM-011',
+      title: '감사 로그 확인',
+      steps: ['관리자 → 감사 로그 진입', '최근 관리 작업 기록 확인'],
+      expected: '관리자 행위 로그 표시 (누가, 언제, 무엇을)',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 16. UI/UX 공통
+// ──────────────────────────────────────────────────
+{
+  id: 'uiux',
+  icon: '🎨',
+  title: 'UI/UX 공통',
+  tests: [
+    {
+      id: 'UI-001',
+      title: '하단 네비게이션 동작',
+      steps: ['홈/게시판/일정/회원/프로필 탭 각각 클릭', '현재 탭 하이라이트 확인', '페이지 전환 확인'],
+      expected: '모든 탭 정상 이동, 현재 위치 표시',
+    },
+    {
+      id: 'UI-002',
+      title: '사이드 메뉴 (햄버거)',
+      steps: ['좌상단 메뉴 아이콘 클릭', '사이드 메뉴 열림 확인', '메뉴 항목 클릭 → 페이지 이동', '메뉴 외부 클릭 → 닫힘'],
+      expected: '사이드 메뉴 정상 동작',
+    },
+    {
+      id: 'UI-003',
+      title: '로딩 상태 표시',
+      steps: ['느린 네트워크에서(개발자도구 Throttling) 페이지 이동', '데이터 로딩 중 스켈레톤/스피너 확인'],
+      expected: '로딩 인디케이터 표시, 완료 후 데이터 표시',
+    },
+    {
+      id: 'UI-004',
+      title: '빈 상태 UI',
+      steps: ['게시글 없는 카테고리 진입', '일정 없는 날짜 선택', '검색 결과 0건'],
+      expected: '각 경우 적절한 빈 상태 메시지/아이콘 표시',
+    },
+    {
+      id: 'UI-005',
+      title: '에러 상태 UI',
+      steps: ['네트워크 끊긴 상태에서 앱 조작', '서버 에러 발생 시'],
+      expected: '인라인 에러 메시지 표시 (스낵바 아님), 재시도 옵션',
+    },
+    {
+      id: 'UI-006',
+      title: '모바일 반응형',
+      steps: ['모바일(375px) 해상도에서 모든 주요 페이지 확인', '태블릿(768px) 해상도 확인', '가로 모드 확인'],
+      expected: '깨지는 레이아웃 없음, 터치 영역 충분',
+    },
+    {
+      id: 'UI-007',
+      title: '스크롤 복원',
+      steps: ['게시글 목록에서 중간까지 스크롤', '게시글 상세 진입 후 뒤로 가기', '스크롤 위치 확인'],
+      expected: '이전 스크롤 위치 복원',
+    },
+    {
+      id: 'UI-008',
+      title: '디자인 시스템 일관성',
+      steps: ['전체 앱에서 버튼 스타일 확인 (높이 48, radius 8)', '카드 스타일 (radius 12)', '색상 (Primary #1F4FD8, Accent #F59E0B, Error #DC2626)', '폰트 일관성 (Noto Sans KR)'],
+      expected: '디자인 가이드 준수, 스타일 불일치 없음',
+    },
+    {
+      id: 'UI-009',
+      title: 'PWA 동작',
+      steps: ['앱을 홈 화면에 추가 (모바일)', '홈 화면 아이콘으로 앱 실행', '스플래시 화면 확인'],
+      expected: 'PWA로 정상 실행, 스플래시 표시 후 앱 진입',
+    },
+    {
+      id: 'UI-010',
+      title: '뒤로 가기 동작',
+      steps: ['여러 페이지를 순서대로 이동 (홈 → 게시판 → 게시글 상세 → 댓글)', '브라우저 뒤로 가기 또는 앱 뒤로 버튼 클릭'],
+      expected: '올바른 역순 네비게이션, 무한 루프 없음',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 17. 멀티테넌트 (로컬 분리)
+// ──────────────────────────────────────────────────
+{
+  id: 'multitenant',
+  icon: '🏢',
+  title: '멀티테넌트 (로컬 분리)',
+  tests: [
+    {
+      id: 'MT-001',
+      title: '로컬별 데이터 격리 — 게시판',
+      steps: ['로컬A 회원으로 로그인', '게시판 확인 → 로컬A 게시글만 보이는지', '로컬B 회원으로 로그인', '게시판 확인 → 로컬B 게시글만 보이는지'],
+      expected: '각 로컬의 게시글만 표시, 타 로컬 게시글 안 보임',
+    },
+    {
+      id: 'MT-002',
+      title: '로컬별 데이터 격리 — 일정',
+      steps: ['로컬A 회원 → 일정 확인', '로컬B 회원 → 일정 확인'],
+      expected: '각 로컬의 일정만 표시',
+    },
+    {
+      id: 'MT-003',
+      title: '로컬별 데이터 격리 — 회의록',
+      steps: ['로컬A 회원 → 회의 목록 확인', '로컬B 회원 → 회의 목록 확인'],
+      expected: '각 로컬의 회의만 표시',
+    },
+    {
+      id: 'MT-004',
+      title: '로컬별 회원 목록',
+      steps: ['내 로컬 회원만 기본 표시 확인', '"타 로컬 보기" 토글 시 전체 표시'],
+      expected: '기본은 내 로컬, 토글 시 전체',
+    },
+    {
+      id: 'MT-005',
+      title: 'local_admin 권한 범위',
+      steps: ['local_admin으로 로그인', '자기 로컬 회원 승인 가능 확인', '타 로컬 회원 관리 불가 확인'],
+      expected: 'local_admin은 자기 로컬만 관리 가능',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 18. 성능 & 안정성
+// ──────────────────────────────────────────────────
+{
+  id: 'performance',
+  icon: '⚡',
+  title: '성능 & 안정성',
+  tests: [
+    {
+      id: 'PERF-001',
+      title: '초기 로딩 속도',
+      steps: ['브라우저 캐시 지운 후 앱 접속', '개발자 도구 Network 탭에서 로딩 시간 확인'],
+      expected: '3초 이내 첫 화면 표시',
+    },
+    {
+      id: 'PERF-002',
+      title: '페이지 전환 속도',
+      steps: ['각 메인 탭 전환 시간 측정', '사이드 메뉴 페이지 이동 시간 측정'],
+      expected: '1초 이내 페이지 전환',
+    },
+    {
+      id: 'PERF-003',
+      title: '이미지 로딩',
+      steps: ['프로필 사진 많은 회원 목록 스크롤', '이미지 포함 게시글 상세 진입'],
+      expected: '이미지 지연 로딩, 깨진 이미지 없음',
+    },
+    {
+      id: 'PERF-004',
+      title: '동시 다중 요청',
+      steps: ['빠르게 여러 탭 전환', '게시글 작성 중 뒤로 가기 후 다시 작성'],
+      expected: '데이터 꼬임 없음, 에러 없음',
+    },
+    {
+      id: 'PERF-005',
+      title: '서비스 워커 캐시',
+      steps: ['앱 접속 후 네트워크 끊기 (오프라인)', '이미 방문한 페이지 접근 시도'],
+      expected: '오프라인에서도 캐시된 페이지 표시 또는 적절한 오프라인 메시지',
+    },
+  ]
+},
+
+// ──────────────────────────────────────────────────
+// 19. 보안
+// ──────────────────────────────────────────────────
+{
+  id: 'security',
+  icon: '🔒',
+  title: '보안',
+  tests: [
+    {
+      id: 'SEC-001',
+      title: '비인증 API 접근 차단',
+      steps: ['로그아웃 상태에서 브라우저 주소창에 직접 API URL 입력', '예: /api/posts, /api/members'],
+      expected: '401 Unauthorized 응답, 데이터 노출 없음',
+    },
+    {
+      id: 'SEC-002',
+      title: '타인 데이터 수정 차단',
+      steps: ['로그인 후 다른 사람의 게시글 수정 API 직접 호출 시도 (개발자도구)', '다른 사람의 프로필 수정 시도'],
+      expected: '403 Forbidden 또는 적절한 에러, 수정 차단',
+    },
+    {
+      id: 'SEC-003',
+      title: '관리자 API 권한 체크',
+      steps: ['일반 회원 토큰으로 관리자 API 호출 시도', '예: 회원 승인, 공지 등록 등'],
+      expected: '403 Forbidden, 관리자 기능 차단',
+    },
+    {
+      id: 'SEC-004',
+      title: '파일 업로드 제한',
+      steps: ['게시글에 .exe 파일 첨부 시도', '.html 파일 첨부 시도', '매우 큰 파일(50MB+) 첨부 시도'],
+      expected: '허용되지 않은 파일 형식 차단, 크기 제한 안내',
+    },
+    {
+      id: 'SEC-005',
+      title: 'Rate Limiting 확인',
+      steps: ['로그인 API를 빠르게 반복 호출 (개발자도구 Console에서)', '50회 이상 시도'],
+      expected: '429 Too Many Requests 응답',
+    },
+  ]
+},
+];
+
+// ═══════════════════════════════════════════════════
+// 앱 상태 관리
+// ═══════════════════════════════════════════════════
+let testResults = {};
+let allCollapsed = false;
+
+function initApp() {
+  loadFromStorage();
+  renderTests();
+  updateStats();
+  populateFilterSection();
+}
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem('jc-qa-results-v2');
+    if (saved) testResults = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function saveToStorage() {
+  localStorage.setItem('jc-qa-results-v2', JSON.stringify(testResults));
+}
+
+function getResult(id) {
+  if (!testResults[id]) testResults[id] = { status: 'none', issue: '', severity: '', screenshots: [] };
+  return testResults[id];
+}
+
+// ═══════════════════════════════════════════════════
+// 렌더링
+// ═══════════════════════════════════════════════════
+function renderTests() {
+  const container = document.getElementById('testContainer');
+  container.innerHTML = '';
+
+  TEST_DATA.forEach(section => {
+    const sectionEl = document.createElement('div');
+    sectionEl.className = 'section';
+    sectionEl.dataset.sectionId = section.id;
+
+    // 실패 카운트
+    const failCount = section.tests.filter(t => getResult(t.id).status === 'fail').length;
+    const doneCount = section.tests.filter(t => getResult(t.id).status !== 'none').length;
+
+    sectionEl.innerHTML = `
+      <div class="section-header" onclick="toggleSection('${section.id}')">
+        <div class="section-title">
+          <span class="section-icon">${section.icon}</span>
+          ${section.title}
+          <span class="section-badge ${failCount > 0 ? 'has-fail' : ''}">${doneCount}/${section.tests.length}${failCount > 0 ? ' | 🐛' + failCount : ''}</span>
+        </div>
+        <span class="section-toggle" id="toggle-${section.id}">▼</span>
+      </div>
+      <div class="section-body" id="body-${section.id}">
+        ${section.tests.map((t, i) => renderTestItem(t, i + 1)).join('')}
+      </div>
+    `;
+    container.appendChild(sectionEl);
+  });
+}
+
+function renderTestItem(test, num) {
+  const result = getResult(test.id);
+  const statusClass = result.status !== 'none' ? `status-${result.status}` : '';
+
+  return `
+    <div class="test-item ${statusClass}" id="item-${test.id}" data-test-id="${test.id}">
+      <div class="test-row">
+        <div class="test-number">${test.id}</div>
+        <div class="test-content">
+          <div class="test-title">${test.title}</div>
+          <ol class="test-steps">
+            ${test.steps.map(s => `<li>${s}</li>`).join('')}
+          </ol>
+          <div class="test-expected">✅ 예상 결과: ${test.expected}</div>
+          ${test.pattern ? `<div class="test-pattern">${test.pattern}</div>` : ''}
+
+          <div class="test-actions">
+            <button class="test-btn btn-pass ${result.status === 'pass' ? 'active' : ''}" onclick="setStatus('${test.id}','pass')">✅ 통과</button>
+            <button class="test-btn btn-fail ${result.status === 'fail' ? 'active' : ''}" onclick="setStatus('${test.id}','fail')">❌ 실패</button>
+            <button class="test-btn btn-skip ${result.status === 'skip' ? 'active' : ''}" onclick="setStatus('${test.id}','skip')">⏭ 건너뜀</button>
+          </div>
+
+          <div class="issue-area ${result.status === 'fail' ? 'visible' : ''}" id="issue-${test.id}">
+            <textarea class="issue-textarea" placeholder="발견된 문제를 상세히 적어주세요...&#10;예: 어떤 화면에서, 어떤 조작을 했을 때, 어떤 결과가 나왔는지"
+              oninput="updateIssue('${test.id}', this.value)">${result.issue || ''}</textarea>
+            <div class="issue-severity">
+              <span style="font-size:12px;color:#6b7280;">심각도:</span>
+              <button class="severity-btn sev-critical ${result.severity === 'critical' ? 'active' : ''}" onclick="setSeverity('${test.id}','critical')">🔴 치명적</button>
+              <button class="severity-btn sev-major ${result.severity === 'major' ? 'active' : ''}" onclick="setSeverity('${test.id}','major')">🟡 주요</button>
+              <button class="severity-btn sev-minor ${result.severity === 'minor' ? 'active' : ''}" onclick="setSeverity('${test.id}','minor')">🔵 경미</button>
+              <button class="severity-btn sev-cosmetic ${result.severity === 'cosmetic' ? 'active' : ''}" onclick="setSeverity('${test.id}','cosmetic')">🟣 외관</button>
+            </div>
+            <div class="screenshot-area">
+              <label class="screenshot-btn" for="file-${test.id}">
+                📷 스크린샷 첨부
+                <input type="file" id="file-${test.id}" accept="image/*" multiple style="display:none" onchange="addScreenshots('${test.id}', this)">
+              </label>
+              <span style="font-size:11px;color:#9ca3af;margin-left:8px;">또는 Ctrl+V로 클립보드 붙여넣기</span>
+              <div class="screenshot-preview" id="preview-${test.id}">
+                ${(result.screenshots || []).map((s, i) => `
+                  <div class="screenshot-thumb" onclick="openLightbox('${s}')">
+                    <img src="${s}" alt="screenshot">
+                    <button class="screenshot-remove" onclick="event.stopPropagation();removeScreenshot('${test.id}',${i})">×</button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+// 상태 관리
+// ═══════════════════════════════════════════════════
+function setStatus(id, status) {
+  const result = getResult(id);
+  result.status = result.status === status ? 'none' : status;
+  saveToStorage();
+  renderTests();
+  updateStats();
+  applyFilter();
+}
+
+function updateIssue(id, text) {
+  getResult(id).issue = text;
+  saveToStorage();
+}
+
+function setSeverity(id, sev) {
+  const result = getResult(id);
+  result.severity = result.severity === sev ? '' : sev;
+  saveToStorage();
+  // Update UI without full re-render
+  document.querySelectorAll(`#issue-${id} .severity-btn`).forEach(btn => btn.classList.remove('active'));
+  if (result.severity) {
+    document.querySelector(`#issue-${id} .sev-${result.severity}`)?.classList.add('active');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// 스크린샷
+// ═══════════════════════════════════════════════════
+function addScreenshots(id, input) {
+  const result = getResult(id);
+  if (!result.screenshots) result.screenshots = [];
+
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      result.screenshots.push(e.target.result);
+      saveToStorage();
+      renderScreenshots(id);
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function removeScreenshot(id, index) {
+  const result = getResult(id);
+  result.screenshots.splice(index, 1);
+  saveToStorage();
+  renderScreenshots(id);
+}
+
+function renderScreenshots(id) {
+  const result = getResult(id);
+  const preview = document.getElementById(`preview-${id}`);
+  if (!preview) return;
+  preview.innerHTML = (result.screenshots || []).map((s, i) => `
+    <div class="screenshot-thumb" onclick="openLightbox('${s}')">
+      <img src="${s}" alt="screenshot">
+      <button class="screenshot-remove" onclick="event.stopPropagation();removeScreenshot('${id}',${i})">×</button>
+    </div>
+  `).join('');
+}
+
+// Ctrl+V 클립보드 붙여넣기
+document.addEventListener('paste', (e) => {
+  const activeIssue = document.querySelector('.issue-area.visible .issue-textarea:focus');
+  if (!activeIssue) return;
+
+  const testId = activeIssue.closest('.test-item')?.dataset.testId;
+  if (!testId) return;
+
+  const items = e.clipboardData?.items;
+  if (!items) return;
+
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      const file = item.getAsFile();
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const result = getResult(testId);
+        if (!result.screenshots) result.screenshots = [];
+        result.screenshots.push(ev.target.result);
+        saveToStorage();
+        renderScreenshots(testId);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════════
+// 라이트박스
+// ═══════════════════════════════════════════════════
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('active');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+}
+
+// ═══════════════════════════════════════════════════
+// 통계
+// ═══════════════════════════════════════════════════
+function updateStats() {
+  let total = 0, pass = 0, fail = 0, skip = 0, issues = 0;
+  TEST_DATA.forEach(s => s.tests.forEach(t => {
+    total++;
+    const r = getResult(t.id);
+    if (r.status === 'pass') pass++;
+    if (r.status === 'fail') fail++;
+    if (r.status === 'skip') skip++;
+    if (r.issue) issues++;
+  }));
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statPass').textContent = pass;
+  document.getElementById('statFail').textContent = fail;
+  document.getElementById('statSkip').textContent = skip;
+  document.getElementById('statIssue').textContent = issues;
+
+  const done = pass + fail + skip;
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `테스트 진행률: ${done}/${total} (${pct}%)`;
+}
+
+// ═══════════════════════════════════════════════════
+// 필터
+// ═══════════════════════════════════════════════════
+function populateFilterSection() {
+  const sel = document.getElementById('filterSection');
+  TEST_DATA.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = `${s.icon} ${s.title}`;
+    sel.appendChild(opt);
+  });
+}
+
+function applyFilter() {
+  const section = document.getElementById('filterSection').value;
+  const status = document.getElementById('filterStatus').value;
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+
+  document.querySelectorAll('.section').forEach(el => {
+    const sid = el.dataset.sectionId;
+    if (section !== 'all' && sid !== section) { el.style.display = 'none'; return; }
+    el.style.display = '';
+  });
+
+  document.querySelectorAll('.test-item').forEach(el => {
+    const tid = el.dataset.testId;
+    const r = getResult(tid);
+    let show = true;
+
+    if (status !== 'all' && r.status !== status) show = false;
+    if (search) {
+      const text = el.textContent.toLowerCase();
+      if (!text.includes(search)) show = false;
+    }
+
+    el.style.display = show ? '' : 'none';
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// 섹션 토글
+// ═══════════════════════════════════════════════════
+function toggleSection(id) {
+  const body = document.getElementById(`body-${id}`);
+  const toggle = document.getElementById(`toggle-${id}`);
+  body.classList.toggle('collapsed');
+  toggle.classList.toggle('collapsed');
+}
+
+function toggleAllSections() {
+  allCollapsed = !allCollapsed;
+  TEST_DATA.forEach(s => {
+    const body = document.getElementById(`body-${s.id}`);
+    const toggle = document.getElementById(`toggle-${s.id}`);
+    if (allCollapsed) {
+      body.classList.add('collapsed');
+      toggle.classList.add('collapsed');
+    } else {
+      body.classList.remove('collapsed');
+      toggle.classList.remove('collapsed');
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// 저장 & 내보내기
+// ═══════════════════════════════════════════════════
+function saveResults() {
+  const now = new Date();
+  const timestamp = now.toISOString().slice(0,19).replace(/[T:]/g, '-');
+  const filename = `qa-result-${timestamp}.json`;
+
+  const data = {
+    version: '2.0',
+    app: 'JC 회원관리 커뮤니티 앱',
+    tester: '사장님',
+    timestamp: now.toISOString(),
+    date: now.toLocaleDateString('ko-KR'),
+    summary: getSummaryData(),
+    results: {},
+    issues: []
+  };
+
+  TEST_DATA.forEach(section => {
+    section.tests.forEach(test => {
+      const r = getResult(test.id);
+      data.results[test.id] = {
+        section: section.title,
+        title: test.title,
+        status: r.status,
+        issue: r.issue || null,
+        severity: r.severity || null,
+        screenshotCount: (r.screenshots || []).length
+      };
+      if (r.status === 'fail' && r.issue) {
+        data.issues.push({
+          id: test.id,
+          section: section.title,
+          title: test.title,
+          severity: r.severity || 'unknown',
+          description: r.issue,
+          screenshotCount: (r.screenshots || []).length
+        });
+      }
+    });
+  });
+
+  // 다운로드
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  showToast(`저장 완료: ${filename}`, 'success');
+  showToast('파일을 Docs/qa-results/ 폴더에 넣으면 Claude AI가 읽을 수 있습니다', 'info');
+}
+
+function getSummaryData() {
+  let total = 0, pass = 0, fail = 0, skip = 0;
+  TEST_DATA.forEach(s => s.tests.forEach(t => {
+    total++;
+    const r = getResult(t.id);
+    if (r.status === 'pass') pass++;
+    if (r.status === 'fail') fail++;
+    if (r.status === 'skip') skip++;
+  }));
+  return { total, pass, fail, skip, untested: total - pass - fail - skip, passRate: total > 0 ? Math.round(pass / total * 100) + '%' : '0%' };
+}
+
+function exportMarkdown() {
+  const now = new Date();
+  let md = `# JC 앱 QA 테스트 결과\n\n`;
+  md += `- **테스트 일시**: ${now.toLocaleString('ko-KR')}\n`;
+  md += `- **테스터**: 사장님\n`;
+  const summary = getSummaryData();
+  md += `- **결과**: 전체 ${summary.total} | ✅ 통과 ${summary.pass} | ❌ 실패 ${summary.fail} | ⏭ 건너뜀 ${summary.skip} | 미테스트 ${summary.untested}\n`;
+  md += `- **통과율**: ${summary.passRate}\n\n`;
+
+  // 이슈 요약
+  const issues = [];
+  TEST_DATA.forEach(section => {
+    section.tests.forEach(test => {
+      const r = getResult(test.id);
+      if (r.status === 'fail' && r.issue) {
+        issues.push({ id: test.id, section: section.title, title: test.title, severity: r.severity, issue: r.issue });
+      }
+    });
+  });
+
+  if (issues.length > 0) {
+    md += `## 🐛 발견된 이슈 (${issues.length}건)\n\n`;
+    const sevOrder = { critical: 0, major: 1, minor: 2, cosmetic: 3, '': 4 };
+    issues.sort((a, b) => (sevOrder[a.severity] || 4) - (sevOrder[b.severity] || 4));
+    issues.forEach(iss => {
+      const sevLabel = { critical: '🔴 치명적', major: '🟡 주요', minor: '🔵 경미', cosmetic: '🟣 외관' }[iss.severity] || '⚪ 미분류';
+      md += `### [${iss.id}] ${iss.title}\n`;
+      md += `- **섹션**: ${iss.section}\n`;
+      md += `- **심각도**: ${sevLabel}\n`;
+      md += `- **설명**: ${iss.issue}\n\n`;
+    });
+  }
+
+  // 상세 결과
+  md += `## 📋 상세 결과\n\n`;
+  TEST_DATA.forEach(section => {
+    md += `### ${section.icon} ${section.title}\n\n`;
+    md += `| ID | 테스트 | 결과 | 비고 |\n`;
+    md += `|----|--------|------|------|\n`;
+    section.tests.forEach(test => {
+      const r = getResult(test.id);
+      const statusLabel = { pass: '✅ 통과', fail: '❌ 실패', skip: '⏭ 건너뜀', none: '⬜ 미테스트' }[r.status] || '⬜ 미테스트';
+      const note = r.issue ? r.issue.substring(0, 50) + (r.issue.length > 50 ? '...' : '') : '-';
+      md += `| ${test.id} | ${test.title} | ${statusLabel} | ${note} |\n`;
+    });
+    md += '\n';
+  });
+
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `JC-QA-결과-${now.toISOString().slice(0,10)}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('마크다운 내보내기 완료!', 'success');
+}
+
+function loadResults() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.results) {
+          Object.entries(data.results).forEach(([id, r]) => {
+            testResults[id] = {
+              status: r.status || 'none',
+              issue: r.issue || '',
+              severity: r.severity || '',
+              screenshots: testResults[id]?.screenshots || []
+            };
+          });
+          saveToStorage();
+          renderTests();
+          updateStats();
+          showToast('이전 결과 불러오기 완료!', 'success');
+        }
+      } catch(err) {
+        showToast('파일 형식 오류', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ═══════════════════════════════════════════════════
+// 이슈 요약 패널
+// ═══════════════════════════════════════════════════
+function showIssueSummary() {
+  const container = document.getElementById('testContainer');
+  const existing = document.getElementById('issueSummaryPanel');
+  if (existing) { existing.remove(); return; }
+
+  const issues = [];
+  TEST_DATA.forEach(section => {
+    section.tests.forEach(test => {
+      const r = getResult(test.id);
+      if (r.status === 'fail') {
+        issues.push({ id: test.id, section: section.title, title: test.title, severity: r.severity || 'unknown', issue: r.issue });
+      }
+    });
+  });
+
+  const panel = document.createElement('div');
+  panel.id = 'issueSummaryPanel';
+  panel.className = 'summary-panel';
+
+  if (issues.length === 0) {
+    panel.innerHTML = `<div class="summary-title">🐛 이슈 요약</div><p style="color:#6b7280;font-size:14px;">발견된 이슈가 없습니다! 🎉</p>`;
+  } else {
+    const sevOrder = { critical: 0, major: 1, minor: 2, cosmetic: 3, unknown: 4 };
+    issues.sort((a, b) => (sevOrder[a.severity] || 4) - (sevOrder[b.severity] || 4));
+
+    panel.innerHTML = `
+      <div class="summary-title">🐛 이슈 요약 (${issues.length}건)</div>
+      ${issues.map(iss => `
+        <div class="issue-list-item ${iss.severity}">
+          <strong>[${iss.id}]</strong>
+          <div>
+            <div><strong>${iss.title}</strong> <span style="font-size:11px;color:#6b7280;">(${iss.section})</span></div>
+            ${iss.issue ? `<div style="font-size:12px;margin-top:2px;">${iss.issue}</div>` : '<div style="font-size:12px;color:#9ca3af;margin-top:2px;">설명 미입력</div>'}
+          </div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  container.insertBefore(panel, container.firstChild);
+}
+
+// ═══════════════════════════════════════════════════
+// 유틸리티
+// ═══════════════════════════════════════════════════
+function showToast(msg, type = 'info') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast ${type} visible`;
+  setTimeout(() => toast.classList.remove('visible'), 3000);
+}
+
+function resetAll() {
+  if (!confirm('모든 테스트 결과를 초기화하시겠습니까?\n(스크린샷 포함 모든 데이터가 삭제됩니다)')) return;
+  testResults = {};
+  localStorage.removeItem('jc-qa-results-v2');
+  renderTests();
+  updateStats();
+  showToast('초기화 완료', 'info');
+}
+
+// 초기화
+window.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>

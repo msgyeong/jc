@@ -613,7 +613,7 @@ async function loadScheduleComments(scheduleId) {
     if (!section) return;
     try {
         const res = await apiClient.request('/schedules/' + scheduleId + '/comments');
-        const comments = res.comments || (res.data && res.data.comments) || [];
+        const comments = (res.data && res.data.items) || res.comments || (res.data && res.data.comments) || [];
         const count = comments.length;
 
         let commentsHtml = '';

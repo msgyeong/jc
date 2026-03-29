@@ -295,7 +295,7 @@ router.post('/:clubId/invite', authenticate, async (req, res) => {
 
 /**
  * PUT /api/clubs/:clubId/invite/:memberId
- * 초대 수락/거절
+ * 초대 수락/거절 (레거시 — memberId 기반)
  */
 router.put('/:clubId/invite/:memberId', authenticate, async (req, res) => {
     try {
@@ -322,6 +322,42 @@ router.put('/:clubId/invite/:memberId', authenticate, async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('Club invite response error:', error);
+        res.status(500).json({ success: false, error: '처리에 실패했습니다.' });
+    }
+});
+
+/**
+ * POST /api/clubs/:clubId/respond
+ * 초대 수락/거절 (간소화 — 로그인 사용자 기준, memberId 불필요)
+ */
+router.post('/:clubId/respond', authenticate, async (req, res) => {
+    try {
+        const clubId = parseInt(req.params.clubId);
+        const userId = req.user.userId;
+        const { action } = req.body;
+
+        if (!['accept', 'reject'].includes(action)) {
+            return res.status(400).json({ success: false, error: '올바른 액션을 지정해주세요.' });
+        }
+
+        const invite = await query(
+            "SELECT id FROM club_members WHERE club_id = $1 AND user_id = $2 AND status = 'pending'",
+            [clubId, userId]
+        );
+        if (invite.rows.length === 0) {
+            return res.status(404).json({ success: false, error: '초대를 찾을 수 없습니다.' });
+        }
+
+        const memberId = invite.rows[0].id;
+        if (action === 'accept') {
+            await query("UPDATE club_members SET status = 'accepted', joined_at = NOW() WHERE id = $1", [memberId]);
+        } else {
+            await query('DELETE FROM club_members WHERE id = $1', [memberId]);
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Club invite respond error:', error);
         res.status(500).json({ success: false, error: '처리에 실패했습니다.' });
     }
 });

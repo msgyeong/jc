@@ -78,16 +78,12 @@ function renderClubInviteCard(c) {
 
 async function respondClubInvite(clubId, action) {
     try {
-        // 먼저 멤버십 ID를 가져와야 함
-        var res = await apiClient.request('/clubs/' + clubId);
-        if (!res.success) return;
-        var myMember = res.members.find(function(m) { return m.user_id === (currentUser && currentUser.id); });
-        if (!myMember) return;
-
-        await apiClient.request('/clubs/' + clubId + '/invite/' + myMember.id, {
-            method: 'PUT', body: JSON.stringify({ action: action })
+        var res = await apiClient.request('/clubs/' + clubId + '/respond', {
+            method: 'POST', body: JSON.stringify({ action: action })
         });
-        loadClubsScreen();
+        if (res.success) {
+            loadClubsScreen();
+        }
     } catch (err) {
         console.error('respondClubInvite error:', err);
     }

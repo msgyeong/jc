@@ -789,14 +789,7 @@ function renderPostDetail(post) {
             </div>
             <div id="post-linked-schedule-container"></div>
             <div id="post-attendance-container"></div>
-            <div class="post-detail-comments">
-                <h4>댓글</h4>
-                <div class="post-detail-comments-list" id="post-detail-comments-list"></div>
-                <form class="post-comment-bar" id="post-detail-comment-form" data-post-id="${post.id}">
-                    <input type="text" name="content" class="post-comment-input" placeholder="댓글을 남겨보세요" maxlength="1000" autocomplete="off">
-                    <button type="submit" class="post-comment-send" aria-label="등록"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
-                </form>
-            </div>
+            <div id="post-detail-comments-list"></div>
         </article>
     `;
 }

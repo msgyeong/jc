@@ -36,10 +36,10 @@ async function loadBannersTable() {
                     <tr>
                         <th style="width:50px">순서</th>
                         <th style="width:80px">이미지</th>
-                        <th>제목</th>
+                        <th style="max-width:200px">제목</th>
                         <th style="width:100px">상태</th>
                         <th style="width:120px">생성일</th>
-                        <th style="width:200px">액션</th>
+                        <th style="width:280px">액션</th>
                     </tr>
                 </thead>
                 <tbody id="banners-tbody">
@@ -71,15 +71,15 @@ function renderBannerRow(b, idx, total) {
                 </div>
             </td>
             <td>${imgThumb}</td>
-            <td>
-                <strong>${escapeAdminHtml(b.title)}</strong>
-                ${b.description ? `<div style="font-size:12px;color:#6B7280;margin-top:2px">${escapeAdminHtml(b.description)}</div>` : ''}
-                ${b.link_url ? `<div style="font-size:11px;color:#3B82F6;margin-top:2px">${escapeAdminHtml(b.link_url)}</div>` : ''}
+            <td style="max-width:200px">
+                <strong style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeAdminHtml(b.title)}</strong>
+                ${b.description ? `<div style="font-size:12px;color:#6B7280;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeAdminHtml(b.description)}</div>` : ''}
+                ${b.link_url ? `<div style="font-size:11px;color:#3B82F6;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeAdminHtml(b.link_url)}</div>` : ''}
             </td>
             <td><span class="badge ${statusClass}">${statusText}</span></td>
             <td>${createdAt}</td>
             <td>
-                <div style="display:flex;gap:4px;flex-wrap:wrap">
+                <div style="display:flex;gap:4px;flex-wrap:nowrap">
                     <button class="btn btn-sm btn-outline" onclick="openBannerForm(${b.id})">수정</button>
                     <button class="btn btn-sm btn-outline" onclick="uploadBannerImage(${b.id})">이미지</button>
                     <button class="btn btn-sm ${b.is_active ? 'btn-warning' : 'btn-success'}" onclick="toggleBanner(${b.id})">${b.is_active ? '비활성' : '활성'}</button>

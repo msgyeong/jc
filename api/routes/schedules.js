@@ -40,15 +40,18 @@ router.get('/', authenticate, async (req, res) => {
         const year = parseInt(req.query.year);
         const month = parseInt(req.query.month);
 
+        const userId = req.user.userId;
         let sqlQuery = `
             SELECT
                 s.id, s.title, s.start_date, s.end_date,
                 s.location, s.description, s.category,
                 s.views,
                 s.created_at, s.updated_at,
-                s.created_by as author_id, u.name as author_name, u.profile_image as author_image
+                s.created_by as author_id, u.name as author_name, u.profile_image as author_image,
+                CASE WHEN rs.id IS NOT NULL THEN true ELSE false END as read_by_current_user
             FROM schedules s
             LEFT JOIN users u ON s.created_by = u.id
+            LEFT JOIN read_status rs ON rs.schedule_id = s.id AND rs.user_id = ${userId}
         `;
 
         const conditions = ['s.deleted_at IS NULL'];
@@ -154,6 +157,14 @@ router.get('/:id', authenticate, async (req, res) => {
                 message: '다른 조직의 일정에 접근할 수 없습니다.'
             });
         }
+
+        // 읽음 기록 (배지 카운트용)
+        try {
+            await query(
+                `INSERT INTO read_status (user_id, schedule_id, read_at) VALUES ($1, $2, NOW()) ON CONFLICT DO NOTHING`,
+                [req.user.userId, id]
+            );
+        } catch (e) { /* read_status 인덱스 없을 수 있음 */ }
 
         // 연결된 공지 정보 조회
         if (schedule.linked_post_id) {

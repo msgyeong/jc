@@ -366,7 +366,7 @@ async function _updateNavBadgesNow() {
         const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
         const upcomingCount = scheds.filter(function(s) {
             var d = new Date(s.start_date);
-            return d >= now && d <= threeDaysLater;
+            return d >= now && d <= threeDaysLater && !s.read_by_current_user;
         }).length;
         document.querySelectorAll('.nav-badge[data-badge-tab="schedules"]').forEach(d => {
             if (upcomingCount > 0) {

@@ -267,6 +267,10 @@ async function showScheduleDetailScreen(scheduleId) {
             return;
         }
         const s = res.schedule;
+
+        // 일정 읽음 → 배지 갱신
+        if (typeof updateNavBadges === 'function') updateNavBadges();
+
         const user = getCurrentUserSafe();
         const canEdit = user && (String(user.id) === String(s.author_id || s.created_by) || ['super_admin', 'admin'].includes(user.role));
         const hasScheduleManage = typeof hasMobilePermission === 'function' && hasMobilePermission('schedule_manage');

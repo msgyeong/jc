@@ -201,6 +201,7 @@ const { query: dbQuery } = require('./config/database');
             read_at TIMESTAMP DEFAULT NOW()
         )`,
         "CREATE UNIQUE INDEX IF NOT EXISTS read_status_user_post_idx ON read_status (user_id, post_id) WHERE post_id IS NOT NULL",
+        "CREATE UNIQUE INDEX IF NOT EXISTS read_status_user_schedule_idx ON read_status (user_id, schedule_id) WHERE schedule_id IS NOT NULL",
         // 그룹 좋아요/참석 테이블
         `CREATE TABLE IF NOT EXISTS group_post_likes (
             id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, post_id INTEGER NOT NULL,

@@ -160,7 +160,7 @@ body {
 
 /* ---- 공통 폼 ---- */
 .form-field {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .form-field label {
@@ -243,6 +243,15 @@ body {
 }
 .btn-outline:hover:not(:disabled) { background: var(--c-primary-bg); }
 
+.btn-danger-outline {
+    background: transparent;
+    color: var(--c-danger);
+    border: 1px solid var(--c-danger);
+}
+.btn-danger-outline:hover:not(:disabled) {
+    background: var(--c-danger-bg);
+}
+
 .btn-success { background: var(--c-success); color: white; }
 .btn-success:hover:not(:disabled) { background: #059669; }
 
@@ -273,7 +282,7 @@ body {
 .sidebar {
     width: var(--sidebar-w);
     min-width: var(--sidebar-w);
-    background: #111827;
+    background: var(--c-text);
     color: white;
     display: flex;
     flex-direction: column;
@@ -537,7 +546,7 @@ body {
 .filter-bar {
     display: flex;
     gap: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     flex-wrap: wrap;
 }
 
@@ -679,7 +688,7 @@ tbody tr:last-child td {
 }
 
 tbody tr:hover {
-    background: #f8faff;
+    background: var(--c-primary-bg);
 }
 
 tbody tr.clickable {
@@ -715,10 +724,10 @@ tbody tr.clickable {
     white-space: nowrap;
 }
 
-.badge-active { background: #dcfce7; color: #15803d; }
-.badge-success { background: #dcfce7; color: #15803d; }
-.badge-pending { background: #fef9c3; color: #a16207; }
-.badge-suspended { background: #fee2e2; color: #b91c1c; }
+.badge-active { background: var(--c-success-bg); color: var(--c-success); }
+.badge-success { background: var(--c-success-bg); color: var(--c-success); }
+.badge-pending { background: var(--c-warning-bg); color: #a16207; }
+.badge-suspended { background: var(--c-danger-bg); color: var(--c-danger); }
 .badge-muted { background: var(--c-bg); color: var(--c-text-hint); }
 .badge-admin { background: var(--c-primary-bg); color: var(--c-primary); }
 .badge-notice { background: var(--c-primary-bg); color: var(--c-primary); }
@@ -860,7 +869,7 @@ tbody tr.clickable {
     box-shadow: var(--shadow-md);
 }
 
-.admin-toast.success { background: #059669; }
+.admin-toast.success { background: var(--c-success); }
 .admin-toast.error { background: var(--c-danger); }
 
 @keyframes toastSlide {
@@ -1195,7 +1204,7 @@ tbody tr.clickable {
     background: var(--c-bg-card);
     border-radius: var(--card-radius);
     box-shadow: var(--shadow-sm);
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     overflow: hidden;
 }
 
@@ -1287,7 +1296,7 @@ tbody tr.clickable {
 }
 
 .toggle-switch input:checked + .toggle-slider {
-    background: #2563EB;
+    background: var(--c-primary);
 }
 
 .toggle-switch input:checked + .toggle-slider::before {
@@ -1316,7 +1325,7 @@ tbody tr.clickable {
     display: flex;
     align-items: center;
     gap: 24px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .profile-card-loading {
@@ -1488,7 +1497,7 @@ tbody tr.clickable {
 
 .dossier-avatar {
     width: 80px; height: 80px; border-radius: 50%;
-    background: #DBEAFE;
+    background: var(--c-primary-light);
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; overflow: visible;
 }
@@ -1624,7 +1633,7 @@ tbody tr.clickable {
     font-style: italic;
 }
 .editable-field .edit-input {
-    border: 1px solid #2563EB;
+    border: 1px solid var(--c-primary);
     border-radius: 4px;
     padding: 2px 8px;
     font-size: inherit;
@@ -1659,7 +1668,7 @@ td.editable-cell:hover .cell-edit-icon {
 td.editable-cell .cell-input {
     width: 100%;
     box-sizing: border-box;
-    border: 1px solid #2563EB;
+    border: 1px solid var(--c-primary);
     border-radius: 4px;
     padding: 2px 6px;
     font-size: inherit;
@@ -1678,14 +1687,14 @@ td.editable-cell .cell-input {
     font-weight: 600;
     letter-spacing: 0.3px;
 }
-.perm-role-badge.role-super_admin { background: #FEE2E2; color: #DC2626; }
-.perm-role-badge.role-admin { background: #DBEAFE; color: #2563EB; }
-.perm-role-badge.role-member { background: #F3F4F6; color: #6B7280; }
+.perm-role-badge.role-super_admin { background: var(--c-danger-bg); color: var(--c-danger); }
+.perm-role-badge.role-admin { background: var(--c-primary-light); color: var(--c-primary); }
+.perm-role-badge.role-member { background: var(--c-bg); color: var(--c-text-sub); }
 
 .perm-super-notice {
     font-size: 13px;
-    color: #6B7280;
-    background: #F3F4F6;
+    color: var(--c-text-sub);
+    background: var(--c-bg);
     padding: 12px 16px;
     border-radius: 8px;
     margin-bottom: 16px;
@@ -1701,7 +1710,7 @@ td.editable-cell .cell-input {
     align-items: center;
     justify-content: space-between;
     padding: 16px;
-    background: #F9FAFB;
+    background: var(--c-bg);
     border-radius: 10px;
     margin-bottom: 10px;
     transition: background 0.15s;
@@ -1727,15 +1736,15 @@ td.editable-cell .cell-input {
 }
 .permission-icon svg { width: 20px; height: 20px; }
 
-.permission-icon.icon-member { background: #DBEAFE; }
-.permission-icon.icon-post { background: #FEF3C7; }
-.permission-icon.icon-schedule { background: #D1FAE5; }
+.permission-icon.icon-member { background: var(--c-primary-light); }
+.permission-icon.icon-post { background: var(--c-warning-bg); }
+.permission-icon.icon-schedule { background: var(--c-success-bg); }
 .permission-icon.icon-notice { background: #EDE9FE; }
-.permission-icon.icon-push { background: #FEE2E2; }
+.permission-icon.icon-push { background: var(--c-danger-bg); }
 
 .permission-text { min-width: 0; }
-.permission-name { font-weight: 600; font-size: 14px; color: #1E293B; }
-.permission-desc { font-size: 12px; color: #6B7280; margin-top: 2px; }
+.permission-name { font-weight: 600; font-size: 14px; color: var(--c-text); }
+.permission-desc { font-size: 12px; color: var(--c-text-sub); margin-top: 2px; }
 
 .perm-toggle {
     position: relative;
@@ -1753,7 +1762,7 @@ td.editable-cell .cell-input {
     position: absolute;
     cursor: pointer;
     inset: 0;
-    background: #D1D5DB;
+    background: var(--c-border);
     border-radius: 24px;
     transition: background 0.3s ease;
 }
@@ -1769,7 +1778,7 @@ td.editable-cell .cell-input {
     transition: transform 0.3s ease;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
-.perm-toggle input:checked + .perm-slider { background: #2563EB; }
+.perm-toggle input:checked + .perm-slider { background: var(--c-primary); }
 .perm-toggle input:checked + .perm-slider::before { transform: translateX(20px); }
 .perm-toggle input:disabled + .perm-slider { cursor: not-allowed; opacity: 0.7; }
 

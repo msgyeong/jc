@@ -165,7 +165,7 @@ function renderNoticeCreateForm(data = {}) {
                 <label><input type="checkbox" id="notice-attendance-enabled" ${data.attendance_survey_enabled ? 'checked' : ''}> 참석자 조사 활성화</label>
             </div>
             <div class="form-group">
-                <label for="notice-schedule-id">연결 일정 <span class="optional-badge" style="font-size:11px;color:#9CA3AF;font-weight:400">선택</span></label>
+                <label for="notice-schedule-id">연결 일정 <span class="optional-badge" style="font-size:11px;color:var(--text-muted);font-weight:400">선택</span></label>
                 <select id="notice-schedule-id">
                     <option value="">연결 일정 없음</option>
                 </select>

@@ -77,7 +77,7 @@ function renderAdminHubContent() {
 
     if (hasMobilePermission('member_approve')) {
         html += '<div class="admin-hub-card" onclick="showPendingMembersScreen()">'
-            + '<div class="admin-hub-card-icon" style="background:#ECFDF5;color:#059669">'
+            + '<div class="admin-hub-card-icon" style="background:var(--success-bg);color:#059669">'
             + '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>'
             + '</div>'
             + '<div class="admin-hub-card-body">'
@@ -89,7 +89,7 @@ function renderAdminHubContent() {
 
     if (hasMobilePermission('notice_manage')) {
         html += '<div class="admin-hub-card" onclick="showNoticeManageScreen()">'
-            + '<div class="admin-hub-card-icon" style="background:#FEF3C7;color:#D97706">'
+            + '<div class="admin-hub-card-icon" style="background:var(--warning-bg);color:var(--warning-text)">'
             + '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
             + '</div>'
             + '<div class="admin-hub-card-body">'
@@ -111,7 +111,7 @@ function renderAdminHubContent() {
 
     if (hasMobilePermission('schedule_manage')) {
         html += '<div class="admin-hub-card" onclick="showScheduleManageScreen()">'
-            + '<div class="admin-hub-card-icon" style="background:#D1FAE5;color:#059669">'
+            + '<div class="admin-hub-card-icon" style="background:var(--success-bg);color:#059669">'
             + '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
             + '</div>'
             + '<div class="admin-hub-card-body">'
@@ -122,7 +122,7 @@ function renderAdminHubContent() {
 
     if (hasMobilePermission('push_send')) {
         html += '<div class="admin-hub-card" onclick="showPushSendScreen()">'
-            + '<div class="admin-hub-card-icon" style="background:#FEE2E2;color:#DC2626">'
+            + '<div class="admin-hub-card-icon" style="background:var(--error-bg);color:var(--error-color)">'
             + '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'
             + '</div>'
             + '<div class="admin-hub-card-body">'
@@ -135,12 +135,12 @@ function renderAdminHubContent() {
     var userInfo = typeof currentUser !== 'undefined' ? currentUser : JSON.parse(localStorage.getItem('user_info') || 'null');
     if (userInfo && userInfo.role === 'super_admin') {
         html += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border-color)">'
-            + '<div class="admin-hub-card" onclick="confirmResetData()" style="border-color:#DC2626">'
-            + '<div class="admin-hub-card-icon" style="background:#FEE2E2;color:#DC2626">'
+            + '<div class="admin-hub-card" onclick="confirmResetData()" style="border-color:var(--error-color)">'
+            + '<div class="admin-hub-card-icon" style="background:var(--error-bg);color:var(--error-color)">'
             + '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>'
             + '</div>'
             + '<div class="admin-hub-card-body">'
-            + '<div class="admin-hub-card-title" style="color:#DC2626">전체 데이터 초기화</div>'
+            + '<div class="admin-hub-card-title" style="color:var(--error-color)">전체 데이터 초기화</div>'
             + '<div class="admin-hub-card-desc">관리자 3명 제외 모든 회원/게시글/일정 삭제</div>'
             + '</div>' + chevron + '</div></div>';
     }
@@ -202,8 +202,8 @@ async function loadPendingMembers() {
             }).join('');
         } else {
             container.innerHTML = '<div class="admin-hub-empty" style="padding:40px 0">'
-                + '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 15h8"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="9" r="1"/></svg>'
-                + '<div style="margin-top:12px;color:#9CA3AF">대기 중인 회원이 없습니다.</div>'
+                + '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border-color)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 15h8"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="9" r="1"/></svg>'
+                + '<div style="margin-top:12px;color:var(--text-muted)">대기 중인 회원이 없습니다.</div>'
                 + '</div>';
         }
     } catch (err) {
@@ -232,10 +232,10 @@ function rejectPendingMember(memberId, name) {
     overlay.className = 'admin-modal-overlay';
     overlay.innerHTML = '<div class="admin-modal">'
         + '<div class="admin-modal-title">가입 거부</div>'
-        + '<p style="color:#6B7280;font-size:14px;margin-bottom:12px">' + escapeHtml(name) + '님의 가입을 거부합니다.</p>'
+        + '<p style="color:var(--text-hint);font-size:14px;margin-bottom:12px">' + escapeHtml(name) + '님의 가입을 거부합니다.</p>'
         + '<div class="form-group">'
-        + '<label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;display:block">거부 사유 (필수)</label>'
-        + '<textarea id="reject-reason-input" rows="3" placeholder="거부 사유를 입력하세요" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;resize:vertical"></textarea>'
+        + '<label style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;display:block">거부 사유 (필수)</label>'
+        + '<textarea id="reject-reason-input" rows="3" placeholder="거부 사유를 입력하세요" style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;resize:vertical"></textarea>'
         + '</div>'
         + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">'
         + '<button class="btn btn-secondary btn-sm" onclick="this.closest(\'.admin-modal-overlay\').remove()">취소</button>'
@@ -308,7 +308,7 @@ async function loadNoticeManageList() {
         var items = (res.data && res.data.items) || [];
         if (items.length === 0) {
             container.innerHTML = '<div class="admin-hub-empty" style="padding:40px 0">'
-                + '<div style="color:#9CA3AF">등록된 공지가 없습니다.</div>'
+                + '<div style="color:var(--text-muted)">등록된 공지가 없습니다.</div>'
                 + '</div>';
             return;
         }
@@ -504,7 +504,7 @@ async function loadPostManageList() {
 
         var items = (res.data && res.data.posts) || (res.data && res.data.items) || [];
         if (items.length === 0) {
-            container.innerHTML = '<div class="admin-hub-empty" style="padding:40px 0"><div style="color:#9CA3AF">게시글이 없습니다.</div></div>';
+            container.innerHTML = '<div class="admin-hub-empty" style="padding:40px 0"><div style="color:var(--text-muted)">게시글이 없습니다.</div></div>';
             return;
         }
 
@@ -595,7 +595,7 @@ async function loadScheduleManageList() {
 
         var items = (res.data && res.data.schedules) || (res.data && res.data.items) || [];
         if (items.length === 0) {
-            container.innerHTML = '<div class="admin-hub-empty" style="padding:40px 0"><div style="color:#9CA3AF">일정이 없습니다.</div></div>';
+            container.innerHTML = '<div class="admin-hub-empty" style="padding:40px 0"><div style="color:var(--text-muted)">일정이 없습니다.</div></div>';
             return;
         }
 
@@ -750,7 +750,7 @@ function onPushTargetChange() {
 
     if (target === 'selected') {
         area.style.display = 'block';
-        area.innerHTML = '<div style="padding:12px;text-align:center;color:#9CA3AF;font-size:13px">회원 목록 로딩 중...</div>';
+        area.innerHTML = '<div style="padding:12px;text-align:center;color:var(--text-muted);font-size:13px">회원 목록 로딩 중...</div>';
         loadPushMembers();
     } else {
         area.style.display = 'none';
@@ -769,7 +769,7 @@ async function loadPushMembers() {
         _pushMembersList = res.data || [];
         renderPushMemberSelect('');
     } catch (err) {
-        area.innerHTML = '<div style="padding:12px;color:#EF4444;font-size:13px">회원 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
+        area.innerHTML = '<div style="padding:12px;color:var(--error-color);font-size:13px">회원 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
     }
 }
 
@@ -788,7 +788,7 @@ function renderPushMemberSelect(filter) {
 
     var html = '<div class="push-member-select">'
         + '<input type="text" class="push-member-search" placeholder="이름 또는 전화번호 검색" oninput="renderPushMemberSelect(this.value)" value="' + escapeHtml(filter) + '">'
-        + '<div class="admin-list-header" style="border-bottom:1px solid #E5E7EB">'
+        + '<div class="admin-list-header" style="border-bottom:1px solid var(--border-color)">'
         + '<label class="admin-checkbox"><input type="checkbox" onchange="toggleAllPushMembers(this.checked)"' + (_pushSelectedUserIds.size === _pushMembersList.length && _pushMembersList.length > 0 ? ' checked' : '') + '><span class="checkmark"></span></label>'
         + '<span>전체 선택</span>'
         + '</div>'
@@ -885,7 +885,7 @@ async function handlePushSend() {
 async function loadPushLog() {
     var container = document.getElementById('push-log-list');
     if (!container) return;
-    container.innerHTML = '<div style="padding:12px;text-align:center;color:#9CA3AF;font-size:13px">로딩 중...</div>';
+    container.innerHTML = '<div style="padding:12px;text-align:center;color:var(--text-muted);font-size:13px">로딩 중...</div>';
 
     try {
         var res = await apiClient.request('/admin-app/push-log?limit=20');
@@ -893,7 +893,7 @@ async function loadPushLog() {
 
         var items = (res.data && res.data.items) || [];
         if (items.length === 0) {
-            container.innerHTML = '<div style="padding:20px;text-align:center;color:#9CA3AF;font-size:13px">발송 기록이 없습니다.</div>';
+            container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">발송 기록이 없습니다.</div>';
             return;
         }
 
@@ -910,7 +910,7 @@ async function loadPushLog() {
                 + '</div>';
         }).join('');
     } catch (err) {
-        container.innerHTML = '<div style="padding:12px;color:#EF4444;font-size:13px">발송 기록 로드 실패</div>';
+        container.innerHTML = '<div style="padding:12px;color:var(--error-color);font-size:13px">발송 기록 로드 실패</div>';
     }
 }
 
@@ -1000,7 +1000,7 @@ async function renderLocalAdminDashboard(container) {
         + ' 승인 대기 회원'
         + '<span class="local-admin-badge" id="local-admin-pending-badge"></span>'
         + '</div>'
-        + '<div id="local-admin-pending-list"><div style="padding:12px;text-align:center;color:#9CA3AF;font-size:13px">로딩 중...</div></div>'
+        + '<div id="local-admin-pending-list"><div style="padding:12px;text-align:center;color:var(--text-muted);font-size:13px">로딩 중...</div></div>'
         + '</div>';
 
     // 회원 목록 섹션
@@ -1009,7 +1009,7 @@ async function renderLocalAdminDashboard(container) {
         + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
         + ' 회원 목록'
         + '</div>'
-        + '<div id="local-admin-member-list"><div style="padding:12px;text-align:center;color:#9CA3AF;font-size:13px">로딩 중...</div></div>'
+        + '<div id="local-admin-member-list"><div style="padding:12px;text-align:center;color:var(--text-muted);font-size:13px">로딩 중...</div></div>'
         + '</div>';
 
     html += '</div>';
@@ -1041,8 +1041,8 @@ async function loadLocalAdminPending() {
         }
 
         if (items.length === 0) {
-            listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#9CA3AF;font-size:13px">'
-                + '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5" style="margin:0 auto 8px"><circle cx="12" cy="12" r="10"/><path d="M8 15h8"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="9" r="1"/></svg>'
+            listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">'
+                + '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--border-color)" stroke-width="1.5" style="margin:0 auto 8px"><circle cx="12" cy="12" r="10"/><path d="M8 15h8"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="9" r="1"/></svg>'
                 + '<div>대기 중인 회원이 없습니다.</div></div>';
             return;
         }
@@ -1062,7 +1062,7 @@ async function loadLocalAdminPending() {
                 + '</div>';
         }).join('');
     } catch (err) {
-        listEl.innerHTML = '<div style="padding:12px;color:#EF4444;font-size:13px">승인 대기 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
+        listEl.innerHTML = '<div style="padding:12px;color:var(--error-color);font-size:13px">승인 대기 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
     }
 }
 
@@ -1084,10 +1084,10 @@ function localAdminReject(memberId, name) {
     overlay.className = 'admin-modal-overlay';
     overlay.innerHTML = '<div class="admin-modal">'
         + '<div class="admin-modal-title">가입 거부</div>'
-        + '<p style="color:#6B7280;font-size:14px;margin-bottom:12px">' + escapeHtml(name) + '님의 가입을 거부합니다.</p>'
+        + '<p style="color:var(--text-hint);font-size:14px;margin-bottom:12px">' + escapeHtml(name) + '님의 가입을 거부합니다.</p>'
         + '<div class="form-group">'
-        + '<label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;display:block">거부 사유 (필수)</label>'
-        + '<textarea id="la-reject-reason" rows="3" placeholder="거부 사유를 입력하세요" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;resize:vertical"></textarea>'
+        + '<label style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;display:block">거부 사유 (필수)</label>'
+        + '<textarea id="la-reject-reason" rows="3" placeholder="거부 사유를 입력하세요" style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;resize:vertical"></textarea>'
         + '</div>'
         + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">'
         + '<button class="btn btn-secondary btn-sm" onclick="this.closest(\'.admin-modal-overlay\').remove()">취소</button>'
@@ -1138,7 +1138,7 @@ async function loadLocalAdminMembers() {
         var items = (res.data && res.data.members) || (res.data && res.data.items) || [];
 
         if (items.length === 0) {
-            listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#9CA3AF;font-size:13px">회원이 없습니다.</div>';
+            listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">회원이 없습니다.</div>';
             return;
         }
 
@@ -1174,7 +1174,7 @@ async function loadLocalAdminMembers() {
                 + '</div>';
         }).join('');
     } catch (err) {
-        listEl.innerHTML = '<div style="padding:12px;color:#EF4444;font-size:13px">회원 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
+        listEl.innerHTML = '<div style="padding:12px;color:var(--error-color);font-size:13px">회원 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
     }
 }
 

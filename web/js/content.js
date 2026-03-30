@@ -53,7 +53,7 @@ async function loadContentScreen(screenName) {
         '<div class="screen-content" style="padding:16px;padding-top:72px;">' +
             '<div class="loading-container" style="text-align:center;padding:40px 0;">' +
                 '<div class="loading-spinner"></div>' +
-                '<p style="color:#6B7280;margin-top:12px;">불러오는 중...</p>' +
+                '<p style="color:var(--text-hint);margin-top:12px;">불러오는 중...</p>' +
             '</div>' +
         '</div>';
 
@@ -88,8 +88,8 @@ async function loadContentScreen(screenName) {
         if (contentArea) {
             contentArea.innerHTML =
                 '<div class="empty-state" style="text-align:center;padding:60px 20px;">' +
-                    '<p style="color:#6B7280;font-size:14px;">콘텐츠를 불러올 수 없습니다.</p>' +
-                    '<p style="color:#9CA3AF;font-size:12px;margin-top:4px;">' + escapeHtml(error.message) + '</p>' +
+                    '<p style="color:var(--text-hint);font-size:14px;">콘텐츠를 불러올 수 없습니다.</p>' +
+                    '<p style="color:var(--text-muted);font-size:12px;margin-top:4px;">' + escapeHtml(error.message) + '</p>' +
                     (isAdmin ? '<button class="btn btn-primary" style="margin-top:16px;" onclick="openContentEditor(\'' + screenName + '\', null)">콘텐츠 등록</button>' : '') +
                 '</div>';
         }
@@ -125,12 +125,12 @@ function renderContentView(screen, screenName, contentType, pageTitle, data, isA
                 '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>' +
                 '<polyline points="14 2 14 8 20 8"/>' +
             '</svg>' +
-            '<p style="color:#6B7280;font-size:14px;">등록된 콘텐츠가 없습니다.</p>' +
+            '<p style="color:var(--text-hint);font-size:14px;">등록된 콘텐츠가 없습니다.</p>' +
         '</div>';
     } else {
         // 제목
         if (data.title) {
-            html += '<h2 style="font-size:18px;font-weight:700;color:#111827;margin-bottom:16px;">' + escapeHtml(data.title) + '</h2>';
+            html += '<h2 style="font-size:18px;font-weight:700;color:var(--text-primary);margin-bottom:16px;">' + escapeHtml(data.title) + '</h2>';
         }
 
         // 이미지
@@ -138,7 +138,7 @@ function renderContentView(screen, screenName, contentType, pageTitle, data, isA
             var baseURL = window.location.hostname === 'localhost'
                 ? 'http://localhost:3000/api'
                 : '/api';
-            html += '<div style="margin-bottom:16px;border-radius:12px;overflow:hidden;background:#F3F4F6;">' +
+            html += '<div style="margin-bottom:16px;border-radius:12px;overflow:hidden;background:var(--neutral-bg);">' +
                 '<img src="' + baseURL + '/content/' + contentType + '/image?t=' + Date.now() + '" ' +
                     'alt="' + escapeHtml(pageTitle) + '" ' +
                     'style="width:100%;display:block;cursor:pointer;" ' +
@@ -149,7 +149,7 @@ function renderContentView(screen, screenName, contentType, pageTitle, data, isA
 
         // 본문
         if (data.body) {
-            html += '<div class="content-body" style="font-size:14px;line-height:1.8;color:#374151;white-space:pre-wrap;word-break:break-word;">' +
+            html += '<div class="content-body" style="font-size:14px;line-height:1.8;color:var(--text-primary);white-space:pre-wrap;word-break:break-word;">' +
                 escapeHtml(data.body) +
             '</div>';
         }
@@ -165,16 +165,16 @@ function renderContentView(screen, screenName, contentType, pageTitle, data, isA
             // PDF인 경우 인라인 뷰어
             if (isPdf) {
                 html += '<div style="margin-top:16px;">' +
-                    '<iframe src="' + fileUrl + '#toolbar=1" style="width:100%;height:70vh;border:1px solid #E5E7EB;border-radius:8px;" frameborder="0"></iframe>' +
+                    '<iframe src="' + fileUrl + '#toolbar=1" style="width:100%;height:70vh;border:1px solid var(--border-color);border-radius:8px;" frameborder="0"></iframe>' +
                     '<div style="display:flex;gap:8px;margin-top:8px;">' +
                         '<a href="' + fileUrl + '" target="_blank" class="btn btn-outline" style="flex:1;text-align:center;font-size:13px;">새 탭에서 보기</a>' +
                         '<a href="' + fileUrl + '" download class="btn btn-primary" style="flex:1;text-align:center;font-size:13px;">다운로드</a>' +
                     '</div>' +
                 '</div>';
             } else {
-            html += '<div style="margin-top:16px;padding:12px;background:#F9FAFB;border-radius:8px;border:1px solid #E5E7EB;">' +
+            html += '<div style="margin-top:16px;padding:12px;background:var(--bg-secondary);border-radius:8px;border:1px solid var(--border-color);">' +
                 '<a href="' + fileUrl + '" ' +
-                    'style="display:flex;align-items:center;gap:8px;color:#2563EB;text-decoration:none;font-size:13px;" download>' +
+                    'style="display:flex;align-items:center;gap:8px;color:var(--primary-color);text-decoration:none;font-size:13px;" download>' +
                     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
                         '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>' +
                         '<polyline points="7 10 12 15 17 10"/>' +
@@ -191,7 +191,7 @@ function renderContentView(screen, screenName, contentType, pageTitle, data, isA
             var dateStr = new Date(data.updated_at).toLocaleDateString('ko-KR', {
                 year: 'numeric', month: 'long', day: 'numeric'
             });
-            html += '<p style="margin-top:20px;font-size:12px;color:#9CA3AF;text-align:right;">최종 수정: ' + dateStr + '</p>';
+            html += '<p style="margin-top:20px;font-size:12px;color:var(--text-muted);text-align:right;">최종 수정: ' + dateStr + '</p>';
         }
     }
 
@@ -259,54 +259,54 @@ function openContentEditor(screenName, hasExisting) {
 function renderContentEditor(container, screenName, contentType, pageTitle, data) {
     var html =
         '<div style="margin-bottom:20px;">' +
-            '<h3 style="font-size:16px;font-weight:600;color:#111827;margin-bottom:16px;">' + escapeHtml(pageTitle) + ' 편집</h3>' +
+            '<h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:16px;">' + escapeHtml(pageTitle) + ' 편집</h3>' +
         '</div>' +
 
         // 제목 입력
         '<div class="form-group" style="margin-bottom:16px;">' +
-            '<label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">제목</label>' +
+            '<label style="display:block;font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">제목</label>' +
             '<input type="text" id="content-edit-title" class="form-input" ' +
                 'placeholder="제목을 입력하세요" ' +
                 'value="' + escapeHtml(data.title || '') + '" ' +
-                'style="width:100%;padding:10px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;">' +
+                'style="width:100%;padding:10px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;">' +
         '</div>' +
 
         // 본문 입력
         '<div class="form-group" style="margin-bottom:16px;">' +
-            '<label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">내용</label>' +
+            '<label style="display:block;font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">내용</label>' +
             '<textarea id="content-edit-body" class="form-input" ' +
                 'placeholder="내용을 입력하세요" rows="10" ' +
-                'style="width:100%;padding:10px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;resize:vertical;line-height:1.6;">' +
+                'style="width:100%;padding:10px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;resize:vertical;line-height:1.6;">' +
                 escapeHtml(data.body || '') +
             '</textarea>' +
         '</div>' +
 
         // 이미지 업로드
         '<div class="form-group" style="margin-bottom:16px;">' +
-            '<label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">이미지</label>' +
+            '<label style="display:block;font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">이미지</label>' +
             (data.has_image
                 ? '<div id="content-current-image" style="margin-bottom:8px;position:relative;display:inline-block;">' +
                     '<img src="' + (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api') + '/content/' + contentType + '/image?t=' + Date.now() + '" ' +
-                        'style="max-width:200px;border-radius:8px;border:1px solid #E5E7EB;" ' +
+                        'style="max-width:200px;border-radius:8px;border:1px solid var(--border-color);" ' +
                         'onerror="this.onerror=null;this.style.display=\'none\';this.parentElement.classList.add(\'img-broken\')">' +
                     '<button onclick="removeContentImage(\'' + contentType + '\')" ' +
                         'style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;">x</button>' +
                   '</div>'
                 : '') +
             '<input type="file" id="content-edit-image" accept="image/*" ' +
-                'style="display:block;font-size:13px;color:#6B7280;">' +
-            '<p style="font-size:11px;color:#9CA3AF;margin-top:4px;">최대 10MB (JPG, PNG, GIF, WebP)</p>' +
+                'style="display:block;font-size:13px;color:var(--text-hint);">' +
+            '<p style="font-size:11px;color:var(--text-muted);margin-top:4px;">최대 10MB (JPG, PNG, GIF, WebP)</p>' +
         '</div>' +
 
         // 파일 업로드
         '<div class="form-group" style="margin-bottom:24px;">' +
-            '<label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">첨부파일</label>' +
+            '<label style="display:block;font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">첨부파일</label>' +
             (data.has_file && data.file_name
-                ? '<p style="font-size:12px;color:#6B7280;margin-bottom:6px;">현재 파일: ' + escapeHtml(data.file_name) + '</p>'
+                ? '<p style="font-size:12px;color:var(--text-hint);margin-bottom:6px;">현재 파일: ' + escapeHtml(data.file_name) + '</p>'
                 : '') +
             '<input type="file" id="content-edit-file" ' +
-                'style="display:block;font-size:13px;color:#6B7280;">' +
-            '<p style="font-size:11px;color:#9CA3AF;margin-top:4px;">최대 10MB (PDF, HWP, DOCX 등)</p>' +
+                'style="display:block;font-size:13px;color:var(--text-hint);">' +
+            '<p style="font-size:11px;color:var(--text-muted);margin-top:4px;">최대 10MB (PDF, HWP, DOCX 등)</p>' +
         '</div>' +
 
         // 저장/취소 버튼

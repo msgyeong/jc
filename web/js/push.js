@@ -263,7 +263,7 @@ function showPushDeniedMessage() {
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           <line x1="1" y1="1" x2="23" y2="23"/>
         </svg>
-        <p style="color:#6B7280">브라우저 설정에서 알림을<br>허용해주세요</p>
+        <p style="color:var(--text-hint)">브라우저 설정에서 알림을<br>허용해주세요</p>
       </div>
       <div class="push-subscribe-actions">
         <button class="push-subscribe-btn push-subscribe-btn--ghost" onclick="hidePushSubscribeBanner()">확인</button>

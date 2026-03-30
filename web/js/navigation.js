@@ -786,10 +786,10 @@ function openSideMenu() {
     }
     var profileEl = document.getElementById('side-menu-profile');
     if (profileEl && user) {
-        profileEl.innerHTML = '<div style="width:36px;height:36px;border-radius:50%;background:#DBEAFE;display:flex;align-items:center;justify-content:center;font-weight:600;color:#2563EB">'
+        profileEl.innerHTML = '<div style="width:36px;height:36px;border-radius:50%;background:var(--primary-bg);display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--primary-color)">'
             + escapeHtml((user.name || '?')[0]) + '</div>'
             + '<div><div style="font-weight:600;font-size:14px">' + escapeHtml(user.name || '') + '</div>'
-            + '<div style="font-size:12px;color:#6B7280">' + escapeHtml(user.email || '') + '</div></div>';
+            + '<div style="font-size:12px;color:var(--text-hint)">' + escapeHtml(user.email || '') + '</div></div>';
     }
 }
 function closeSideMenu() {

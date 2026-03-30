@@ -292,7 +292,7 @@ function renderSkeleton(type) {
     if (type === 'list') {
         let html = '';
         for (let i = 0; i < 4; i++) {
-            html += '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #F3F4F6"><div class="skeleton skeleton--avatar"></div><div style="flex:1"><div class="skeleton skeleton--title" style="width:' + (60 + i * 5) + '%"></div><div class="skeleton skeleton--text" style="width:' + (70 + i * 3) + '%"></div></div></div>';
+            html += '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--neutral-bg)"><div class="skeleton skeleton--avatar"></div><div style="flex:1"><div class="skeleton skeleton--title" style="width:' + (60 + i * 5) + '%"></div><div class="skeleton skeleton--text" style="width:' + (70 + i * 3) + '%"></div></div></div>';
         }
         return html;
     }

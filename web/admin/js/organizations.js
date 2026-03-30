@@ -553,8 +553,8 @@ async function loadOrgStats(orgId, el) {
         if (!res.success) throw new Error();
         var d = res.data;
         el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">' +
-            '<div style="background:var(--c-success-bg);padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:#16A34A">' + (d.members?.total || 0) + '</div><div style="font-size:13px;color:var(--c-text-sub)">전체 회원</div></div>' +
-            '<div style="background:var(--c-warning-bg);padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:#D97706">' + (d.members?.pending || 0) + '</div><div style="font-size:13px;color:var(--c-text-sub)">승인 대기</div></div>' +
+            '<div style="background:var(--c-success-bg);padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--c-success)">' + (d.members?.total || 0) + '</div><div style="font-size:13px;color:var(--c-text-sub)">전체 회원</div></div>' +
+            '<div style="background:var(--c-warning-bg);padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--c-warning)">' + (d.members?.pending || 0) + '</div><div style="font-size:13px;color:var(--c-text-sub)">승인 대기</div></div>' +
             '<div style="background:var(--c-primary-light);padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--c-primary)">' + (d.posts?.total || 0) + '</div><div style="font-size:13px;color:var(--c-text-sub)">게시글</div></div>' +
             '<div style="background:var(--c-danger-bg);padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--c-danger)">' + (d.schedules?.total || 0) + '</div><div style="font-size:13px;color:var(--c-text-sub)">일정</div></div>' +
             '</div>';

@@ -74,7 +74,7 @@ function renderBannerRow(b, idx, total) {
             <td style="max-width:200px">
                 <strong style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeAdminHtml(b.title)}</strong>
                 ${b.description ? `<div style="font-size:12px;color:var(--c-text-sub);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeAdminHtml(b.description)}</div>` : ''}
-                ${b.link_url ? `<div style="font-size:11px;color:#3B82F6;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeAdminHtml(b.link_url)}</div>` : ''}
+                ${b.link_url ? `<div style="font-size:11px;color:var(--c-primary);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeAdminHtml(b.link_url)}</div>` : ''}
             </td>
             <td><span class="badge ${statusClass}">${statusText}</span></td>
             <td>${createdAt}</td>

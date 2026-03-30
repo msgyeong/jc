@@ -292,7 +292,7 @@ async function showAttendanceModal(scheduleId) {
         // 통계 요약
         bodyHtml += '<div style="display:flex;gap:12px;margin-bottom:16px">'
             + '<div style="flex:1;text-align:center;padding:12px;background:var(--c-success-bg);border-radius:8px">'
-            + '<div style="font-size:20px;font-weight:700;color:#16A34A">' + s.attending + '</div>'
+            + '<div style="font-size:20px;font-weight:700;color:var(--c-success)">' + s.attending + '</div>'
             + '<div style="font-size:12px;color:var(--c-text-sub)">참석</div></div>'
             + '<div style="flex:1;text-align:center;padding:12px;background:var(--c-danger-bg);border-radius:8px">'
             + '<div style="font-size:20px;font-weight:700;color:var(--c-danger)">' + s.not_attending + '</div>'

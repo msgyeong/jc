@@ -55,7 +55,7 @@ async function loadNoticeSummary() {
             });
 
             // 최대 5개
-            const notices = filtered.slice(0, 5);
+            const notices = filtered.slice(0, 3);
 
             if (notices.length > 0) {
                 let nBadgeCount = 0;
@@ -104,7 +104,7 @@ async function loadScheduleSummary() {
         // API 응답 호환: result.schedules 또는 result.data.schedules
         const schedules = result.schedules || (result.data && (result.data.schedules || result.data.items)) || [];
         if (result.success && schedules.length > 0) {
-            const items = schedules.slice(0, 5);
+            const items = schedules.slice(0, 3);
 
             let schedNBadgeCount = 0;
             container.innerHTML = items.map(schedule => {

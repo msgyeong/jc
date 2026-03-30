@@ -1168,7 +1168,7 @@ input::-ms-clear {
 
 /* ==================== 콘텐츠 섹션 ==================== */
 .content-section {
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-md);
 }
 
 .section-header {
@@ -4930,8 +4930,8 @@ input[type="date"]:focus {
 .banner-carousel {
     position: relative;
     width: calc(100% - 32px);
-    height: 160px;
-    margin: 16px 16px 0;
+    height: 120px;
+    margin: 12px 16px 0;
     border-radius: 12px;
     overflow: hidden;
 }
@@ -5047,7 +5047,7 @@ input[type="date"]:focus {
 
 /* ==================== 소형 기기 반응형 ==================== */
 @media (max-width: 479px) {
-    .banner-carousel { height: 140px; }
+    .banner-carousel { height: 110px; }
     .banner-slide .banner-title { font-size: 16px; }
     .banner-slide .banner-subtitle { font-size: 12px; }
     .empty-state-icon { width: 56px; height: 56px; }

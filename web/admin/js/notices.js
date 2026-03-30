@@ -121,7 +121,7 @@ function openNoticeModal(editId) {
                     '<label for="notice-pinned" style="margin:0;cursor:pointer">상단 고정</label>' +
                 '</div>' +
                 '<div class="form-field">' +
-                    '<label>연결 일정 <span style="font-size:11px;color:#9CA3AF;font-weight:400">(선택)</span></label>' +
+                    '<label>연결 일정 <span style="font-size:11px;color:var(--c-text-hint);font-weight:400">(선택)</span></label>' +
                     '<select id="notice-schedule-id"><option value="">연결 일정 없음</option></select>' +
                 '</div>' +
             '</div>' +

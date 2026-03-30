@@ -59,7 +59,7 @@ function renderBannerRow(b, idx, total) {
     const createdAt = b.created_at ? new Date(b.created_at).toLocaleDateString('ko-KR') : '-';
     const imgThumb = b.image_url
         ? `<img src="${b.image_url}" alt="" style="width:60px;height:36px;object-fit:cover;border-radius:4px">`
-        : '<span style="color:#9CA3AF;font-size:12px">없음</span>';
+        : '<span style="color:var(--c-text-hint);font-size:12px">없음</span>';
 
     return `
         <tr data-id="${b.id}">
@@ -73,7 +73,7 @@ function renderBannerRow(b, idx, total) {
             <td>${imgThumb}</td>
             <td style="max-width:200px">
                 <strong style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeAdminHtml(b.title)}</strong>
-                ${b.description ? `<div style="font-size:12px;color:#6B7280;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeAdminHtml(b.description)}</div>` : ''}
+                ${b.description ? `<div style="font-size:12px;color:var(--c-text-sub);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeAdminHtml(b.description)}</div>` : ''}
                 ${b.link_url ? `<div style="font-size:11px;color:#3B82F6;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeAdminHtml(b.link_url)}</div>` : ''}
             </td>
             <td><span class="badge ${statusClass}">${statusText}</span></td>
@@ -125,7 +125,7 @@ async function openBannerForm(bannerId) {
             <form id="banner-form" onsubmit="saveBanner(event, ${bannerId || 'null'})">
                 <div class="modal-body">
                     <div class="form-field">
-                        <label for="banner-title">제목 <span style="color:#DC2626">*</span></label>
+                        <label for="banner-title">제목 <span style="color:var(--c-danger)">*</span></label>
                         <input type="text" id="banner-title" value="${title}" placeholder="배너 제목" required maxlength="200">
                     </div>
                     <div class="form-field">
@@ -141,7 +141,7 @@ async function openBannerForm(bannerId) {
                         <label for="banner-sort">순서</label>
                         <input type="number" id="banner-sort" value="${sortOrder}" min="0">
                     </div>` : ''}
-                    <div id="banner-form-error" style="color:#DC2626;font-size:13px;margin-top:4px"></div>
+                    <div id="banner-form-error" style="color:var(--c-danger);font-size:13px;margin-top:4px"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline" onclick="closeModal()">취소</button>

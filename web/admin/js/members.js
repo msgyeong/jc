@@ -174,7 +174,7 @@ async function loadMembers() {
                 : '<span class="edit-placeholder">-</span>';
             var avatarHtml = m.profile_image
                 ? '<div class="avatar avatar-sm"><img src="' + escapeHtml(m.profile_image) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>'
-                : '<div class="avatar avatar-sm" style="background:#DBEAFE">' + ADMIN_DEFAULT_AVATAR + '</div>';
+                : '<div class="avatar avatar-sm" style="background:var(--c-primary-light)">' + ADMIN_DEFAULT_AVATAR + '</div>';
             html += `<tr>
                 <td>${avatarHtml}</td>
                 <td><strong>${escapeHtml(m.name)}</strong></td>

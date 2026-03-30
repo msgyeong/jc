@@ -84,7 +84,7 @@ async function loadOrganizations() {
 
             var nameEsc = escapeHtml(org.name).replace(/'/g, "\\'");
             html += '<tr>' +
-                '<td><a href="javascript:void(0)" style="color:#2563EB;font-weight:600;text-decoration:underline;cursor:pointer" onclick="selectOrg(' + org.id + ',\'' + nameEsc + '\')">' + escapeHtml(org.name) + '</a></td>' +
+                '<td><a href="javascript:void(0)" style="color:var(--c-primary);font-weight:600;text-decoration:underline;cursor:pointer" onclick="selectOrg(' + org.id + ',\'' + nameEsc + '\')">' + escapeHtml(org.name) + '</a></td>' +
                 '<td>' + escapeHtml(org.code || '-') + '</td>' +
                 '<td>' + escapeHtml(org.district || '-') + '</td>' +
                 '<td>' + escapeHtml(org.region || '-') + '</td>' +
@@ -127,7 +127,7 @@ function openOrgModal(orgId) {
             '<div class="form-field"><label>지구</label><input type="text" id="org-district" class="form-input" placeholder="예: 서울지구"></div>' +
             '<div class="form-field"><label>지역</label><input type="text" id="org-region" class="form-input" placeholder="예: 서울특별시"></div>' +
             '<div class="form-field"><label>설명</label><textarea id="org-description" class="form-input" rows="3" placeholder="로컬 설명 (선택)"></textarea></div>' +
-            '<div class="form-error" id="org-modal-error" style="color:#DC2626;margin-bottom:12px;display:none"></div>' +
+            '<div class="form-error" id="org-modal-error" style="color:var(--c-danger);margin-bottom:12px;display:none"></div>' +
         '</div>' +
         '<div class="modal-footer">' +
             '<button class="btn btn-outline" onclick="closeModal()">취소</button>' +
@@ -244,7 +244,7 @@ function openAssignAdminModal(orgId, orgName) {
                 '<input type="text" id="admin-search-input" class="form-input" placeholder="이름 또는 이메일로 검색...">' +
             '</div>' +
             '<div id="admin-search-results" style="max-height:300px;overflow-y:auto;margin-top:8px"></div>' +
-            '<div class="form-error" id="assign-admin-error" style="color:#DC2626;margin-top:8px;display:none"></div>' +
+            '<div class="form-error" id="assign-admin-error" style="color:var(--c-danger);margin-top:8px;display:none"></div>' +
         '</div>' +
         '<div class="modal-footer">' +
             '<button class="btn btn-outline" onclick="closeModal()">닫기</button>' +
@@ -271,11 +271,11 @@ async function searchAdminCandidates(orgId, query) {
     if (!resultsEl) return;
 
     if (!query || query.length < 1) {
-        resultsEl.innerHTML = '<p style="color:#6B7280;text-align:center;padding:16px">검색어를 입력하세요.</p>';
+        resultsEl.innerHTML = '<p style="color:var(--c-text-sub);text-align:center;padding:16px">검색어를 입력하세요.</p>';
         return;
     }
 
-    resultsEl.innerHTML = '<p style="color:#6B7280;text-align:center;padding:16px">검색 중...</p>';
+    resultsEl.innerHTML = '<p style="color:var(--c-text-sub);text-align:center;padding:16px">검색 중...</p>';
 
     try {
         var res = await AdminAPI.get('/api/members?search=' + encodeURIComponent(query) + '&limit=10&status=active');
@@ -285,17 +285,17 @@ async function searchAdminCandidates(orgId, query) {
         if (Array.isArray(data)) items = data;
 
         if (!items.length) {
-            resultsEl.innerHTML = '<p style="color:#6B7280;text-align:center;padding:16px">검색 결과가 없습니다.</p>';
+            resultsEl.innerHTML = '<p style="color:var(--c-text-sub);text-align:center;padding:16px">검색 결과가 없습니다.</p>';
             return;
         }
 
         var html = '<div style="display:flex;flex-direction:column;gap:8px">';
         for (var i = 0; i < items.length; i++) {
             var m = items[i];
-            html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #E5E7EB;border-radius:8px">' +
+            html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--c-border);border-radius:8px">' +
                 '<div>' +
                     '<strong>' + escapeHtml(m.name) + '</strong>' +
-                    '<span style="color:#6B7280;margin-left:8px;font-size:13px">' + escapeHtml(m.email) + '</span>' +
+                    '<span style="color:var(--c-text-sub);margin-left:8px;font-size:13px">' + escapeHtml(m.email) + '</span>' +
                 '</div>' +
                 '<button class="btn btn-sm btn-primary" onclick="assignLocalAdmin(' + orgId + ', ' + m.id + ')">지정</button>' +
             '</div>';
@@ -303,7 +303,7 @@ async function searchAdminCandidates(orgId, query) {
         html += '</div>';
         resultsEl.innerHTML = html;
     } catch (err) {
-        resultsEl.innerHTML = '<p style="color:#DC2626;text-align:center;padding:16px">' + escapeHtml(err.message) + '</p>';
+        resultsEl.innerHTML = '<p style="color:var(--c-danger);text-align:center;padding:16px">' + escapeHtml(err.message) + '</p>';
     }
 }
 
@@ -374,12 +374,12 @@ function switchOrgTab(tab, orgId) {
     });
     var el = document.getElementById('org-detail-content');
     if (!el) return;
-    el.innerHTML = '<div style="text-align:center;padding:24px;color:#9CA3AF">로딩 중...</div>';
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--c-text-hint)">로딩 중...</div>';
 
     if (tab === 'members') loadOrgMembers(orgId, el);
     else if (tab === 'admins') loadOrgAdmins(orgId, el);
-    else if (tab === 'posts') el.innerHTML = '<div style="color:#9CA3AF;padding:24px;text-align:center">게시판 관리는 앱 내 로컬 관리에서 진행합니다.</div>';
-    else if (tab === 'schedules') el.innerHTML = '<div style="color:#9CA3AF;padding:24px;text-align:center">일정 관리는 앱 내 로컬 관리에서 진행합니다.</div>';
+    else if (tab === 'posts') el.innerHTML = '<div style="color:var(--c-text-hint);padding:24px;text-align:center">게시판 관리는 앱 내 로컬 관리에서 진행합니다.</div>';
+    else if (tab === 'schedules') el.innerHTML = '<div style="color:var(--c-text-hint);padding:24px;text-align:center">일정 관리는 앱 내 로컬 관리에서 진행합니다.</div>';
     else if (tab === 'stats') loadOrgStats(orgId, el);
 }
 
@@ -394,21 +394,21 @@ async function loadOrgMembers(orgId, el) {
             return m.org_id === orgId || (!m.org_id && orgId === 1);
         });
         if (members.length === 0) {
-            el.innerHTML = '<div style="color:#9CA3AF;padding:24px;text-align:center">이 로컬에 소속된 회원이 없습니다.</div>';
+            el.innerHTML = '<div style="color:var(--c-text-hint);padding:24px;text-align:center">이 로컬에 소속된 회원이 없습니다.</div>';
             return;
         }
         var html = '<div class="table-wrap"><table class="data-table"><thead><tr>' +
             '<th>이름</th><th>이메일</th><th>역할</th><th>상태</th><th>관리</th>' +
             '</tr></thead><tbody>';
         members.forEach(function(m) {
-            var roleSelect = '<select onchange="changeOrgMemberRole(' + m.id + ',this.value,' + orgId + ')" style="padding:4px;border:1px solid #D1D5DB;border-radius:4px;font-size:12px">' +
+            var roleSelect = '<select onchange="changeOrgMemberRole(' + m.id + ',this.value,' + orgId + ')" style="padding:4px;border:1px solid var(--c-border);border-radius:4px;font-size:12px">' +
                 '<option value="member"' + (m.role==='member'?' selected':'') + '>회원</option>' +
                 '<option value="local_admin"' + (m.role==='local_admin'?' selected':'') + '>중간관리자</option>' +
                 '<option value="admin"' + (m.role==='admin'?' selected':'') + '>관리자</option>' +
                 '</select>';
             html += '<tr>' +
                 '<td><strong>' + escapeHtml(m.name || '') + '</strong></td>' +
-                '<td style="font-size:13px;color:#6B7280">' + escapeHtml(m.email || '') + '</td>' +
+                '<td style="font-size:13px;color:var(--c-text-sub)">' + escapeHtml(m.email || '') + '</td>' +
                 '<td>' + roleSelect + '</td>' +
                 '<td>' + statusBadge(m.status) + '</td>' +
                 '<td class="actions-cell">' +
@@ -422,7 +422,7 @@ async function loadOrgMembers(orgId, el) {
         html += '</tbody></table></div>';
         el.innerHTML = html;
     } catch (err) {
-        el.innerHTML = '<div style="color:#DC2626;padding:24px">회원 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
+        el.innerHTML = '<div style="color:var(--c-danger);padding:24px">회원 목록 로드 실패: ' + escapeHtml(err.message) + '</div>';
     }
 }
 
@@ -485,9 +485,9 @@ async function loadOrgAdmins(orgId, el) {
         if (admins.length > 0) {
             html += '<div style="margin-bottom:16px">';
             admins.forEach(function(a) {
-                html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F3F4F6">' +
+                html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--c-bg)">' +
                     '<span style="font-weight:500">' + escapeHtml(a.name) + '</span>' +
-                    '<span style="font-size:12px;color:#6B7280">' + escapeHtml(a.email) + '</span>' +
+                    '<span style="font-size:12px;color:var(--c-text-sub)">' + escapeHtml(a.email) + '</span>' +
                     roleBadge(a.role) +
                     '</div>';
             });
@@ -497,14 +497,14 @@ async function loadOrgAdmins(orgId, el) {
         // 관리자 추가
         html += '<h3 style="font-size:16px;margin:16px 0 12px">관리자 추가</h3>' +
             '<div style="display:flex;gap:8px;margin-bottom:12px">' +
-                '<input type="text" id="admin-search-input" placeholder="회원 이름 검색..." style="flex:1;padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px">' +
+                '<input type="text" id="admin-search-input" placeholder="회원 이름 검색..." style="flex:1;padding:8px 12px;border:1px solid var(--c-border);border-radius:6px">' +
                 '<button class="btn btn-primary btn-sm" onclick="searchAndAssignAdmin(' + orgId + ')">검색</button>' +
             '</div>' +
             '<div id="admin-search-results"></div>';
 
         el.innerHTML = html;
     } catch (err) {
-        el.innerHTML = '<div style="color:#DC2626;padding:24px">관리자 목록 로드 실패</div>';
+        el.innerHTML = '<div style="color:var(--c-danger);padding:24px">관리자 목록 로드 실패</div>';
     }
 }
 
@@ -519,17 +519,17 @@ async function searchAndAssignAdmin(orgId) {
         if (!res.success) throw new Error(res.message);
         var members = res.members || (res.data && res.data.items) || [];
         if (members.length === 0) {
-            el.innerHTML = '<div style="color:#9CA3AF">검색 결과 없음</div>';
+            el.innerHTML = '<div style="color:var(--c-text-hint)">검색 결과 없음</div>';
             return;
         }
         el.innerHTML = members.map(function(m) {
-            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px;border:1px solid #E5E7EB;border-radius:6px;margin-bottom:6px">' +
-                '<div><strong>' + escapeHtml(m.name) + '</strong> <span style="color:#6B7280;font-size:13px">' + escapeHtml(m.email) + '</span></div>' +
+            return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px;border:1px solid var(--c-border);border-radius:6px;margin-bottom:6px">' +
+                '<div><strong>' + escapeHtml(m.name) + '</strong> <span style="color:var(--c-text-sub);font-size:13px">' + escapeHtml(m.email) + '</span></div>' +
                 '<button class="btn btn-primary btn-sm" onclick="doAssignAdmin(' + orgId + ',' + m.id + ',\'' + escapeHtml(m.name).replace(/'/g,"\\'") + '\')">관리자 지정</button>' +
                 '</div>';
         }).join('');
     } catch (err) {
-        el.innerHTML = '<div style="color:#DC2626">검색 실패: ' + escapeHtml(err.message) + '</div>';
+        el.innerHTML = '<div style="color:var(--c-danger)">검색 실패: ' + escapeHtml(err.message) + '</div>';
     }
 }
 
@@ -553,12 +553,12 @@ async function loadOrgStats(orgId, el) {
         if (!res.success) throw new Error();
         var d = res.data;
         el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">' +
-            '<div style="background:#F0FDF4;padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:#16A34A">' + (d.members?.total || 0) + '</div><div style="font-size:13px;color:#6B7280">전체 회원</div></div>' +
-            '<div style="background:#FEF3C7;padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:#D97706">' + (d.members?.pending || 0) + '</div><div style="font-size:13px;color:#6B7280">승인 대기</div></div>' +
-            '<div style="background:#DBEAFE;padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:#2563EB">' + (d.posts?.total || 0) + '</div><div style="font-size:13px;color:#6B7280">게시글</div></div>' +
-            '<div style="background:#FEE2E2;padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:#DC2626">' + (d.schedules?.total || 0) + '</div><div style="font-size:13px;color:#6B7280">일정</div></div>' +
+            '<div style="background:var(--c-success-bg);padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:#16A34A">' + (d.members?.total || 0) + '</div><div style="font-size:13px;color:var(--c-text-sub)">전체 회원</div></div>' +
+            '<div style="background:var(--c-warning-bg);padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:#D97706">' + (d.members?.pending || 0) + '</div><div style="font-size:13px;color:var(--c-text-sub)">승인 대기</div></div>' +
+            '<div style="background:var(--c-primary-light);padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--c-primary)">' + (d.posts?.total || 0) + '</div><div style="font-size:13px;color:var(--c-text-sub)">게시글</div></div>' +
+            '<div style="background:var(--c-danger-bg);padding:16px;border-radius:8px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--c-danger)">' + (d.schedules?.total || 0) + '</div><div style="font-size:13px;color:var(--c-text-sub)">일정</div></div>' +
             '</div>';
     } catch (_) {
-        el.innerHTML = '<div style="color:#9CA3AF;padding:24px;text-align:center">통계를 불러올 수 없습니다.</div>';
+        el.innerHTML = '<div style="color:var(--c-text-hint);padding:24px;text-align:center">통계를 불러올 수 없습니다.</div>';
     }
 }

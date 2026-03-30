@@ -268,7 +268,7 @@ async function showAttendanceModal(scheduleId) {
                 '<button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
             '</div>' +
             '<div class="modal-body" id="attendance-modal-body">' +
-                '<div style="text-align:center;padding:24px;color:#9CA3AF">로딩 중...</div>' +
+                '<div style="text-align:center;padding:24px;color:var(--c-text-hint)">로딩 중...</div>' +
             '</div>' +
             '<div class="modal-footer">' +
                 '<button class="btn btn-ghost btn-sm" onclick="exportAttendanceCsv(' + scheduleId + ')">CSV 내보내기</button>' +
@@ -291,24 +291,24 @@ async function showAttendanceModal(scheduleId) {
 
         // 통계 요약
         bodyHtml += '<div style="display:flex;gap:12px;margin-bottom:16px">'
-            + '<div style="flex:1;text-align:center;padding:12px;background:#F0FDF4;border-radius:8px">'
+            + '<div style="flex:1;text-align:center;padding:12px;background:var(--c-success-bg);border-radius:8px">'
             + '<div style="font-size:20px;font-weight:700;color:#16A34A">' + s.attending + '</div>'
-            + '<div style="font-size:12px;color:#6B7280">참석</div></div>'
-            + '<div style="flex:1;text-align:center;padding:12px;background:#FEF2F2;border-radius:8px">'
-            + '<div style="font-size:20px;font-weight:700;color:#DC2626">' + s.not_attending + '</div>'
-            + '<div style="font-size:12px;color:#6B7280">불참</div></div>'
-            + '<div style="flex:1;text-align:center;padding:12px;background:#F9FAFB;border-radius:8px">'
-            + '<div style="font-size:20px;font-weight:700;color:#9CA3AF">' + s.no_response + '</div>'
-            + '<div style="font-size:12px;color:#6B7280">미응답</div></div>'
+            + '<div style="font-size:12px;color:var(--c-text-sub)">참석</div></div>'
+            + '<div style="flex:1;text-align:center;padding:12px;background:var(--c-danger-bg);border-radius:8px">'
+            + '<div style="font-size:20px;font-weight:700;color:var(--c-danger)">' + s.not_attending + '</div>'
+            + '<div style="font-size:12px;color:var(--c-text-sub)">불참</div></div>'
+            + '<div style="flex:1;text-align:center;padding:12px;background:var(--c-bg);border-radius:8px">'
+            + '<div style="font-size:20px;font-weight:700;color:var(--c-text-hint)">' + s.no_response + '</div>'
+            + '<div style="font-size:12px;color:var(--c-text-sub)">미응답</div></div>'
             + '</div>';
 
-        bodyHtml += '<div style="font-size:13px;color:#6B7280;margin-bottom:12px">전체 회원: ' + s.total_members + '명</div>';
+        bodyHtml += '<div style="font-size:13px;color:var(--c-text-sub);margin-bottom:12px">전체 회원: ' + s.total_members + '명</div>';
 
         // 그룹별 명단
         function renderAdminGroup(title, color, members) {
-            if (!members || members.length === 0) return '<div style="margin-bottom:12px"><div style="font-weight:600;font-size:13px;color:' + color + ';margin-bottom:4px">' + title + ' (0명)</div><div style="font-size:13px;color:#9CA3AF">없음</div></div>';
+            if (!members || members.length === 0) return '<div style="margin-bottom:12px"><div style="font-weight:600;font-size:13px;color:' + color + ';margin-bottom:4px">' + title + ' (0명)</div><div style="font-size:13px;color:var(--c-text-hint)">없음</div></div>';
             var names = members.map(function(m) {
-                var pos = m.jc_position ? ' <span style="color:#9CA3AF;font-size:12px">(' + escapeHtml(m.jc_position) + ')</span>' : '';
+                var pos = m.jc_position ? ' <span style="color:var(--c-text-hint);font-size:12px">(' + escapeHtml(m.jc_position) + ')</span>' : '';
                 return escapeHtml(m.name) + pos;
             }).join(', ');
             return '<div style="margin-bottom:12px"><div style="font-weight:600;font-size:13px;color:' + color + ';margin-bottom:4px">' + title + ' (' + members.length + '명)</div><div style="font-size:13px;line-height:1.6">' + names + '</div></div>';
@@ -322,7 +322,7 @@ async function showAttendanceModal(scheduleId) {
 
         document.getElementById('attendance-modal-body').innerHTML = bodyHtml;
     } catch (err) {
-        document.getElementById('attendance-modal-body').innerHTML = '<div style="text-align:center;padding:24px;color:#DC2626">참석 현황을 불러올 수 없습니다.<br><span style="font-size:13px;color:#9CA3AF">' + escapeHtml(err.message) + '</span></div>';
+        document.getElementById('attendance-modal-body').innerHTML = '<div style="text-align:center;padding:24px;color:var(--c-danger)">참석 현황을 불러올 수 없습니다.<br><span style="font-size:13px;color:var(--c-text-hint)">' + escapeHtml(err.message) + '</span></div>';
     }
 }
 

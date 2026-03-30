@@ -515,6 +515,41 @@ html {
     box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.06);
 }
 
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--input-border);
+    border-radius: var(--input-radius);
+    font-size: 14px;
+    font-family: var(--font-family);
+    color: var(--text-primary);
+    background: var(--input-bg);
+    box-sizing: border-box;
+    resize: vertical;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-group textarea:focus {
+    border-color: var(--input-border-focus);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08);
+}
+
+.form-group select {
+    width: 100%;
+    height: var(--input-height);
+    padding: 0 12px;
+    border: 1px solid var(--input-border);
+    border-radius: var(--input-radius);
+    font-size: 14px;
+    font-family: var(--font-family);
+    color: var(--text-primary);
+    background: var(--input-bg);
+    box-sizing: border-box;
+    outline: none;
+}
+
 /* 전역 input/select/textarea 최소 높이 통일 (터치 타겟 44px 보장) */
 .screen-content input[type="text"],
 .screen-content input[type="email"],
@@ -3957,7 +3992,24 @@ input[type="date"]:focus {
 
 /* ==================== 프로필 화면 개선 ==================== */
 .profile-v2 {
-    padding: 0 16px 24px;
+    padding: 0 12px 80px;
+}
+
+/* 프로필 편집 폼: 입력 필드 높이 통일 + 섹션 간격 축소 */
+.profile-v2 .info-section {
+    margin-bottom: 8px;
+}
+
+.profile-v2 .form-group input,
+.profile-v2 .form-group select {
+    height: var(--input-height);
+}
+
+.profile-v2 .btn-full {
+    position: sticky;
+    bottom: 62px;
+    z-index: 10;
+    margin-top: 12px;
 }
 
 .profile-hero {
@@ -4716,7 +4768,7 @@ input[type="date"]:focus {
 /* ==================== 일정 폼 (개선) ==================== */
 .schedule-form-wrapper {
     background: var(--background-color);
-    padding: 16px;
+    padding: 12px 12px 80px;
 }
 .schedule-form-inner {
     background: var(--background-color);
@@ -6907,7 +6959,7 @@ a.sns-badge:hover {
 
 /* 공지 수정 폼 */
 .notice-edit-form {
-    padding: 16px;
+    padding: 12px 12px 80px;
 }
 .notice-edit-form .form-group {
     margin-bottom: 16px;

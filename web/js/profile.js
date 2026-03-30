@@ -266,7 +266,7 @@ function showEditProfileForm() {
                     <h3 class="info-section-title">사업 PR</h3>
                     <div class="form-group"><label>한 줄 PR</label><input type="text" id="edit-one-line-pr" value="${escapeHtml(p.one_line_pr || p.business_headline || '')}" placeholder="예: 프리미엄 IT 서비스" maxlength="100"></div>
                     <div class="form-group"><label>주요 서비스</label><textarea id="edit-service-description" rows="4" placeholder="사업 소개, 주요 서비스, 상품 등을 자유롭게 입력하세요" maxlength="500" style="resize:vertical">${escapeHtml(p.service_description || p.business_description || '')}</textarea></div>
-                    <div class="form-group"><label>사업장 주소</label><div style="display:flex;gap:6px"><input type="text" id="edit-biz-address" value="${escapeHtml(p.business_address || '')}" placeholder="사업장 주소" style="flex:1"><button type="button" class="btn btn-outline btn-sm" onclick="openBizAddressSearch()" style="white-space:nowrap">주소 검색</button></div></div>
+                    <div class="form-group"><label>사업장 주소</label><div style="display:flex;gap:8px;align-items:center"><input type="text" id="edit-biz-address" value="${escapeHtml(p.business_address || '')}" placeholder="주소를 검색해 주세요" readonly style="flex:1;background:var(--bg-secondary);cursor:pointer" onclick="openBizAddressSearch()"><button type="button" class="btn btn-outline btn-sm" onclick="openBizAddressSearch()" style="white-space:nowrap;height:var(--input-height);padding:0 12px">주소 검색</button></div></div>
                     <div class="form-group">
                         <label>SNS 링크</label>
                         <div id="sns-links-container">
@@ -293,6 +293,15 @@ function renderSnsEditList(snsLinks) {
     }).join('');
 }
 
+var SNS_PLACEHOLDERS = {
+    instagram: 'https://instagram.com/계정명',
+    youtube: 'https://youtube.com/@채널명',
+    twitter: 'https://x.com/계정명',
+    facebook: 'https://facebook.com/계정명',
+    blog: 'https://blog.naver.com/아이디',
+    other: 'https://...'
+};
+
 function renderSnsRow(type, handle, idx) {
     var options = [
         {val:'instagram', label:'Instagram'},
@@ -305,11 +314,19 @@ function renderSnsRow(type, handle, idx) {
     var optHtml = options.map(function(o) {
         return '<option value="' + o.val + '"' + (type === o.val ? ' selected' : '') + '>' + o.label + '</option>';
     }).join('');
-    return '<div class="sns-edit-row" data-idx="' + idx + '" style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
-        '<select class="sns-type-select" style="flex:0 0 120px;height:40px;border:1px solid var(--border-color);border-radius:8px;padding:0 8px;font-size:14px">' + optHtml + '</select>' +
-        '<input type="text" class="sns-handle-input" value="' + escapeHtml(handle) + '" placeholder="@계정명 또는 URL (https:// 자동 추가)" style="flex:1;height:40px;border:1px solid var(--border-color);border-radius:8px;padding:0 12px;font-size:14px">' +
-        '<button type="button" class="btn-icon-delete" onclick="removeSnsRow(this)" style="flex:0 0 36px;height:36px;border:none;background:var(--error-bg);color:var(--error-color);border-radius:8px;cursor:pointer;font-size:16px" title="삭제">&times;</button>' +
+    var ph = SNS_PLACEHOLDERS[type] || SNS_PLACEHOLDERS.other;
+    return '<div class="sns-edit-row" data-idx="' + idx + '" style="display:flex;gap:6px;align-items:center;margin-bottom:8px">' +
+        '<select class="sns-type-select" onchange="updateSnsPlaceholder(this)" style="flex:0 0 110px;height:var(--input-height);border:1px solid var(--input-border);border-radius:var(--input-radius);padding:0 6px;font-size:13px">' + optHtml + '</select>' +
+        '<input type="text" class="sns-handle-input" value="' + escapeHtml(handle) + '" placeholder="' + ph + '" style="flex:1;height:var(--input-height);border:1px solid var(--input-border);border-radius:var(--input-radius);padding:0 10px;font-size:13px">' +
+        '<button type="button" class="btn-icon-delete" onclick="removeSnsRow(this)" style="flex:0 0 32px;height:32px;border:none;background:var(--error-bg);color:var(--error-color);border-radius:var(--input-radius);cursor:pointer;font-size:14px" title="삭제">&times;</button>' +
         '</div>';
+}
+
+function updateSnsPlaceholder(sel) {
+    var row = sel.closest('.sns-edit-row');
+    if (!row) return;
+    var input = row.querySelector('.sns-handle-input');
+    if (input) input.placeholder = SNS_PLACEHOLDERS[sel.value] || SNS_PLACEHOLDERS.other;
 }
 
 function addSnsLinkRow() {

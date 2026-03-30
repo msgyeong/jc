@@ -117,7 +117,7 @@ async function loadMembersScreen() {
         if (groups.length > 0) {
             html += renderGroupsSections(groups);
         }
-        html += `<div class="add-group-row"><button type="button" class="add-group-btn" onclick="showCreateGroupDialog()">+ 그룹 추가</button></div>`;
+        html += `<div class="add-group-row"><button type="button" class="add-group-btn add-group-btn--compact" onclick="showCreateGroupDialog()">+ 그룹 추가</button></div>`;
 
         // 4. 전체 회원 섹션
         const otherMembers = members.filter(m => !myId || String(m.id) !== String(myId));
@@ -140,19 +140,14 @@ function renderMeSection(member) {
 
     return `
         <div class="member-section me-section">
-            <div class="member-section-header">나</div>
-            <div class="me-card" onclick="navigateTo('/members/${member.id}')">
-                <div class="me-avatar" style="background:var(--primary-bg)">
+            <div class="me-card me-card--compact" onclick="navigateTo('/members/${member.id}')">
+                <div class="me-avatar me-avatar--sm" style="background:var(--primary-bg)">
                     ${member.profile_image ? `<img src="${member.profile_image}" alt="${escapeHtml(name)}">` : DEFAULT_AVATAR_SVG_SM}
                 </div>
-                <div class="me-info">
-                    <div class="me-name-row">
-                        <span class="me-name">${escapeHtml(name)}</span>
-                        ${member.jc_position ? getPositionBadgeHtml(member.jc_position) : ''}
-                        ${roleBadge}
-                    </div>
-                    ${member.company ? `<div class="me-sub">${escapeHtml(member.company)}</div>` : ''}
-                </div>
+                <span class="me-name">${escapeHtml(name)}</span>
+                ${member.jc_position ? getPositionBadgeHtml(member.jc_position) : ''}
+                ${roleBadge}
+                ${member.company ? `<span class="me-sub--inline">${escapeHtml(member.company)}</span>` : ''}
             </div>
         </div>`;
 }
@@ -231,7 +226,7 @@ function renderAllMembersSection(members, count) {
                         <option value="">직책: 전체</option>
                         ${positionOptions}
                     </select>
-                    <label class="cross-org-toggle" style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--text-hint);cursor:pointer;margin-left:4px">
+                    <label class="cross-org-toggle" style="display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--text-hint);cursor:pointer;margin-left:2px;white-space:nowrap">
                         <input type="checkbox" id="cross-org-check" onchange="handleCrossOrgToggle(this.checked)" style="accent-color:var(--primary-color)">
                         <span>타로컬 보기</span>
                     </label>

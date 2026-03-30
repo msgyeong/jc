@@ -4244,7 +4244,7 @@ input[type="date"]:focus {
 }
 
 .member-section {
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .member-section-header {
@@ -4253,9 +4253,9 @@ input[type="date"]:focus {
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 8px 4px 4px;
+    padding: 6px 4px 3px;
     border-bottom: 1px solid var(--border-color);
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 
 .member-section-list {
@@ -5125,10 +5125,10 @@ input[type="date"]:focus {
     .schedule-form-submit { height: 44px; font-size: 15px; }
     .schedule-info-row svg { width: 14px; height: 14px; }
     .schedule-info-text { font-size: 13px; }
-    /* 멤버 필터 세로 정렬 */
-    .member-filters-row { flex-direction: column; }
+    /* 멤버 필터 — 가로 유지, 크기만 축소 */
+    .member-filters-row { flex-direction: row; flex-wrap: wrap; }
     .member-filters-row select,
-    .member-filters-row .industry-filter-inline { width: 100%; }
+    .member-filters-row .industry-filter-inline { width: auto; min-width: 0; flex: 1 1 auto; }
     /* 하단 탭 라벨 축소 */
     .nav-label { font-size: 9px; }
 }
@@ -7340,7 +7340,7 @@ a.sns-badge:hover {
 
 /* ── "나" 섹션 ── */
 .me-section {
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .me-card {
@@ -7352,6 +7352,12 @@ a.sns-badge:hover {
     border-radius: var(--radius-lg);
     cursor: pointer;
     transition: background 0.15s;
+}
+.me-card--compact {
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--primary-bg, #EFF6FF);
+    border-radius: 8px;
 }
 .me-card:active {
     background: var(--bg-secondary);
@@ -7366,6 +7372,14 @@ a.sns-badge:hover {
     justify-content: center;
     flex-shrink: 0;
     overflow: hidden;
+}
+.me-avatar--sm {
+    width: 28px;
+    height: 28px;
+}
+.me-avatar--sm svg {
+    width: 22px;
+    height: 22px;
 }
 .me-avatar img {
     width: 100%;
@@ -7390,7 +7404,7 @@ a.sns-badge:hover {
 }
 
 .me-name {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text-primary);
 }
@@ -7399,6 +7413,11 @@ a.sns-badge:hover {
     font-size: 13px;
     color: var(--text-secondary);
     margin-top: 2px;
+}
+.me-sub--inline {
+    font-size: 12px;
+    color: var(--text-hint);
+    margin-left: 4px;
 }
 
 /* ── 접기/펼치기 섹션 ── */
@@ -7469,7 +7488,7 @@ a.sns-badge:hover {
 
 /* ── 그룹 추가 버튼 ── */
 .add-group-row {
-    padding: 4px 4px 8px;
+    padding: 2px 4px 4px;
 }
 
 .add-group-btn {
@@ -7486,6 +7505,10 @@ a.sns-badge:hover {
     width: 100%;
     justify-content: center;
     transition: border-color 0.15s, color 0.15s;
+}
+.add-group-btn--compact {
+    padding: 6px 12px;
+    font-size: 12px;
 }
 .add-group-btn:hover {
     border-color: var(--primary-color);
@@ -8900,3 +8923,17 @@ a.sns-badge:hover {
 .fw-500 { font-weight: 500; }
 .fw-600 { font-weight: 600; }
 .fw-700 { font-weight: 700; }
+
+/* ==================== 터치 타겟 44px 보장 ==================== */
+.back-button, .logout-button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+.app-bar-icon-btn { min-width: 44px; min-height: 44px; }
+.calendar-nav-btn { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+.schedule-map-icon { min-width: 44px; min-height: 44px; }
+.gallery-arrow { min-width: 44px; min-height: 44px; }
+.post-search-close { min-width: 44px; min-height: 44px; }
+.post-search-bar input { min-height: 44px; }
+.cc-input { min-height: 44px; font-size: 16px; }
+.cc-reply-input { min-height: 44px; font-size: 16px; }
+.cc-reply-send { min-width: 44px; min-height: 44px; }
+.btn-remove { min-width: 44px; min-height: 44px; }
+.cc-like-btn, .cc-reply-btn, .cc-delete-btn { min-height: 44px; padding: 8px 12px; }

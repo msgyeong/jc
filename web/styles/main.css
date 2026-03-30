@@ -12,15 +12,19 @@
     --accent-color: #F59E0B;
 
     /* ── Semantic ── */
-    --error-color: #C4532D;
-    --error-hover: #A3421F;
-    --error-bg: #FFF7F5;
-    --error-text: #7C2D12;
+    --error-color: #DC2626;
+    --error-hover: #B91C1C;
+    --error-bg: #FEE2E2;
+    --error-text: #991B1B;
     --success-color: #16A34A;
     --success-bg: #F0FDF4;
     --success-text: #166534;
+    --warning-color: #F59E0B;
     --warning-bg: #FFFBEB;
     --warning-text: #92400E;
+    --color-primary: var(--primary-color);
+    --color-error: var(--error-color);
+    --color-text-hint: var(--text-hint);
 
     /* ── Neutral ── */
     --background-color: #FFFFFF;

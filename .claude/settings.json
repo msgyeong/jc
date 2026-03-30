@@ -45,5 +45,20 @@
       "Bash(grep -i \"orgchart\\\\|club\\\\|group.*board\\\\|group_post\\\\|club_member\\\\|club_post\" /Users/wy/개발/jc/database/migrations/*.sql)",
       "Bash(curl -s https://jc-production-7db6.up.railway.app/index.html)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);const cmd=(j.tool_input&&j.tool_input.command)||'';if(/^git commit/.test(cmd)&&cmd.indexOf('검증:')===-1){console.log(JSON.stringify({decision:'block',reason:'[HOOK] 검증 결과가 커밋 메시지에 없습니다. MCP로 검증 후 커밋 메시지에 검증: [내용] 을 포함하세요.'}))}else{console.log('{}')}}catch(e){console.log('{}')}})\"",
+            "timeout": 5,
+            "statusMessage": "커밋 메시지 검증 확인 중..."
+          }
+        ]
+      }
+    ]
   }
 }

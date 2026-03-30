@@ -76,7 +76,11 @@ CommentComponent.prototype.load = async function () {
 
 CommentComponent.prototype._flatten = function (comments) {
     var result = [];
-    comments.forEach(function (c) {
+    var seen = new Set(); // 중복 방지
+
+    function addComment(c, isReply, parentIdOverride) {
+        if (seen.has(c.id)) return;
+        seen.add(c.id);
         var name = c.author_name || (c.author && c.author.name) || '알 수 없음';
         var authorId = c.author_id || (c.author && c.author.id);
         result.push({
@@ -86,36 +90,18 @@ CommentComponent.prototype._flatten = function (comments) {
             author_image: c.author_image || (c.author && c.author.profile_image),
             content: c.content,
             created_at: c.created_at,
-            parent_id: c.parent_id || null,
+            parent_id: c.parent_id || parentIdOverride || null,
             likes_count: c.likes_count || 0,
             liked: c.liked || false,
-            _isReply: !!c.parent_id
+            _isReply: isReply || !!c.parent_id
         });
-        // 이미 구조화된 replies 처리
-        if (c.replies && c.replies.length > 0) {
-            c.replies.forEach(function (r) {
-                var rName = r.author_name || (r.author && r.author.name) || '회원';
-                var rAuthorId = r.author_id || (r.author && r.author.id);
-                result.push({
-                    id: r.id,
-                    author_id: rAuthorId,
-                    author_name: rName,
-                    author_image: r.author_image || (r.author && r.author.profile_image),
-                    content: r.content,
-                    created_at: r.created_at,
-                    parent_id: r.parent_id || c.id,
-                    likes_count: r.likes_count || 0,
-                    liked: r.liked || false,
-                    _isReply: true
-                });
-            });
-        }
-    });
+    }
 
-    // flat 배열에서 parent_id가 있는데 _isReply가 안 된 경우 처리
-    var parentIds = new Set(result.filter(function (c) { return !c.parent_id; }).map(function (c) { return c.id; }));
-    result.forEach(function (c) {
-        if (c.parent_id && parentIds.has(c.parent_id)) c._isReply = true;
+    comments.forEach(function (c) {
+        addComment(c, false, null);
+        if (c.replies && c.replies.length > 0) {
+            c.replies.forEach(function (r) { addComment(r, true, c.id); });
+        }
     });
 
     return result;

@@ -73,9 +73,9 @@ async function loadJcMapScreen() {
             controlsDiv.className = 'jc-map-controls';
             controlsDiv.style.cssText = 'position:absolute;top:8px;left:8px;right:8px;z-index:1000;display:flex;gap:6px;align-items:center';
             controlsDiv.innerHTML =
-                '<input type="text" id="jc-map-search" placeholder="회원명/업종/로컬명 검색" style="flex:1;height:38px;border:1px solid #D1D5DB;border-radius:8px;padding:0 12px;font-size:13px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.1)">'
-                + '<label style="display:flex;align-items:center;gap:4px;background:#fff;padding:4px 10px;border-radius:8px;font-size:12px;white-space:nowrap;border:1px solid #D1D5DB;box-shadow:0 2px 6px rgba(0,0,0,0.1);cursor:pointer">'
-                + '<input type="checkbox" id="jc-map-show-all" style="accent-color:#1F4FD8">'
+                '<input type="text" id="jc-map-search" placeholder="회원명/업종/로컬명 검색" style="flex:1;height:38px;border:1px solid var(--border-color);border-radius:8px;padding:0 12px;font-size:13px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.1)">'
+                + '<label style="display:flex;align-items:center;gap:4px;background:#fff;padding:4px 10px;border-radius:8px;font-size:12px;white-space:nowrap;border:1px solid var(--border-color);box-shadow:0 2px 6px rgba(0,0,0,0.1);cursor:pointer">'
+                + '<input type="checkbox" id="jc-map-show-all" style="accent-color:var(--primary-color)">'
                 + '<span>모두보기</span></label>';
             contentEl.appendChild(controlsDiv);
 
@@ -104,7 +104,7 @@ async function loadJcMapScreen() {
             myLocBtn.className = 'jc-map-loc-btn';
             myLocBtn.innerHTML = '📍';
             myLocBtn.title = '내 위치';
-            myLocBtn.style.cssText = 'position:absolute;bottom:20px;right:12px;z-index:1000;width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #D1D5DB;box-shadow:0 2px 6px rgba(0,0,0,0.15);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center';
+            myLocBtn.style.cssText = 'position:absolute;bottom:20px;right:12px;z-index:1000;width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid var(--border-color);box-shadow:0 2px 6px rgba(0,0,0,0.15);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center';
             myLocBtn.onclick = showMyLocation;
             mapContainer.parentElement.appendChild(myLocBtn);
         }
@@ -178,13 +178,13 @@ async function loadMapMembers() {
 
             var popup = '<div style="min-width:180px;font-size:13px;line-height:1.5">'
                 + '<div style="font-size:15px;font-weight:700;margin-bottom:4px">' + escapeHtml(m.name) + '</div>';
-            if (m.org_name) popup += '<div style="color:#2563EB;font-size:12px;margin-bottom:2px">' + escapeHtml(m.org_name) + '</div>';
+            if (m.org_name) popup += '<div style="color:var(--primary-color);font-size:12px;margin-bottom:2px">' + escapeHtml(m.org_name) + '</div>';
             if (m.company) popup += '<div>' + escapeHtml(m.company) + (m.position ? ' / ' + escapeHtml(m.position) : '') + '</div>';
-            if (industry) popup += '<div style="color:#6B7280">' + escapeHtml(industry) + '</div>';
-            if (m.business_address) popup += '<div style="color:#6B7280;margin-top:4px">📍 ' + escapeHtml(m.business_address) + '</div>';
+            if (industry) popup += '<div style="color:var(--text-hint)">' + escapeHtml(industry) + '</div>';
+            if (m.business_address) popup += '<div style="color:var(--text-hint);margin-top:4px">📍 ' + escapeHtml(m.business_address) + '</div>';
             if (m.phone) popup += '<div style="margin-top:4px"><a href="tel:' + escapeHtml(m.phone) + '">📞 ' + escapeHtml(m.phone) + '</a></div>';
             if (m.website) popup += '<div><a href="' + escapeHtml(m.website) + '" target="_blank">🌐 사이트</a></div>';
-            popup += '<div style="margin-top:6px;text-align:center"><a href="#" onclick="event.preventDefault();jcMap.closePopup();navigateToScreen(\'member-detail\');loadMemberDetail(' + m.id + ')" style="color:#3B82F6;font-weight:600;font-size:13px">프로필 보기</a></div>';
+            popup += '<div style="margin-top:6px;text-align:center"><a href="#" onclick="event.preventDefault();jcMap.closePopup();navigateToScreen(\'member-detail\');loadMemberDetail(' + m.id + ')" style="color:var(--primary-color);font-weight:600;font-size:13px">프로필 보기</a></div>';
             popup += '</div>';
 
             marker.bindPopup(popup);

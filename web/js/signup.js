@@ -285,7 +285,7 @@ function showTermsPopup() {
         + '<p><strong>제6조 (탈퇴 및 자격상실)</strong><br>1. 회원은 언제든지 탈퇴를 요청할 수 있습니다.<br>2. 탈퇴 후 90일간 데이터 보관 후 완전 파기됩니다.</p>'
         + '<p><strong>제7조 (면책 조항)</strong><br>1. 회의소는 천재지변 또는 불가항력으로 인한 서비스 제공 불가에 대해 책임지지 않습니다.<br>2. 이용자 귀책사유로 인한 서비스 이용 장애에 대해 책임지지 않습니다.</p>'
         + '<p><strong>제8조 (분쟁 해결)</strong><br>서비스 이용과 관련한 분쟁은 대한민국 법률에 따르며, 서울서부지방법원을 관할법원으로 합니다.</p>'
-        + '<p style="color:#6B7280;font-size:13px;margin-top:16px">시행일: 2026년 1월 1일</p>'
+        + '<p style="color:var(--text-hint);font-size:13px;margin-top:16px">시행일: 2026년 1월 1일</p>'
     );
 }
 
@@ -312,7 +312,7 @@ function showPrivacyPopup() {
         + '이용자는 언제든지 본인의 개인정보를 열람, 정정, 삭제 요구할 수 있으며, 프로필 수정 또는 회원 탈퇴를 통해 처리할 수 있습니다.</p>'
         + '<p><strong>7. 개인정보 보호 책임자</strong><br>'
         + '영등포청년회의소 사무국<br>문의: 앱 내 관리자 연락</p>'
-        + '<p style="color:#6B7280;font-size:13px;margin-top:16px">시행일: 2026년 1월 1일</p>'
+        + '<p style="color:var(--text-hint);font-size:13px;margin-top:16px">시행일: 2026년 1월 1일</p>'
     );
 }
 
@@ -327,7 +327,7 @@ function showLegalPopup(title, content) {
         + '<div style="background:#fff;border-radius:12px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;padding:24px">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
         + '<h3 style="font-size:17px;font-weight:600;margin:0">' + title + '</h3>'
-        + '<button onclick="this.closest(\'#legal-popup-overlay\').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#6B7280">&times;</button>'
+        + '<button onclick="this.closest(\'#legal-popup-overlay\').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-hint)">&times;</button>'
         + '</div>'
         + '<div class="legal-content">' + content + '</div>'
         + '</div>';
@@ -851,7 +851,7 @@ async function checkEmailDuplicate() {
         });
         if (res.available) {
             const errEl = document.getElementById('signup-email-error');
-            if (errEl) { errEl.textContent = '사용 가능한 이메일입니다.'; errEl.style.color = '#059669'; errEl.style.display = 'block'; }
+            if (errEl) { errEl.textContent = '사용 가능한 이메일입니다.'; errEl.style.color = 'var(--success-color)'; errEl.style.display = 'block'; }
         } else {
             showError('signup-email-error', '이미 가입된 이메일입니다.');
         }

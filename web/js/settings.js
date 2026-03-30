@@ -195,7 +195,7 @@ function showChangePasswordFromSettings() {
         + '<div class="form-group"><label>현재 비밀번호</label><input type="password" id="settings-pw-current" required style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:8px"></div>'
         + '<div class="form-group"><label>새 비밀번호 (6자 이상)</label><input type="password" id="settings-pw-new" required minlength="6" style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:8px"></div>'
         + '<div class="form-group"><label>새 비밀번호 확인</label><input type="password" id="settings-pw-confirm" required minlength="6" style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:8px"></div>'
-        + '<div id="settings-pw-error" style="color:#DC2626;font-size:13px;margin-bottom:8px"></div>'
+        + '<div id="settings-pw-error" style="color:var(--error-color);font-size:13px;margin-bottom:8px"></div>'
         + '<button type="submit" class="btn btn-primary" id="settings-pw-btn">비밀번호 변경</button>'
         + '</form></div>';
 }

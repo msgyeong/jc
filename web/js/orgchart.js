@@ -281,7 +281,7 @@ async function searchOrgchartMember(groupId) {
             if (isAll && m.org_name) info.push(m.org_name);
             var infoText = info.length > 0 ? info.join(' · ') : '';
             return '<div class="oc-result-item">'
-                + '<div class="oc-result-avatar" style="background:#DBEAFE">'
+                + '<div class="oc-result-avatar" style="background:var(--primary-bg)">'
                 + (m.profile_image ? '<img src="' + escapeHtml(m.profile_image) + '" alt="">' : DEFAULT_AVATAR_SVG_OC)
                 + '</div>'
                 + '<div class="oc-result-info">'

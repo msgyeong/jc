@@ -96,7 +96,7 @@ async function showMeetingDetail(meetingId) {
                 <span class="meeting-type-badge">${escapeHtml(typeLabel)}</span>
                 <span class="meeting-status ${m.status === 'in_progress' ? 'badge-active' : ''}">${escapeHtml(statusLabel)}</span>
                 ${isAdminUser && m.status === 'scheduled' ? `<button class="btn btn-primary btn-sm" onclick="startMeeting(${meetingId})">회의 시작</button>` : ''}
-                ${isAdminUser && m.status === 'in_progress' ? `<button class="btn btn-secondary btn-sm" style="color:#DC2626" onclick="endMeeting(${meetingId})">회의 종료</button>` : ''}
+                ${isAdminUser && m.status === 'in_progress' ? `<button class="btn btn-secondary btn-sm" style="color:var(--error-color)" onclick="endMeeting(${meetingId})">회의 종료</button>` : ''}
             </div>
             <h2 style="margin:0 0 8px">${escapeHtml(m.title)}</h2>
             <div style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">
@@ -183,14 +183,14 @@ async function loadMeetingAttendance(meetingId) {
         var isAdmin3 = userInfo3 && ['admin', 'super_admin', 'local_admin'].includes(userInfo3.role);
 
         el.innerHTML = `<div style="font-size:14px;display:flex;gap:12px;flex-wrap:wrap">
-            <span style="color:#16A34A;font-weight:600">실제참석 ${confirmed.length}명</span>
-            <span style="color:#6B7280">옵서버 ${observers.length}명</span>
-            <span style="color:#3B82F6">참석예정 ${attending.length}명</span>
-            <span style="color:#DC2626">불참 ${absent.length}명</span>
+            <span style="color:var(--success-color);font-weight:600">실제참석 ${confirmed.length}명</span>
+            <span style="color:var(--text-hint)">옵서버 ${observers.length}명</span>
+            <span style="color:var(--primary-color)">참석예정 ${attending.length}명</span>
+            <span style="color:var(--error-color)">불참 ${absent.length}명</span>
         </div>
-        ${confirmed.length > 0 ? '<div style="margin-top:6px;font-size:13px"><span style="color:#16A34A">실제참석:</span> ' + confirmed.map(a => escapeHtml(a.user_name)).join(', ') + '</div>' : ''}
-        ${observers.length > 0 ? '<div style="margin-top:4px;font-size:13px"><span style="color:#6B7280">옵서버:</span> ' + observers.map(a => escapeHtml(a.user_name)).join(', ') + '</div>' : ''}
-        ${attending.length > 0 ? '<div style="margin-top:4px;font-size:13px"><span style="color:#3B82F6">참석예정:</span> ' + attending.map(a => escapeHtml(a.user_name)).join(', ') + '</div>' : ''}
+        ${confirmed.length > 0 ? '<div style="margin-top:6px;font-size:13px"><span style="color:var(--success-color)">실제참석:</span> ' + confirmed.map(a => escapeHtml(a.user_name)).join(', ') + '</div>' : ''}
+        ${observers.length > 0 ? '<div style="margin-top:4px;font-size:13px"><span style="color:var(--text-hint)">옵서버:</span> ' + observers.map(a => escapeHtml(a.user_name)).join(', ') + '</div>' : ''}
+        ${attending.length > 0 ? '<div style="margin-top:4px;font-size:13px"><span style="color:var(--primary-color)">참석예정:</span> ' + attending.map(a => escapeHtml(a.user_name)).join(', ') + '</div>' : ''}
         ${isAdmin3 ? '<div style="margin-top:12px;font-size:12px;color:var(--text-secondary)">관리자: 참석 예정자를 "실제참석" 또는 "옵서버"로 변경할 수 있습니다</div><div id="admin-attendance-controls-' + meetingId + '" style="margin-top:8px"></div>' : ''}`
 
         if (isAdmin3) {
@@ -229,14 +229,14 @@ async function loadMeetingVotes(meetingId) {
             return `<div class="vote-card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
                     <span style="font-weight:600">${escapeHtml(v.title)}</span>
-                    ${v.status === 'open' && isAdmin2 ? `<button class="btn btn-sm" style="color:#DC2626;font-size:11px" onclick="closeVote(${meetingId},${v.id})">마감</button>` : ''}
-                    ${v.status === 'closed' ? '<span style="color:#DC2626;font-size:12px;font-weight:600">마감</span>' : ''}
+                    ${v.status === 'open' && isAdmin2 ? `<button class="btn btn-sm" style="color:var(--error-color);font-size:11px" onclick="closeVote(${meetingId},${v.id})">마감</button>` : ''}
+                    ${v.status === 'closed' ? '<span style="color:var(--error-color);font-size:12px;font-weight:600">마감</span>' : ''}
                 </div>
                 ${v.status === 'open' ? `<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
                     ${options.map(opt => `<button class="btn btn-sm ${v.my_vote === opt ? 'btn-primary' : 'btn-secondary'}"
                         onclick="castVote(${meetingId},${v.id},'${escapeHtml(opt)}')">${escapeHtml(opt)}</button>`).join('')}
                 </div>
-                <div style="font-size:11px;color:#9CA3AF;margin-bottom:4px">* 참석 체크된 회원만 투표 가능 (익명)</div>` : ''}
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">* 참석 체크된 회원만 투표 가능 (익명)</div>` : ''}
                 <div style="font-size:13px;color:var(--text-secondary)">
                     ${options.map(opt => `${escapeHtml(opt)}: ${results[opt] || 0}표`).join(' · ')}
                     (총 ${totalVotes}표)
@@ -390,7 +390,7 @@ async function loadMeetingMinutes(meetingId) {
         }
         el.innerHTML = minutes.map(m => `<a href="#" onclick="event.preventDefault();openMinutesPdf(${m.id})"
             style="display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--border-color);border-radius:8px;margin-bottom:8px;text-decoration:none;color:var(--text-primary)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--error-color)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <div>
                 <div style="font-size:14px;font-weight:500">${escapeHtml(m.title || m.file_name)}</div>
                 <div style="font-size:12px;color:var(--text-secondary)">${formatDate(m.created_at)}</div>

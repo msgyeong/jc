@@ -37,7 +37,7 @@ async function loadPortalScreen() {
                 html += '<div class="portal-org-card' + (isMine ? ' portal-mine' : '') + '" onclick="visitOrg(' + org.id + ',\'' + escapeHtml(org.name).replace(/'/g, "\\'") + '\')">';
                 html += '<div class="portal-org-icon">' + escapeHtml(org.name.substring(0, 2)) + '</div>';
                 html += '<div class="portal-org-info">';
-                html += '<div class="portal-org-name">' + escapeHtml(org.name) + (isMine ? ' <span style="color:#16A34A;font-size:12px">(내 소속)</span>' : '') + '</div>';
+                html += '<div class="portal-org-name">' + escapeHtml(org.name) + (isMine ? ' <span style="color:var(--success-color);font-size:12px">(내 소속)</span>' : '') + '</div>';
                 html += '<div class="portal-org-district">' + escapeHtml(org.district || '') + '</div>';
                 html += '</div>';
                 html += '<span style="color:var(--text-secondary);font-size:20px">›</span>';
@@ -73,7 +73,7 @@ async function visitOrg(orgId, orgName) {
 
         // 로컬 기본 정보
         html += '<div style="text-align:center;padding:24px 0">';
-        html += '<div style="width:64px;height:64px;border-radius:50%;background:#DBEAFE;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:20px;font-weight:700;color:#1E40AF">' + escapeHtml(orgName.substring(0, 2)) + '</div>';
+        html += '<div style="width:64px;height:64px;border-radius:50%;background:var(--primary-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:20px;font-weight:700;color:var(--primary-hover)">' + escapeHtml(orgName.substring(0, 2)) + '</div>';
         html += '<h2 style="margin:0 0 4px">' + escapeHtml(orgName) + '</h2>';
         html += '</div>';
 

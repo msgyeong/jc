@@ -24,8 +24,9 @@ function canCreateSchedule() {
 // ========== 캘린더 로직 ==========
 
 async function loadSchedulesScreen() {
-    // 상세 화면이 활성화 중이면 목록 로드 스킵 (상세가 덮어쓰여지는 것 방지)
+    // 상세/폼 화면이 활성화 중이면 목록 로드 스킵 (덮어쓰여지는 것 방지)
     if (_scheduleDetailActive) return;
+    if (_scheduleFormActive) return;
 
     const now = new Date();
     if (calYear == null) calYear = now.getFullYear();
@@ -236,6 +237,7 @@ function createScheduleCard(schedule) {
 let scheduleDropdownOpen = false;
 
 var _scheduleDetailActive = false;
+var _scheduleFormActive = false;
 
 async function showScheduleDetailScreen(scheduleId) {
     const screen = document.getElementById('schedules-screen');
@@ -660,6 +662,7 @@ function submitAttendance(status, scheduleId) {
 
 function backToScheduleList() {
     _scheduleDetailActive = false;
+    _scheduleFormActive = false;
     // calYear/calMonth 미초기화 상태 방지
     if (calYear == null || calMonth == null) {
         var now = new Date();
@@ -687,6 +690,7 @@ function checkScheduleCreatePermission() {
 
 function handleCreateSchedule() {
     if (!canCreateSchedule()) return;
+    _scheduleFormActive = true;
     const calContainer = document.getElementById('calendar-container');
     const dayHeader = document.getElementById('schedule-day-header');
     if (calContainer) calContainer.style.display = 'none';
@@ -979,6 +983,7 @@ async function handleScheduleFormSubmit(e) {
 
 async function handleEditSchedule(scheduleId) {
     try {
+        _scheduleFormActive = true;
         const res = await apiClient.getSchedule(scheduleId);
         const calContainer = document.getElementById('calendar-container');
         const dayHeader = document.getElementById('schedule-day-header');
@@ -1053,7 +1058,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!target) return;
             const action = target.dataset.action;
             const id = target.dataset.id;
-            if (action === 'schedule-back-list') goBack();
+            if (action === 'schedule-back-list') { _scheduleFormActive = false; _scheduleDetailActive = false; goBack(); }
             if (action === 'schedule-edit' && id) handleEditSchedule(id);
             if (action === 'schedule-delete' && id) handleDeleteSchedule(id);
             if (action === 'schedule-admin-delete' && id && typeof adminDeleteSchedule === 'function') adminDeleteSchedule(id);

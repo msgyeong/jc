@@ -809,7 +809,7 @@
         <!-- 게시글 상세 화면 -->
         <div id="post-detail-screen" class="screen">
             <div class="app-bar">
-                <button type="button" class="back-button" id="post-detail-back" aria-label="뒤로 가기"
+                <button type="button" class="back-button" id="post-detail-back" aria-label="뒤로 가기">
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">게시글</h1>
@@ -824,7 +824,7 @@
         <!-- 게시글 수정 화면 -->
         <div id="post-edit-screen" class="screen">
             <div class="app-bar">
-                <button type="button" class="back-button" id="post-edit-back" aria-label="뒤로 가기"
+                <button type="button" class="back-button" id="post-edit-back" aria-label="뒤로 가기">
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">글 수정</h1>
@@ -873,7 +873,7 @@
         <!-- 게시글 작성 화면 -->
         <div id="post-create-screen" class="screen">
             <div class="app-bar">
-                <button type="button" class="back-button" id="post-create-back" aria-label="뒤로 가기"
+                <button type="button" class="back-button" id="post-create-back" aria-label="뒤로 가기">
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">글쓰기</h1>
@@ -1305,10 +1305,10 @@
         <!-- 회원 프로필 상세 (타인) -->
         <div id="member-detail-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
+                <button class="back-button" onclick="goBack()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">프로필</h1>
             </div>
-            <div class="screen-content" id="member-detail-content">
+            <div class="screen-content with-bottom-nav" id="member-detail-content">
             </div>
         </div>
 
@@ -1455,10 +1455,10 @@
         <!-- 내 프로필 화면 -->
         <div id="profile-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="switchTab('home')" aria-label="뒤로 가기"><span class="icon">←</span></button>
+                <button class="back-button" onclick="goBack()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">내 프로필</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <div class="profile-content" id="profile-content">
                     <div class="content-loading">프로필 로딩 중...</div>
                 </div>

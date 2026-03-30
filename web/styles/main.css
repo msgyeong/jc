@@ -563,6 +563,7 @@ html {
 .screen-content textarea {
     min-height: var(--input-height);
     box-sizing: border-box;
+    font-size: 16px; /* iOS 자동 줌 방지: 16px 미만이면 포커스 시 줌 */
 }
 /* 학력 2행 레이아웃 */
 .education-fields-row {
@@ -4581,7 +4582,7 @@ input[type="date"]:focus {
 
 /* ==================== 일정 상세 (개선) ==================== */
 .schedule-detail {
-    padding: 12px 12px 0;
+    padding: 12px 12px 80px;
 }
 .schedule-detail-section {
     background: var(--background-color);

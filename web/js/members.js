@@ -627,7 +627,7 @@ async function loadTitleHistory(userId, containerId) {
 }
 
 function backToMemberList() {
-    navigateToScreen('members', { back: true });
+    goBack();
 }
 
 // ========== 유틸리티 ==========

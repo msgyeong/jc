@@ -19,7 +19,7 @@ async function uploadDossierPhoto(input, memberId) {
     try {
         var formData = new FormData();
         formData.append('photo', file);
-        var token = localStorage.getItem('admin_token') || localStorage.getItem('auth_token');
+        var token = AdminAPI.getToken();
         var res = await fetch('/api/admin/members/' + memberId + '/photo', {
             method: 'PUT',
             headers: { 'Authorization': 'Bearer ' + token },

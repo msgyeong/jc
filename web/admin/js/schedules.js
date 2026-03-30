@@ -328,7 +328,7 @@ async function showAttendanceModal(scheduleId) {
 
 async function exportAttendanceCsv(scheduleId) {
     try {
-        var token = localStorage.getItem('auth_token');
+        var token = AdminAPI.getToken();
         var res = await fetch('/api/schedules/' + scheduleId + '/attendance/export', {
             headers: { 'Authorization': 'Bearer ' + token }
         });

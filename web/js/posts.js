@@ -796,8 +796,7 @@ function renderPostDetail(post) {
 
 // ── 상세 뒤로가기 ──
 function handlePostDetailBack() {
-    // 목록 화면으로 전환 (loadPostsScreen이 호출되어 목록 재조회 + 뱃지 갱신)
-    navigateToScreen('posts');
+    goBack();
 }
 
 // ── 수정 화면 ──

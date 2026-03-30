@@ -1054,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!target) return;
             const action = target.dataset.action;
             const id = target.dataset.id;
-            if (action === 'schedule-back-list') backToScheduleList();
+            if (action === 'schedule-back-list') goBack();
             if (action === 'schedule-edit' && id) handleEditSchedule(id);
             if (action === 'schedule-delete' && id) handleDeleteSchedule(id);
             if (action === 'schedule-admin-delete' && id && typeof adminDeleteSchedule === 'function') adminDeleteSchedule(id);

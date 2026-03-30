@@ -91,7 +91,7 @@ var _routes = {
     'posts':        { nav: 'posts',     showNav: true,  init: function() { if (typeof loadPostsScreen === 'function') loadPostsScreen(); } },
     'schedules':    { nav: 'schedules', showNav: true,
         init: function() { if (typeof loadSchedulesScreen === 'function') loadSchedulesScreen(); },
-        leave: function() { if (typeof _scheduleDetailActive !== 'undefined') _scheduleDetailActive = false; if (typeof backToScheduleList === 'function') backToScheduleList(); }
+        leave: function() { if (typeof _scheduleDetailActive !== 'undefined') _scheduleDetailActive = false; }
     },
     'members':      { nav: 'members',   showNav: true,  init: function() { if (typeof loadMembersScreen === 'function') loadMembersScreen(); } },
     'meetings':     { nav: 'meetings',  showNav: true,  init: function() { if (typeof loadMeetingsScreen === 'function') loadMeetingsScreen(); } },
@@ -241,8 +241,12 @@ function navigateToScreen(screenName, opts) {
     }
 }
 
-// 뒤로가기 헬퍼
+// 뒤로가기 헬퍼 — 모든 뒤로가기의 단일 진입점
 function goBack() {
+    // 폼 작성 중 확인 팝업
+    if (_isFormDirty()) {
+        if (!confirm('작성 중인 내용이 저장되지 않습니다. 정말 나가시겠습니까?')) return;
+    }
     if (_navStack.length > 1) {
         _navStack.pop();
         var prev = _navStack[_navStack.length - 1];
@@ -250,6 +254,38 @@ function goBack() {
     } else {
         history.back();
     }
+}
+
+// 현재 화면에 작성 중인 폼이 있는지 감지
+function _isFormDirty() {
+    // 게시글 작성 폼
+    var postTitle = document.getElementById('post-create-title');
+    var postContent = document.getElementById('post-create-content');
+    if (postTitle && postContent) {
+        var postScreen = postTitle.closest('.screen');
+        if (postScreen && postScreen.classList.contains('active')) {
+            if (postTitle.value.trim() || postContent.value.trim()) return true;
+        }
+    }
+    // 게시글 수정 폼
+    var editTitle = document.getElementById('post-edit-title');
+    var editContent = document.getElementById('post-edit-content');
+    if (editTitle && editContent) {
+        var editScreen = editTitle.closest('.screen');
+        if (editScreen && editScreen.classList.contains('active')) {
+            if (editTitle.dataset.original !== editTitle.value || editContent.dataset.original !== editContent.value) return true;
+        }
+    }
+    // 일정 등록/수정 폼
+    var schedForm = document.getElementById('schedule-form');
+    if (schedForm) {
+        var schedContainer = schedForm.closest('.schedule-form-wrapper');
+        if (schedContainer && schedContainer.offsetParent !== null) {
+            var schedTitle = schedForm.querySelector('[name="title"], #schedule-title');
+            if (schedTitle && schedTitle.value.trim()) return true;
+        }
+    }
+    return false;
 }
 
 // 하단 네비게이션 업데이트
@@ -689,11 +725,10 @@ window.addEventListener('popstate', function(e) {
         // 특수 화면 (상세 뷰에서 부모로 복귀)
         var _popstateSpecial = {
             'schedule-detail': function() {
-                // backToScheduleList는 loadSchedulesScreen 내부에서 처리
                 if (typeof _scheduleDetailActive !== 'undefined') _scheduleDetailActive = false;
-                navigateToScreen('schedules');
+                goBack();
             },
-            'post-detail': function() { navigateToScreen('posts'); },
+            'post-detail': function() { goBack(); },
             'group-board': function() {
                 // 항상 openGroupBoard로 상태 초기화 보장
                 if (typeof openGroupBoard === 'function') {

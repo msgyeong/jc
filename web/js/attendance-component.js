@@ -70,12 +70,12 @@ AttendanceComponent.prototype._render = function (d) {
     // 투표 버튼
     html += '<div class="ac-buttons">';
     html += '<button class="ac-vote-btn ac-attend' + (myStatus === 'attending' ? ' ac-selected' : '') + '" data-action="ac-vote" data-status="attending">';
-    html += '<span class="ac-vote-icon" style="color:#2563EB">&#10003;</span>';
+    html += '<span class="ac-vote-icon" style="color:var(--primary-color)">&#10003;</span>';
     html += '<span class="ac-vote-label">' + labels.attending + '</span>';
     html += '<span class="ac-vote-count">' + attending + '</span>';
     html += '</button>';
     html += '<button class="ac-vote-btn ac-absent' + (myStatus === 'not_attending' ? ' ac-selected' : '') + '" data-action="ac-vote" data-status="not_attending">';
-    html += '<span class="ac-vote-icon" style="color:#EF4444">&#10007;</span>';
+    html += '<span class="ac-vote-icon" style="color:var(--error-color)">&#10007;</span>';
     html += '<span class="ac-vote-label">' + labels.not_attending + '</span>';
     html += '<span class="ac-vote-count">' + notAttending + '</span>';
     html += '</button>';

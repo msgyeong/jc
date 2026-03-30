@@ -142,7 +142,7 @@ function renderMeSection(member) {
         <div class="member-section me-section">
             <div class="member-section-header">나</div>
             <div class="me-card" onclick="navigateTo('/members/${member.id}')">
-                <div class="me-avatar" style="background:#DBEAFE">
+                <div class="me-avatar" style="background:var(--primary-bg)">
                     ${member.profile_image ? `<img src="${member.profile_image}" alt="${escapeHtml(name)}">` : DEFAULT_AVATAR_SVG_SM}
                 </div>
                 <div class="me-info">
@@ -164,7 +164,7 @@ function renderFavoritesSection(favorites) {
             ? `<a href="tel:${m.phone.replace(/\D/g, '')}" class="call-btn" aria-label="${escapeHtml(name)}에게 전화걸기" onclick="event.stopPropagation()">${phoneSvg20}</a>`
             : '';
         return `<div class="member-card-v2 compact" onclick="navigateTo('/members/${m.id}')">
-            <div class="member-avatar-v2" style="background:#DBEAFE;width:36px;height:36px">
+            <div class="member-avatar-v2" style="background:var(--primary-bg);width:36px;height:36px">
                 ${m.profile_image ? `<img src="${m.profile_image}" alt="${escapeHtml(name)}">` : DEFAULT_AVATAR_SVG_SM}
             </div>
             <div class="member-info-v2">
@@ -231,8 +231,8 @@ function renderAllMembersSection(members, count) {
                         <option value="">직책: 전체</option>
                         ${positionOptions}
                     </select>
-                    <label class="cross-org-toggle" style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:#6B7280;cursor:pointer;margin-left:4px">
-                        <input type="checkbox" id="cross-org-check" onchange="handleCrossOrgToggle(this.checked)" style="accent-color:#1F4FD8">
+                    <label class="cross-org-toggle" style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--text-hint);cursor:pointer;margin-left:4px">
+                        <input type="checkbox" id="cross-org-check" onchange="handleCrossOrgToggle(this.checked)" style="accent-color:var(--primary-color)">
                         <span>타로컬 보기</span>
                     </label>
                 </div>
@@ -257,7 +257,7 @@ function createMemberCard(member) {
 
     return `
         <div class="member-card-v2" onclick="navigateTo('/members/${member.id}')">
-            <div class="member-avatar-v2" style="background:#DBEAFE">
+            <div class="member-avatar-v2" style="background:var(--primary-bg)">
                 ${member.profile_image ? `<img src="${member.profile_image}" alt="${escapeHtml(name)}">` : DEFAULT_AVATAR_SVG_SM}
             </div>
             <div class="member-info-v2">
@@ -288,7 +288,7 @@ function createSearchResultCard(member) {
 
     return `
         <div class="member-card-v2" onclick="navigateTo('/members/${member.id}')">
-            <div class="member-avatar-v2" style="background:#DBEAFE;width:36px;height:36px">
+            <div class="member-avatar-v2" style="background:var(--primary-bg);width:36px;height:36px">
                 ${member.profile_image ? `<img src="${member.profile_image}" alt="${escapeHtml(name)}">` : DEFAULT_AVATAR_SVG_SM}
             </div>
             <div class="member-info-v2">
@@ -405,7 +405,7 @@ async function loadGroupMembers(groupId) {
         body.innerHTML = items.map(m => {
             const name = m.name || '이름 없음';
             return `<div class="member-card-v2 compact" onclick="navigateTo('/members/${m.id}')">
-                <div class="member-avatar-v2" style="background:#DBEAFE;width:36px;height:36px">
+                <div class="member-avatar-v2" style="background:var(--primary-bg);width:36px;height:36px">
                     ${m.profile_image ? `<img src="${m.profile_image}" alt="${escapeHtml(name)}">` : DEFAULT_AVATAR_SVG_SM}
                 </div>
                 <div class="member-info-v2">
@@ -566,7 +566,7 @@ async function showMemberDetailScreen(memberId) {
             <div class="detail-view">
                 <button class="btn-back" onclick="backToMemberList()">← 회원 목록</button>
                 <div class="profile-hero">
-                    <div class="profile-avatar-xl" style="background:#DBEAFE${m.profile_image ? ';cursor:pointer' : ''}" ${m.profile_image ? `onclick="openFullscreenViewer('${m.profile_image.replace(/'/g, "\\'")}')"` : ''}>
+                    <div class="profile-avatar-xl" style="background:var(--primary-bg)${m.profile_image ? ';cursor:pointer' : ''}" ${m.profile_image ? `onclick="openFullscreenViewer('${m.profile_image.replace(/'/g, "\\'")}')"` : ''}>
                         ${m.profile_image ? `<img src="${m.profile_image}" alt="${escapeHtml(m.name)}">` : DEFAULT_AVATAR_SVG_SM}
                     </div>
                     <h2 class="profile-hero-name">${escapeHtml(m.name || '')}${m.jc_position ? ' ' + getPositionBadgeHtml(m.jc_position) : ''}</h2>

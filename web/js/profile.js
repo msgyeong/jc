@@ -91,14 +91,14 @@ function renderProfile(p) {
         <div class="profile-v2">
             <!-- 편집 버튼 (우측 상단) -->
             <div style="display:flex;justify-content:flex-end;padding:12px 16px 0">
-                <button onclick="showEditProfileForm()" style="background:none;border:1px solid var(--border-color,#e5e7eb);border-radius:8px;padding:6px 14px;font-size:13px;color:var(--primary-color,#1F4FD8);cursor:pointer;display:flex;align-items:center;gap:4px">
+                <button onclick="showEditProfileForm()" style="background:none;border:1px solid var(--border-color,#e5e7eb);border-radius:8px;padding:6px 14px;font-size:13px;color:var(--primary-color,#2563EB);cursor:pointer;display:flex;align-items:center;gap:4px">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                     편집
                 </button>
             </div>
             <!-- 프로필 히어로 -->
             <div class="profile-hero">
-                <div class="profile-avatar-xl" style="background:#DBEAFE; position:relative; cursor:pointer" onclick="document.getElementById('profile-photo-input').click()">
+                <div class="profile-avatar-xl" style="background:var(--primary-bg); position:relative; cursor:pointer" onclick="document.getElementById('profile-photo-input').click()">
                     ${p.profile_image
                         ? `<img src="${p.profile_image}" alt="${escapeHtml(p.name)}">`
                         : DEFAULT_AVATAR_SVG
@@ -306,9 +306,9 @@ function renderSnsRow(type, handle, idx) {
         return '<option value="' + o.val + '"' + (type === o.val ? ' selected' : '') + '>' + o.label + '</option>';
     }).join('');
     return '<div class="sns-edit-row" data-idx="' + idx + '" style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
-        '<select class="sns-type-select" style="flex:0 0 120px;height:40px;border:1px solid #D1D5DB;border-radius:8px;padding:0 8px;font-size:14px">' + optHtml + '</select>' +
-        '<input type="text" class="sns-handle-input" value="' + escapeHtml(handle) + '" placeholder="@계정명 또는 URL (https:// 자동 추가)" style="flex:1;height:40px;border:1px solid #D1D5DB;border-radius:8px;padding:0 12px;font-size:14px">' +
-        '<button type="button" class="btn-icon-delete" onclick="removeSnsRow(this)" style="flex:0 0 36px;height:36px;border:none;background:#FEE2E2;color:#DC2626;border-radius:8px;cursor:pointer;font-size:16px" title="삭제">&times;</button>' +
+        '<select class="sns-type-select" style="flex:0 0 120px;height:40px;border:1px solid var(--border-color);border-radius:8px;padding:0 8px;font-size:14px">' + optHtml + '</select>' +
+        '<input type="text" class="sns-handle-input" value="' + escapeHtml(handle) + '" placeholder="@계정명 또는 URL (https:// 자동 추가)" style="flex:1;height:40px;border:1px solid var(--border-color);border-radius:8px;padding:0 12px;font-size:14px">' +
+        '<button type="button" class="btn-icon-delete" onclick="removeSnsRow(this)" style="flex:0 0 36px;height:36px;border:none;background:var(--error-bg);color:var(--error-color);border-radius:8px;cursor:pointer;font-size:16px" title="삭제">&times;</button>' +
         '</div>';
 }
 

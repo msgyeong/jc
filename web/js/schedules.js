@@ -145,7 +145,7 @@ function renderCalendar() {
             const cats = Array.from(eventCategoriesByDate[dateStr] || []).filter(c => c !== 'birthday').slice(0, 3);
             if (cats.length > 0) {
                 dots = '<div class="cal-dots">' + cats.map(c =>
-                    `<span class="cal-dot" style="background:${CATEGORY_COLORS[c] || '#6B7280'}"></span>`
+                    `<span class="cal-dot" style="background:${CATEGORY_COLORS[c] || 'var(--text-hint)'}"></span>`
                 ).join('') + '</div>';
             }
         }
@@ -324,7 +324,7 @@ async function showScheduleDetailScreen(scheduleId) {
                     <div style="display:flex;justify-content:space-between;align-items:flex-start">
                         <span class="schedule-category-badge ${badgeClass}">${categoryLabel}</span>
                         ${canManage ? `<div style="position:relative">
-                            <button class="schedule-more-btn" onclick="toggleScheduleDropdown(event)" style="color:#6B7280">
+                            <button class="schedule-more-btn" onclick="toggleScheduleDropdown(event)" style="color:var(--text-hint)">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
                             </button>
                             <div class="schedule-dropdown" id="schedule-dropdown">
@@ -340,7 +340,7 @@ async function showScheduleDetailScreen(scheduleId) {
                             </div>
                         </div>` : ''}
                     </div>
-                    <h2 style="font-size:20px;font-weight:700;color:#111827;line-height:1.4;margin-top:4px">${escapeHtml(s.title || '')}</h2>
+                    <h2 style="font-size:20px;font-weight:700;color:var(--text-primary);line-height:1.4;margin-top:4px">${escapeHtml(s.title || '')}</h2>
 
                     <!-- 정보 행 -->
                     <div class="schedule-info-row" style="margin-top:16px">
@@ -372,7 +372,7 @@ async function showScheduleDetailScreen(scheduleId) {
                 ${s.description ? `<div class="schedule-detail-section">
                     <div class="schedule-detail-section-title">설명</div>
                     <div class="schedule-detail-divider"></div>
-                    <div style="font-size:15px;color:#374151;line-height:1.7;white-space:pre-wrap">${escapeHtml(s.description)}</div>
+                    <div style="font-size:15px;color:var(--text-primary);line-height:1.7;white-space:pre-wrap">${escapeHtml(s.description)}</div>
                 </div>` : ''}
 
                 <!-- 출석투표 -->
@@ -481,7 +481,7 @@ async function showGroupScheduleDetail(scheduleId, groupId) {
                         <span class="schedule-category-badge ${badgeClass}">${categoryLabel}</span>
                         ${groupName ? `<span class="schedule-group-badge">${escapeHtml(groupName)}</span>` : ''}
                     </div>
-                    <h2 style="font-size:20px;font-weight:700;color:#111827;line-height:1.4;margin-top:8px">${escapeHtml(s.title || '')}</h2>
+                    <h2 style="font-size:20px;font-weight:700;color:var(--text-primary);line-height:1.4;margin-top:8px">${escapeHtml(s.title || '')}</h2>
 
                     <div class="schedule-info-row" style="margin-top:16px">
                         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -507,7 +507,7 @@ async function showGroupScheduleDetail(scheduleId, groupId) {
                 ${s.description ? `<div class="schedule-detail-section">
                     <div class="schedule-detail-section-title">설명</div>
                     <div class="schedule-detail-divider"></div>
-                    <div style="font-size:15px;color:#374151;line-height:1.7;white-space:pre-wrap">${escapeHtml(s.description)}</div>
+                    <div style="font-size:15px;color:var(--text-primary);line-height:1.7;white-space:pre-wrap">${escapeHtml(s.description)}</div>
                 </div>` : ''}
             </div>
         `;

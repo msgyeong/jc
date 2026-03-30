@@ -1094,10 +1094,7 @@ input::-ms-clear {
 }
 
 /* ==================== 배너 섹션 ==================== */
-.banner-section {
-    margin: 0 calc(-1 * var(--spacing-lg)) var(--spacing-lg);
-    position: relative;
-}
+/* [Phase 4] removed duplicate .banner-section — see line ~4041 */
 
 .banner-slider {
     display: flex;
@@ -1162,12 +1159,12 @@ input::-ms-clear {
     border-radius: 4px;
 }
 
-.banner-loading,
-.content-loading {
+.banner-loading {
     text-align: center;
     padding: var(--spacing-xl);
     color: var(--text-secondary);
 }
+/* [Phase 4] removed duplicate .content-loading from combined selector — see line ~4109 */
 
 /* ==================== 콘텐츠 섹션 ==================== */
 .content-section {
@@ -1206,19 +1203,8 @@ input::-ms-clear {
 /* ==================== 카드 스타일 ==================== */
 /* [Phase 4] 첫 번째 .card 정의 제거됨 — line ~3952의 개선된 정의 사용 */
 
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: var(--spacing-xs);
-}
-
-.card-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
-    line-height: 1.4;
-}
+/* [Phase 4] removed duplicate .card-header — see line ~3974 */
+/* [Phase 4] removed duplicate .card-title — see line ~3981 */
 
 .new-badge {
     background-color: var(--error-color);
@@ -1240,25 +1226,14 @@ input::-ms-clear {
     margin-left: var(--spacing-xs);
 }
 
-.card-meta {
-    display: flex;
-    gap: var(--spacing-sm);
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-xs);
-}
+/* [Phase 4] removed duplicate .card-meta — see line ~3989 */
 
 .card-date {
     font-size: 13px;
     color: var(--text-secondary);
 }
 
-.card-stats {
-    display: flex;
-    gap: var(--spacing-md);
-    font-size: 13px;
-    color: var(--text-secondary);
-}
+/* [Phase 4] removed duplicate .card-stats — see line ~3997 */
 
 .card-stat {
     display: flex;
@@ -1484,17 +1459,8 @@ input::-ms-clear {
 }
 
 /* ==================== 빈 상태 ==================== */
-.empty-state {
-    text-align: center;
-    padding: var(--spacing-xl);
-    color: var(--text-secondary);
-}
-
-.empty-state-icon {
-    font-size: 64px;
-    margin-bottom: var(--spacing-md);
-    opacity: 0.5;
-}
+/* [Phase 4] removed duplicate .empty-state — see line ~4470 */
+/* [Phase 4] removed duplicate .empty-state-icon — see line ~4480 */
 
 .empty-state-message {
     font-size: 15px;
@@ -3232,12 +3198,7 @@ input[type="date"]:focus {
     margin: 0;
 }
 
-.empty-state-mini {
-    text-align: center;
-    padding: 32px 16px;
-    color: var(--text-secondary);
-    font-size: 14px;
-}
+/* [Phase 4] removed duplicate .empty-state-mini — see line ~4029 */
 
 /* ==================== 회원 화면 V2 ==================== */
 
@@ -3452,15 +3413,8 @@ input[type="date"]:focus {
 }
 
 /* ==================== 프로필 & 상세 뷰 공통 ==================== */
-
-.profile-v2 {
-    padding: 0 16px 24px;
-}
-
-.profile-hero {
-    text-align: center;
-    padding: 24px 0 20px;
-}
+/* [Phase 4] removed duplicate .profile-v2 — see line ~4048 */
+/* [Phase 4] removed duplicate .profile-hero — see line ~4052 */
 
 .profile-avatar-xl {
     width: 80px;
@@ -3642,13 +3596,7 @@ input[type="date"]:focus {
 }
 
 /* 정보 섹션 (프로필/회원 상세) */
-.info-section {
-    margin-bottom: 16px;
-    background: var(--background-color);
-    border-radius: var(--border-radius-lg);
-    padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
+/* [Phase 4] removed duplicate .info-section — see line ~4075 */
 
 .info-section-title {
     font-size: 13px;
@@ -3688,28 +3636,8 @@ input[type="date"]:focus {
 }
 
 /* 프로필 액션 버튼 */
-.profile-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.profile-action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: var(--border-radius-lg);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    font-family: var(--font-family);
-}
+/* [Phase 4] removed duplicate .profile-actions — see line ~4084 */
+/* [Phase 4] removed duplicate .profile-action-btn — see line ~4091 */
 
 .profile-action-btn.primary {
     background: var(--primary-color);
@@ -4001,36 +3929,19 @@ input[type="date"]:focus {
     color: var(--text-secondary);
 }
 
-/* 빈 상태 개선 */
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-secondary);
-    font-size: 14px;
-}
-
-.empty-state-icon,
-.error-state-icon {
-    font-size: 36px;
-    margin-bottom: 8px;
-}
-
-.error-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-secondary);
-    font-size: 14px;
-}
-
-.error-state .btn {
-    margin-top: 12px;
-}
+/* [Phase 4] removed duplicate .empty-state — see line ~4470 */
+/* [Phase 4] removed duplicate .empty-state-icon, .error-state-icon — see line ~4480/4471 */
+/* [Phase 4] removed duplicate .error-state — see line ~4535 */
 
 .empty-state-mini {
     text-align: center;
     padding: 24px 16px;
     color: var(--text-secondary);
     font-size: 13px;
+}
+
+.error-state .btn {
+    margin-top: 12px;
 }
 
 /* ==================== 배너 섹션 개선 ==================== */

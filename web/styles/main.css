@@ -426,7 +426,7 @@ html {
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: #6B7280;
+    background: var(--text-hint);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -835,8 +835,8 @@ input::-ms-clear {
 /* ==================== 정보 박스 ==================== */
 .info-box {
     background-color: var(--secondary-color, #E6ECFA);
-    border: 1px solid var(--primary-color, #2563EB);
-    border-left: 4px solid var(--primary-color, #2563EB);
+    border: 1px solid var(--primary-color);
+    border-left: 4px solid var(--primary-color);
     padding: 12px 16px;
     margin-bottom: var(--spacing-lg);
     border-radius: var(--border-radius);
@@ -2098,13 +2098,13 @@ input::-ms-clear {
 }
 
 .badge-admin {
-    background-color: #2563EB;
+    background-color: var(--primary-color);
     color: white;
 }
 
 .badge-member {
-    background-color: #DBEAFE;
-    color: #1E40AF;
+    background-color: var(--primary-bg);
+    color: var(--primary-hover);
 }
 
 .badge-pending {
@@ -2436,7 +2436,7 @@ input[type="date"]:focus {
 }
 
 .btn-address-search:hover {
-    background: #1D4ED8;
+    background: var(--primary-hover);
 }
 
 .address-detail {
@@ -3243,7 +3243,7 @@ input[type="date"]:focus {
 
 .app-bar-badge {
     background: var(--secondary-color, #E6ECFA);
-    color: var(--primary-color, #2563EB);
+    color: var(--primary-color);
     font-size: 12px;
     font-weight: 600;
     padding: 2px 10px;
@@ -3325,13 +3325,13 @@ input[type="date"]:focus {
 }
 
 .member-role-badge.role-super {
-    background: #2563EB;
+    background: var(--primary-color);
     color: white;
 }
 
 .member-role-badge.role-admin {
     background: var(--primary-light);
-    color: #1D4ED8;
+    color: var(--primary-hover);
 }
 
 .member-position-v2 {
@@ -3358,7 +3358,7 @@ input[type="date"]:focus {
     background: transparent;
     border: none;
     cursor: pointer;
-    color: #2563EB;
+    color: var(--primary-color);
     transition: background 0.15s ease;
     flex-shrink: 0;
     margin-left: auto;
@@ -3367,12 +3367,12 @@ input[type="date"]:focus {
 }
 
 .call-btn:hover {
-    background: #EFF6FF;
+    background: var(--primary-light);
 }
 
 .call-btn:active {
-    background: #DBEAFE;
-    color: #1D4ED8;
+    background: var(--primary-bg);
+    color: var(--primary-hover);
 }
 
 .call-btn svg {
@@ -3381,13 +3381,13 @@ input[type="date"]:focus {
 }
 
 .call-btn--disabled {
-    color: #D1D5DB;
+    color: var(--text-disabled);
     pointer-events: none;
     cursor: default;
 }
 
 .phone-link {
-    color: #2563EB;
+    color: var(--primary-color);
     font-size: 15px;
     font-weight: 500;
     text-decoration: underline;
@@ -3404,12 +3404,12 @@ input[type="date"]:focus {
 }
 
 .phone-link:hover {
-    text-decoration-color: #2563EB;
+    text-decoration-color: var(--primary-color);
 }
 
 .phone-link:active {
-    color: #1D4ED8;
-    text-decoration-color: #1D4ED8;
+    color: var(--primary-hover);
+    text-decoration-color: var(--primary-hover);
 }
 
 /* ==================== 프로필 & 상세 뷰 공통 ==================== */
@@ -3645,7 +3645,7 @@ input[type="date"]:focus {
 }
 
 .profile-action-btn.primary:hover {
-    background: #1A43B8;
+    background: var(--primary-hover);
 }
 
 .profile-action-btn.secondary {
@@ -3963,7 +3963,7 @@ input[type="date"]:focus {
 .profile-hero {
     text-align: center;
     padding: 28px 0 24px;
-    background: linear-gradient(135deg, #2563EB 0%, #60A5FA 100%);
+    background: linear-gradient(135deg, var(--primary-color) 0%, #60A5FA 100%);
     margin: 0 -16px 20px;
     padding-left: 16px;
     padding-right: 16px;
@@ -4071,7 +4071,7 @@ input[type="date"]:focus {
 }
 
 .attendance-deadline.closed {
-    color: #EF4444;
+    color: var(--error-color);
     font-weight: 600;
 }
 
@@ -4096,26 +4096,26 @@ input[type="date"]:focus {
 }
 
 .vote-btn:hover:not(.disabled) {
-    border-color: var(--primary-color, #2563EB);
+    border-color: var(--primary-color);
     background: #F0F5FF;
 }
 
 .vote-btn.selected.vote-attend {
-    border-color: #2563EB;
-    background: #DBEAFE;
-    color: #1D4ED8;
+    border-color: var(--primary-color);
+    background: var(--primary-bg);
+    color: var(--primary-hover);
 }
 
 .vote-btn.selected.vote-absent {
-    border-color: #EF4444;
-    background: #FEE2E2;
-    color: #DC2626;
+    border-color: var(--error-color);
+    background: var(--error-bg);
+    color: var(--error-color);
 }
 
 .vote-btn.selected.vote-undecided {
-    border-color: #F59E0B;
-    background: #FEF3C7;
-    color: #D97706;
+    border-color: var(--accent-color);
+    background: var(--warning-bg);
+    color: var(--warning-text);
 }
 
 .vote-btn.disabled {
@@ -4148,17 +4148,17 @@ input[type="date"]:focus {
 }
 
 .progress-attend {
-    background: #2563EB;
+    background: var(--primary-color);
     transition: width 0.3s;
 }
 
 .progress-absent {
-    background: #EF4444;
+    background: var(--error-color);
     transition: width 0.3s;
 }
 
 .progress-undecided {
-    background: #F59E0B;
+    background: var(--accent-color);
     transition: width 0.3s;
 }
 
@@ -4214,9 +4214,9 @@ input[type="date"]:focus {
 .favorites-section {
     margin-bottom: 8px;
     padding: 12px 16px;
-    background: #FFFBEB;
+    background: var(--warning-bg);
     border-radius: var(--radius-md, 12px);
-    border: 1px solid #FDE68A;
+    border: 1px solid var(--accent-color);
 }
 
 .favorites-header {
@@ -4225,7 +4225,7 @@ input[type="date"]:focus {
     gap: 6px;
     font-size: 14px;
     font-weight: 600;
-    color: #92400E;
+    color: var(--warning-text);
     margin-bottom: 10px;
 }
 
@@ -4265,7 +4265,7 @@ input[type="date"]:focus {
 .title-year {
     font-size: 13px;
     font-weight: 700;
-    color: var(--primary-color, #2563EB);
+    color: var(--primary-color);
     min-width: 50px;
 }
 
@@ -4300,9 +4300,9 @@ input[type="date"]:focus {
     gap: 8px;
     animation: toastIn 0.3s ease;
 }
-.toast--success { background: #ECFDF5; color: #065F46; }
-.toast--error { background: #FEF2F2; color: #991B1B; }
-.toast--info { background: #EFF6FF; color: #1E40AF; }
+.toast--success { background: var(--success-bg); color: var(--success-text); }
+.toast--error { background: var(--error-bg); color: var(--error-text); }
+.toast--info { background: var(--primary-light); color: var(--primary-hover); }
 .toast-icon { width: 18px; height: 18px; flex-shrink: 0; }
 @keyframes toastIn {
     from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
@@ -4392,7 +4392,7 @@ input[type="date"]:focus {
     width: 64px;
     height: 64px;
     margin-bottom: 16px;
-    color: #D1D5DB;
+    color: var(--text-disabled);
 }
 .empty-state-icon svg {
     width: 100%;
@@ -4422,11 +4422,11 @@ input[type="date"]:focus {
     font-weight: 600;
     cursor: pointer;
     transition: background 0.15s ease;
-    background: #2563EB;
+    background: var(--primary-color);
     color: #FFFFFF;
     border: none;
 }
-.empty-state-cta:active { background: #1D4ED8; }
+.empty-state-cta:active { background: var(--primary-hover); }
 
 /* 홈 화면 빈 상태 compact */
 .home-section .empty-state {
@@ -4455,7 +4455,7 @@ input[type="date"]:focus {
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    background: #FEE2E2;
+    background: var(--error-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4464,7 +4464,7 @@ input[type="date"]:focus {
 .error-state-icon svg {
     width: 32px;
     height: 32px;
-    stroke: #DC2626;
+    stroke: var(--error-color);
     stroke-width: 2;
     fill: none;
 }
@@ -4484,7 +4484,7 @@ input[type="date"]:focus {
     margin-top: 20px;
     padding: 10px 24px;
     border-radius: 8px;
-    background: #2563EB;
+    background: var(--primary-color);
     color: #FFFFFF;
     border: none;
     font-size: 14px;
@@ -4492,7 +4492,7 @@ input[type="date"]:focus {
     cursor: pointer;
     transition: background 0.15s ease;
 }
-.error-state-retry:active { background: #1D4ED8; }
+.error-state-retry:active { background: var(--primary-hover); }
 
 /* ==================== M-10: 관리자 지정 필드 readonly ==================== */
 .readonly-field {
@@ -4532,7 +4532,7 @@ input[type="date"]:focus {
     padding: 16px 16px 0;
 }
 .schedule-detail-section {
-    background: #FFFFFF;
+    background: var(--background-color);
     padding: 16px;
     margin-top: 8px;
 }
@@ -4565,10 +4565,10 @@ input[type="date"]:focus {
     letter-spacing: 0.02em;
     margin-bottom: 8px;
 }
-.badge-event { background: #DBEAFE; color: #1E40AF; }
-.badge-meeting { background: #FEF3C7; color: #92400E; }
-.badge-training { background: #D1FAE5; color: #065F46; }
-.badge-holiday { background: #FEE2E2; color: #991B1B; }
+.badge-event { background: var(--primary-bg); color: var(--primary-hover); }
+.badge-meeting { background: var(--warning-bg); color: var(--warning-text); }
+.badge-training { background: var(--success-bg); color: var(--success-text); }
+.badge-holiday { background: var(--error-bg); color: var(--error-text); }
 .badge-other { background: var(--neutral-bg); color: var(--text-secondary); }
 
 /* 정보 행 */
@@ -4582,7 +4582,7 @@ input[type="date"]:focus {
 .schedule-info-row svg {
     width: 16px;
     height: 16px;
-    stroke: #6B7280;
+    stroke: var(--text-hint);
     stroke-width: 1.5;
     fill: none;
     flex-shrink: 0;
@@ -4597,8 +4597,8 @@ input[type="date"]:focus {
 .schedule-allday-badge {
     font-size: 12px;
     font-weight: 500;
-    color: #2563EB;
-    background: #EFF6FF;
+    color: var(--primary-color);
+    background: var(--primary-light);
     padding: 2px 8px;
     border-radius: 4px;
     margin-left: 4px;
@@ -4609,7 +4609,7 @@ input[type="date"]:focus {
     width: 28px;
     height: 28px;
     border-radius: 6px;
-    background: #EFF6FF;
+    background: var(--primary-light);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4617,11 +4617,11 @@ input[type="date"]:focus {
     cursor: pointer;
     transition: background 0.15s ease;
 }
-.schedule-map-icon:active { background: #DBEAFE; }
+.schedule-map-icon:active { background: var(--primary-bg); }
 .schedule-map-icon svg {
     width: 16px;
     height: 16px;
-    stroke: #2563EB;
+    stroke: var(--primary-color);
     stroke-width: 1.5;
     fill: none;
 }
@@ -4645,7 +4645,7 @@ input[type="date"]:focus {
     right: 16px;
     top: 52px;
     z-index: 100;
-    background: #FFFFFF;
+    background: var(--background-color);
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.10);
     min-width: 120px;
@@ -4668,12 +4668,12 @@ input[type="date"]:focus {
     font-family: var(--font-family);
 }
 .schedule-dropdown-item:hover { background: #F9FAFB; }
-.schedule-dropdown-item--danger { color: #DC2626; }
+.schedule-dropdown-item--danger { color: var(--error-color); }
 .schedule-dropdown-divider { height: 1px; background: var(--neutral-bg); margin: 4px 16px; }
 
 /* 연결된 공지 배너 */
 .linked-notice-banner {
-    background: #EFF6FF;
+    background: var(--primary-light);
     border: 1px solid #BFDBFE;
     border-radius: 8px;
     padding: 12px 16px;
@@ -4683,11 +4683,11 @@ input[type="date"]:focus {
     gap: 8px;
     transition: background 0.15s ease;
 }
-.linked-notice-banner:active { background: #DBEAFE; }
+.linked-notice-banner:active { background: var(--primary-bg); }
 .linked-notice-text {
     font-size: 14px;
     font-weight: 500;
-    color: #1E40AF;
+    color: var(--primary-hover);
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -4703,7 +4703,7 @@ input[type="date"]:focus {
 .attendee-view-all {
     font-size: 13px;
     font-weight: 500;
-    color: #2563EB;
+    color: var(--primary-color);
     margin-top: 12px;
     cursor: pointer;
     background: none;
@@ -4715,11 +4715,11 @@ input[type="date"]:focus {
 
 /* ==================== 일정 폼 (개선) ==================== */
 .schedule-form-wrapper {
-    background: #FFFFFF;
+    background: var(--background-color);
     padding: 16px;
 }
 .schedule-form-inner {
-    background: #FFFFFF;
+    background: var(--background-color);
     padding: 0;
 }
 .schedule-form-field { margin-bottom: 20px; }
@@ -4730,37 +4730,37 @@ input[type="date"]:focus {
     color: var(--text-primary);
     margin-bottom: 6px;
 }
-.schedule-form-label .required { color: #DC2626; margin-left: 2px; }
+.schedule-form-label .required { color: var(--error-color); margin-left: 2px; }
 .schedule-form-input {
     width: 100%;
     height: 48px;
     padding: 0 14px;
-    border: 1px solid #D1D5DB;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 15px;
     color: var(--text-primary);
-    background: #FFFFFF;
+    background: var(--background-color);
     transition: all 0.15s ease;
     outline: none;
     font-family: var(--font-family);
 }
 .schedule-form-input:focus {
-    border-color: #2563EB;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
 }
 .schedule-form-input--error {
-    border-color: #DC2626;
+    border-color: var(--error-color);
     box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
 }
 .schedule-form-textarea {
     width: 100%;
     min-height: 120px;
     padding: 12px 14px;
-    border: 1px solid #D1D5DB;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 15px;
     color: var(--text-primary);
-    background: #FFFFFF;
+    background: var(--background-color);
     transition: all 0.15s ease;
     outline: none;
     resize: vertical;
@@ -4768,7 +4768,7 @@ input[type="date"]:focus {
     font-family: var(--font-family);
 }
 .schedule-form-textarea:focus {
-    border-color: #2563EB;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
 }
 .schedule-form-select {
@@ -4782,7 +4782,7 @@ input[type="date"]:focus {
 }
 .schedule-form-error {
     font-size: 13px;
-    color: #DC2626;
+    color: var(--error-color);
     margin-top: 4px;
     display: flex;
     align-items: center;
@@ -4811,7 +4811,7 @@ input[type="date"]:focus {
 .allday-checkbox-wrapper input[type="checkbox"] {
     width: 20px;
     height: 20px;
-    accent-color: #2563EB;
+    accent-color: var(--primary-color);
     cursor: pointer;
 }
 .allday-checkbox-label {
@@ -4830,7 +4830,7 @@ input[type="date"]:focus {
     border-top: 1px solid var(--border-color);
     margin-top: 4px;
 }
-.vote-collapsible-header .line { flex: 1; height: 1px; background: #D1D5DB; }
+.vote-collapsible-header .line { flex: 1; height: 1px; background: var(--toggle-bg-off); }
 .vote-collapsible-header .line:first-child { flex: 0 0 16px; }
 .vote-collapsible-header .text { font-size: 14px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
 .vote-collapsible-header .arrow {
@@ -4838,7 +4838,7 @@ input[type="date"]:focus {
     transition: transform 0.2s ease;
     width: 12px;
     height: 12px;
-    stroke: #6B7280;
+    stroke: var(--text-hint);
 }
 .vote-collapsible-header.open .arrow { transform: rotate(180deg); }
 .vote-collapsible-body {
@@ -4855,12 +4855,12 @@ input[type="date"]:focus {
     width: 44px;
     height: 24px;
     border-radius: 12px;
-    background: #D1D5DB;
+    background: var(--toggle-bg-off);
     cursor: pointer;
     transition: background 0.2s ease;
     flex-shrink: 0;
 }
-.toggle-switch.active { background: #2563EB; }
+.toggle-switch.active { background: var(--primary-color); }
 .toggle-thumb {
     position: absolute;
     top: 2px;
@@ -4868,7 +4868,7 @@ input[type="date"]:focus {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #FFFFFF;
+    background: var(--background-color);
     box-shadow: 0 1px 3px rgba(0,0,0,0.15);
     transition: transform 0.2s ease;
 }
@@ -4894,7 +4894,7 @@ input[type="date"]:focus {
 .vote-radio-option input[type="radio"] {
     width: 18px;
     height: 18px;
-    accent-color: #2563EB;
+    accent-color: var(--primary-color);
     cursor: pointer;
 }
 .vote-radio-option label {
@@ -4907,13 +4907,13 @@ input[type="date"]:focus {
 /* CTA 하단 버튼 */
 .schedule-form-cta {
     padding: 16px;
-    background: #FFFFFF;
+    background: var(--background-color);
     border-top: 1px solid var(--border-light);
 }
 .schedule-form-submit {
     width: 100%;
     height: 48px;
-    background: #2563EB;
+    background: var(--primary-color);
     color: #FFFFFF;
     border: none;
     border-radius: 8px;
@@ -4923,8 +4923,8 @@ input[type="date"]:focus {
     transition: background 0.15s ease;
     font-family: var(--font-family);
 }
-.schedule-form-submit:active { background: #1D4ED8; }
-.schedule-form-submit:disabled { background: #D1D5DB; pointer-events: none; }
+.schedule-form-submit:active { background: var(--primary-hover); }
+.schedule-form-submit:disabled { background: var(--text-disabled); pointer-events: none; }
 
 /* ==================== 홈 배너 캐러셀 (개선) ==================== */
 .banner-carousel {
@@ -4977,7 +4977,7 @@ input[type="date"]:focus {
 .banner-dot.active {
     width: 18px;
     border-radius: 3px;
-    background: #FFFFFF;
+    background: var(--background-color);
 }
 .banner-slide .banner-title {
     font-size: 18px;
@@ -5020,7 +5020,7 @@ input[type="date"]:focus {
     height: 16px;
     padding: 0 4px;
     border-radius: 8px;
-    background: #DC2626;
+    background: var(--error-color);
     color: #FFFFFF;
     font-size: 10px;
     font-weight: 700;
@@ -5089,13 +5089,13 @@ input[type="date"]:focus {
     gap: 12px;
     padding: 14px 16px;
     margin: 16px 0;
-    background: #EFF6FF;
+    background: var(--primary-light);
     border: 1px solid #BFDBFE;
     border-radius: var(--radius-md, 12px);
     cursor: pointer;
     transition: background 0.15s;
 }
-.linked-schedule-banner:hover { background: #DBEAFE; }
+.linked-schedule-banner:hover { background: var(--primary-bg); }
 .linked-schedule-icon {
     flex-shrink: 0;
     width: 36px;
@@ -5162,8 +5162,8 @@ input[type="date"]:focus {
 .industry-tag {
     display: inline-block;
     padding: 2px 8px;
-    background: #EFF6FF;
-    color: #1E40AF;
+    background: var(--primary-light);
+    color: var(--primary-hover);
     border-radius: 4px;
     font-size: 11px;
     font-weight: 500;
@@ -5250,14 +5250,14 @@ a.sns-badge:hover {
     min-width: 18px;
     height: 18px;
     padding: 0 5px;
-    background: #DC2626;
+    background: var(--error-color);
     color: #FFFFFF;
     font-size: 10px;
     font-weight: 700;
     line-height: 18px;
     text-align: center;
     border-radius: 9px;
-    border: 2px solid var(--primary-color, #2563EB);
+    border: 2px solid var(--primary-color);
     z-index: 1;
     pointer-events: none;
     box-sizing: border-box;
@@ -5306,7 +5306,7 @@ a.sns-badge:hover {
     align-items: flex-start;
     gap: 12px;
     padding: 16px;
-    background: #FFFFFF;
+    background: var(--background-color);
     border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background 0.15s ease;
@@ -5318,11 +5318,11 @@ a.sns-badge:hover {
 }
 
 .notification-item.unread {
-    background: #EFF6FF;
+    background: var(--primary-light);
 }
 
 .notification-item.unread:active {
-    background: #DBEAFE;
+    background: var(--primary-bg);
 }
 
 .notification-dot {
@@ -5330,7 +5330,7 @@ a.sns-badge:hover {
     height: 8px;
     min-width: 8px;
     border-radius: 50%;
-    background: #2563EB;
+    background: var(--primary-color);
     margin-top: 14px;
     flex-shrink: 0;
 }
@@ -5358,17 +5358,17 @@ a.sns-badge:hover {
 .notification-icon--notice,
 .notification-icon--schedule,
 .notification-icon--comment {
-    background: #DBEAFE;
-    color: #2563EB;
+    background: var(--primary-bg);
+    color: var(--primary-color);
 }
 .notification-icon--club {
-    background: #FEF3C7;
-    color: #D97706;
+    background: var(--warning-bg);
+    color: var(--warning-text);
 }
 
 .notification-icon--reminder {
-    background: #FEF3C7;
-    color: #D97706;
+    background: var(--warning-bg);
+    color: var(--warning-text);
 }
 
 .notification-content {
@@ -5427,7 +5427,7 @@ a.sns-badge:hover {
 .notification-empty svg {
     width: 64px;
     height: 64px;
-    color: #D1D5DB;
+    color: var(--text-disabled);
 }
 
 .notification-empty p {
@@ -5444,7 +5444,7 @@ a.sns-badge:hover {
 }
 
 .alert-settings-master {
-    background: #FFFFFF;
+    background: var(--background-color);
     padding: 20px 16px;
     display: flex;
     align-items: center;
@@ -5470,7 +5470,7 @@ a.sns-badge:hover {
     display: flex;
     align-items: flex-start;
     padding: 16px;
-    background: #FFFFFF;
+    background: var(--background-color);
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -5478,7 +5478,7 @@ a.sns-badge:hover {
     width: 18px;
     height: 18px;
     min-width: 18px;
-    color: #2563EB;
+    color: var(--primary-color);
     margin-right: 12px;
     margin-top: 1px;
 }
@@ -5529,13 +5529,13 @@ a.sns-badge:hover {
     left: 0;
     right: 0;
     bottom: 0;
-    background: #D1D5DB;
+    background: var(--toggle-bg-off);
     border-radius: 14px;
     transition: background 0.2s ease;
 }
 
 .alert-settings-toggle input:checked + .toggle-track {
-    background: #2563EB;
+    background: var(--primary-color);
 }
 
 .alert-settings-toggle .toggle-knob {
@@ -5544,7 +5544,7 @@ a.sns-badge:hover {
     left: 2px;
     width: 24px;
     height: 24px;
-    background: #FFFFFF;
+    background: var(--background-color);
     border-radius: 50%;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
     transition: left 0.2s ease;
@@ -5571,7 +5571,7 @@ a.sns-badge:hover {
 
 /* 푸시 상태 섹션 */
 .alert-settings-status {
-    background: #FFFFFF;
+    background: var(--background-color);
     padding: 16px;
     display: flex;
     align-items: center;
@@ -5589,11 +5589,11 @@ a.sns-badge:hover {
 }
 
 .status-dot.active {
-    background: #10B981;
+    background: var(--success-color);
 }
 
 .status-dot.inactive {
-    background: #DC2626;
+    background: var(--error-color);
 }
 
 /* ---- 푸시 구독 유도 배너 ---- */
@@ -5605,8 +5605,8 @@ a.sns-badge:hover {
     right: 16px;
     max-width: 430px;
     margin: 0 auto;
-    background: #FFFFFF;
-    border: 1px solid #DBEAFE;
+    background: var(--background-color);
+    border: 1px solid var(--primary-bg);
     border-radius: 12px;
     padding: 16px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
@@ -5639,7 +5639,7 @@ a.sns-badge:hover {
     width: 24px;
     height: 24px;
     min-width: 24px;
-    color: #2563EB;
+    color: var(--primary-color);
     margin-top: 1px;
 }
 
@@ -5669,12 +5669,12 @@ a.sns-badge:hover {
 }
 
 .push-subscribe-btn--primary {
-    background: #2563EB;
+    background: var(--primary-color);
     color: #FFFFFF;
 }
 
 .push-subscribe-btn--primary:active {
-    background: #1D4ED8;
+    background: var(--primary-hover);
 }
 
 .push-subscribe-btn--ghost {
@@ -5697,8 +5697,8 @@ a.sns-badge:hover {
     right: 16px;
     max-width: 430px;
     margin: 0 auto;
-    background: #EFF6FF;
-    border: 1px solid #DBEAFE;
+    background: var(--primary-light);
+    border: 1px solid var(--primary-bg);
     border-radius: 12px;
     padding: 14px 16px;
     padding-right: 40px;
@@ -5749,7 +5749,7 @@ a.sns-badge:hover {
     width: 20px;
     height: 20px;
     min-width: 20px;
-    color: #2563EB;
+    color: var(--primary-color);
     margin-top: 1px;
 }
 
@@ -5769,7 +5769,7 @@ a.sns-badge:hover {
 .push-install-action button {
     font-size: 13px;
     font-weight: 600;
-    color: #2563EB;
+    color: var(--primary-color);
     background: transparent;
     padding: 8px 0;
     border: none;
@@ -5789,7 +5789,7 @@ a.sns-badge:hover {
 }
 
 .pwa-guide-modal {
-    background: #FFFFFF;
+    background: var(--background-color);
     border-radius: 16px;
     max-width: 360px;
     width: 100%;
@@ -5826,7 +5826,7 @@ a.sns-badge:hover {
 .pwa-guide-section h4 {
     font-size: 13px;
     font-weight: 600;
-    color: #2563EB;
+    color: var(--primary-color);
     margin: 20px 0 12px;
 }
 
@@ -5923,7 +5923,7 @@ a.sns-badge:hover {
     height: var(--toggle-knob-size);
     left: 2px;
     bottom: 2px;
-    background: #FFFFFF;
+    background: var(--background-color);
     border-radius: 50%;
     transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
@@ -6043,7 +6043,7 @@ a.sns-badge:hover {
 .profile-hero .profile-hero-name {
     font-size: 22px;
     font-weight: 700;
-    color: #1E293B;
+    color: var(--text-primary);
     margin-bottom: 4px;
 }
 
@@ -6129,7 +6129,7 @@ a.sns-badge:hover {
 .attendance-btn.active-attending {
     border-color: var(--success-color);
     background: var(--success-bg);
-    color: #166534;
+    color: var(--success-text);
 }
 
 .attendance-btn.active-not-attending {
@@ -6164,13 +6164,13 @@ a.sns-badge:hover {
 .attendee-summary { font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
 .attendee-group { margin-bottom: 10px; }
 .attendee-group-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-.attendee-group-label.attendee-attend { color: var(--color-primary, #2563EB); }
-.attendee-group-label.attendee-absent { color: var(--color-error, #DC2626); }
+.attendee-group-label.attendee-attend { color: var(--color-primary); }
+.attendee-group-label.attendee-absent { color: var(--color-error); }
 .attendee-group-label.attendee-noresponse { color: var(--color-text-hint, #9CA3AF); }
 .attendee-group-names { font-size: 14px; color: var(--text-primary); line-height: 1.6; }
 .attendee-toggle-btn {
     background: none; border: 1px solid var(--border-color); border-radius: 8px;
-    color: var(--color-primary, #2563EB); font-size: 13px; font-weight: 500;
+    color: var(--color-primary); font-size: 13px; font-weight: 500;
     padding: 6px 14px; cursor: pointer; margin-top: 4px;
 }
 
@@ -6234,10 +6234,10 @@ a.sns-badge:hover {
     border-radius: 2px;
     transition: width 0.3s ease, background 0.3s ease;
 }
-.password-strength-fill[data-level="weak"] { width: 25%; background: #DC2626; }
-.password-strength-fill[data-level="fair"] { width: 50%; background: #F59E0B; }
-.password-strength-fill[data-level="good"] { width: 75%; background: #2563EB; }
-.password-strength-fill[data-level="strong"] { width: 100%; background: #16A34A; }
+.password-strength-fill[data-level="weak"] { width: 25%; background: var(--error-color); }
+.password-strength-fill[data-level="fair"] { width: 50%; background: var(--accent-color); }
+.password-strength-fill[data-level="good"] { width: 75%; background: var(--primary-color); }
+.password-strength-fill[data-level="strong"] { width: 100%; background: var(--success-color); }
 .password-requirements {
     list-style: none;
     padding: 0;
@@ -6316,8 +6316,8 @@ a.sns-badge:hover {
     font-size: 13px; font-weight: 600; padding: 4px 10px;
     border-radius: 20px; display: inline-block;
 }
-.attendance-count-badge.attend { background: #ECFDF5; color: #166534; }
-.attendance-count-badge.absent { background: #FEF2F2; color: #991B1B; }
+.attendance-count-badge.attend { background: var(--success-bg); color: var(--success-text); }
+.attendance-count-badge.absent { background: var(--error-bg); color: var(--error-text); }
 
 /* ==================== Push 알림 설정 ==================== */
 .push-setting-options { display: flex; flex-direction: column; gap: 2px; }
@@ -6344,12 +6344,12 @@ a.sns-badge:hover {
     font-size: 11px; font-weight: 600; white-space: nowrap;
     vertical-align: middle; margin-left: 4px;
 }
-.position-badge.pos-president { background: #FEF3C7; color: #92400E; }
+.position-badge.pos-president { background: var(--warning-bg); color: var(--warning-text); }
 .position-badge.pos-senior-vp { background: var(--neutral-bg); color: var(--text-secondary); }
 .position-badge.pos-vp { background: var(--neutral-bg); color: var(--text-secondary); }
-.position-badge.pos-secretary { background: #EFF6FF; color: #1E40AF; }
-.position-badge.pos-director { background: #EFF6FF; color: #1E40AF; }
-.position-badge.pos-auditor { background: #F0FDF4; color: #166534; }
+.position-badge.pos-secretary { background: var(--primary-light); color: var(--primary-hover); }
+.position-badge.pos-director { background: var(--primary-light); color: var(--primary-hover); }
+.position-badge.pos-auditor { background: var(--success-bg); color: var(--success-text); }
 .position-badge.pos-member { background: var(--bg-secondary); color: var(--text-secondary); }
 .position-badge.pos-default { background: var(--bg-secondary); color: var(--text-secondary); }
 
@@ -6360,7 +6360,7 @@ a.sns-badge:hover {
 }
 .btn-ghost:hover:not(:disabled) { background: var(--bg-secondary); }
 
-.btn-danger { background: var(--error-color); color: #FFFFFF; }
+.btn-danger { background: var(--error-color); color: var(--background-color); }
 .btn-danger:hover:not(:disabled) { background: var(--error-hover); }
 
 /* ==================== 글꼴 크기 설정 ==================== */
@@ -6431,7 +6431,7 @@ a.sns-badge:hover {
     gap: 6px;
     font-size: 13px;
     font-weight: 600;
-    color: #2563EB;
+    color: var(--primary-color);
     padding: 8px 16px 4px;
 }
 
@@ -6483,7 +6483,7 @@ a.sns-badge:hover {
     height: 20px;
     padding: 0 6px;
     border-radius: 10px;
-    background: #EF4444;
+    background: var(--error-color);
     color: #fff;
     font-size: 11px;
     font-weight: 700;
@@ -6553,7 +6553,7 @@ a.sns-badge:hover {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    background: #10B981;
+    background: var(--success-color);
     color: #fff;
     transition: background 0.15s;
 }
@@ -6566,8 +6566,8 @@ a.sns-badge:hover {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    background: #FEE2E2;
-    color: #EF4444;
+    background: var(--error-bg);
+    color: var(--error-color);
     transition: background 0.15s;
 }
 .btn-admin-reject:active { background: #FECACA; }
@@ -6608,7 +6608,7 @@ a.sns-badge:hover {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: #2563EB;
+    color: var(--primary-color);
     font-size: 12px;
 }
 
@@ -6629,7 +6629,7 @@ a.sns-badge:hover {
 .push-send-form .form-input {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #D1D5DB;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
     font-family: inherit;
@@ -6637,7 +6637,7 @@ a.sns-badge:hover {
 }
 .push-send-form .form-input:focus {
     outline: none;
-    border-color: #2563EB;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
 }
 .push-target-options {
@@ -6658,11 +6658,11 @@ a.sns-badge:hover {
     align-items: center;
     gap: 8px;
     padding: 12px;
-    background: #FFFBEB;
-    border: 1px solid #FDE68A;
+    background: var(--warning-bg);
+    border: 1px solid var(--accent-color);
     border-radius: 8px;
     font-size: 13px;
-    color: #92400E;
+    color: var(--warning-text);
     margin-bottom: 20px;
 }
 .btn-push-send {
@@ -6673,7 +6673,7 @@ a.sns-badge:hover {
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
-    background: #DC2626;
+    background: var(--error-color);
     color: #fff;
     transition: background 0.15s;
 }
@@ -6698,13 +6698,13 @@ a.sns-badge:hover {
     position: absolute;
     inset: 0;
     background: #fff;
-    border: 2px solid #D1D5DB;
+    border: 2px solid var(--border-color);
     border-radius: 4px;
     transition: all 0.2s;
 }
 .admin-checkbox input:checked + .checkmark {
-    background: #2563EB;
-    border-color: #2563EB;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
 }
 .admin-checkbox input:checked + .checkmark::after {
     content: '';
@@ -6761,8 +6761,8 @@ a.sns-badge:hover {
 .pin-tag {
     display: inline-block;
     padding: 1px 6px;
-    background: #EFF6FF;
-    color: #2563EB;
+    background: var(--primary-light);
+    color: var(--primary-color);
     border-radius: 4px;
     font-size: 11px;
     font-weight: 600;
@@ -6791,10 +6791,10 @@ a.sns-badge:hover {
 .floating-delete-bar .selected-count {
     font-weight: 600;
     font-size: 14px;
-    color: #1E293B;
+    color: var(--text-primary);
 }
 .floating-delete-bar .btn-bulk-delete {
-    background: #EF4444;
+    background: var(--error-color);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -6804,7 +6804,7 @@ a.sns-badge:hover {
     cursor: pointer;
     transition: background 0.15s;
 }
-.floating-delete-bar .btn-bulk-delete:active { background: #DC2626; }
+.floating-delete-bar .btn-bulk-delete:active { background: var(--error-color); }
 
 /* 푸시 대상 회원 선택 */
 .push-member-select {
@@ -6844,7 +6844,7 @@ a.sns-badge:hover {
     transition: background 0.15s;
 }
 .push-member-item:last-child { border-bottom: none; }
-.push-member-item.selected { background: #F0F7FF; }
+.push-member-item.selected { background: var(--primary-bg); }
 .push-member-item-info { flex: 1; min-width: 0; }
 .push-member-item-name {
     font-size: 14px;
@@ -6858,11 +6858,11 @@ a.sns-badge:hover {
 }
 .push-selected-summary {
     padding: 8px 14px;
-    background: #F0F7FF;
+    background: var(--primary-bg);
     border-top: 1px solid var(--border-color);
     font-size: 13px;
     font-weight: 600;
-    color: #2563EB;
+    color: var(--primary-color);
 }
 
 /* 푸시 기록 */
@@ -6922,7 +6922,7 @@ a.sns-badge:hover {
 .notice-edit-form .form-input {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #D1D5DB;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
     font-family: inherit;
@@ -6930,7 +6930,7 @@ a.sns-badge:hover {
 }
 .notice-edit-form .form-input:focus {
     outline: none;
-    border-color: #2563EB;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
 }
 .notice-pin-toggle {
@@ -6956,7 +6956,7 @@ a.sns-badge:hover {
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
-    background: #2563EB;
+    background: var(--primary-color);
     color: #fff;
     transition: background 0.15s;
     margin-top: 8px;
@@ -6991,7 +6991,7 @@ a.sns-badge:hover {
     position: absolute;
     cursor: pointer;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: #D1D5DB;
+    background: var(--toggle-bg-off);
     border-radius: 24px;
     transition: background 0.2s;
 }
@@ -7006,7 +7006,7 @@ a.sns-badge:hover {
     border-radius: 50%;
     transition: transform 0.2s;
 }
-.perm-switch input:checked + .perm-slider { background: #10B981; }
+.perm-switch input:checked + .perm-slider { background: var(--success-color); }
 .perm-switch input:checked + .perm-slider::before { transform: translateX(20px); }
 .perm-switch--disabled .perm-slider { opacity: 0.5; cursor: not-allowed; }
 .perm-switch--disabled input:checked + .perm-slider { background: #9CA3AF; }
@@ -7073,16 +7073,16 @@ a.sns-badge:hover {
 .meeting-type-badge {
     display: inline-block; font-size: 11px; font-weight: 600;
     padding: 2px 8px; border-radius: 4px;
-    background: #DBEAFE; color: #1E40AF;
+    background: var(--primary-bg); color: var(--primary-hover);
 }
 .meeting-status {
     font-size: 12px; font-weight: 500; color: var(--text-secondary);
 }
-.meeting-status.badge-active { color: #16A34A; font-weight: 600; }
+.meeting-status.badge-active { color: var(--success-color); font-weight: 600; }
 .meeting-status.badge-done { color: var(--text-hint); }
 .meeting-title { font-size: 16px; font-weight: 600; margin: 0 0 6px; }
 .meeting-meta { font-size: 13px; color: var(--text-secondary); }
-.meeting-attendance-count { font-size: 12px; color: #1E40AF; margin-top: 8px; }
+.meeting-attendance-count { font-size: 12px; color: var(--primary-hover); margin-top: 8px; }
 .vote-card {
     padding: 12px; border: 1px solid var(--border-color);
     border-radius: 8px; margin-bottom: 8px;
@@ -7106,7 +7106,7 @@ a.sns-badge:hover {
     padding: 14px 16px;
     font-size: 15px;
     font-weight: 700;
-    color: #2563EB;
+    color: var(--primary-color);
     border-bottom: 1px solid var(--border-light);
 }
 
@@ -7116,7 +7116,7 @@ a.sns-badge:hover {
     height: 20px;
     padding: 0 6px;
     border-radius: 10px;
-    background: #DC2626;
+    background: var(--error-color);
     color: #fff;
     font-size: 11px;
     font-weight: 700;
@@ -7205,7 +7205,7 @@ a.sns-badge:hover {
 
 .local-admin-role-select {
     padding: 4px 8px;
-    border: 1px solid #D1D5DB;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     font-size: 12px;
     color: var(--text-secondary);
@@ -7215,7 +7215,7 @@ a.sns-badge:hover {
 }
 
 .local-admin-role-select:focus {
-    border-color: #2563EB;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(31,79,216,0.15);
 }
 
@@ -7228,10 +7228,10 @@ a.sns-badge:hover {
     transition: transform 0.15s;
 }
 .portal-org-card:active { transform: scale(0.98); }
-.portal-mine { border: 2px solid #DBEAFE; }
+.portal-mine { border: 2px solid var(--primary-bg); }
 .portal-org-icon {
     width: 44px; height: 44px; border-radius: 50%;
-    background: linear-gradient(135deg, #2563EB, #60A5FA);
+    background: linear-gradient(135deg, var(--primary-color), #60A5FA);
     color: #fff; display: flex; align-items: center; justify-content: center;
     font-size: 14px; font-weight: 700; flex-shrink: 0;
 }
@@ -7242,8 +7242,8 @@ a.sns-badge:hover {
 /* JC 지도 — JS에서 position:fixed로 처리 */
 
 /* 회의 삭제 버튼 */
-.btn-meeting-delete { background:none;border:1px solid #DC2626;color:#DC2626;padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer;margin-left:auto }
-.btn-meeting-delete:hover { background:#DC2626;color:#fff }
+.btn-meeting-delete { background:none;border:1px solid var(--error-color);color:var(--error-color);padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer;margin-left:auto }
+.btn-meeting-delete:hover { background:var(--error-color);color:#fff }
 
 /* Leaflet 지도 컨테이너 */
 #jc-map-content { position: relative !important; width: 100% !important; height: calc(100vh - 56px) !important; overflow: hidden !important; }
@@ -7777,7 +7777,7 @@ a.sns-badge:hover {
     object-fit: cover;
 }
 .oc-avatar-default {
-    background: #DBEAFE;
+    background: var(--primary-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -8108,7 +8108,7 @@ a.sns-badge:hover {
     box-sizing: border-box;
 }
 .oc-board-btn:hover, .oc-board-btn:active {
-    background: var(--primary-light, #EFF6FF);
+    background: var(--primary-light);
     border-color: var(--primary-color);
     color: var(--primary-color);
 }
@@ -8269,7 +8269,7 @@ a.sns-badge:hover {
     flex-shrink: 0;
 }
 .gb-post-avatar-default {
-    background: #DBEAFE;
+    background: var(--primary-bg);
 }
 .gb-post-meta {
     flex: 1;
@@ -8289,8 +8289,8 @@ a.sns-badge:hover {
 .gb-pin-badge {
     display: inline-block;
     padding: 2px 8px;
-    background: #FEF3C7;
-    color: #92400E;
+    background: var(--warning-bg);
+    color: var(--warning-text);
     font-size: 11px;
     font-weight: 600;
     border-radius: 10px;
@@ -8438,9 +8438,9 @@ a.sns-badge:hover {
     transition: all 0.15s;
 }
 .gb-like-btn.liked {
-    color: #DC2626;
+    color: var(--error-color);
     border-color: #FECACA;
-    background: #FEF2F2;
+    background: var(--error-bg);
 }
 .gb-like-btn:active { transform: scale(0.95); }
 .gb-stat-text {
@@ -8625,7 +8625,7 @@ a.sns-badge:hover {
 
 /* 사이드메뉴 배지 */
 .side-menu-badge {
-    background: #DC2626;
+    background: var(--error-color);
     color: #fff;
     font-size: 11px;
     font-weight: 700;
@@ -8684,7 +8684,7 @@ a.sns-badge:hover {
 .club-member-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
 .club-member-avatar-default { background: var(--primary-light, #E6ECFA); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
 .club-member-more { background: #E5E7EB; color: var(--text-hint); font-size: 11px; display: flex; align-items: center; justify-content: center; }
-.club-member-add-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px dashed #D1D5DB; background: none; color: var(--text-muted); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.club-member-add-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px dashed var(--text-disabled); background: none; color: var(--text-muted); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
 .club-admin-row { display: flex; gap: 8px; padding-bottom: 12px; }
 
@@ -8696,8 +8696,8 @@ a.sns-badge:hover {
 .club-member-org { font-size: 12px; color: var(--primary-color); margin-top: 2px; }
 
 .club-role-tag { font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
-.club-role-tag.owner { background: #FEF3C7; color: #92400E; }
-.club-role-tag.admin { background: #DBEAFE; color: #1E40AF; }
+.club-role-tag.owner { background: var(--warning-bg); color: var(--warning-text); }
+.club-role-tag.admin { background: var(--primary-bg); color: var(--primary-hover); }
 
 /* 멤버 초대 */
 .club-invite-search { padding-bottom: 12px; }
@@ -8748,7 +8748,7 @@ a.sns-badge:hover {
 .cc-reply { padding-left: 24px; background: #FAFBFC; margin-left: 12px; border-left: 2px solid #E5E7EB; }
 
 .cc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
-.cc-avatar { width: 28px; height: 28px; border-radius: 30%; background: #DBEAFE; color: #2563EB; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cc-avatar { width: 28px; height: 28px; border-radius: 30%; background: var(--primary-bg); color: var(--primary-color); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .cc-author { font-size: 13px; font-weight: 600; color: #1F2937; }
 .cc-date { font-size: 11px; color: var(--text-muted); }
 .cc-content { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin: 2px 0; padding-left: 36px; }
@@ -8756,18 +8756,18 @@ a.sns-badge:hover {
 .cc-actions { display: flex; gap: 12px; align-items: center; margin-top: 4px; padding-left: 36px; }
 .cc-like-btn, .cc-reply-btn, .cc-delete-btn { background: none; border: none; cursor: pointer; font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 3px; padding: 2px 0; }
 .cc-like-btn:hover, .cc-reply-btn:hover { color: var(--text-hint); }
-.cc-like-btn.cc-liked { color: #DC2626; }
-.cc-delete-btn { color: #DC2626; }
+.cc-like-btn.cc-liked { color: var(--error-color); }
+.cc-delete-btn { color: var(--error-color); }
 .cc-delete-btn:hover { color: #B91C1C; }
 .cc-like-count { font-size: 12px; }
 
 .cc-input-bar { display: flex; gap: 8px; align-items: center; padding: 12px 0 0; }
 .cc-input { flex: 1; height: 40px; border: none; border-bottom: 1px solid var(--border-color); border-radius: 0; padding: 0 12px; font-size: 14px; color: var(--text-primary); background: transparent; outline: none !important; box-shadow: none !important; -webkit-appearance: none; font-family: var(--font-family); }
-.cc-input:focus { border-bottom-color: #2563EB; }
+.cc-input:focus { border-bottom-color: var(--primary-color); }
 .cc-input::placeholder { color: var(--text-muted); }
-.cc-send-btn { width: 40px; height: 40px; border-radius: 50%; background: #2563EB; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-.cc-send-btn:disabled { background: #D1D5DB; pointer-events: none; }
-.cc-send-btn:active { background: #1D4ED8; }
+.cc-send-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.cc-send-btn:disabled { background: var(--text-disabled); pointer-events: none; }
+.cc-send-btn:active { background: var(--primary-hover); }
 
 .cc-reply-bar { display: flex; gap: 8px; padding: 8px 0 8px 36px; align-items: center; }
 .cc-reply-input { height: 36px; font-size: 13px; }
@@ -8779,22 +8779,22 @@ a.sns-badge:hover {
 
 .ac-buttons { display: flex; gap: 10px; margin-bottom: 16px; }
 .ac-vote-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 8px; border: 1.5px solid var(--border-color, #E2E8F0); border-radius: var(--radius-md, 12px); background: var(--background-color); cursor: pointer; transition: all 0.2s; }
-.ac-vote-btn:hover { border-color: var(--primary-color, #2563EB); background: #F0F5FF; }
-.ac-vote-btn.ac-selected.ac-attend { border-color: #2563EB; background: #DBEAFE; color: #1D4ED8; }
-.ac-vote-btn.ac-selected.ac-absent { border-color: #EF4444; background: #FEE2E2; color: #DC2626; }
+.ac-vote-btn:hover { border-color: var(--primary-color); background: #F0F5FF; }
+.ac-vote-btn.ac-selected.ac-attend { border-color: var(--primary-color); background: var(--primary-bg); color: var(--primary-hover); }
+.ac-vote-btn.ac-selected.ac-absent { border-color: var(--error-color); background: var(--error-bg); color: var(--error-color); }
 .ac-vote-icon { font-size: 20px; font-weight: 700; }
 .ac-vote-label { font-size: 13px; font-weight: 600; }
 .ac-vote-count { font-size: 18px; font-weight: 700; color: var(--text-primary, #0F172A); }
 
 .ac-progress { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #E2E8F0; }
-.ac-progress-attend { background: #2563EB; transition: width 0.3s; }
-.ac-progress-absent { background: #EF4444; transition: width 0.3s; }
-.ac-progress-no-response { background: #F59E0B; transition: width 0.3s; }
+.ac-progress-attend { background: var(--primary-color); transition: width 0.3s; }
+.ac-progress-absent { background: var(--error-color); transition: width 0.3s; }
+.ac-progress-no-response { background: var(--accent-color); transition: width 0.3s; }
 .ac-progress-label { margin-top: 8px; font-size: 13px; color: var(--text-secondary, #64748B); text-align: right; }
 
 .ac-group { margin-bottom: 10px; margin-top: 12px; }
 .ac-group-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block; }
-.ac-group-label.ac-group-attend { color: #2563EB; }
-.ac-group-label.ac-group-absent { color: #DC2626; }
+.ac-group-label.ac-group-attend { color: var(--primary-color); }
+.ac-group-label.ac-group-absent { color: var(--error-color); }
 .ac-group-label.ac-group-no-response { color: var(--text-muted); }
 .ac-group-names { font-size: 14px; color: var(--text-primary); line-height: 1.6; }

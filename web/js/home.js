@@ -130,7 +130,7 @@ async function loadScheduleSummary() {
                             ${schedule.location ? `<span>${escapeHtml(schedule.location)}</span>` : ''}
                         </div>
                     </div>
-                    ${(() => { const show = isNewContent(schedule.created_at) && schedNBadgeCount < 2; if (show) schedNBadgeCount++; return show ? '<span class="home-badge-new">N</span>' : ''; })()}
+                    ${(() => { const show = isNewContent(schedule.created_at) && !schedule.read_by_current_user && schedNBadgeCount < 2; if (show) schedNBadgeCount++; return show ? '<span class="home-badge-new">N</span>' : ''; })()}
                 </div>`;
             }).join('');
         } else {

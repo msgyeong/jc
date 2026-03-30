@@ -41,6 +41,7 @@ router.get('/', authenticate, async (req, res) => {
         const month = parseInt(req.query.month);
 
         const userId = req.user.userId;
+        const params = [userId];
         let sqlQuery = `
             SELECT
                 s.id, s.title, s.start_date, s.end_date,
@@ -51,11 +52,10 @@ router.get('/', authenticate, async (req, res) => {
                 CASE WHEN rs.id IS NOT NULL THEN true ELSE false END as read_by_current_user
             FROM schedules s
             LEFT JOIN users u ON s.created_by = u.id
-            LEFT JOIN read_status rs ON rs.schedule_id = s.id AND rs.user_id = ${userId}
+            LEFT JOIN read_status rs ON rs.schedule_id = s.id AND rs.user_id = $1
         `;
 
         const conditions = ['s.deleted_at IS NULL'];
-        const params = [];
 
         // 멀티테넌트 org_id 필터
         addOrgFilter(conditions, params, req, 's');

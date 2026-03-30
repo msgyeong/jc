@@ -661,12 +661,21 @@ function submitAttendance(status, scheduleId) {
 
 function backToScheduleList() {
     _scheduleDetailActive = false;
+    // calYear/calMonth 미초기화 상태 방지
+    if (calYear == null || calMonth == null) {
+        var now = new Date();
+        calYear = now.getFullYear();
+        calMonth = now.getMonth();
+        if (!calSelectedDate) calSelectedDate = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+    }
     const calContainer = document.getElementById('calendar-container');
     const dayHeader = document.getElementById('schedule-day-header');
     if (calContainer) calContainer.style.display = '';
     if (dayHeader) dayHeader.style.display = '';
-    renderCalendar();
-    renderDaySchedules();
+    loadMonthSchedules().then(function() {
+        renderCalendar();
+        renderDaySchedules();
+    });
     checkScheduleCreatePermission();
 }
 

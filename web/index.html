@@ -123,7 +123,7 @@
                 <h1 class="app-bar-title">아이디 찾기</h1>
             </div>
             <div class="form-container" style="padding:24px">
-                <p style="font-size:14px;color:#6B7280;margin-bottom:20px">가입 시 등록한 이름과 전화번호를 입력하세요.</p>
+                <p style="font-size:14px;color:var(--text-hint);margin-bottom:24px">가입 시 등록한 이름과 전화번호를 입력하세요.</p>
                 <div class="form-group">
                     <label for="find-email-name">이름</label>
                     <input type="text" id="find-email-name" placeholder="이름 입력">
@@ -133,9 +133,9 @@
                     <input type="tel" id="find-email-phone" placeholder="010-1234-5678">
                 </div>
                 <span class="error-message" id="find-email-error"></span>
-                <div id="find-email-result" style="display:none;padding:16px;background:#F0FDF4;border-radius:12px;margin-top:12px;text-align:center">
-                    <div style="font-size:14px;color:#059669;font-weight:600;margin-bottom:4px">가입된 이메일</div>
-                    <div id="find-email-value" style="font-size:18px;font-weight:700;color:#1a1a1a"></div>
+                <div id="find-email-result" style="display:none;padding:16px;background:var(--success-bg);border-radius:12px;margin-top:12px;text-align:center">
+                    <div style="font-size:14px;color:var(--success-color);font-weight:600;margin-bottom:4px">가입된 이메일</div>
+                    <div id="find-email-value" style="font-size:18px;font-weight:700;color:var(--text-primary)"></div>
                 </div>
                 <button type="button" class="btn btn-primary" onclick="handleFindEmail()" style="margin-top:16px;width:100%;height:48px;border-radius:8px">이메일 찾기</button>
             </div>
@@ -347,7 +347,7 @@
                                 required
                                 style="flex:1"
                             >
-                            <button type="button" id="email-check-btn" onclick="checkEmailDuplicate()" style="flex:0 0 auto;height:48px;padding:0 14px;border:1px solid #1F4FD8;border-radius:8px;background:#fff;color:#1F4FD8;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">중복 확인</button>
+                            <button type="button" id="email-check-btn" onclick="checkEmailDuplicate()" style="flex:0 0 auto;height:48px;padding:0 14px;border:1px solid var(--primary-color);border-radius:8px;background:var(--background-color);color:var(--primary-color);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">중복 확인</button>
                         </div>
                         <span class="help-text">소문자로 입력해주세요</span>
                         <span class="error-message" id="signup-email-error"></span>
@@ -1539,7 +1539,7 @@
                     <span class="icon">&larr;</span>
                 </button>
                 <h1 class="app-bar-title">공지 관리</h1>
-                <button class="app-bar-action" onclick="showNoticeEditor()" style="font-size:14px;font-weight:600;color:#2563EB;background:none;border:none;cursor:pointer">+ 새 공지</button>
+                <button class="app-bar-action" onclick="showNoticeEditor()" style="font-size:14px;font-weight:600;color:var(--primary-color);background:none;border:none;cursor:pointer">+ 새 공지</button>
             </div>
             <div class="screen-content" id="notice-manage-content">
             </div>

@@ -248,6 +248,9 @@ CommentComponent.prototype._bindInput = function (container) {
 CommentComponent.prototype._submitComment = async function (input, sendBtn) {
     var content = input.value.trim();
     if (!content) return;
+    // 중복 제출 방지
+    if (this._commentSubmitting) return;
+    this._commentSubmitting = true;
     sendBtn.disabled = true;
     try {
         var res = await apiClient.request(this.config.apiBase, {
@@ -264,6 +267,7 @@ CommentComponent.prototype._submitComment = async function (input, sendBtn) {
     } catch (e) {
         sendBtn.disabled = false;
     }
+    this._commentSubmitting = false;
 };
 
 // ─── LIKE TOGGLE ───
@@ -320,10 +324,15 @@ CommentComponent.prototype._showReplyInput = function (parentId, btn) {
 // ─── SUBMIT REPLY ───
 
 CommentComponent.prototype._submitReply = async function (parentId, btn) {
+    // 중복 제출 방지
+    if (this._replySubmitting) return;
+    this._replySubmitting = true;
+
     var bar = btn.closest('.cc-reply-bar');
+    if (!bar) { this._replySubmitting = false; return; }
     var input = bar.querySelector('input');
     var content = input.value.trim();
-    if (!content) return;
+    if (!content) { this._replySubmitting = false; return; }
     btn.disabled = true;
     try {
         await apiClient.request(this.config.apiBase, {
@@ -335,6 +344,7 @@ CommentComponent.prototype._submitReply = async function (parentId, btn) {
     } catch (e) {
         btn.disabled = false;
     }
+    this._replySubmitting = false;
 };
 
 // ─── DELETE COMMENT ───

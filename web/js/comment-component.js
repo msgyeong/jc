@@ -56,10 +56,13 @@ CommentComponent.prototype.load = async function () {
         var html = this._renderSection(allComments, count, myId);
         container.innerHTML = html;
 
-        // 이벤트 위임 바인딩
-        this._bindEvents(container, myId);
+        // 이벤트 위임 바인딩 (container에 1회만 — innerHTML 교체해도 container 자체는 유지됨)
+        if (!this._eventsBound) {
+            this._bindEvents(container);
+            this._eventsBound = true;
+        }
 
-        // 입력창 바인딩
+        // 입력창 바인딩 (innerHTML 교체 후 매번 필요)
         this._bindInput(container);
 
         if (this.config.onCountChange) this.config.onCountChange(count);

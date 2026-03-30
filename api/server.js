@@ -157,11 +157,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // admin 파일은 항상 최신 버전을 받도록 캐시 비활성화
 app.use(express.static(path.join(__dirname, '../web'), {
     setHeaders: (res, filePath) => {
-        if (filePath.includes(`${path.sep}admin${path.sep}`)) {
-            res.setHeader(
-                'Cache-Control',
-                'no-store, no-cache, must-revalidate, proxy-revalidate',
-            );
+        // index.html, sw.js, admin 파일은 항상 최신 버전
+        if (filePath.endsWith('index.html') || filePath.endsWith('sw.js') || filePath.includes(`${path.sep}admin${path.sep}`)) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
             res.setHeader('Pragma', 'no-cache');
             res.setHeader('Expires', '0');
         }

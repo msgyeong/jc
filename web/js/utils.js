@@ -203,6 +203,25 @@ function formatDate(dateString, format) {
 // 상대 시간 포맷 별칭 (formatDate의 format 미지정 = 상대 시간)
 function formatRelativeTime(dateString) { return formatDate(dateString); }
 
+// 절대 날짜 + 상대 시간 (7일 이내)
+// 예: "2026년 3월 12일 · 3일 전", "2026년 3월 30일 · 방금 전", "2026년 2월 14일"
+function formatDateWithRelative(dateString) {
+    if (!dateString) return '';
+    var date = new Date(dateString);
+    var abs = date.getFullYear() + '년 ' + (date.getMonth() + 1) + '월 ' + date.getDate() + '일';
+    var now = new Date();
+    var diffMs = now - date;
+    var diffMin = Math.floor(diffMs / 60000);
+    var diffHours = Math.floor(diffMs / 3600000);
+    var diffDays = Math.floor(diffMs / 86400000);
+    var rel = '';
+    if (diffMin < 1) rel = '방금 전';
+    else if (diffMin < 60) rel = diffMin + '분 전';
+    else if (diffHours < 24) rel = diffHours + '시간 전';
+    else if (diffDays < 7) rel = diffDays + '일 전';
+    return rel ? abs + ' · ' + rel : abs;
+}
+
 // 현재 사용자 정보 (안전하게)
 function getCurrentUserSafe() {
     try {

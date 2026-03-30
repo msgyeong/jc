@@ -43,7 +43,7 @@ function renderPostCard(post, opts) {
         + '<div class="pc-avatar">' + avatarHtml + '</div>'
         + '<span class="pc-author">' + escapeHtml(post.author_name || '알 수 없음') + '</span>'
         + '<span class="pc-dot">&middot;</span>'
-        + '<span class="pc-time">' + formatDate(post.created_at) + '</span>'
+        + '<span class="pc-time">' + formatDateWithRelative(post.created_at) + '</span>'
         + '<span class="pc-top-spacer"></span>'
         + nBadgeHtml
         + '</div>'

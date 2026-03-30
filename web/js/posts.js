@@ -113,7 +113,7 @@ function createPostCard(post) {
                 <div class="pc-avatar">${avatarHtml}</div>
                 <span class="pc-author">${escapeHtml(post.author_name || '알 수 없음')}</span>
                 <span class="pc-dot">·</span>
-                <span class="pc-time">${formatRelativeTime(post.created_at)}</span>
+                <span class="pc-time">${formatDateWithRelative(post.created_at)}</span>
                 <span class="pc-top-spacer"></span>
                 ${nBadgeHtml}
             </div>
@@ -771,7 +771,7 @@ function renderPostDetail(post) {
                     }
                     <div class="post-author-info">
                         <span class="author-name">${escapeHtml(post.author_name || '알 수 없음')}</span>
-                        <span class="post-date">${formatRelativeTime(post.created_at)}</span>
+                        <span class="post-date">${formatDateWithRelative(post.created_at)}</span>
                     </div>
                 </div>
 

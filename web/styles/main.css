@@ -232,7 +232,7 @@ html {
     padding: 0 12px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     border-bottom: 1px solid var(--appbar-border);
     box-shadow: none;
     position: sticky;
@@ -287,7 +287,7 @@ html {
     align-items: center;
     justify-content: center;
     height: 100vh;
-    gap: var(--spacing-xl);
+    gap: 16px;
 }
 
 .splash-content .logo {
@@ -875,7 +875,7 @@ input::-ms-clear {
 /* ==================== 승인 대기 화면 ==================== */
 .pending-content {
     text-align: center;
-    padding: var(--spacing-xl);
+    padding: 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -884,8 +884,8 @@ input::-ms-clear {
 }
 
 .icon-large {
-    font-size: 80px;
-    margin-bottom: var(--spacing-lg);
+    font-size: 48px;
+    margin-bottom: 12px;
     animation: bounce 2s infinite;
 }
 
@@ -895,7 +895,7 @@ input::-ms-clear {
 }
 
 .pending-content h2 {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     margin-bottom: var(--spacing-md);
     color: var(--text-primary);
@@ -918,12 +918,12 @@ input::-ms-clear {
 }
 
 .welcome-section {
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: 12px;
 }
 
 .welcome-section h2 {
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 17px;
+    font-weight: 600;
     margin-bottom: var(--spacing-sm);
 }
 
@@ -941,14 +941,14 @@ input::-ms-clear {
 .feature-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-md);
+    gap: 8px;
 }
 
 .feature-card {
     background: var(--background-color);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg);
-    padding: var(--spacing-lg);
+    padding: 12px;
     text-align: center;
     transition: var(--transition);
     cursor: pointer;
@@ -961,8 +961,8 @@ input::-ms-clear {
 }
 
 .feature-icon {
-    font-size: 48px;
-    margin-bottom: var(--spacing-sm);
+    font-size: 32px;
+    margin-bottom: 8px;
 }
 
 .feature-card h3 {
@@ -1363,7 +1363,7 @@ input::-ms-clear {
 .member-card {
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
+    gap: 10px;
 }
 
 .member-avatar {
@@ -1797,29 +1797,29 @@ input::-ms-clear {
 
 .profile-header {
     text-align: center;
-    padding: var(--spacing-xl) var(--spacing-md);
+    padding: 16px 12px;
     background-color: var(--secondary-color);
     border-radius: var(--border-radius-lg);
     margin-bottom: var(--spacing-lg);
 }
 
 .profile-avatar-large {
-    width: 120px;
-    height: 120px;
+    width: 80px;
+    height: 80px;
     border-radius: 30%;
     background-color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 48px;
+    font-size: 36px;
     margin: 0 auto var(--spacing-md);
     border: 4px solid white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .profile-name {
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 17px;
+    font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 4px;
 }
@@ -2482,7 +2482,7 @@ input[type="date"]:focus {
 }
 
 .stat-number {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--primary-color);
     line-height: 1;
@@ -2555,7 +2555,7 @@ input[type="date"]:focus {
     background: #fff;
     border: 2px dashed var(--success-color);
     border-radius: 8px;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     font-family: 'Courier New', monospace;
     letter-spacing: 2px;
@@ -2707,7 +2707,7 @@ input[type="date"]:focus {
 /* 중단: 제목 + 미리보기 + 썸네일 */
 .pc-body {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     margin-bottom: 8px;
 }
 
@@ -3685,8 +3685,8 @@ input[type="date"]:focus {
 }
 
 .form-card-title {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 600;
     color: var(--text-primary);
     margin: 12px 0 20px;
 }
@@ -3924,7 +3924,7 @@ input[type="date"]:focus {
 
 .card-stats {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     font-size: 12px;
     color: var(--text-secondary);
 }
@@ -4077,7 +4077,7 @@ input[type="date"]:focus {
 
 .attendance-vote-buttons {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 16px;
 }
 
@@ -4245,8 +4245,8 @@ input[type="date"]:focus {
 }
 
 .title-history-section .section-title {
-    font-size: 15px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     color: var(--text-primary, #0F172A);
     margin: 0 0 12px 0;
 }
@@ -4254,7 +4254,7 @@ input[type="date"]:focus {
 .title-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     padding: 10px 14px;
     background: var(--background-color);
     border-radius: var(--radius-sm, 8px);
@@ -4383,7 +4383,7 @@ input[type="date"]:focus {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 24px;
+    padding: 24px 16px;
     min-height: 200px;
     color: var(--text-secondary);
     text-align: center;
@@ -4448,7 +4448,7 @@ input[type="date"]:focus {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 24px;
+    padding: 24px 16px;
     min-height: 300px;
 }
 .error-state-icon {
@@ -4514,7 +4514,7 @@ input[type="date"]:focus {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 16px;
+    padding: 24px 16px;
     min-height: 200px;
 }
 .loading-state .loading-spinner {
@@ -4722,7 +4722,7 @@ input[type="date"]:focus {
     background: var(--background-color);
     padding: 0;
 }
-.schedule-form-field { margin-bottom: 24px; }
+.schedule-form-field { margin-bottom: 16px; }
 .schedule-form-label {
     display: block;
     font-size: 14px;
@@ -4804,7 +4804,7 @@ input[type="date"]:focus {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     cursor: pointer;
     user-select: none;
 }
@@ -4932,7 +4932,7 @@ input[type="date"]:focus {
     width: calc(100% - 24px);
     height: 120px;
     margin: 8px 12px 0;
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
 }
 .banner-carousel:empty { display: none; }
@@ -5304,7 +5304,7 @@ a.sns-badge:hover {
 .notification-item {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 8px;
     padding: 16px;
     background: var(--background-color);
     border-bottom: 1px solid var(--border-color);
@@ -6290,7 +6290,7 @@ a.sns-badge:hover {
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    padding: 24px;
+    padding: 16px;
 }
 .dialog-overlay.show {
     display: flex;
@@ -6299,7 +6299,7 @@ a.sns-badge:hover {
 .dialog {
     background: var(--background-color);
     border-radius: 16px;
-    padding: 24px;
+    padding: 16px;
     max-width: 320px;
     width: 100%;
     box-shadow: var(--shadow-lg);

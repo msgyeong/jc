@@ -229,7 +229,7 @@ html {
     height: var(--appbar-height);
     background: var(--appbar-bg);
     color: var(--appbar-text);
-    padding: 0 16px;
+    padding: 0 12px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -241,7 +241,7 @@ html {
 }
 
 .app-bar-title {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 600;
     flex: 1;
     color: var(--text-primary);
@@ -273,7 +273,7 @@ html {
 .screen-content {
     flex: 1;
     overflow-y: auto;
-    padding: 16px;
+    padding: 12px;
 }
 
 /* ==================== 스플래시 화면 ==================== */
@@ -434,13 +434,13 @@ html {
 }
 
 /* 의미적 제목 계층: h1=24px(페이지), h2=20px(섹션), h3=17px(서브) */
-.screen h1, .app-bar-title { font-size: 17px; font-weight: 600; line-height: 1.3; }
-.screen h2, .section-title { font-size: 18px; font-weight: 700; line-height: 1.35; }
-.screen h3, .info-section-title { font-size: 16px; font-weight: 600; line-height: 1.4; }
+.screen h1, .app-bar-title { font-size: 16px; font-weight: 600; line-height: 1.3; }
+.screen h2, .section-title { font-size: 15px; font-weight: 600; line-height: 1.35; }
+.screen h3, .info-section-title { font-size: 12px; font-weight: 600; line-height: 1.4; }
 
 .section-title {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text-primary);
     margin: var(--spacing-lg) 0 var(--spacing-md);
     padding-bottom: var(--spacing-xs);
@@ -914,7 +914,7 @@ input::-ms-clear {
 
 /* ==================== 홈 화면 ==================== */
 .home-content {
-    padding: 8px 0 0;
+    padding: 8px 0;
 }
 
 .welcome-section {
@@ -1090,7 +1090,7 @@ input::-ms-clear {
 
 /* ==================== 하단 네비게이션이 있는 화면 ==================== */
 .screen-content.with-bottom-nav {
-    padding-bottom: 70px;
+    padding-bottom: 62px;
 }
 
 /* ==================== 배너 섹션 ==================== */
@@ -1414,15 +1414,15 @@ input::-ms-clear {
 /* FAB — flex 정렬로 아이콘 중앙 고정 (이슈 #6) */
 .fab {
     position: fixed;
-    bottom: 90px;
+    bottom: 72px;
     right: 20px;
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background-color: var(--primary-color);
     color: white;
     border: none;
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 300;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
@@ -1469,15 +1469,15 @@ input::-ms-clear {
 /* ==================== 게시글 상세 ==================== */
 .post-detail {
     padding: 0;
-    padding-bottom: 70px;
+    padding-bottom: 62px;
 }
 
 .post-detail-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
+    gap: 8px;
+    margin-bottom: 10px;
     overflow: hidden;
 }
 
@@ -1491,15 +1491,15 @@ input::-ms-clear {
 
 /* 작성자 아바타 (카카오톡 스타일 둥근 사각형) */
 .author-avatar {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 30%;
     object-fit: cover;
     flex-shrink: 0;
 }
 .author-avatar-placeholder {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 30%;
     background: var(--primary-light);
     color: var(--primary-color);
@@ -1531,16 +1531,16 @@ input::-ms-clear {
 }
 
 .post-detail-title {
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 700;
-    margin-bottom: var(--spacing-md);
+    margin-bottom: 10px;
     line-height: 1.4;
 }
 
 .post-detail-body {
     white-space: pre-wrap;
     word-break: break-word;
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: 12px;
 }
 
 .post-detail-images {
@@ -1638,11 +1638,11 @@ input::-ms-clear {
 
 .post-detail-meta {
     display: flex;
-    gap: 20px;
+    gap: 12px;
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 13px;
     margin-bottom: var(--spacing-lg);
-    padding: 12px 0;
+    padding: 8px 0;
     border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
 }
@@ -1652,7 +1652,7 @@ input::-ms-clear {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .post-detail-meta .icon-sm {
@@ -1685,7 +1685,7 @@ input::-ms-clear {
 }
 
 .post-detail-comments h4 {
-    font-size: 16px;
+    font-size: 14px;
     margin-bottom: var(--spacing-sm);
 }
 
@@ -2596,16 +2596,16 @@ input[type="date"]:focus {
 
 .board-tab {
     flex: 1;
-    padding: 12px 0;
+    padding: 8px 0;
     background: none;
     border: none;
     color: var(--text-hint);
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 500;
     font-family: var(--font-family);
     cursor: pointer;
     transition: var(--transition);
-    border-bottom: 3px solid transparent;
+    border-bottom: 2px solid transparent;
     text-align: center;
 }
 
@@ -2623,8 +2623,8 @@ input[type="date"]:focus {
 .pc-card {
     background: var(--background-color);
     border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     cursor: pointer;
     transition: var(--transition);
@@ -2642,13 +2642,13 @@ input[type="date"]:focus {
 .pc-top {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 6px;
+    margin-bottom: 8px;
 }
 
 .pc-avatar {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 30%;
     background-color: var(--primary-light);
     display: flex;
@@ -2671,7 +2671,7 @@ input[type="date"]:focus {
 }
 
 .pc-author {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--text-primary);
 }
@@ -2682,7 +2682,7 @@ input[type="date"]:focus {
 }
 
 .pc-time {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-secondary);
 }
 
@@ -2708,7 +2708,7 @@ input[type="date"]:focus {
 .pc-body {
     display: flex;
     gap: 12px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .pc-text {
@@ -2725,7 +2725,7 @@ input[type="date"]:focus {
 }
 
 .pc-title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
     line-height: 1.3;
@@ -2736,7 +2736,7 @@ input[type="date"]:focus {
 }
 
 .pc-preview {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 400;
     color: var(--text-secondary);
     line-height: 1.4;
@@ -2748,8 +2748,8 @@ input[type="date"]:focus {
 }
 
 .pc-thumb {
-    width: 60px;
-    height: 60px;
+    width: 52px;
+    height: 52px;
     border-radius: 8px;
     overflow: hidden;
     flex-shrink: 0;
@@ -2764,11 +2764,11 @@ input[type="date"]:focus {
 /* 하단: 통계 */
 .pc-stats {
     display: flex;
-    gap: 14px;
+    gap: 10px;
 }
 
 .pc-stat {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-secondary);
     display: flex;
     align-items: center;
@@ -2994,7 +2994,7 @@ input[type="date"]:focus {
 
 .calendar-container {
     background: var(--background-color);
-    padding: 16px;
+    padding: 8px 12px;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -3002,18 +3002,18 @@ input[type="date"]:focus {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
 }
 
 .calendar-title {
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text-primary);
 }
 
 .calendar-nav-btn {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border: none;
     background: var(--background-color);
     border-radius: 50%;
@@ -3035,12 +3035,12 @@ input[type="date"]:focus {
 .calendar-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .cal-weekday {
     text-align: center;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-secondary);
     padding: 4px 0;
@@ -3061,7 +3061,7 @@ input[type="date"]:focus {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
     transition: var(--transition);
     position: relative;
@@ -3081,7 +3081,7 @@ input[type="date"]:focus {
 }
 
 .cal-day-num {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     line-height: 1;
 }
@@ -3127,21 +3127,21 @@ input[type="date"]:focus {
 }
 
 .schedule-day-header {
-    padding: 12px 16px 4px;
+    padding: 8px 12px 2px;
     background: var(--background-color);
 }
 
 .schedule-day-text {
-    font-size: 15px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     color: var(--text-primary);
 }
 
 /* 일정 카드 V2 */
 .schedule-card-v2 {
     background: var(--background-color);
-    margin: 8px 16px;
-    padding: 14px 16px;
+    margin: 4px 12px;
+    padding: 10px 12px;
     border-radius: var(--border-radius-lg);
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     cursor: pointer;
@@ -3156,8 +3156,8 @@ input[type="date"]:focus {
 .schedule-card-top {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 4px;
 }
 
 .schedule-cat-badge {
@@ -3174,7 +3174,7 @@ input[type="date"]:focus {
 }
 
 .schedule-card-title {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 4px;
@@ -3182,7 +3182,7 @@ input[type="date"]:focus {
 }
 
 .schedule-card-loc {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-secondary);
     margin-bottom: 4px;
 }
@@ -3203,7 +3203,7 @@ input[type="date"]:focus {
 /* ==================== 회원 화면 V2 ==================== */
 
 .member-search-wrap {
-    padding: 12px 16px 8px;
+    padding: 8px 12px 6px;
     background: var(--background-color);
     border-bottom: 1px solid var(--border-color);
 }
@@ -3212,7 +3212,7 @@ input[type="date"]:focus {
     display: flex;
     align-items: center;
     background: var(--background-color);
-    border-radius: 24px;
+    border-radius: 20px;
     padding: 0 14px;
     border: 1px solid transparent;
     transition: var(--transition);
@@ -3234,8 +3234,8 @@ input[type="date"]:focus {
     flex: 1;
     border: none;
     background: transparent;
-    padding: 10px 0;
-    font-size: 14px;
+    padding: 8px 0;
+    font-size: 13px;
     font-family: var(--font-family);
     outline: none;
     color: var(--text-primary);
@@ -3256,18 +3256,18 @@ input[type="date"]:focus {
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 }
 
 .member-card-v2 {
     display: flex;
     align-items: center;
-    padding: 12px 16px;
+    padding: 8px 12px;
     background: var(--background-color);
     border-radius: var(--border-radius-lg);
     cursor: pointer;
     transition: var(--transition);
-    gap: 16px;
+    gap: 10px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
@@ -3277,8 +3277,8 @@ input[type="date"]:focus {
 }
 
 .member-avatar-v2 {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     border-radius: 30%;
     display: flex;
     align-items: center;
@@ -3288,7 +3288,7 @@ input[type="date"]:focus {
 }
 
 .member-avatar-v2 span {
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 700;
     color: inherit;
 }
@@ -3312,7 +3312,7 @@ input[type="date"]:focus {
 }
 
 .member-name-v2 {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -3335,13 +3335,13 @@ input[type="date"]:focus {
 }
 
 .member-position-v2 {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-secondary);
     line-height: 1.4;
 }
 
 .member-company-v2 {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-secondary);
     opacity: 0.8;
 }
@@ -3352,8 +3352,8 @@ input[type="date"]:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: transparent;
     border: none;
@@ -3417,13 +3417,13 @@ input[type="date"]:focus {
 /* [Phase 4] removed duplicate .profile-hero — see line ~4052 */
 
 .profile-avatar-xl {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     border-radius: 30%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
@@ -3480,18 +3480,18 @@ input[type="date"]:focus {
 }
 
 .profile-hero-name {
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 700;
     color: var(--text-primary);
     margin: 0 0 4px;
 }
 
 .profile-hero-role {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--primary-color);
     background: var(--secondary-color);
-    padding: 3px 12px;
+    padding: 2px 8px;
     border-radius: 12px;
     display: inline-block;
 }
@@ -3599,13 +3599,13 @@ input[type="date"]:focus {
 /* [Phase 4] removed duplicate .info-section — see line ~4075 */
 
 .info-section-title {
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -3613,7 +3613,7 @@ input[type="date"]:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    padding: 6px 0;
     border-bottom: 1px solid rgba(0,0,0,0.04);
 }
 
@@ -3622,14 +3622,14 @@ input[type="date"]:focus {
 }
 
 .info-label {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-secondary);
     flex-shrink: 0;
     min-width: 70px;
 }
 
 .info-value {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-primary);
     font-weight: 500;
     text-align: right;
@@ -3733,11 +3733,11 @@ input[type="date"]:focus {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 8px 10px;
     background: var(--background-color);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     cursor: pointer;
     transition: var(--transition);
     position: relative;
@@ -3791,7 +3791,7 @@ input[type="date"]:focus {
 .home-schedule-meta {
     display: flex;
     gap: 8px;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-secondary);
 }
 
@@ -3815,11 +3815,11 @@ input[type="date"]:focus {
 
 /* ==================== 홈 공지 카드 (개선) ==================== */
 .notice-card {
-    padding: 10px 12px;
+    padding: 8px 10px;
     background: var(--background-color);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     cursor: pointer;
     transition: var(--transition);
 }
@@ -3846,7 +3846,7 @@ input[type="date"]:focus {
 .notice-meta {
     display: flex;
     gap: 8px;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-secondary);
 }
 
@@ -3879,7 +3879,7 @@ input[type="date"]:focus {
 
 /* ==================== 게시판 카드 디자인 개선 ==================== */
 .post-list {
-    padding: var(--spacing-md);
+    padding: 8px 12px;
 }
 
 .card {
@@ -3962,11 +3962,11 @@ input[type="date"]:focus {
 
 .profile-hero {
     text-align: center;
-    padding: 28px 0 24px;
+    padding: 16px 0 12px;
     background: linear-gradient(135deg, var(--primary-color) 0%, #60A5FA 100%);
-    margin: 0 -16px 20px;
-    padding-left: 16px;
-    padding-right: 16px;
+    margin: 0 -12px 10px;
+    padding-left: 12px;
+    padding-right: 12px;
 }
 
 .profile-hero .profile-avatar-xl {
@@ -3984,10 +3984,10 @@ input[type="date"]:focus {
 }
 
 .info-section {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     background: var(--background-color);
     border-radius: var(--border-radius-lg);
-    padding: 16px;
+    padding: 10px 12px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
     border: 1px solid rgba(0, 0, 0, 0.04);
 }
@@ -3995,7 +3995,7 @@ input[type="date"]:focus {
 .profile-actions {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     margin-top: 12px;
 }
 
@@ -4005,10 +4005,10 @@ input[type="date"]:focus {
     justify-content: center;
     gap: 8px;
     width: 100%;
-    padding: 14px;
+    padding: 12px;
     border: none;
     border-radius: var(--border-radius-lg);
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
@@ -4045,9 +4045,9 @@ input[type="date"]:focus {
 
 .attendance-section {
     margin-top: 24px;
-    padding: 24px;
+    padding: 12px;
     background: #F8FAFC;
-    border-radius: var(--radius-md, 12px);
+    border-radius: 8px;
     border: 1px solid var(--border-color, #E2E8F0);
 }
 
@@ -4059,8 +4059,8 @@ input[type="date"]:focus {
 }
 
 .attendance-title {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     color: var(--text-primary, #0F172A);
     margin: 0;
 }
@@ -4087,9 +4087,9 @@ input[type="date"]:focus {
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    padding: 14px 8px;
+    padding: 10px 6px;
     border: 1.5px solid var(--border-color, #E2E8F0);
-    border-radius: var(--radius-md, 12px);
+    border-radius: 8px;
     background: var(--background-color);
     cursor: pointer;
     transition: all 0.2s;
@@ -4134,7 +4134,7 @@ input[type="date"]:focus {
 }
 
 .vote-count {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text-primary, #0F172A);
 }
@@ -4200,7 +4200,7 @@ input[type="date"]:focus {
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 12px 4px 6px;
+    padding: 8px 4px 4px;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 4px;
 }
@@ -4529,16 +4529,16 @@ input[type="date"]:focus {
 
 /* ==================== 일정 상세 (개선) ==================== */
 .schedule-detail {
-    padding: 16px 16px 0;
+    padding: 12px 12px 0;
 }
 .schedule-detail-section {
     background: var(--background-color);
-    padding: 16px;
-    margin-top: 8px;
+    padding: 12px;
+    margin-top: 6px;
 }
 .schedule-detail-section:first-child { margin-top: 0; }
 .schedule-detail-section-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 8px;
@@ -4551,16 +4551,16 @@ input[type="date"]:focus {
 .schedule-detail-divider {
     height: 1px;
     background: var(--neutral-bg);
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 /* 카테고리 배지 5종 */
 .schedule-category-badge {
     display: inline-flex;
     align-items: center;
-    padding: 4px 12px;
+    padding: 2px 8px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.02em;
     margin-bottom: 8px;
@@ -4576,9 +4576,9 @@ input[type="date"]:focus {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 0;
+    padding: 4px 0;
 }
-.schedule-info-row:first-of-type { margin-top: 16px; }
+.schedule-info-row:first-of-type { margin-top: 8px; }
 .schedule-info-row svg {
     width: 16px;
     height: 16px;
@@ -4588,7 +4588,7 @@ input[type="date"]:focus {
     flex-shrink: 0;
 }
 .schedule-info-text {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-secondary);
     line-height: 1.5;
 }
@@ -4696,12 +4696,12 @@ input[type="date"]:focus {
 
 /* 참석자 명단 */
 .attendee-names {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-secondary);
     line-height: 1.6;
 }
 .attendee-view-all {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--primary-color);
     margin-top: 12px;
@@ -4929,9 +4929,9 @@ input[type="date"]:focus {
 /* ==================== 홈 배너 캐러셀 (개선) ==================== */
 .banner-carousel {
     position: relative;
-    width: calc(100% - 32px);
+    width: calc(100% - 24px);
     height: 120px;
-    margin: 12px 16px 0;
+    margin: 8px 12px 0;
     border-radius: 12px;
     overflow: hidden;
 }
@@ -4951,7 +4951,7 @@ input[type="date"]:focus {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding: 16px;
+    padding: 10px 12px;
     cursor: default;
     box-sizing: border-box;
 }
@@ -4980,7 +4980,7 @@ input[type="date"]:focus {
     background: var(--background-color);
 }
 .banner-slide .banner-title {
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 700;
     color: #FFFFFF;
     line-height: 1.3;
@@ -4989,7 +4989,7 @@ input[type="date"]:focus {
     white-space: nowrap;
 }
 .banner-slide .banner-subtitle {
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 400;
     color: rgba(255,255,255,0.8);
     margin-top: 4px;
@@ -5048,8 +5048,8 @@ input[type="date"]:focus {
 /* ==================== 소형 기기 반응형 ==================== */
 @media (max-width: 479px) {
     .banner-carousel { height: 110px; }
-    .banner-slide .banner-title { font-size: 16px; }
-    .banner-slide .banner-subtitle { font-size: 12px; }
+    .banner-slide .banner-title { font-size: 14px; }
+    .banner-slide .banner-subtitle { font-size: 10px; }
     .empty-state-icon { width: 56px; height: 56px; }
     .toast { font-size: 13px; }
     .error-state-icon { width: 64px; height: 64px; }
@@ -5059,7 +5059,7 @@ input[type="date"]:focus {
 }
 
 @media (max-width: 359px) {
-    .banner-carousel { height: 120px; margin: 12px 12px 0; width: calc(100% - 24px); }
+    .banner-carousel { height: 110px; margin: 8px 8px 0; width: calc(100% - 16px); }
     .banner-dot { width: 5px; height: 5px; }
     .banner-dot.active { width: 14px; }
     .empty-state-icon { width: 48px; height: 48px; }
@@ -5138,15 +5138,15 @@ input[type="date"]:focus {
 
 /* ========== M-13: 업종 필터 + 태그 ========== */
 .industry-filter-wrap {
-    padding: 0 16px 8px;
+    padding: 0 12px 4px;
 }
 .industry-filter-select {
     width: 100%;
-    height: 38px;
+    height: 34px;
     padding: 0 12px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm, 8px);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-primary);
     background: var(--background-color);
     appearance: auto;
@@ -6035,13 +6035,13 @@ a.sns-badge:hover {
 /* ==================== 프로필 히어로 v2.0 (이슈 #7) ==================== */
 .profile-hero {
     background: var(--bg-secondary);
-    padding: 32px 16px 24px;
+    padding: 16px 12px 12px;
     text-align: center;
     border-bottom: 1px solid var(--border-color);
 }
 
 .profile-hero .profile-hero-name {
-    font-size: 22px;
+    font-size: 17px;
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 4px;
@@ -6049,7 +6049,7 @@ a.sns-badge:hover {
 
 .profile-hero .profile-hero-role {
     display: inline-block;
-    padding: 4px 12px;
+    padding: 2px 8px;
     font-size: 12px;
     font-weight: 500;
     color: var(--primary-color);
@@ -6091,8 +6091,8 @@ a.sns-badge:hover {
 .attendance-section {
     background: var(--background-color);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 16px;
+    border-radius: 8px;
+    padding: 12px;
     margin-top: 16px;
 }
 

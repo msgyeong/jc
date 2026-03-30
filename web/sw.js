@@ -1,6 +1,6 @@
 // 영등포 JC — Service Worker (Push Notifications + Offline Cache)
 
-var CACHE_NAME = 'jc-v7';
+var CACHE_NAME = 'jc-v8';
 var STATIC_ASSETS = [
   '/manifest.json'
 ];

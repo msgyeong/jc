@@ -177,8 +177,7 @@ function renderDaySchedules() {
     });
 
     if (daySchedules.length === 0) {
-        var cta = canCreateSchedule() ? { label: '일정 만들기', action: "document.getElementById('create-schedule-btn').click()" } : null;
-        listEl.innerHTML = '<div class="empty-state-mini">' + renderEmptyState('calendar', '이 날짜에 일정이 없습니다', null, cta) + '</div>';
+        listEl.innerHTML = '<div class="empty-state-mini">' + renderEmptyState('calendar', '이 날짜에 일정이 없습니다') + '</div>';
         return;
     }
 

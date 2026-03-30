@@ -3971,9 +3971,18 @@ input[type="date"]:focus {
 
 .empty-state-mini {
     text-align: center;
-    padding: 24px 16px;
+    padding: 8px 16px;
     color: var(--text-secondary);
     font-size: 13px;
+}
+.empty-state-mini .empty-state {
+    padding: 8px;
+    min-height: auto;
+}
+.empty-state-mini .empty-state-icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 4px;
 }
 
 .error-state .btn {

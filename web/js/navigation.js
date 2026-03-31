@@ -240,8 +240,8 @@ function navigateToScreen(screenName, opts) {
             try { route.init(); } catch (err) { console.error('Screen init error:', screenName, err); }
         }
 
-        // pushState
-        if (!route.noHistory) {
+        // pushState (뒤로가기/popstate 시에는 push 안 함 — 무한루프 방지)
+        if (!route.noHistory && !isBack && !window._navPopstate) {
             pushRoute(screenName);
         }
     } else {

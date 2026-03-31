@@ -203,38 +203,61 @@ function renderGroupsSections(groups) {
     `).join('');
 }
 
+function getIndustryLabel() {
+    if (!currentIndustryFilter) return '업종: 전체';
+    var found = INDUSTRY_CATEGORIES.find(c => c.code === currentIndustryFilter);
+    return '업종: ' + (found ? found.name : currentIndustryFilter);
+}
+
+function getPositionLabel() {
+    if (!currentPositionFilter) return '직책: 전체';
+    var positions = cachedPositions.length > 0 ? cachedPositions
+        : [{id:1,name:'회장'},{id:2,name:'수석부회장'},{id:3,name:'부회장'},{id:4,name:'총무'},{id:5,name:'이사'},{id:6,name:'감사'},{id:7,name:'일반회원'}];
+    var found = positions.find(p => String(p.id) === String(currentPositionFilter));
+    return '직책: ' + (found ? found.name : '전체');
+}
+
+var chevronDownSvg = '<svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function openIndustryFilter() {
+    var options = [{ value: '', label: '전체' }];
+    INDUSTRY_CATEGORIES.forEach(function(c) { options.push({ value: c.code, label: c.name }); });
+    openBottomSheet('업종 선택', options, currentIndustryFilter, function(value) {
+        handleIndustryFilterChange(value);
+        var btn = document.getElementById('industry-filter-btn');
+        if (btn) btn.firstChild.textContent = value ? '업종: ' + (INDUSTRY_CATEGORIES.find(c => c.code === value) || {}).name : '업종: 전체';
+    });
+}
+
+function openPositionFilter() {
+    var positions = cachedPositions.length > 0 ? cachedPositions
+        : [{id:1,name:'회장'},{id:2,name:'수석부회장'},{id:3,name:'부회장'},{id:4,name:'총무'},{id:5,name:'이사'},{id:6,name:'감사'},{id:7,name:'일반회원'}];
+    var options = [{ value: '', label: '전체' }];
+    positions.forEach(function(p) { options.push({ value: String(p.id), label: p.name }); });
+    openBottomSheet('직책 선택', options, String(currentPositionFilter || ''), function(value) {
+        handlePositionFilterChange(value);
+        var btn = document.getElementById('position-filter-btn');
+        if (btn) btn.firstChild.textContent = value ? '직책: ' + (positions.find(p => String(p.id) === value) || {}).name : '직책: 전체';
+    });
+}
+
 function renderAllMembersSection(members, count) {
-    const industryOptions = INDUSTRY_CATEGORIES.map(c =>
-        `<option value="${c.code}"${currentIndustryFilter === c.code ? ' selected' : ''}>${c.name}</option>`
-    ).join('');
-
-    const positionOptions = cachedPositions.length > 0
-        ? cachedPositions.map(p =>
-            `<option value="${p.id}"${currentPositionFilter == p.id ? ' selected' : ''}>${escapeHtml(p.name)}</option>`
-        ).join('')
-        : [
-            {id: 1, name: '회장'}, {id: 2, name: '수석부회장'}, {id: 3, name: '부회장'},
-            {id: 4, name: '총무'}, {id: 5, name: '이사'}, {id: 6, name: '감사'}, {id: 7, name: '일반회원'}
-        ].map(p => `<option value="${p.id}"${currentPositionFilter == p.id ? ' selected' : ''}>${p.name}</option>`).join('');
-
     const cards = members.map(m => createMemberCard(m)).join('');
 
     return `
         <div class="member-section" id="section-all-members">
-            <div class="member-section-header all-members-header" style="flex-wrap:wrap;gap:6px">
+            <div class="member-section-header all-members-header">
                 <span>회원 ${count}명</span>
                 <div class="member-filters-row">
-                    <select class="industry-filter-inline" onchange="handleIndustryFilterChange(this.value)">
-                        <option value="">업종: 전체</option>
-                        ${industryOptions}
-                    </select>
-                    <select class="industry-filter-inline" onchange="handlePositionFilterChange(this.value)">
-                        <option value="">직책: 전체</option>
-                        ${positionOptions}
-                    </select>
-                    <label class="cross-org-toggle" style="display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--text-hint);cursor:pointer;margin-left:2px;white-space:nowrap">
+                    <button type="button" class="filter-btn" id="industry-filter-btn" onclick="openIndustryFilter()">
+                        <span>${getIndustryLabel()}</span>${chevronDownSvg}
+                    </button>
+                    <button type="button" class="filter-btn" id="position-filter-btn" onclick="openPositionFilter()">
+                        <span>${getPositionLabel()}</span>${chevronDownSvg}
+                    </button>
+                    <label class="cross-org-toggle" style="display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--text-hint);cursor:pointer;white-space:nowrap">
                         <input type="checkbox" id="cross-org-check" onchange="handleCrossOrgToggle(this.checked)" style="accent-color:var(--primary-color)">
-                        <span>타로컬 보기</span>
+                        <span>타로컬</span>
                     </label>
                 </div>
             </div>

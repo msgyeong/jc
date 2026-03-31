@@ -135,9 +135,7 @@ async function initApp() {
 // 초기 화면 표시
 async function showInitialScreen() {
     console.log('🔹 초기 화면 표시 시작');
-    
-    // 스플래시 화면 표시
-    navigateToScreen('splash');
+    // 스플래시는 index.html에서 이미 active — JS에서 다시 활성화하지 않음
     
     // 인증 상태 확인 (최대 3초 타임아웃)
     const timeout = new Promise((resolve) => 

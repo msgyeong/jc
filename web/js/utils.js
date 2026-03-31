@@ -340,3 +340,52 @@ function renderSkeleton(type) {
     }
     return '<div style="padding:24px;text-align:center"><div class="loading-spinner"></div></div>';
 }
+
+// ========== 바텀시트 (공통 컴포넌트) ==========
+
+function openBottomSheet(title, options, currentValue, onSelect) {
+    var existing = document.querySelector('.bottomsheet-overlay');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'bottomsheet-overlay';
+
+    var sheet = document.createElement('div');
+    sheet.className = 'bottomsheet';
+
+    var html = '<div class="bottomsheet-handle"></div>';
+    html += '<div class="bottomsheet-title">' + escapeHtml(title) + '</div>';
+    options.forEach(function(opt) {
+        var sel = (String(opt.value) === String(currentValue)) ? ' selected' : '';
+        html += '<div class="bottomsheet-option' + sel + '" data-value="' + (opt.value || '') + '">' + escapeHtml(opt.label) + '</div>';
+    });
+
+    sheet.innerHTML = html;
+    overlay.appendChild(sheet);
+    document.body.appendChild(overlay);
+
+    // 뒤 스크롤 방지
+    document.body.style.overflow = 'hidden';
+
+    requestAnimationFrame(function() {
+        overlay.classList.add('active');
+    });
+
+    sheet.addEventListener('click', function(e) {
+        var option = e.target.closest('.bottomsheet-option');
+        if (!option) return;
+        onSelect(option.dataset.value, option.textContent);
+        closeBottomSheet(overlay);
+    });
+
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeBottomSheet(overlay);
+    });
+}
+
+function closeBottomSheet(overlay) {
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+    setTimeout(function() { overlay.remove(); }, 250);
+}

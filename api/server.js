@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
@@ -49,12 +50,16 @@ app.use(cors({
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            callback(null, true); // 모바일 앱 등 다양한 클라이언트 허용
+            console.warn('CORS 차단:', origin);
+            callback(new Error('CORS not allowed'));
         }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// gzip 압축
+app.use(compression());
 
 // Body parser
 app.use(express.json({ limit: '10mb' }));

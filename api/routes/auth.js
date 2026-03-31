@@ -144,7 +144,7 @@ router.post('/signup', async (req, res) => {
                 const geoUrl = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`;
                 const kakaoRes = await new Promise((resolve, reject) => {
                     https.get(geoUrl, {
-                        headers: { 'Authorization': `KakaoAK ${process.env.KAKAO_REST_API_KEY || 'bf233c9ee97fc1e97870c696f6375006'}` }
+                        headers: { 'Authorization': `KakaoAK ${process.env.KAKAO_REST_API_KEY}` }
                     }, (response) => {
                         let data = '';
                         response.on('data', chunk => data += chunk);

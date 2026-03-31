@@ -24,7 +24,7 @@ function generateToken(userId, email, role) {
         role
     };
 
-    const token = jwt.sign(payload, JWT_SECRET || 'dev-only-secret', {
+    const token = jwt.sign(payload, JWT_SECRET, {
         algorithm: 'HS256',
         expiresIn: JWT_EXPIRES_IN
     });
@@ -39,7 +39,7 @@ function generateToken(userId, email, role) {
  */
 function verifyToken(token) {
     try {
-        const decoded = jwt.verify(token, JWT_SECRET || 'dev-only-secret', {
+        const decoded = jwt.verify(token, JWT_SECRET, {
             algorithms: ['HS256']
         });
         return decoded;

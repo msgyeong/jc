@@ -101,7 +101,10 @@ function renderProfile(p) {
 
             <!-- 프로필 요약 -->
             <div class="profile-summary">
-                ${avatarImg}${avatarInitial}
+                <div class="profile-avatar-wrap" onclick="document.getElementById('profile-photo-input').click()" style="cursor:pointer;position:relative">
+                    ${avatarImg}${avatarInitial}
+                    <div class="profile-avatar-camera"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4" fill="rgba(0,0,0,0.3)" stroke="none"/></svg></div>
+                </div>
                 <div class="profile-summary-info">
                     <div class="profile-summary-name">${escapeHtml(p.name || '이름 없음')}</div>
                     <span class="profile-summary-badge">${roleLabel}</span>

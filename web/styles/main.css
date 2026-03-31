@@ -4022,6 +4022,23 @@ input[type="date"]:focus {
     padding: 12px 16px;
     border-bottom: 1px solid var(--border-color);
 }
+.profile-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+.profile-avatar-camera {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+}
 .profile-summary-avatar {
     width: 48px;
     height: 48px;

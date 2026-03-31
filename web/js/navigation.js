@@ -107,10 +107,7 @@ var _routes = {
     'settings':     { nav: 'profile', showNav: true, init: function() { if (typeof renderSettingsScreen === 'function') renderSettingsScreen(); } },
     'portal':       { showNav: true, init: function() { if (typeof loadPortalScreen === 'function') loadPortalScreen(); } },
     'org-chart':    { showNav: true, init: function() { if (typeof loadOrgChartScreen === 'function') loadOrgChartScreen(); } },
-    'jc-map':       { showNav: true,
-        init: function() { setTimeout(function() { if (typeof loadJcMapScreen === 'function') loadJcMapScreen(); }, 100); },
-        leave: function() { var s = document.getElementById('jc-map-screen'); if (s) { s.style.position = ''; s.style.top = ''; s.style.left = ''; s.style.width = ''; s.style.height = ''; s.style.zIndex = ''; s.style.maxWidth = ''; } }
-    },
+    'jc-map':       { showNav: true, init: function() { setTimeout(function() { if (typeof loadJcMapScreen === 'function') loadJcMapScreen(); }, 100); } },
     'jc-vision':    { showNav: true, init: function() { if (typeof loadContentScreen === 'function') loadContentScreen('jc-vision'); } },
     'jc-roles':     { showNav: true, init: function() { if (typeof loadContentScreen === 'function') loadContentScreen('jc-roles'); } },
     'jc-charter':   { showNav: true, init: function() { if (typeof loadContentScreen === 'function') loadContentScreen('jc-charter'); } },

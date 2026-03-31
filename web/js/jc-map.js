@@ -33,17 +33,7 @@ async function loadJcMapScreen() {
             return;
         }
 
-        // 지도 화면 — 하단 네비(60px) 남기고 표시
-        if (screen) {
-            screen.style.position = 'fixed';
-            screen.style.top = '0';
-            screen.style.left = '0';
-            screen.style.width = '100vw';
-            screen.style.height = 'calc(100vh - 60px)';
-            screen.style.zIndex = '200';
-            screen.style.background = '#fff';
-            screen.style.maxWidth = '100vw';
-        }
+        // 지도 화면 — 일반 screen으로 유지 (fixed 사용 안 함)
         var contentEl = document.getElementById('jc-map-content');
         if (contentEl) {
             contentEl.style.width = '100%';

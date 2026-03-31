@@ -85,32 +85,28 @@ function renderSnsBadges(snsLinks) {
 // 프로필 렌더링
 function renderProfile(p) {
     const roleLabel = getRoleText(p.role);
-    const hasWorkInfo = p.company || p.position || p.department || p.work_phone;
+    const hasWorkInfo = p.company || p.position || p.department || p.work_phone || p.industry;
+    const hasPR = p.one_line_pr || p.service_description || (p.sns_links && p.sns_links.length > 0);
+    const hasJC = p.join_date;
+
+    // 프로필 요약 아바타
+    var avatarHtml = p.profile_image
+        ? '<img src="' + p.profile_image + '" alt="' + escapeHtml((p.name || '')[0] || '') + '" style="width:48px;height:48px;border-radius:50%;object-fit:cover" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+          '<span class="profile-summary-initial" style="display:none">' + escapeHtml((p.name || '?')[0]) + '</span>'
+        : '<span class="profile-summary-initial">' + escapeHtml((p.name || '?')[0]) + '</span>';
 
     return `
         <div class="profile-v2">
-            <!-- 편집 버튼 (우측 상단) -->
-            <div style="display:flex;justify-content:flex-end;padding:12px 16px 0">
-                <button onclick="showEditProfileForm()" style="background:none;border:1px solid var(--border-color,#e5e7eb);border-radius:8px;padding:6px 14px;font-size:13px;color:var(--primary-color,#2563EB);cursor:pointer;display:flex;align-items:center;gap:4px">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                    편집
-                </button>
-            </div>
-            <!-- 프로필 히어로 -->
-            <div class="profile-hero">
-                <div class="profile-avatar-xl" style="background:var(--primary-bg); position:relative; cursor:pointer" onclick="document.getElementById('profile-photo-input').click()">
-                    ${p.profile_image
-                        ? `<img src="${p.profile_image}" alt="${escapeHtml(p.name)}">`
-                        : DEFAULT_AVATAR_SVG
-                    }
-                    <div class="avatar-camera-btn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.5"><rect x="2" y="6" width="20" height="14" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M7 6l1.5-2h7L17 6"/></svg>
-                    </div>
-                    <div class="avatar-photo-hint">사진 변경</div>
+            <!-- 프로필 요약 (1줄) -->
+            <div class="profile-summary-row">
+                <div class="profile-summary-avatar">${avatarHtml}
                     <input type="file" id="profile-photo-input" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this)">
                 </div>
-                <h2 class="profile-hero-name">${escapeHtml(p.name || '이름 없음')}${p.jc_position && typeof getPositionBadgeHtml === 'function' ? ' ' + getPositionBadgeHtml(p.jc_position) : ''}</h2>
-                <span class="profile-hero-role">${roleLabel}</span>
+                <div class="profile-summary-info">
+                    <span class="profile-summary-name">${escapeHtml(p.name || '이름 없음')}</span>
+                    ${p.jc_position && typeof getPositionBadgeHtml === 'function' ? getPositionBadgeHtml(p.jc_position) : ''}
+                    <span class="profile-summary-role">${roleLabel}</span>
+                </div>
             </div>
 
             <!-- 기본 정보 -->
@@ -124,7 +120,7 @@ function renderProfile(p) {
                 ${p.gender ? profileInfoRow('성별', getGenderText(p.gender), 'person') : ''}
             </div>
 
-            ${hasWorkInfo || p.industry ? `
+            ${hasWorkInfo ? `
             <div class="info-section">
                 <h3 class="info-section-title">직장 정보</h3>
                 ${p.company ? profileInfoRow('회사', p.company, 'company') : ''}
@@ -134,7 +130,7 @@ function renderProfile(p) {
                 ${p.work_phone ? profileInfoRow('직장 전화', p.work_phone, 'phone') : ''}
             </div>` : ''}
 
-            ${p.one_line_pr || p.service_description || (p.sns_links && p.sns_links.length > 0) ? `
+            ${hasPR ? `
             <div class="info-section">
                 <h3 class="info-section-title">사업 PR</h3>
                 ${p.one_line_pr ? profileInfoRow('한 줄 PR', p.one_line_pr, 'text') : ''}
@@ -146,24 +142,19 @@ function renderProfile(p) {
                 </div>` : ''}
             </div>` : ''}
 
+            ${hasJC ? `
             <div class="info-section">
                 <h3 class="info-section-title">JC 정보</h3>
-                ${profileInfoRow('입회일', p.join_date ? formatDate(p.join_date, 'YYYY-MM-DD') : '미설정', 'calendar')}
-            </div>
+                ${profileInfoRow('입회일', formatDate(p.join_date, 'YYYY-MM-DD'), 'calendar')}
+            </div>` : ''}
 
             <div id="profile-title-history-container"></div>
 
-            <!-- 사업 PR 섹션 -->
-            ${renderBusinessPR(p)}
+            ${typeof renderBusinessPR === 'function' ? renderBusinessPR(p) : ''}
 
             <!-- 메뉴 -->
             <div class="settings-group">
-                <div class="settings-item" onclick="showEditProfileForm()">
-                    <span class="settings-item-icon">&#9998;</span>
-                    <span class="settings-item-label">내 정보 수정</span>
-                    <span class="settings-item-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
-                </div>
-                <div class="settings-item" onclick="showSettingsScreen()">
+                <div class="settings-item" onclick="navigateToScreen('settings')">
                     <span class="settings-item-icon">&#9881;</span>
                     <span class="settings-item-label">환경설정</span>
                     <span class="settings-item-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>

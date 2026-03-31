@@ -33,7 +33,7 @@
     --text-secondary: #4B5563;  /* WCAG AA: 7:1 on white */
     --text-hint: #6B7280;      /* WCAG AA: 5.0:1 on white */
     --text-disabled: #D1D5DB;
-    --text-muted: #9CA3AF;
+    --text-muted: #6B7280;  /* WCAG AA: 5.0:1 on white (기존 #9CA3AF은 3.2:1 미달) */
     --border-color: #E5E7EB;
     --border-light: #F3F4F6;
     --neutral-bg: #F3F4F6;

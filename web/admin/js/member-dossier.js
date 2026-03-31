@@ -168,7 +168,7 @@ function renderDossierPage(container) {
         + '<div class="dossier-profile-card">'
         + '<div class="dossier-avatar dossier-avatar-lg" style="background:var(--c-primary-light);position:relative;cursor:pointer" onclick="document.getElementById(\'dossier-photo-input\').click()">'
         + (m.profile_image
-            ? '<img src="' + escapeHtml(m.profile_image) + '" alt="">'
+            ? '<img src="' + escapeHtml(m.profile_image) + '" alt="' + escapeHtml(m.name || '') + '">'
             : DOSSIER_DEFAULT_AVATAR)
         + '<div class="avatar-camera-btn avatar-camera-btn--lg">'
         + '<svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.5"><rect x="2" y="6" width="20" height="14" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M7 6l1.5-2h7L17 6"/></svg>'

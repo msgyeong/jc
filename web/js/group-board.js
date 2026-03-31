@@ -151,7 +151,7 @@ async function openGroupPostDetail(postId) {
         // 헤더
         html += '<div class="gb-detail-header">';
         html += '<div class="gb-detail-author-row">';
-        html += (post.author_image ? '<img src="' + escapeHtml(post.author_image) + '" class="gb-detail-avatar" alt="">' : '<div class="gb-detail-avatar gb-post-avatar-default"></div>');
+        html += (post.author_image ? '<img src="' + escapeHtml(post.author_image) + '" class="gb-detail-avatar" alt="' + escapeHtml(post.author_name || '') + '">' : '<div class="gb-detail-avatar gb-post-avatar-default"></div>');
         html += '<div><strong>' + escapeHtml(post.author_name) + '</strong>';
         if (post.author_position) html += '<span class="gb-detail-position"> · ' + escapeHtml(post.author_position) + '</span>';
         html += '<br><span class="gb-detail-date">' + formatFullDate(post.created_at) + '</span></div>';
@@ -178,7 +178,7 @@ async function openGroupPostDetail(postId) {
                 if (Array.isArray(imgs) && imgs.length > 0) {
                     html += '<div class="gb-detail-images">';
                     imgs.forEach(function(imgUrl) {
-                        html += '<img src="' + escapeHtml(imgUrl) + '" class="gb-detail-img" alt="" loading="lazy">';
+                        html += '<img src="' + escapeHtml(imgUrl) + '" class="gb-detail-img" alt="게시글 첨부 이미지" loading="lazy">';
                     });
                     html += '</div>';
                 }

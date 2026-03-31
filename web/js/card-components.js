@@ -16,7 +16,7 @@ function renderPostCard(post, opts) {
     var unread = isNewPost && !post[readField];
 
     var avatarHtml = post.author_image
-        ? '<img src="' + escapeHtml(post.author_image) + '" alt="" class="pc-avatar-img">'
+        ? '<img src="' + escapeHtml(post.author_image) + '" alt="' + escapeHtml(post.author_name || '') + '" class="pc-avatar-img">'
         : '<span class="pc-avatar-text">' + escapeHtml((post.author_name || '?')[0]) + '</span>';
 
     var pinnedHtml = post.is_pinned ? '<span class="pc-pinned">[고정]</span>' : '';
@@ -26,7 +26,7 @@ function renderPostCard(post, opts) {
     if (opts.showThumb) {
         var imgs = parseImageArray ? parseImageArray(post.images) : [];
         if (imgs.length > 0) {
-            thumbHtml = '<div class="pc-thumb"><img src="' + imgs[0] + '" alt="" onerror="this.parentElement.style.display=\'none\'"></div>';
+            thumbHtml = '<div class="pc-thumb"><img src="' + imgs[0] + '" alt="게시글 첨부 이미지" loading="lazy" onerror="this.parentElement.style.display=\'none\'"></div>';
         }
     }
 
@@ -53,9 +53,9 @@ function renderPostCard(post, opts) {
         + preview
         + '</div>' + thumbHtml + '</div>'
         + '<div class="pc-stats">'
-        + '<span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ' + (post.comments_count || 0) + '</span>'
-        + '<span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg> ' + (post.likes_count || 0) + '</span>'
-        + '<span class="pc-stat"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ' + (post.views || 0) + '</span>'
+        + '<span class="pc-stat"><svg aria-hidden="true" class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ' + (post.comments_count || 0) + '</span>'
+        + '<span class="pc-stat"><svg aria-hidden="true" class="icon-sm" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg> ' + (post.likes_count || 0) + '</span>'
+        + '<span class="pc-stat"><svg aria-hidden="true" class="icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ' + (post.views || 0) + '</span>'
         + '</div>'
         + '</div>';
 }
@@ -77,7 +77,7 @@ function renderComment(c, opts) {
     var deleteAction = opts.deleteAction || 'delete-comment';
 
     var avatarHtml = c.author_image
-        ? '<img src="' + escapeHtml(c.author_image) + '" class="gb-comment-avatar" alt="">'
+        ? '<img src="' + escapeHtml(c.author_image) + '" class="gb-comment-avatar" alt="' + escapeHtml(c.author_name || '') + '">'
         : '<div class="gb-comment-avatar gb-post-avatar-default"></div>';
 
     return '<div class="gb-comment' + indent + '">'

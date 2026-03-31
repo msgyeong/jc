@@ -164,7 +164,7 @@ async function loadClubDetailScreen() {
         var membersHtml = '<div class="club-members-row">';
         acceptedMembers.slice(0, 8).forEach(function(m) {
             var avatar = m.profile_image
-                ? '<img src="' + m.profile_image + '" class="club-member-avatar">'
+                ? '<img src="' + m.profile_image + '" class="club-member-avatar" alt="' + escapeHtml(m.name) + '">'
                 : '<div class="club-member-avatar club-member-avatar-default">' + escapeHtml(m.name).charAt(0) + '</div>';
             membersHtml += avatar;
         });
@@ -306,7 +306,7 @@ async function openClubPostDetail(postId) {
             if (imgs && imgs.length > 0) {
                 images = '<div class="gb-post-images">';
                 imgs.forEach(function(url) {
-                    images += '<img src="' + url + '" class="gb-post-image" onclick="window.open(this.src)">';
+                    images += '<img src="' + url + '" class="gb-post-image" alt="게시글 첨부 이미지" loading="lazy" onclick="window.open(this.src)">';
                 });
                 images += '</div>';
             }
@@ -433,7 +433,7 @@ function initClubPostForm() {
             Array.from(this.files).slice(0, 5).forEach(function(file) {
                 var reader = new FileReader();
                 reader.onload = function(e) {
-                    preview.innerHTML += '<img src="' + e.target.result + '" class="gb-preview-img">';
+                    preview.innerHTML += '<img src="' + e.target.result + '" class="gb-preview-img" alt="업로드 미리보기">';
                 };
                 reader.readAsDataURL(file);
             });
@@ -602,7 +602,7 @@ function loadClubMembersList(members) {
         var roleTag = m.role === 'owner' ? '<span class="club-role-tag owner">개설자</span>'
             : m.role === 'admin' ? '<span class="club-role-tag admin">관리자</span>' : '';
         var avatar = m.profile_image
-            ? '<img src="' + m.profile_image + '" class="club-member-avatar">'
+            ? '<img src="' + m.profile_image + '" class="club-member-avatar" alt="' + escapeHtml(m.name) + '">'
             : '<div class="club-member-avatar club-member-avatar-default">' + escapeHtml(m.name).charAt(0) + '</div>';
         html += '<div class="club-member-card" onclick="navigateToScreen(\'member-detail\');loadMemberDetail(' + m.user_id + ')">'
             + avatar
@@ -739,7 +739,7 @@ async function loadMemberDetail(userId) {
         var m = res.member || res;
 
         var avatar = m.profile_image
-            ? '<img src="' + m.profile_image + '" class="profile-avatar">'
+            ? '<img src="' + m.profile_image + '" class="profile-avatar" alt="' + escapeHtml(m.name) + '">'
             : '<div class="profile-avatar profile-avatar-default">' + escapeHtml(m.name).charAt(0) + '</div>';
 
         var html = '<div class="profile-header">' + avatar

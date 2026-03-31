@@ -34,6 +34,7 @@ async function loadJcMapScreen() {
         }
 
         // 지도 화면 — flex:1로 자동 크기 (JS에서 높이 덮어쓰지 않음)
+        var contentEl = document.getElementById('jc-map-content');
         mapContainer.style.width = '100%';
         mapContainer.style.height = '100%';
 

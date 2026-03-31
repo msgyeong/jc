@@ -58,7 +58,7 @@
             <div class="app-bar">
                 <h1 class="app-bar-title">로그인</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <form id="login-form" class="auth-form">
                     <div class="form-group">
                         <label for="login-email">이메일</label>
@@ -149,7 +149,7 @@
                 </button>
                 <h1 class="app-bar-title">비밀번호 찾기</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <!-- 단계 표시 -->
                 <div class="step-indicator" id="forgot-step-indicator">
                     <div class="step-dot active" data-step="1"><span>1</span></div>
@@ -305,7 +305,7 @@
                 </button>
                 <h1 class="app-bar-title">회원가입</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <form id="signup-form" class="auth-form">
                     <!-- 프로필 사진 -->
                     <div class="form-group signup-photo-group">
@@ -716,7 +716,7 @@
             <div class="app-bar">
                 <h1 class="app-bar-title">가입 승인 대기</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <div class="pending-content">
                     <div class="icon-large">⏳</div>
                     <h2>가입 신청이 완료되었습니다</h2>
@@ -814,7 +814,7 @@
                 </button>
                 <h1 class="app-bar-title">게시글</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <div id="post-detail-content">
                     <div class="content-loading">로딩 중...</div>
                 </div>
@@ -829,7 +829,7 @@
                 </button>
                 <h1 class="app-bar-title">글 수정</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <form id="post-edit-form" class="auth-form">
                     <input type="hidden" id="post-edit-id" value="">
                     <div class="form-group">
@@ -881,7 +881,7 @@
                     등록
                 </button>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <form id="post-create-form" class="post-create-form">
                     <!-- category는 현재 탭에서 자동 결정 (hidden) -->
                     <input type="hidden" id="post-create-category" value="general">
@@ -1045,7 +1045,7 @@
                 <h1 class="app-bar-title">로컬조직도</h1>
                 <button class="app-bar-home-btn" onclick="navigateToScreen('home');updateNavigation('home')" title="홈"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
             </div>
-            <div class="screen-content" id="org-chart-content">
+            <div class="screen-content with-bottom-nav" id="org-chart-content">
                 <div class="content-placeholder">관리자가 로컬조직도를 등록하면 여기에 표시됩니다.</div>
             </div>
         </div>
@@ -1060,7 +1060,7 @@
                     <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
             </div>
-            <div class="screen-content" id="group-board-content">
+            <div class="screen-content with-bottom-nav" id="group-board-content">
                 <div class="content-placeholder">로딩 중...</div>
             </div>
         </div>
@@ -1072,7 +1072,7 @@
                 <h1 class="app-bar-title">게시글</h1>
                 <button class="app-bar-home-btn" onclick="navigateToScreen('home');updateNavigation('home')" title="홈"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
             </div>
-            <div class="screen-content" id="group-post-detail-content">
+            <div class="screen-content with-bottom-nav" id="group-post-detail-content">
             </div>
         </div>
 
@@ -1084,7 +1084,7 @@
                 <button class="app-bar-home-btn" onclick="navigateToScreen('home');updateNavigation('home')" title="홈" style="margin-right:8px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
                 <button type="submit" form="group-post-form" class="app-bar-action" id="gp-submit-btn">등록</button>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <form id="group-post-form" class="post-create-form">
                     <input type="text" id="gp-title" class="post-create-title-input" placeholder="제목을 입력하세요" maxlength="200" required>
                     <textarea id="gp-content" class="post-create-content-input" placeholder="내용을 입력하세요" rows="10"></textarea>
@@ -1123,7 +1123,7 @@
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">일정 추가</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <form id="group-schedule-form" class="gb-form">
                     <div class="form-group">
                         <label for="gs-title">제목</label>
@@ -1161,7 +1161,7 @@
                     <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
             </div>
-            <div class="screen-content" id="clubs-content">
+            <div class="screen-content with-bottom-nav" id="clubs-content">
                 <div class="content-placeholder">로딩 중...</div>
             </div>
         </div>
@@ -1175,7 +1175,7 @@
                     <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
             </div>
-            <div class="screen-content" id="club-detail-content">
+            <div class="screen-content with-bottom-nav" id="club-detail-content">
             </div>
         </div>
 
@@ -1185,7 +1185,7 @@
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">게시글</h1>
             </div>
-            <div class="screen-content" id="club-post-detail-content">
+            <div class="screen-content with-bottom-nav" id="club-post-detail-content">
             </div>
         </div>
 
@@ -1195,7 +1195,7 @@
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title" id="club-post-form-title">게시글 작성</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <form id="club-post-form" class="gb-form">
                     <div class="form-group">
                         <label for="cp-title">제목</label>
@@ -1225,7 +1225,7 @@
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">일정 추가</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <form id="club-schedule-form" class="gb-form">
                     <div class="form-group">
                         <label for="cs-title">제목</label>
@@ -1269,7 +1269,7 @@
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">소모임 만들기</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <form id="club-create-form" class="gb-form">
                     <div class="form-group">
                         <label for="club-name">소모임 이름</label>
@@ -1290,7 +1290,7 @@
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">멤버 초대</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <div class="club-invite-search">
                     <input type="search" id="club-invite-query" placeholder="이름·회사·조직명 검색 (초성 가능)" autocomplete="off">
                     <div class="help-text">우리 로컬 + 타로컬 회원 모두 검색됩니다</div>
@@ -1317,7 +1317,7 @@
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">개인정보처리방침</h1>
             </div>
-            <div class="screen-content" style="padding:16px">
+            <div class="screen-content with-bottom-nav" style="padding:16px">
                 <div class="privacy-policy-content">
                     <h3>1. 개인정보의 수집 및 이용 목적</h3>
                     <p>영등포청년회의소(이하 "JC")는 다음의 목적으로 개인정보를 수집·이용합니다.</p>
@@ -1387,7 +1387,7 @@
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">JC 비전·목표</h1>
             </div>
-            <div class="screen-content" id="jc-vision-content">
+            <div class="screen-content with-bottom-nav" id="jc-vision-content">
                 <div class="content-placeholder">관리자가 비전, JC 음악, 목표를 업로드하면 여기에 표시됩니다.</div>
             </div>
         </div>
@@ -1396,7 +1396,7 @@
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">직책 업무</h1>
             </div>
-            <div class="screen-content" id="jc-roles-content">
+            <div class="screen-content with-bottom-nav" id="jc-roles-content">
                 <div class="content-placeholder">직책별 업무 내용이 여기에 표시됩니다.</div>
             </div>
         </div>
@@ -1415,7 +1415,7 @@
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">정관</h1>
             </div>
-            <div class="screen-content" id="jc-charter-content">
+            <div class="screen-content with-bottom-nav" id="jc-charter-content">
                 <div class="content-placeholder">정관 내용이 여기에 표시됩니다.</div>
             </div>
         </div>
@@ -1424,7 +1424,7 @@
                 <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">회의록</h1>
             </div>
-            <div class="screen-content" id="meeting-records-content">
+            <div class="screen-content with-bottom-nav" id="meeting-records-content">
                 <div class="content-placeholder">이사회·정기총회 자료가 여기에 표시됩니다.</div>
             </div>
         </div>
@@ -1435,7 +1435,7 @@
                 <button class="back-button" onclick="switchTab('home')" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">JC 포털</h1>
             </div>
-            <div class="screen-content" id="portal-content">
+            <div class="screen-content with-bottom-nav" id="portal-content">
                 <div class="content-loading">로컬 목록 로딩 중...</div>
             </div>
         </div>
@@ -1446,7 +1446,7 @@
                 <button class="back-button" onclick="switchTab('home')" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">로컬 관리</h1>
             </div>
-            <div class="screen-content" id="admin-manage-content">
+            <div class="screen-content with-bottom-nav" id="admin-manage-content">
                 <div class="content-loading">로딩 중...</div>
             </div>
         </div>
@@ -1503,7 +1503,7 @@
                 </button>
                 <h1 class="app-bar-title">앱 관리</h1>
             </div>
-            <div class="screen-content" id="admin-hub-content">
+            <div class="screen-content with-bottom-nav" id="admin-hub-content">
             </div>
         </div>
 
@@ -1515,7 +1515,7 @@
                 </button>
                 <h1 class="app-bar-title">회원 승인 대기</h1>
             </div>
-            <div class="screen-content" id="pending-members-list">
+            <div class="screen-content with-bottom-nav" id="pending-members-list">
             </div>
         </div>
 
@@ -1527,7 +1527,7 @@
                 </button>
                 <h1 class="app-bar-title">긴급 푸시 발송</h1>
             </div>
-            <div class="screen-content" id="push-send-content">
+            <div class="screen-content with-bottom-nav" id="push-send-content">
             </div>
         </div>
 
@@ -1540,7 +1540,7 @@
                 <h1 class="app-bar-title">공지 관리</h1>
                 <button class="app-bar-action" onclick="showNoticeEditor()" style="font-size:14px;font-weight:600;color:var(--primary-color);background:none;border:none;cursor:pointer">+ 새 공지</button>
             </div>
-            <div class="screen-content" id="notice-manage-content">
+            <div class="screen-content with-bottom-nav" id="notice-manage-content">
             </div>
         </div>
 
@@ -1552,7 +1552,7 @@
                 </button>
                 <h1 class="app-bar-title" id="notice-edit-title">새 공지 작성</h1>
             </div>
-            <div class="screen-content" id="notice-edit-content">
+            <div class="screen-content with-bottom-nav" id="notice-edit-content">
             </div>
         </div>
 
@@ -1564,7 +1564,7 @@
                 </button>
                 <h1 class="app-bar-title">게시글 관리</h1>
             </div>
-            <div class="screen-content" id="post-manage-content">
+            <div class="screen-content with-bottom-nav" id="post-manage-content">
             </div>
         </div>
 
@@ -1576,7 +1576,7 @@
                 </button>
                 <h1 class="app-bar-title">일정 관리</h1>
             </div>
-            <div class="screen-content" id="schedule-manage-content">
+            <div class="screen-content with-bottom-nav" id="schedule-manage-content">
             </div>
         </div>
 
@@ -1613,7 +1613,7 @@
                 </button>
                 <h1 class="app-bar-title">관리자 페이지</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <div class="error-message" id="admin-error" style="display: none;"></div>
 
                 <!-- 대시보드 통계 -->

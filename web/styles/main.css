@@ -204,25 +204,25 @@ html {
 
 /* 방향별 슬라이드 전환 (Phase 3 개선) */
 @keyframes slideInFromRight {
-    from { opacity: 0; transform: translateX(25%); }
-    to { opacity: 1; transform: translateX(0); }
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
 }
 @keyframes slideInFromLeft {
-    from { opacity: 0; transform: translateX(-25%); }
-    to { opacity: 1; transform: translateX(0); }
+    from { transform: translateX(-30%); }
+    to { transform: translateX(0); }
 }
 @keyframes slideOutToLeft {
-    from { opacity: 1; transform: translateX(0); }
-    to { opacity: 0; transform: translateX(-15%); }
+    from { transform: translateX(0); }
+    to { transform: translateX(-30%); }
 }
 @keyframes slideOutToRight {
-    from { opacity: 1; transform: translateX(0); }
-    to { opacity: 0; transform: translateX(15%); }
+    from { transform: translateX(0); }
+    to { transform: translateX(100%); }
 }
-.screen.slide-forward { animation: slideInFromRight 0.22s ease-out; }
-.screen.slide-back { animation: slideInFromLeft 0.22s ease-out; }
-.screen.slide-out-left { animation: slideOutToLeft 0.18s ease-in forwards; pointer-events: none; }
-.screen.slide-out-right { animation: slideOutToRight 0.18s ease-in forwards; pointer-events: none; }
+.screen.slide-forward { animation: slideInFromRight 0.25s cubic-bezier(0.32, 0.72, 0, 1); }
+.screen.slide-back { animation: slideInFromLeft 0.25s cubic-bezier(0.32, 0.72, 0, 1); }
+.screen.slide-out-left { animation: slideOutToLeft 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards; pointer-events: none; }
+.screen.slide-out-right { animation: slideOutToRight 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards; pointer-events: none; }
 
 /* ==================== 앱바 — v2.0 흰색 배경 + border ==================== */
 .app-bar {

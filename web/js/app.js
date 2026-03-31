@@ -183,6 +183,8 @@ async function showInitialScreen() {
     }
     navigateToScreen(targetScreen);
     window._navPopstate = false;
+    // 초기 화면 진입 시 스크롤 초기화 — 앱바 보이도록
+    window.scrollTo(0, 0);
 
     // 로그인 상태이면 푸시 초기화 + 안읽은 알림 수 조회
     if (targetScreen === 'home') {

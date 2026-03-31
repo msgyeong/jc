@@ -214,6 +214,13 @@ function navigateToScreen(screenName, opts) {
             if (inClass) targetScreen.classList.add(inClass);
             targetScreen.classList.add('active');
 
+            // 스크롤 위치 초기화 — 앱바가 보이도록
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+            var _scrollable = targetScreen.querySelector('.screen-content');
+            if (_scrollable) _scrollable.scrollTop = 0;
+
             // 애니메이션 클래스 정리
             if (inClass) {
                 setTimeout(function() {

@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
+const helmet = require('helmet');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
@@ -58,6 +59,12 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// 보안 헤더
+app.use(helmet({
+    contentSecurityPolicy: false,  // SPA에서 인라인 스크립트 사용
+    crossOriginEmbedderPolicy: false
+}));
+
 // gzip 압축
 app.use(compression());
 
@@ -76,6 +83,17 @@ const authLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/signup', authLimiter);
 app.use('/api/auth/reset-password', authLimiter);
+app.use('/api/admin/auth/login', authLimiter);
+
+// 글로벌 API 레이트 리미팅
+const globalLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1분
+    max: 200, // 1분당 최대 200회
+    message: { success: false, message: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api/', globalLimiter);
 
 // 요청 로깅 (개발 환경)
 if (process.env.NODE_ENV === 'development') {

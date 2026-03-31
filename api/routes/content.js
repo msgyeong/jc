@@ -67,7 +67,7 @@ router.get('/:type', authenticate, async (req, res) => {
  * GET /api/content/:type/image
  * 콘텐츠 이미지 바이너리 반환
  */
-router.get('/:type/image', async (req, res) => {
+router.get('/:type/image', authenticate, async (req, res) => {
     try {
         const { type } = req.params;
 
@@ -100,7 +100,7 @@ router.get('/:type/image', async (req, res) => {
  * GET /api/content/:type/file
  * 콘텐츠 첨부파일 다운로드
  */
-router.get('/:type/file', async (req, res) => {
+router.get('/:type/file', authenticate, async (req, res) => {
     try {
         const { type } = req.params;
 

@@ -198,10 +198,10 @@ router.put('/password', authenticate, async (req, res) => {
             });
         }
 
-        if (new_password.length < 6) {
+        if (new_password.length < 8) {
             return res.status(400).json({
                 success: false,
-                message: '새 비밀번호는 6자 이상이어야 합니다.'
+                message: '새 비밀번호는 8자 이상이어야 합니다.'
             });
         }
 

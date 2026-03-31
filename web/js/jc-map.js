@@ -33,21 +33,21 @@ async function loadJcMapScreen() {
             return;
         }
 
-        // 지도 화면을 fixed 오버레이로 표시
+        // 지도 화면 — 하단 네비(60px) 남기고 표시
         if (screen) {
             screen.style.position = 'fixed';
             screen.style.top = '0';
             screen.style.left = '0';
             screen.style.width = '100vw';
-            screen.style.height = '100vh';
-            screen.style.zIndex = '999';
+            screen.style.height = 'calc(100vh - 60px)';
+            screen.style.zIndex = '200';
             screen.style.background = '#fff';
             screen.style.maxWidth = '100vw';
         }
         var contentEl = document.getElementById('jc-map-content');
         if (contentEl) {
             contentEl.style.width = '100%';
-            contentEl.style.height = 'calc(100vh - 56px)';
+            contentEl.style.height = 'calc(100vh - 56px - 60px)';
             contentEl.style.position = 'relative';
         }
         mapContainer.style.width = '100%';

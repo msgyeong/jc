@@ -66,6 +66,20 @@ let searchScope = 'my-org'; // 'my-org' | 'all-org'
 let searchTimeout = null;
 let crossOrgEnabled = false; // 타로컬 보기 토글
 
+// 앱바 내 아바타 업데이트
+function updateMyAvatarInAppbar(user) {
+    var btn = document.getElementById('member-my-avatar');
+    if (!btn || !user) return;
+    var name = user.name || '';
+    var initial = name.charAt(0) || '?';
+    if (user.profile_image) {
+        btn.innerHTML = '<img src="' + user.profile_image + '" alt="' + escapeHtml(initial) + '" style="width:28px;height:28px;border-radius:50%;object-fit:cover" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">' +
+            '<span style="display:none;width:28px;height:28px;border-radius:50%;background:var(--primary-bg);color:var(--primary-color);font-size:12px;font-weight:600;align-items:center;justify-content:center">' + escapeHtml(initial) + '</span>';
+    } else {
+        btn.innerHTML = '<span style="display:flex;width:28px;height:28px;border-radius:50%;background:var(--primary-bg);color:var(--primary-color);font-size:12px;font-weight:600;align-items:center;justify-content:center">' + escapeHtml(initial) + '</span>';
+    }
+}
+
 // ========== 메인 화면 로드 ==========
 
 async function loadMembersScreen() {
@@ -100,28 +114,20 @@ async function loadMembersScreen() {
 
         let html = '';
 
-        // 1. "나" 섹션
         const userInfo = typeof currentUser !== 'undefined' ? currentUser : JSON.parse(localStorage.getItem('user_info') || 'null');
         const myId = userInfo ? userInfo.id : null;
         const myMember = myId ? members.find(m => String(m.id) === String(myId)) : null;
-        if (myMember) {
-            html += renderMeSection(myMember);
-        }
 
-        // 2. 즐겨찾기 섹션
+        // 앱바 내 아바타 업데이트
+        updateMyAvatarInAppbar(myMember || userInfo);
+
+        // 1. 즐겨찾기 섹션
         if (favorites.length > 0) {
             html += renderFavoritesSection(favorites);
         }
 
-        // 3. 그룹 섹션들
-        if (groups.length > 0) {
-            html += renderGroupsSections(groups);
-        }
-        html += `<div class="add-group-row"><button type="button" class="add-group-btn add-group-btn--compact" onclick="showCreateGroupDialog()">+ 그룹 추가</button></div>`;
-
-        // 4. 전체 회원 섹션
-        const otherMembers = members.filter(m => !myId || String(m.id) !== String(myId));
-        html += renderAllMembersSection(otherMembers, total - (myMember ? 1 : 0));
+        // 2. 전체 회원 섹션 (나 포함)
+        html += renderAllMembersSection(members, total);
 
         container.innerHTML = html;
         currentMembersPage = 1;
@@ -253,7 +259,7 @@ function createMemberCard(member) {
     return `
         <div class="member-card-v2" onclick="navigateTo('/members/${member.id}')">
             <div class="member-avatar-v2" style="background:var(--primary-bg)">
-                ${member.profile_image ? `<img src="${member.profile_image}" alt="${escapeHtml(name)}">` : DEFAULT_AVATAR_SVG_SM}
+                ${member.profile_image ? `<img src="${member.profile_image}" alt="${escapeHtml(name[0] || '')}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="member-avatar-initial" style="display:none">${escapeHtml(name[0] || '?')}</span>` : `<span class="member-avatar-initial">${escapeHtml(name[0] || '?')}</span>`}
             </div>
             <div class="member-info-v2">
                 <div class="member-name-row-v2">

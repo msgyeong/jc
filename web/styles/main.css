@@ -3314,8 +3314,8 @@ input[type="date"]:focus {
 }
 
 .member-avatar-v2 {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     border-radius: 30%;
     display: flex;
     align-items: center;
@@ -5281,6 +5281,33 @@ a.sns-badge:hover {
     display: flex;
     align-items: center;
     margin-left: auto;
+    gap: 4px;
+}
+
+.app-bar-my-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary-bg);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.member-avatar-initial {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-color);
+    background: var(--primary-bg);
 }
 
 /* 앱바 알림 아이콘 래퍼 */
@@ -7529,18 +7556,23 @@ a.sns-badge:hover {
 .all-members-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
     gap: 6px;
+    padding: 6px 12px;
+    flex-wrap: nowrap;
 }
 .all-members-header > span {
     flex-shrink: 0;
+    font-size: 12px;
+    color: var(--text-hint);
+    white-space: nowrap;
 }
 
 .member-filters-row {
     display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+    gap: 4px;
+    flex-wrap: nowrap;
+    flex: 1;
+    min-width: 0;
 }
 
 .industry-filter-inline {

@@ -87,32 +87,31 @@ function renderProfile(p) {
     const roleLabel = getRoleText(p.role);
     const hasWorkInfo = p.company || p.position || p.department || p.work_phone || p.industry;
     const hasPR = p.one_line_pr || p.service_description || (p.sns_links && p.sns_links.length > 0);
-    const hasJC = p.join_date;
+    const hasJC = p.join_date || p.org_name;
 
-    // 프로필 요약 아바타
-    var avatarHtml = p.profile_image
-        ? '<img src="' + p.profile_image + '" alt="' + escapeHtml((p.name || '')[0] || '') + '" style="width:48px;height:48px;border-radius:50%;object-fit:cover" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
-          '<span class="profile-summary-initial" style="display:none">' + escapeHtml((p.name || '?')[0]) + '</span>'
-        : '<span class="profile-summary-initial">' + escapeHtml((p.name || '?')[0]) + '</span>';
+    var initial = escapeHtml((p.name || '?')[0]);
+    var avatarImg = p.profile_image
+        ? '<img class="profile-summary-avatar" src="' + p.profile_image + '" alt="' + initial + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        : '';
+    var avatarInitial = '<div class="profile-summary-initial"' + (p.profile_image ? ' style="display:none"' : '') + '>' + initial + '</div>';
 
     return `
         <div class="profile-v2">
-            <!-- 프로필 요약 (1줄) -->
-            <div class="profile-summary-row">
-                <div class="profile-summary-avatar">${avatarHtml}
-                    <input type="file" id="profile-photo-input" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this)">
-                </div>
+            <input type="file" id="profile-photo-input" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this)">
+
+            <!-- 프로필 요약 -->
+            <div class="profile-summary">
+                ${avatarImg}${avatarInitial}
                 <div class="profile-summary-info">
-                    <span class="profile-summary-name">${escapeHtml(p.name || '이름 없음')}</span>
-                    ${p.jc_position && typeof getPositionBadgeHtml === 'function' ? getPositionBadgeHtml(p.jc_position) : ''}
-                    <span class="profile-summary-role">${roleLabel}</span>
+                    <div class="profile-summary-name">${escapeHtml(p.name || '이름 없음')}</div>
+                    <span class="profile-summary-badge">${roleLabel}</span>
+                    ${p.jc_position ? '<span class="profile-summary-badge">' + escapeHtml(p.jc_position) + '</span>' : ''}
                 </div>
             </div>
 
             <!-- 기본 정보 -->
             <div class="info-section">
                 <h3 class="info-section-title">기본 정보</h3>
-                ${p.org_name ? profileInfoRow('소속 로컬', p.org_name + (p.org_district ? ' (' + p.org_district + ')' : ''), 'group') : ''}
                 ${profileInfoRow('이메일', p.email, 'mail')}
                 ${profileInfoRow('연락처', p.phone, 'phone')}
                 ${profileInfoRow('주소', p.address, 'location')}
@@ -120,9 +119,18 @@ function renderProfile(p) {
                 ${p.gender ? profileInfoRow('성별', getGenderText(p.gender), 'person') : ''}
             </div>
 
+            <div id="profile-title-history-container"></div>
+
+            ${hasJC ? `
+            <div class="info-section">
+                <h3 class="info-section-title">JC 정보</h3>
+                ${p.org_name ? profileInfoRow('소속 로컬', p.org_name + (p.org_district ? ' (' + p.org_district + ')' : ''), 'group') : ''}
+                ${p.join_date ? profileInfoRow('입회일', formatDate(p.join_date, 'YYYY-MM-DD'), 'calendar') : ''}
+            </div>` : ''}
+
             ${hasWorkInfo ? `
             <div class="info-section">
-                <h3 class="info-section-title">직장 정보</h3>
+                <h3 class="info-section-title">직업 정보</h3>
                 ${p.company ? profileInfoRow('회사', p.company, 'company') : ''}
                 ${p.position ? profileInfoRow('직책', p.position, 'badge') : ''}
                 ${p.department ? profileInfoRow('부서', p.department, 'group') : ''}
@@ -135,35 +143,22 @@ function renderProfile(p) {
                 <h3 class="info-section-title">사업 PR</h3>
                 ${p.one_line_pr ? profileInfoRow('한 줄 PR', p.one_line_pr, 'text') : ''}
                 ${p.service_description ? profileInfoRow('주요 서비스', p.service_description, 'text') : ''}
-                ${p.sns_links && p.sns_links.length > 0 ? `
-                <div class="info-row">
-                    <span class="info-label">SNS</span>
-                    <span class="info-value sns-badges-wrap">${renderSnsBadges(p.sns_links)}</span>
-                </div>` : ''}
+                ${p.sns_links && p.sns_links.length > 0 ? `<div class="info-row"><span class="info-label">SNS</span><span class="info-value sns-badges-wrap">${renderSnsBadges(p.sns_links)}</span></div>` : ''}
             </div>` : ''}
 
-            ${hasJC ? `
-            <div class="info-section">
-                <h3 class="info-section-title">JC 정보</h3>
-                ${profileInfoRow('입회일', formatDate(p.join_date, 'YYYY-MM-DD'), 'calendar')}
-            </div>` : ''}
-
-            <div id="profile-title-history-container"></div>
-
-            ${typeof renderBusinessPR === 'function' ? renderBusinessPR(p) : ''}
-
-            <!-- 메뉴 -->
-            <div class="settings-group">
-                <div class="settings-item" onclick="navigateToScreen('settings')">
-                    <span class="settings-item-icon">&#9881;</span>
-                    <span class="settings-item-label">환경설정</span>
-                    <span class="settings-item-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+            <!-- 하단 메뉴 -->
+            <div class="profile-menu">
+                <div class="profile-menu-item" onclick="showEditProfileForm()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    프로필 수정
                 </div>
-            </div>
-            <div class="settings-group">
-                <div class="settings-item settings-item--danger" onclick="handleProfileLogout()">
-                    <span class="settings-item-icon">&#10132;</span>
-                    <span class="settings-item-label">로그아웃</span>
+                <div class="profile-menu-item" onclick="navigateToScreen('settings')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    환경설정
+                </div>
+                <div class="profile-menu-item danger" onclick="handleProfileLogout()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    로그아웃
                 </div>
             </div>
         </div>

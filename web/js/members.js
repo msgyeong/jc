@@ -118,8 +118,7 @@ async function loadMembersScreen() {
         const myId = userInfo ? userInfo.id : null;
         const myMember = myId ? members.find(m => String(m.id) === String(myId)) : null;
 
-        // 앱바 내 아바타 업데이트
-        updateMyAvatarInAppbar(myMember || userInfo);
+        // 앱바 아바타 제거됨 — 내 프로필은 프로필 탭에서 접근
 
         // 1. 즐겨찾기 섹션
         if (favorites.length > 0) {

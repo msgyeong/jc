@@ -33,13 +33,7 @@ async function loadJcMapScreen() {
             return;
         }
 
-        // 지도 화면 — 일반 screen으로 유지 (fixed 사용 안 함)
-        var contentEl = document.getElementById('jc-map-content');
-        if (contentEl) {
-            contentEl.style.width = '100%';
-            contentEl.style.height = 'calc(100vh - 56px - 60px)';
-            contentEl.style.position = 'relative';
-        }
+        // 지도 화면 — flex:1로 자동 크기 (JS에서 높이 덮어쓰지 않음)
         mapContainer.style.width = '100%';
         mapContainer.style.height = '100%';
 

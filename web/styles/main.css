@@ -1024,7 +1024,7 @@ input::-ms-clear {
     left: 0;
     right: 0;
     min-height: 56px;
-    z-index: 100;
+    z-index: 9999;
 }
 
 .nav-item {

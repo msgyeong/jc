@@ -135,9 +135,7 @@ async function initApp() {
 // 초기 화면 표시
 async function showInitialScreen() {
     console.log('🔹 초기 화면 표시 시작');
-    
-    // 스플래시 화면 표시
-    navigateToScreen('splash');
+    // 스플래시는 index.html에서 이미 active — JS에서 다시 활성화하지 않음
     
     // 인증 상태 확인 (최대 3초 타임아웃)
     const timeout = new Promise((resolve) => 
@@ -183,6 +181,8 @@ async function showInitialScreen() {
     }
     navigateToScreen(targetScreen);
     window._navPopstate = false;
+    // 초기 화면 진입 시 스크롤 초기화 — 앱바 보이도록
+    window.scrollTo(0, 0);
 
     // 로그인 상태이면 푸시 초기화 + 안읽은 알림 수 조회
     if (targetScreen === 'home') {

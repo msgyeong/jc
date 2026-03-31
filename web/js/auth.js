@@ -104,6 +104,10 @@ async function handleLogin(event) {
             window._navPopstate = true; // 중복 pushState 방지
             navigateToScreen('home');
             window._navPopstate = false;
+            // 로그인 직후 스크롤 초기화 — 앱바 보이도록
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
 
             // 홈 화면 데이터 로드
             if (typeof loadHomeData === 'function') {

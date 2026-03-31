@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영등포 JC - 회원관리 앱</title>
     <!-- Build: 2026-02-06 v2.1 -->
-    <link rel="stylesheet" href="styles/main.css?v=20260330g" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="styles/main.css?v=20260330g"></noscript>
+    <link rel="stylesheet" href="styles/main.css?v=20260331f" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="styles/main.css?v=20260331f"></noscript>
     <link rel="manifest" href="manifest.json">
     <meta name="description" content="영등포청년회의소 회원관리 커뮤니티 앱 — 공지, 일정, 회원 검색을 하나의 앱에서">
     <meta name="theme-color" content="#2563EB">
@@ -21,7 +21,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Critical CSS: 첫 페인트에 필요한 최소 스타일 인라인 -->
     <style>
-    :root{--primary-color:#1E3A5F;--background-color:#FFFFFF;--text-primary:#111827;--appbar-height:56px;--font-family:'Pretendard','Noto Sans KR',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+    :root{--primary-color:#1E3A5F;--background-color:#FFFFFF;--text-primary:#111827;--appbar-height:48px;--font-family:'Pretendard','Noto Sans KR',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:var(--font-family);background:#F9FAFB;color:var(--text-primary);-webkit-font-smoothing:antialiased;overflow-x:hidden}
     #app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--background-color);position:relative}
@@ -809,7 +809,7 @@
         <!-- 게시글 상세 화면 -->
         <div id="post-detail-screen" class="screen">
             <div class="app-bar">
-                <button type="button" class="back-button" id="post-detail-back" aria-label="뒤로 가기"
+                <button type="button" class="back-button" id="post-detail-back" aria-label="뒤로 가기">
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">게시글</h1>
@@ -824,7 +824,7 @@
         <!-- 게시글 수정 화면 -->
         <div id="post-edit-screen" class="screen">
             <div class="app-bar">
-                <button type="button" class="back-button" id="post-edit-back" aria-label="뒤로 가기"
+                <button type="button" class="back-button" id="post-edit-back" aria-label="뒤로 가기">
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">글 수정</h1>
@@ -873,7 +873,7 @@
         <!-- 게시글 작성 화면 -->
         <div id="post-create-screen" class="screen">
             <div class="app-bar">
-                <button type="button" class="back-button" id="post-create-back" aria-label="뒤로 가기"
+                <button type="button" class="back-button" id="post-create-back" aria-label="뒤로 가기">
                     <span class="icon">←</span>
                 </button>
                 <h1 class="app-bar-title">글쓰기</h1>
@@ -994,7 +994,6 @@
                 </button>
                 <h1 class="app-bar-title">회원</h1>
                 <div class="app-bar-right">
-                    <span class="app-bar-badge" id="member-count-badge"></span>
                     <button type="button" class="app-bar-icon-btn" id="member-search-btn" onclick="openMemberSearchOverlay()" aria-label="회원 검색">
                         <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     </button>
@@ -1305,10 +1304,10 @@
         <!-- 회원 프로필 상세 (타인) -->
         <div id="member-detail-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="history.back()" aria-label="뒤로 가기"><span class="icon">←</span></button>
+                <button class="back-button" onclick="goBack()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">프로필</h1>
             </div>
-            <div class="screen-content" id="member-detail-content">
+            <div class="screen-content with-bottom-nav" id="member-detail-content">
             </div>
         </div>
 
@@ -1455,10 +1454,10 @@
         <!-- 내 프로필 화면 -->
         <div id="profile-screen" class="screen">
             <div class="app-bar">
-                <button class="back-button" onclick="switchTab('home')" aria-label="뒤로 가기"><span class="icon">←</span></button>
+                <button class="back-button" onclick="goBack()" aria-label="뒤로 가기"><span class="icon">←</span></button>
                 <h1 class="app-bar-title">내 프로필</h1>
             </div>
-            <div class="screen-content">
+            <div class="screen-content with-bottom-nav">
                 <div class="profile-content" id="profile-content">
                     <div class="content-loading">프로필 로딩 중...</div>
                 </div>
@@ -1738,35 +1737,35 @@
     </nav>
 
     <!-- 앱 스크립트 -->
-    <script src="js/config.js?v=20260330g"></script>
-    <script src="js/api-client.js?v=20260330g"></script>
-    <script src="js/utils.js?v=20260330g"></script>
-    <script src="js/auth.js?v=20260330g"></script>
-    <script src="js/signup.js?v=20260330g"></script>
-    <script src="js/home.js?v=20260330g"></script>
-    <script src="js/card-components.js?v=20260330g"></script>
-    <script src="js/comment-component.js?v=20260330g"></script>
-    <script src="js/attendance-component.js?v=20260330g"></script>
-    <script src="js/posts.js?v=20260330g"></script>
-    <script src="js/notices.js?v=20260330g"></script>
-    <script src="js/schedules.js?v=20260330g"></script>
-    <script src="js/chosung.js?v=20260330g"></script>
-    <script src="js/members.js?v=20260330g"></script>
-    <script src="js/profile.js?v=20260330g"></script>
-    <script src="js/admin.js?v=20260330g"></script>
-    <script src="js/push.js?v=20260330g"></script>
-    <script src="js/notifications.js?v=20260330g"></script>
-    <script src="js/notification-settings.js?v=20260330g"></script>
-    <script src="js/settings.js?v=20260330g"></script>
-    <script src="js/meetings.js?v=20260330g"></script>
-    <script src="js/portal.js?v=20260330g"></script>
-    <script src="js/admin-app.js?v=20260330g"></script>
-    <script src="js/content.js?v=20260330g"></script>
-    <script src="js/orgchart.js?v=20260330g"></script>
-    <script src="js/group-board.js?v=20260330g"></script>
-    <script src="js/clubs.js?v=20260330g"></script>
-    <script src="js/jc-map.js?v=20260330g"></script>
-    <script src="js/navigation.js?v=20260330g"></script>
-    <script src="js/app.js?v=20260330g"></script>
+    <script src="js/config.js?v=20260331f"></script>
+    <script src="js/api-client.js?v=20260331f"></script>
+    <script src="js/utils.js?v=20260331f"></script>
+    <script src="js/auth.js?v=20260331f"></script>
+    <script src="js/signup.js?v=20260331f"></script>
+    <script src="js/home.js?v=20260331f"></script>
+    <script src="js/card-components.js?v=20260331f"></script>
+    <script src="js/comment-component.js?v=20260331f"></script>
+    <script src="js/attendance-component.js?v=20260331f"></script>
+    <script src="js/posts.js?v=20260331f"></script>
+    <script src="js/notices.js?v=20260331f"></script>
+    <script src="js/schedules.js?v=20260331f"></script>
+    <script src="js/chosung.js?v=20260331f"></script>
+    <script src="js/members.js?v=20260331f"></script>
+    <script src="js/profile.js?v=20260331f"></script>
+    <script src="js/admin.js?v=20260331f"></script>
+    <script src="js/push.js?v=20260331f"></script>
+    <script src="js/notifications.js?v=20260331f"></script>
+    <script src="js/notification-settings.js?v=20260331f"></script>
+    <script src="js/settings.js?v=20260331f"></script>
+    <script src="js/meetings.js?v=20260331f"></script>
+    <script src="js/portal.js?v=20260331f"></script>
+    <script src="js/admin-app.js?v=20260331f"></script>
+    <script src="js/content.js?v=20260331f"></script>
+    <script src="js/orgchart.js?v=20260331f"></script>
+    <script src="js/group-board.js?v=20260331f"></script>
+    <script src="js/clubs.js?v=20260331f"></script>
+    <script src="js/jc-map.js?v=20260331f"></script>
+    <script src="js/navigation.js?v=20260331f"></script>
+    <script src="js/app.js?v=20260331f"></script>
 </body>
 </html>

@@ -66,6 +66,20 @@ let searchScope = 'my-org'; // 'my-org' | 'all-org'
 let searchTimeout = null;
 let crossOrgEnabled = false; // 타로컬 보기 토글
 
+// 앱바 내 아바타 업데이트
+function updateMyAvatarInAppbar(user) {
+    var btn = document.getElementById('member-my-avatar');
+    if (!btn || !user) return;
+    var name = user.name || '';
+    var initial = name.charAt(0) || '?';
+    if (user.profile_image) {
+        btn.innerHTML = '<img src="' + user.profile_image + '" alt="' + escapeHtml(initial) + '" style="width:28px;height:28px;border-radius:50%;object-fit:cover" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">' +
+            '<span style="display:none;width:28px;height:28px;border-radius:50%;background:var(--primary-bg);color:var(--primary-color);font-size:12px;font-weight:600;align-items:center;justify-content:center">' + escapeHtml(initial) + '</span>';
+    } else {
+        btn.innerHTML = '<span style="display:flex;width:28px;height:28px;border-radius:50%;background:var(--primary-bg);color:var(--primary-color);font-size:12px;font-weight:600;align-items:center;justify-content:center">' + escapeHtml(initial) + '</span>';
+    }
+}
+
 // ========== 메인 화면 로드 ==========
 
 async function loadMembersScreen() {
@@ -100,28 +114,19 @@ async function loadMembersScreen() {
 
         let html = '';
 
-        // 1. "나" 섹션
         const userInfo = typeof currentUser !== 'undefined' ? currentUser : JSON.parse(localStorage.getItem('user_info') || 'null');
         const myId = userInfo ? userInfo.id : null;
         const myMember = myId ? members.find(m => String(m.id) === String(myId)) : null;
-        if (myMember) {
-            html += renderMeSection(myMember);
-        }
 
-        // 2. 즐겨찾기 섹션
+        // 앱바 아바타 제거됨 — 내 프로필은 프로필 탭에서 접근
+
+        // 1. 즐겨찾기 섹션
         if (favorites.length > 0) {
             html += renderFavoritesSection(favorites);
         }
 
-        // 3. 그룹 섹션들
-        if (groups.length > 0) {
-            html += renderGroupsSections(groups);
-        }
-        html += `<div class="add-group-row"><button type="button" class="add-group-btn" onclick="showCreateGroupDialog()">+ 그룹 추가</button></div>`;
-
-        // 4. 전체 회원 섹션
-        const otherMembers = members.filter(m => !myId || String(m.id) !== String(myId));
-        html += renderAllMembersSection(otherMembers, total - (myMember ? 1 : 0));
+        // 2. 전체 회원 섹션 (나 포함)
+        html += renderAllMembersSection(members, total);
 
         container.innerHTML = html;
         currentMembersPage = 1;
@@ -140,19 +145,14 @@ function renderMeSection(member) {
 
     return `
         <div class="member-section me-section">
-            <div class="member-section-header">나</div>
-            <div class="me-card" onclick="navigateTo('/members/${member.id}')">
-                <div class="me-avatar" style="background:var(--primary-bg)">
+            <div class="me-card me-card--compact" onclick="navigateTo('/members/${member.id}')">
+                <div class="me-avatar me-avatar--sm" style="background:var(--primary-bg)">
                     ${member.profile_image ? `<img src="${member.profile_image}" alt="${escapeHtml(name)}">` : DEFAULT_AVATAR_SVG_SM}
                 </div>
-                <div class="me-info">
-                    <div class="me-name-row">
-                        <span class="me-name">${escapeHtml(name)}</span>
-                        ${member.jc_position ? getPositionBadgeHtml(member.jc_position) : ''}
-                        ${roleBadge}
-                    </div>
-                    ${member.company ? `<div class="me-sub">${escapeHtml(member.company)}</div>` : ''}
-                </div>
+                <span class="me-name">${escapeHtml(name)}</span>
+                ${member.jc_position ? getPositionBadgeHtml(member.jc_position) : ''}
+                ${roleBadge}
+                ${member.company ? `<span class="me-sub--inline">${escapeHtml(member.company)}</span>` : ''}
             </div>
         </div>`;
 }
@@ -202,38 +202,61 @@ function renderGroupsSections(groups) {
     `).join('');
 }
 
+function getIndustryLabel() {
+    if (!currentIndustryFilter) return '업종: 전체';
+    var found = INDUSTRY_CATEGORIES.find(c => c.code === currentIndustryFilter);
+    return '업종: ' + (found ? found.name : currentIndustryFilter);
+}
+
+function getPositionLabel() {
+    if (!currentPositionFilter) return '직책: 전체';
+    var positions = cachedPositions.length > 0 ? cachedPositions
+        : [{id:1,name:'회장'},{id:2,name:'수석부회장'},{id:3,name:'부회장'},{id:4,name:'총무'},{id:5,name:'이사'},{id:6,name:'감사'},{id:7,name:'일반회원'}];
+    var found = positions.find(p => String(p.id) === String(currentPositionFilter));
+    return '직책: ' + (found ? found.name : '전체');
+}
+
+var chevronDownSvg = '<svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function openIndustryFilter() {
+    var options = [{ value: '', label: '전체' }];
+    INDUSTRY_CATEGORIES.forEach(function(c) { options.push({ value: c.code, label: c.name }); });
+    openBottomSheet('업종 선택', options, currentIndustryFilter, function(value) {
+        handleIndustryFilterChange(value);
+        var btn = document.getElementById('industry-filter-btn');
+        if (btn) btn.firstChild.textContent = value ? '업종: ' + (INDUSTRY_CATEGORIES.find(c => c.code === value) || {}).name : '업종: 전체';
+    });
+}
+
+function openPositionFilter() {
+    var positions = cachedPositions.length > 0 ? cachedPositions
+        : [{id:1,name:'회장'},{id:2,name:'수석부회장'},{id:3,name:'부회장'},{id:4,name:'총무'},{id:5,name:'이사'},{id:6,name:'감사'},{id:7,name:'일반회원'}];
+    var options = [{ value: '', label: '전체' }];
+    positions.forEach(function(p) { options.push({ value: String(p.id), label: p.name }); });
+    openBottomSheet('직책 선택', options, String(currentPositionFilter || ''), function(value) {
+        handlePositionFilterChange(value);
+        var btn = document.getElementById('position-filter-btn');
+        if (btn) btn.firstChild.textContent = value ? '직책: ' + (positions.find(p => String(p.id) === value) || {}).name : '직책: 전체';
+    });
+}
+
 function renderAllMembersSection(members, count) {
-    const industryOptions = INDUSTRY_CATEGORIES.map(c =>
-        `<option value="${c.code}"${currentIndustryFilter === c.code ? ' selected' : ''}>${c.name}</option>`
-    ).join('');
-
-    const positionOptions = cachedPositions.length > 0
-        ? cachedPositions.map(p =>
-            `<option value="${p.id}"${currentPositionFilter == p.id ? ' selected' : ''}>${escapeHtml(p.name)}</option>`
-        ).join('')
-        : [
-            {id: 1, name: '회장'}, {id: 2, name: '수석부회장'}, {id: 3, name: '부회장'},
-            {id: 4, name: '총무'}, {id: 5, name: '이사'}, {id: 6, name: '감사'}, {id: 7, name: '일반회원'}
-        ].map(p => `<option value="${p.id}"${currentPositionFilter == p.id ? ' selected' : ''}>${p.name}</option>`).join('');
-
     const cards = members.map(m => createMemberCard(m)).join('');
 
     return `
         <div class="member-section" id="section-all-members">
-            <div class="member-section-header all-members-header" style="flex-wrap:wrap;gap:6px">
+            <div class="member-section-header all-members-header">
                 <span>회원 ${count}명</span>
                 <div class="member-filters-row">
-                    <select class="industry-filter-inline" onchange="handleIndustryFilterChange(this.value)">
-                        <option value="">업종: 전체</option>
-                        ${industryOptions}
-                    </select>
-                    <select class="industry-filter-inline" onchange="handlePositionFilterChange(this.value)">
-                        <option value="">직책: 전체</option>
-                        ${positionOptions}
-                    </select>
-                    <label class="cross-org-toggle" style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--text-hint);cursor:pointer;margin-left:4px">
+                    <button type="button" class="filter-btn" id="industry-filter-btn" onclick="openIndustryFilter()">
+                        <span>${getIndustryLabel()}</span>${chevronDownSvg}
+                    </button>
+                    <button type="button" class="filter-btn" id="position-filter-btn" onclick="openPositionFilter()">
+                        <span>${getPositionLabel()}</span>${chevronDownSvg}
+                    </button>
+                    <label class="cross-org-toggle" style="display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--text-hint);cursor:pointer;white-space:nowrap">
                         <input type="checkbox" id="cross-org-check" onchange="handleCrossOrgToggle(this.checked)" style="accent-color:var(--primary-color)">
-                        <span>타로컬 보기</span>
+                        <span>타로컬</span>
                     </label>
                 </div>
             </div>
@@ -258,7 +281,7 @@ function createMemberCard(member) {
     return `
         <div class="member-card-v2" onclick="navigateTo('/members/${member.id}')">
             <div class="member-avatar-v2" style="background:var(--primary-bg)">
-                ${member.profile_image ? `<img src="${member.profile_image}" alt="${escapeHtml(name)}">` : DEFAULT_AVATAR_SVG_SM}
+                ${member.profile_image ? `<img src="${member.profile_image}" alt="${escapeHtml(name[0] || '')}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="member-avatar-initial" style="display:none">${escapeHtml(name[0] || '?')}</span>` : `<span class="member-avatar-initial">${escapeHtml(name[0] || '?')}</span>`}
             </div>
             <div class="member-info-v2">
                 <div class="member-name-row-v2">
@@ -627,7 +650,7 @@ async function loadTitleHistory(userId, containerId) {
 }
 
 function backToMemberList() {
-    navigateToScreen('members', { back: true });
+    goBack();
 }
 
 // ========== 유틸리티 ==========

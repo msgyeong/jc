@@ -85,38 +85,33 @@ function renderSnsBadges(snsLinks) {
 // 프로필 렌더링
 function renderProfile(p) {
     const roleLabel = getRoleText(p.role);
-    const hasWorkInfo = p.company || p.position || p.department || p.work_phone;
+    const hasWorkInfo = p.company || p.position || p.department || p.work_phone || p.industry;
+    const hasPR = p.one_line_pr || p.service_description || (p.sns_links && p.sns_links.length > 0);
+    const hasJC = p.join_date || p.org_name;
+
+    var initial = escapeHtml((p.name || '?')[0]);
+    var avatarImg = p.profile_image
+        ? '<img class="profile-summary-avatar" src="' + p.profile_image + '" alt="' + initial + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        : '';
+    var avatarInitial = '<div class="profile-summary-initial"' + (p.profile_image ? ' style="display:none"' : '') + '>' + initial + '</div>';
 
     return `
         <div class="profile-v2">
-            <!-- 편집 버튼 (우측 상단) -->
-            <div style="display:flex;justify-content:flex-end;padding:12px 16px 0">
-                <button onclick="showEditProfileForm()" style="background:none;border:1px solid var(--border-color,#e5e7eb);border-radius:8px;padding:6px 14px;font-size:13px;color:var(--primary-color,#2563EB);cursor:pointer;display:flex;align-items:center;gap:4px">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                    편집
-                </button>
-            </div>
-            <!-- 프로필 히어로 -->
-            <div class="profile-hero">
-                <div class="profile-avatar-xl" style="background:var(--primary-bg); position:relative; cursor:pointer" onclick="document.getElementById('profile-photo-input').click()">
-                    ${p.profile_image
-                        ? `<img src="${p.profile_image}" alt="${escapeHtml(p.name)}">`
-                        : DEFAULT_AVATAR_SVG
-                    }
-                    <div class="avatar-camera-btn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.5"><rect x="2" y="6" width="20" height="14" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M7 6l1.5-2h7L17 6"/></svg>
-                    </div>
-                    <div class="avatar-photo-hint">사진 변경</div>
-                    <input type="file" id="profile-photo-input" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this)">
+            <input type="file" id="profile-photo-input" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this)">
+
+            <!-- 프로필 요약 -->
+            <div class="profile-summary">
+                ${avatarImg}${avatarInitial}
+                <div class="profile-summary-info">
+                    <div class="profile-summary-name">${escapeHtml(p.name || '이름 없음')}</div>
+                    <span class="profile-summary-badge">${roleLabel}</span>
+                    ${p.jc_position ? '<span class="profile-summary-badge">' + escapeHtml(p.jc_position) + '</span>' : ''}
                 </div>
-                <h2 class="profile-hero-name">${escapeHtml(p.name || '이름 없음')}${p.jc_position && typeof getPositionBadgeHtml === 'function' ? ' ' + getPositionBadgeHtml(p.jc_position) : ''}</h2>
-                <span class="profile-hero-role">${roleLabel}</span>
             </div>
 
             <!-- 기본 정보 -->
             <div class="info-section">
                 <h3 class="info-section-title">기본 정보</h3>
-                ${p.org_name ? profileInfoRow('소속 로컬', p.org_name + (p.org_district ? ' (' + p.org_district + ')' : ''), 'group') : ''}
                 ${profileInfoRow('이메일', p.email, 'mail')}
                 ${profileInfoRow('연락처', p.phone, 'phone')}
                 ${profileInfoRow('주소', p.address, 'location')}
@@ -124,9 +119,18 @@ function renderProfile(p) {
                 ${p.gender ? profileInfoRow('성별', getGenderText(p.gender), 'person') : ''}
             </div>
 
-            ${hasWorkInfo || p.industry ? `
+            <div id="profile-title-history-container"></div>
+
+            ${hasJC ? `
             <div class="info-section">
-                <h3 class="info-section-title">직장 정보</h3>
+                <h3 class="info-section-title">JC 정보</h3>
+                ${p.org_name ? profileInfoRow('소속 로컬', p.org_name + (p.org_district ? ' (' + p.org_district + ')' : ''), 'group') : ''}
+                ${p.join_date ? profileInfoRow('입회일', formatDate(p.join_date, 'YYYY-MM-DD'), 'calendar') : ''}
+            </div>` : ''}
+
+            ${hasWorkInfo ? `
+            <div class="info-section">
+                <h3 class="info-section-title">직업 정보</h3>
                 ${p.company ? profileInfoRow('회사', p.company, 'company') : ''}
                 ${p.position ? profileInfoRow('직책', p.position, 'badge') : ''}
                 ${p.department ? profileInfoRow('부서', p.department, 'group') : ''}
@@ -134,45 +138,27 @@ function renderProfile(p) {
                 ${p.work_phone ? profileInfoRow('직장 전화', p.work_phone, 'phone') : ''}
             </div>` : ''}
 
-            ${p.one_line_pr || p.service_description || (p.sns_links && p.sns_links.length > 0) ? `
+            ${hasPR ? `
             <div class="info-section">
                 <h3 class="info-section-title">사업 PR</h3>
                 ${p.one_line_pr ? profileInfoRow('한 줄 PR', p.one_line_pr, 'text') : ''}
                 ${p.service_description ? profileInfoRow('주요 서비스', p.service_description, 'text') : ''}
-                ${p.sns_links && p.sns_links.length > 0 ? `
-                <div class="info-row">
-                    <span class="info-label">SNS</span>
-                    <span class="info-value sns-badges-wrap">${renderSnsBadges(p.sns_links)}</span>
-                </div>` : ''}
+                ${p.sns_links && p.sns_links.length > 0 ? `<div class="info-row"><span class="info-label">SNS</span><span class="info-value sns-badges-wrap">${renderSnsBadges(p.sns_links)}</span></div>` : ''}
             </div>` : ''}
 
-            <div class="info-section">
-                <h3 class="info-section-title">JC 정보</h3>
-                ${profileInfoRow('입회일', p.join_date ? formatDate(p.join_date, 'YYYY-MM-DD') : '미설정', 'calendar')}
-            </div>
-
-            <div id="profile-title-history-container"></div>
-
-            <!-- 사업 PR 섹션 -->
-            ${renderBusinessPR(p)}
-
-            <!-- 메뉴 -->
-            <div class="settings-group">
-                <div class="settings-item" onclick="showEditProfileForm()">
-                    <span class="settings-item-icon">&#9998;</span>
-                    <span class="settings-item-label">내 정보 수정</span>
-                    <span class="settings-item-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+            <!-- 하단 메뉴 -->
+            <div class="profile-menu">
+                <div class="profile-menu-item" onclick="showEditProfileForm()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    프로필 수정
                 </div>
-                <div class="settings-item" onclick="showSettingsScreen()">
-                    <span class="settings-item-icon">&#9881;</span>
-                    <span class="settings-item-label">환경설정</span>
-                    <span class="settings-item-chevron"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+                <div class="profile-menu-item" onclick="navigateToScreen('settings')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    환경설정
                 </div>
-            </div>
-            <div class="settings-group">
-                <div class="settings-item settings-item--danger" onclick="handleProfileLogout()">
-                    <span class="settings-item-icon">&#10132;</span>
-                    <span class="settings-item-label">로그아웃</span>
+                <div class="profile-menu-item danger" onclick="handleProfileLogout()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    로그아웃
                 </div>
             </div>
         </div>
@@ -266,7 +252,7 @@ function showEditProfileForm() {
                     <h3 class="info-section-title">사업 PR</h3>
                     <div class="form-group"><label>한 줄 PR</label><input type="text" id="edit-one-line-pr" value="${escapeHtml(p.one_line_pr || p.business_headline || '')}" placeholder="예: 프리미엄 IT 서비스" maxlength="100"></div>
                     <div class="form-group"><label>주요 서비스</label><textarea id="edit-service-description" rows="4" placeholder="사업 소개, 주요 서비스, 상품 등을 자유롭게 입력하세요" maxlength="500" style="resize:vertical">${escapeHtml(p.service_description || p.business_description || '')}</textarea></div>
-                    <div class="form-group"><label>사업장 주소</label><div style="display:flex;gap:6px"><input type="text" id="edit-biz-address" value="${escapeHtml(p.business_address || '')}" placeholder="사업장 주소" style="flex:1"><button type="button" class="btn btn-outline btn-sm" onclick="openBizAddressSearch()" style="white-space:nowrap">주소 검색</button></div></div>
+                    <div class="form-group"><label>사업장 주소</label><div style="display:flex;gap:8px;align-items:center"><input type="text" id="edit-biz-address" value="${escapeHtml(p.business_address || '')}" placeholder="주소를 검색해 주세요" readonly style="flex:1;background:var(--bg-secondary);cursor:pointer" onclick="openBizAddressSearch()"><button type="button" class="btn btn-outline btn-sm" onclick="openBizAddressSearch()" style="white-space:nowrap;height:var(--input-height);padding:0 12px">주소 검색</button></div></div>
                     <div class="form-group">
                         <label>SNS 링크</label>
                         <div id="sns-links-container">
@@ -293,6 +279,15 @@ function renderSnsEditList(snsLinks) {
     }).join('');
 }
 
+var SNS_PLACEHOLDERS = {
+    instagram: 'https://instagram.com/계정명',
+    youtube: 'https://youtube.com/@채널명',
+    twitter: 'https://x.com/계정명',
+    facebook: 'https://facebook.com/계정명',
+    blog: 'https://blog.naver.com/아이디',
+    other: 'https://...'
+};
+
 function renderSnsRow(type, handle, idx) {
     var options = [
         {val:'instagram', label:'Instagram'},
@@ -305,11 +300,19 @@ function renderSnsRow(type, handle, idx) {
     var optHtml = options.map(function(o) {
         return '<option value="' + o.val + '"' + (type === o.val ? ' selected' : '') + '>' + o.label + '</option>';
     }).join('');
-    return '<div class="sns-edit-row" data-idx="' + idx + '" style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
-        '<select class="sns-type-select" style="flex:0 0 120px;height:40px;border:1px solid var(--border-color);border-radius:8px;padding:0 8px;font-size:14px">' + optHtml + '</select>' +
-        '<input type="text" class="sns-handle-input" value="' + escapeHtml(handle) + '" placeholder="@계정명 또는 URL (https:// 자동 추가)" style="flex:1;height:40px;border:1px solid var(--border-color);border-radius:8px;padding:0 12px;font-size:14px">' +
-        '<button type="button" class="btn-icon-delete" onclick="removeSnsRow(this)" style="flex:0 0 36px;height:36px;border:none;background:var(--error-bg);color:var(--error-color);border-radius:8px;cursor:pointer;font-size:16px" title="삭제">&times;</button>' +
+    var ph = SNS_PLACEHOLDERS[type] || SNS_PLACEHOLDERS.other;
+    return '<div class="sns-edit-row" data-idx="' + idx + '" style="display:flex;gap:6px;align-items:center;margin-bottom:8px">' +
+        '<select class="sns-type-select" onchange="updateSnsPlaceholder(this)" style="flex:0 0 110px;height:var(--input-height);border:1px solid var(--input-border);border-radius:var(--input-radius);padding:0 6px;font-size:13px">' + optHtml + '</select>' +
+        '<input type="text" class="sns-handle-input" value="' + escapeHtml(handle) + '" placeholder="' + ph + '" style="flex:1;height:var(--input-height);border:1px solid var(--input-border);border-radius:var(--input-radius);padding:0 10px;font-size:13px">' +
+        '<button type="button" class="btn-icon-delete" onclick="removeSnsRow(this)" style="flex:0 0 32px;height:32px;border:none;background:var(--error-bg);color:var(--error-color);border-radius:var(--input-radius);cursor:pointer;font-size:14px" title="삭제">&times;</button>' +
         '</div>';
+}
+
+function updateSnsPlaceholder(sel) {
+    var row = sel.closest('.sns-edit-row');
+    if (!row) return;
+    var input = row.querySelector('.sns-handle-input');
+    if (input) input.placeholder = SNS_PLACEHOLDERS[sel.value] || SNS_PLACEHOLDERS.other;
 }
 
 function addSnsLinkRow() {

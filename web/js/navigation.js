@@ -87,6 +87,7 @@ var _screenCache = {}; // 화면 캐싱 — 뒤로가기 시 깜빡임 방지
 var _tabScreens = ['home', 'posts', 'schedules', 'members', 'meetings', 'profile'];
 
 var _routes = {
+    'splash':       { showNav: false, noHistory: true },
     'home':         { nav: 'home',      showNav: true,  init: function() { if (typeof updateUserDisplay === 'function') updateUserDisplay(); loadHomeData(); updateNavBadges(); } },
     'posts':        { nav: 'posts',     showNav: true,  init: function() { if (typeof loadPostsScreen === 'function') loadPostsScreen(); } },
     'schedules':    { nav: 'schedules', showNav: true,
@@ -96,10 +97,10 @@ var _routes = {
     'members':      { nav: 'members',   showNav: true,  init: function() { if (typeof loadMembersScreen === 'function') loadMembersScreen(); } },
     'meetings':     { nav: 'meetings',  showNav: true,  init: function() { if (typeof loadMeetingsScreen === 'function') loadMeetingsScreen(); } },
     'profile':      { nav: 'profile',   showNav: true,  init: function() { if (typeof loadProfile === 'function') loadProfile(); } },
-    'login':        { noHistory: true, init: function() { var f = document.getElementById('login-form'); if (f) f.reset(); clearAllErrors(); setTimeout(function() { var el = document.getElementById('login-email'); if (el) el.focus(); }, 100); } },
-    'signup':       { noHistory: true, init: function() { var f = document.getElementById('signup-form'); if (f) f.reset(); clearAllErrors(); setTimeout(function() { var el = document.getElementById('signup-org'); if (el) el.focus(); }, 100); } },
-    'forgot-password': { noHistory: true, init: function() { resetForgotPasswordToStep1(); ['forgot-password-form','forgot-verify-form','forgot-set-password-form'].forEach(function(id) { var f = document.getElementById(id); if (f) f.reset(); }); clearAllErrors(); setTimeout(function() { var el = document.getElementById('forgot-email'); if (el) el.focus(); }, 100); } },
-    'pending-approval': { noHistory: true },
+    'login':        { showNav: false, noHistory: true, init: function() { var f = document.getElementById('login-form'); if (f) f.reset(); clearAllErrors(); setTimeout(function() { var el = document.getElementById('login-email'); if (el) el.focus(); }, 100); } },
+    'signup':       { showNav: false, noHistory: true, init: function() { var f = document.getElementById('signup-form'); if (f) f.reset(); clearAllErrors(); setTimeout(function() { var el = document.getElementById('signup-org'); if (el) el.focus(); }, 100); } },
+    'forgot-password': { showNav: false, noHistory: true, init: function() { resetForgotPasswordToStep1(); ['forgot-password-form','forgot-verify-form','forgot-set-password-form'].forEach(function(id) { var f = document.getElementById(id); if (f) f.reset(); }); clearAllErrors(); setTimeout(function() { var el = document.getElementById('forgot-email'); if (el) el.focus(); }, 100); } },
+    'pending-approval': { showNav: false, noHistory: true },
     'admin':        { init: function() { if (typeof initAdminPage === 'function') initAdminPage(); } },
     'admin-manage': { init: function() { if (typeof initLocalAdmin === 'function') initLocalAdmin(); } },
     'notifications': { showNav: true },

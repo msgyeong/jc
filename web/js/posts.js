@@ -320,7 +320,14 @@ async function handlePostCreateFileSelect(e) {
             }
             renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage, postCreatePreviewUrls);
             if (errEl) {
-                errEl.textContent = err.message || '이미지 업로드에 실패했습니다.';
+                var errMsg = err.message || '';
+                if (errMsg.includes('413') || errMsg.includes('too large') || errMsg.includes('크기')) {
+                    errEl.textContent = '이미지 크기가 너무 큽니다. 자동 압축 후에도 실패했습니다.';
+                } else if (errMsg.includes('형식') || errMsg.includes('type') || errMsg.includes('format')) {
+                    errEl.textContent = 'JPEG, PNG, GIF, WebP 형식만 업로드 가능합니다.';
+                } else {
+                    errEl.textContent = '이미지 업로드에 실패했습니다. 다시 시도해주세요.';
+                }
                 errEl.classList.add('show');
             }
         }
@@ -583,7 +590,7 @@ async function handlePostCreateSubmit(e) {
     } catch (err) {
         console.error('게시글 작성 실패:', err);
         if (errorEl) {
-            errorEl.textContent = err.message || '게시글 작성 중 오류가 발생했습니다.';
+            errorEl.textContent = err.message || '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
             errorEl.classList.add('show');
         }
     } finally {

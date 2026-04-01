@@ -886,6 +886,7 @@
                     <!-- category는 현재 탭에서 자동 결정 (hidden) -->
                     <input type="hidden" id="post-create-category" value="general">
                     <div class="inline-error-message" id="post-create-error"></div>
+                    <label class="post-form-label" for="post-create-title">제목</label>
                     <input
                         type="text"
                         id="post-create-title"
@@ -894,6 +895,7 @@
                         maxlength="200"
                         required
                     >
+                    <label class="post-form-label" for="post-create-content">내용</label>
                     <textarea
                         id="post-create-content"
                         class="post-create-content-input"
@@ -904,7 +906,7 @@
                     <div class="post-create-images-section">
                         <div class="post-create-images-header">
                             <span class="post-create-images-label">사진</span>
-                            <span class="post-create-images-count" id="post-create-images-count">(0/8)</span>
+                            <span class="post-create-images-count" id="post-create-images-count"></span>
                         </div>
                         <div class="post-create-images-scroll">
                             <div id="post-create-images-list" class="post-form-images-list"></div>

@@ -389,3 +389,32 @@ function closeBottomSheet(overlay) {
     document.body.style.overflow = '';
     setTimeout(function() { overlay.remove(); }, 250);
 }
+
+// ========== 이미지 리사이즈 (클라이언트 압축) ==========
+
+function resizeImage(file, maxWidth, quality) {
+    return new Promise(function(resolve) {
+        // 이미 충분히 작으면 그대로 반환
+        if (file.size <= 1024 * 1024) { resolve(file); return; }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var img = new Image();
+            img.onload = function() {
+                var canvas = document.createElement('canvas');
+                var ratio = Math.min((maxWidth || 1920) / img.width, 1);
+                canvas.width = Math.round(img.width * ratio);
+                canvas.height = Math.round(img.height * ratio);
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob(function(blob) {
+                    if (!blob) { resolve(file); return; }
+                    resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg', lastModified: Date.now() }));
+                }, 'image/jpeg', quality || 0.8);
+            };
+            img.onerror = function() { resolve(file); };
+            img.src = e.target.result;
+        };
+        reader.onerror = function() { resolve(file); };
+        reader.readAsDataURL(file);
+    });
+}

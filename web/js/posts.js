@@ -296,7 +296,8 @@ async function handlePostCreateFileSelect(e) {
         renderPostFormImages('post-create-images-list', postCreateImageUrls, removePostCreateImage, postCreatePreviewUrls);
 
         try {
-            var result = await apiClient.uploadPostImage(filesToUpload[i]);
+            var resizedFile = typeof resizeImage === 'function' ? await resizeImage(filesToUpload[i], 1920, 0.8) : filesToUpload[i];
+            var result = await apiClient.uploadPostImage(resizedFile);
             if (result && result.url) {
                 // placeholder를 실제 서버 URL로 교체
                 var placeholderIdx = postCreateImageUrls.indexOf('__uploading__');
@@ -933,7 +934,8 @@ async function handlePostEditFileSelect(e) {
     if (!file || getPostEditImages().length >= MAX_POST_IMAGES) return;
     e.target.value = '';
     try {
-        const result = await apiClient.uploadPostImage(file);
+        const resizedFile = typeof resizeImage === 'function' ? await resizeImage(file, 1920, 0.8) : file;
+        const result = await apiClient.uploadPostImage(resizedFile);
         if (result && result.url) {
             postEditImageUrls = getPostEditImages().concat([result.url]).slice(0, MAX_POST_IMAGES);
             renderPostFormImages('post-edit-images-list', postEditImageUrls, removePostEditImage);

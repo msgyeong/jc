@@ -68,6 +68,22 @@
 - **Sequential Thinking**: 복잡한 버그 분석, 기능 설계 시 구조화 사고
 - 코드만 보고 추측하지 말고, MCP로 실제 상태를 확인한 후 작업할 것
 
+## Claude 스킬 활용 (필수)
+프로젝트에 설치된 스킬을 작업 유형에 맞게 **반드시 활용**할 것:
+
+| 스킬 | 사용 시점 | 설명 |
+|------|----------|------|
+| **express-backend-expert** | API 코드 작성/수정할 때 | Express 백엔드 전문가 — 라우트, 미들웨어, DB 쿼리 패턴 |
+| **web-design-guidelines** | UI/프론트엔드 코드 작업할 때 | 웹 디자인 가이드라인 — 접근성, 반응형, UX 패턴 |
+| **security-auditor** | 보안 점검할 때 | 보안 감사 — SQL 인젝션, XSS, 인증/권한 취약점 |
+| **performance-profiler** | 성능 이슈 분석할 때 | 성능 프로파일링 — 로딩 속도, 메모리, 렌더링 최적화 |
+| **pr-review-expert** | PR 리뷰할 때 | 코드 리뷰 — 품질, 패턴, 버그 가능성 분석 |
+
+- 백엔드 에이전트: `express-backend-expert` + `security-auditor` 필수
+- 프론트엔드 에이전트: `web-design-guidelines` 필수
+- 테스터/UX 에이전트: `performance-profiler` + `web-design-guidelines` 활용
+- 스킬을 활용하지 않고 작업하면 품질이 떨어짐 — 반드시 참고할 것
+
 ## 작업 완료 검증 규칙 (강제 — 예외 없음)
 - **"완료" 보고 전에 반드시 배포된 앱에서 MCP로 실제 검증할 것**
 - 코드를 고쳤다 ≠ 실제로 고쳐졌다. 검증 없이 "완료"라고 보고하지 말 것

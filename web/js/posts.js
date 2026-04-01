@@ -1,6 +1,6 @@
 // 게시판 기능 (Railway API 연동) — 서브탭 + 카드 재디자인
 
-const MAX_POST_IMAGES = 8;
+const MAX_POST_IMAGES = 20;
 
 let currentPostsPage = 0;
 let postsLoading = false;
@@ -254,7 +254,7 @@ function renderPostFormImages(containerId, urls, onRemove, previewUrls) {
     });
     // 이미지 카운트 업데이트
     const countEl = document.getElementById('post-create-images-count');
-    if (countEl) countEl.textContent = `(${list.length}/${MAX_POST_IMAGES})`;
+    if (countEl) countEl.textContent = list.length > 0 ? `(${list.length}장 첨부)` : '';
 }
 
 function getPostCreateImages() {
@@ -474,7 +474,7 @@ function handleCreatePost() {
     const imgList = document.getElementById('post-create-images-list');
     if (imgList) imgList.innerHTML = '';
     const imgCount = document.getElementById('post-create-images-count');
-    if (imgCount) imgCount.textContent = '(0/' + MAX_POST_IMAGES + ')';
+    if (imgCount) imgCount.textContent = '';
 
     navigateToScreen('post-create');
 }

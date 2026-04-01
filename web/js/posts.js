@@ -166,14 +166,20 @@ function setupPostsInfiniteScroll() {
 
 // ── 게시판 탭 진입 ──
 async function loadPostsScreen() {
+    // 게시판 탭 복귀 시 항상 공지 탭으로 리셋
+    currentBoardCategory = 'notice';
     currentPostsPage = 0;
     hasMorePosts = true;
     postsLoading = false;
 
-    // 탭 UI를 현재 카테고리에 맞게 갱신
+    // 탭 UI를 공지 탭 활성화로 갱신
     document.querySelectorAll('.board-tab').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.category === currentBoardCategory);
     });
+
+    // post-list 초기화 후 새로 로드
+    const container = document.getElementById('post-list');
+    if (container) container.innerHTML = '';
 
     await loadPosts(1);
     setupPostsInfiniteScroll();
